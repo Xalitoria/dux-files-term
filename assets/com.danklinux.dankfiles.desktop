@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Dank Files
+GenericName=File Manager
+Comment=File manager for the dank desktop
+Exec=dfiles open %f
+Icon=com.danklinux.dankfiles
+Terminal=false
+Categories=System;FileTools;FileManager;Utility;Qt;
+Keywords=files;folders;browse;explorer;
+MimeType=inode/directory;
+StartupNotify=true
+StartupWMClass=com.danklinux.dankfiles
+SingleMainWindow=true
