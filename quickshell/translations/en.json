@@ -1,8 +1,62 @@
 [
   {
+    "term": "B",
+    "context": "B",
+    "reference": "Modules/FileRow.qml:26",
+    "comment": "file size unit"
+  },
+  {
     "term": "Dank Files",
     "context": "Dank Files",
-    "reference": "Modules/MainWindow.qml:13",
+    "reference": "Modules/MainWindow.qml:17",
     "comment": "main window title"
+  },
+  {
+    "term": "GB",
+    "context": "GB",
+    "reference": "Modules/FileRow.qml:26",
+    "comment": "file size unit"
+  },
+  {
+    "term": "MB",
+    "context": "MB",
+    "reference": "Modules/FileRow.qml:26",
+    "comment": "file size unit"
+  },
+  {
+    "term": "TB",
+    "context": "TB",
+    "reference": "Modules/FileRow.qml:26",
+    "comment": "file size unit"
+  },
+  {
+    "term": "This folder could not be opened",
+    "context": "This folder could not be opened",
+    "reference": "Modules/MainWindow.qml:33",
+    "comment": "directory listing error"
+  },
+  {
+    "term": "This folder is empty",
+    "context": "This folder is empty",
+    "reference": "Modules/MainWindow.qml:116",
+    "comment": "empty directory placeholder"
+  },
+  {
+    "term": "This folder no longer exists",
+    "context": "This folder no longer exists",
+    "reference": "Modules/MainWindow.qml:29",
+    "comment": "directory listing error"
+  },
+  {
+    "term": "You do not have permission to view this folder",
+    "context": "You do not have permission to view this folder",
+    "reference": "Modules/MainWindow.qml:31",
+    "comment": "directory listing error"
+  },
+  {
+    "term": "kB",
+    "context": "kB",
+    "reference": "Modules/FileRow.qml:26",
+    "comment": "file size unit"
   }
 ]

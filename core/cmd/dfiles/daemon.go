@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/spf13/cobra"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
+	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
+	"github.com/AvengeMedia/dankfiles/core/internal/paths"
 	"github.com/AvengeMedia/dankfiles/core/internal/uriopen"
 	"github.com/AvengeMedia/dankgo/log"
 )
@@ -24,6 +27,7 @@ var daemonCmd = &cobra.Command{
 type daemonServices struct {
 	ipc      *ipc.Server
 	ipcErrCh <-chan error
+	files    *files.Service
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -34,14 +38,21 @@ func (s *daemonServices) SocketPath() string {
 }
 
 func (s *daemonServices) Close() {
-	if s == nil || s.ipc == nil {
+	if s == nil {
 		return
 	}
-	s.ipc.Close()
+	if s.files != nil {
+		s.files.Close()
+	}
+	if s.ipc != nil {
+		s.ipc.Close()
+	}
 }
 
 func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 	bus := ipc.NewEventBus()
+
+	fileService := files.NewService(bus, cacheHome())
 
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
 	if err := colorSchemeWatcher.Start(); err != nil {
@@ -54,13 +65,23 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		Version:     Version,
 		ColorScheme: colorSchemeWatcher,
 		Opener:      uriopen.Opener{},
+		Files:       fileService,
 	}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {
 		return nil, err
 	}
 
-	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh}, nil
+	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService}, nil
+}
+
+func cacheHome() string {
+	dir, err := paths.CacheDir()
+	if err != nil {
+		log.Warnf("cache dir unavailable: %v", err)
+		return os.TempDir()
+	}
+	return filepath.Dir(dir)
 }
 
 func runDaemon(_ *cobra.Command, _ []string) error {

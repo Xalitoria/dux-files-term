@@ -21,6 +21,9 @@ func NewServer(deps Deps) *Server {
 		Bus:                    deps.Bus,
 		OnSubscribe: func(topics []string, _ *Subscriber) {
 			publishPending(deps, topics)
+			if deps.Files != nil {
+				deps.Files.Attach(topics)
+			}
 		},
 	}
 

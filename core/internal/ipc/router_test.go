@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -91,11 +92,16 @@ func TestRouteFilesList(t *testing.T) {
 	root := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(root, "x"), nil, 0o644))
 
-	out := routeAndRead(t, Request{ID: 3, Method: "files.list", Params: map[string]any{"path": root}}, Deps{})
+	out := routeAndRead(t, Request{ID: 3, Method: "files.list", Params: map[string]any{"path": root}}, Deps{Files: files.NewService(nil, t.TempDir())})
 
 	result, ok := out["result"].(map[string]any)
 	require.True(t, ok)
 	assert.Len(t, result["entries"], 1)
+}
+
+func TestRouteFilesWithoutService(t *testing.T) {
+	out := routeAndRead(t, Request{ID: 4, Method: "files.list", Params: map[string]any{"path": t.TempDir()}}, Deps{})
+	assert.Equal(t, "file service unavailable", out["error"])
 }
 
 func TestRegistryCoversFilesList(t *testing.T) {

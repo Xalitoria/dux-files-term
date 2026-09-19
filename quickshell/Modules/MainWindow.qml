@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Window
 import Quickshell
 import qs.Common
 import qs.Models
@@ -33,14 +34,33 @@ FloatingWindow {
         }
     }
 
+    function navigateUp() {
+        const parent = currentPath.substring(0, currentPath.lastIndexOf("/"));
+        currentPath = parent === "" ? "/" : parent;
+    }
+
     DirectoryModel {
         id: directory
         path: window.currentPath
+        onGone: window.navigateUp()
     }
 
     Item {
+        id: surface
+
         anchors.fill: parent
         readonly property bool isFloatingWindowSurface: true
+        readonly property bool windowActive: Window.active
+
+        onWindowActiveChanged: {
+            if (windowActive)
+                directory.refresh();
+        }
+
+        Shortcut {
+            sequences: ["Ctrl+H"]
+            onActivated: directory.setShowHidden(!directory.includeHidden)
+        }
 
         StyledText {
             id: pathLabel
@@ -55,6 +75,8 @@ FloatingWindow {
         }
 
         DankListView {
+            id: fileList
+
             anchors.top: pathLabel.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left
@@ -63,10 +85,27 @@ FloatingWindow {
             clip: true
             spacing: Theme.groupedListGap
             model: directory.entries
+            cacheBuffer: height
+
             delegate: FileRow {
                 onClicked: {
                     if (isDir)
                         window.currentPath = path;
+                }
+            }
+
+            onContentYChanged: scrollSettle.restart()
+            onCountChanged: scrollSettle.restart()
+
+            Timer {
+                id: scrollSettle
+                interval: Theme.mediumDuration
+                onTriggered: {
+                    const first = fileList.indexAt(fileList.width / 2, fileList.contentY);
+                    const last = fileList.indexAt(fileList.width / 2, fileList.contentY + fileList.height - 1);
+                    directory.requestThumbnails(Math.max(first, 0), last < 0 ? fileList.count - 1 : last);
+                    if (last < 0 || last >= fileList.count - 1)
+                        directory.loadMore();
                 }
             }
         }

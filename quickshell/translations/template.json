@@ -1,8 +1,71 @@
 [
   {
+    "term": "B",
+    "translation": "",
+    "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Dank Files",
     "translation": "",
     "context": "main window title",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "GB",
+    "translation": "",
+    "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "MB",
+    "translation": "",
+    "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "TB",
+    "translation": "",
+    "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This folder could not be opened",
+    "translation": "",
+    "context": "directory listing error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This folder is empty",
+    "translation": "",
+    "context": "empty directory placeholder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This folder no longer exists",
+    "translation": "",
+    "context": "directory listing error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "You do not have permission to view this folder",
+    "translation": "",
+    "context": "directory listing error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "kB",
+    "translation": "",
+    "context": "file size unit",
     "reference": "",
     "comment": ""
   }

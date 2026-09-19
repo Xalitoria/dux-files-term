@@ -15,6 +15,9 @@ DankListItem {
     required property bool isSymlink
     required property real size
     required property real mtimeMs
+    required property string iconName
+    required property string thumbnail
+    required property string mime
 
     width: listView?.width ?? 0
     firstInGroup: index === 0
@@ -38,8 +41,9 @@ DankListItem {
         anchors.rightMargin: Theme.spacingL
         spacing: Theme.spacingM
 
-        DankIcon {
-            name: row.isDir ? "folder" : row.isSymlink ? "link" : "draft"
+        FileIcon {
+            iconName: row.iconName
+            thumbnail: row.thumbnail !== "" ? row.thumbnail : row.mime === "image/svg+xml" ? row.path : ""
             size: Theme.iconSize
             color: row.isDir ? Theme.primary : row.contentColor
         }
@@ -52,8 +56,15 @@ DankListItem {
             elide: Text.ElideMiddle
         }
 
+        DankIcon {
+            visible: row.isSymlink
+            name: "link"
+            size: Theme.fontSizeSmall
+            color: row.supportingContentColor
+        }
+
         StyledText {
-            visible: !row.isDir
+            visible: row.size >= 0
             text: row.formatSize(row.size)
             color: row.supportingContentColor
             font.pixelSize: Theme.fontSizeSmall
