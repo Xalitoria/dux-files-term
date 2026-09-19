@@ -1,0 +1,144 @@
+package fileops
+
+import (
+	"os"
+	"path/filepath"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+)
+
+type testBus struct {
+	mu         sync.Mutex
+	events     []event
+	finished   map[string]View
+	waiters    map[string]chan View
+	onConflict func(Conflict) Answer
+	onFailure  func(Failure) Answer
+	manager    *Manager
+}
+
+func newHarness(t *testing.T) (*Manager, *testBus) {
+	t.Helper()
+	bus := &testBus{finished: map[string]View{}, waiters: map[string]chan View{}}
+	manager := NewManager(bus, nil)
+	bus.manager = manager
+	return manager, bus
+}
+
+func (b *testBus) Publish(_ string, data any) {
+	payload, ok := data.(event)
+	if !ok {
+		return
+	}
+
+	b.mu.Lock()
+	b.events = append(b.events, payload)
+	conflict := b.onConflict
+	failure := b.onFailure
+	b.mu.Unlock()
+
+	switch {
+	case payload.Kind == "conflict" && conflict != nil:
+		_ = b.manager.Respond(payload.JobID, conflict(*payload.Conflict))
+	case payload.Kind == "error" && failure != nil:
+		_ = b.manager.Respond(payload.JobID, failure(*payload.Failure))
+	case payload.Kind == "job" && (payload.Job.State == StateDone || payload.Job.State == StateFailed):
+		b.complete(*payload.Job)
+	}
+}
+
+func (b *testBus) complete(view View) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.finished[view.ID] = view
+	waiter, ok := b.waiters[view.ID]
+	if !ok {
+		return
+	}
+	delete(b.waiters, view.ID)
+	waiter <- view
+}
+
+func (b *testBus) wait(t *testing.T, id string) View {
+	t.Helper()
+
+	b.mu.Lock()
+	if view, ok := b.finished[id]; ok {
+		b.mu.Unlock()
+		return view
+	}
+	waiter := make(chan View, 1)
+	b.waiters[id] = waiter
+	b.mu.Unlock()
+
+	select {
+	case view := <-waiter:
+		return view
+	case <-time.After(20 * time.Second):
+		t.Fatalf("job %s did not finish", id)
+		return View{}
+	}
+}
+
+func (b *testBus) kinds(kind string) []event {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	var out []event
+	for _, e := range b.events {
+		if e.Kind == kind {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+func run(t *testing.T, m *Manager, bus *testBus, s spec) View {
+	t.Helper()
+	return bus.wait(t, m.enqueue(s).id)
+}
+
+func write(t *testing.T, path, body string) string {
+	t.Helper()
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+	require.NoError(t, os.WriteFile(path, []byte(body), 0o644))
+	return path
+}
+
+func read(t *testing.T, path string) string {
+	t.Helper()
+	body, err := os.ReadFile(path)
+	require.NoError(t, err)
+	return string(body)
+}
+
+func tempsIn(t *testing.T, dir string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	var leftovers []string
+	for _, entry := range entries {
+		if len(entry.Name()) > 12 && entry.Name()[:12] == ".dfiles-tmp-" {
+			leftovers = append(leftovers, entry.Name())
+		}
+	}
+	return leftovers
+}
+
+// otherDevice returns a directory on a different filesystem, for the
+// cross-device paths; there is no portable way to fake st_dev.
+func otherDevice(t *testing.T, reference string) string {
+	t.Helper()
+	dir, err := os.MkdirTemp("/dev/shm", "dfiles-xdev-")
+	if err != nil {
+		t.Skip("no second filesystem available")
+	}
+	t.Cleanup(func() { os.RemoveAll(dir) })
+
+	if sameDevice(reference, dir) {
+		t.Skip("scratch dirs share a filesystem")
+	}
+	return dir
+}

@@ -1,8 +1,71 @@
 [
   {
+    "term": "%1 already exists in this folder.",
+    "translation": "",
+    "context": "file conflict dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 will be deleted permanently. This cannot be undone.",
+    "translation": "",
+    "context": "permanent delete confirmation explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Already here",
+    "translation": "",
+    "context": "file conflict dialog label for the existing item",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "B",
     "translation": "",
     "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Being added",
+    "translation": "",
+    "context": "file conflict dialog label for the incoming item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Cancel",
+    "translation": "",
+    "context": "dialog button to cancel",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Cancelled",
+    "translation": "",
+    "context": "file operation was cancelled",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Copied",
+    "translation": "",
+    "context": "toast after copying files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Copying",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Create",
+    "translation": "",
+    "context": "dialog button creating an item",
     "reference": "",
     "comment": ""
   },
@@ -14,6 +77,62 @@
     "comment": ""
   },
   {
+    "term": "Delete",
+    "translation": "",
+    "context": "confirm dialog default confirm button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Delete permanently?",
+    "translation": "",
+    "context": "permanent delete confirmation header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Deleting",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Do this for the rest",
+    "translation": "",
+    "context": "file conflict dialog option to reuse the answer",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Emptying the trash",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Estimating…",
+    "translation": "",
+    "context": "file operation is still measuring the work",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "File operations",
+    "translation": "",
+    "context": "jobs popover header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Finished",
+    "translation": "",
+    "context": "file operation completed",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "GB",
     "translation": "",
     "context": "file size unit",
@@ -21,9 +140,114 @@
     "comment": ""
   },
   {
+    "term": "Keep both",
+    "translation": "",
+    "context": "file conflict dialog button to keep both items",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "MB",
     "translation": "",
     "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Merge",
+    "translation": "",
+    "context": "file conflict dialog button to merge folders",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Moved",
+    "translation": "",
+    "context": "toast after moving files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Moved to trash",
+    "translation": "",
+    "context": "toast after trashing files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Moving",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Moving to trash",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Name",
+    "translation": "",
+    "context": "label for a file name input",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "New folder",
+    "translation": "",
+    "context": "new folder dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Nothing is running",
+    "translation": "",
+    "context": "jobs popover empty state",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Rename",
+    "translation": "",
+    "context": "rename dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Renamed",
+    "translation": "",
+    "context": "toast after renaming a file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Replace",
+    "translation": "",
+    "context": "file conflict dialog button to overwrite the existing item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Restoring",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Save",
+    "translation": "",
+    "context": "dialog button to confirm a name",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Skip",
+    "translation": "",
+    "context": "file conflict dialog button to leave the item alone",
     "reference": "",
     "comment": ""
   },
@@ -52,6 +276,83 @@
     "term": "This folder no longer exists",
     "translation": "",
     "context": "directory listing error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This item already exists",
+    "translation": "",
+    "context": "file conflict dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This item cannot be moved here directly",
+    "translation": "",
+    "context": "file operation error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This item could not be handled",
+    "translation": "",
+    "context": "file operation error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This item is in use",
+    "translation": "",
+    "context": "file operation error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This item no longer exists",
+    "translation": "",
+    "context": "file operation error",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Try again",
+    "translation": "",
+    "context": "file operation error dialog button to retry",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Undo",
+    "translation": "",
+    "context": "toast action reversing the last operation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Untitled folder",
+    "translation": "",
+    "context": "default name for a new folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Waiting",
+    "translation": "",
+    "context": "file operation is queued",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Working",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "You do not have permission to do this",
+    "translation": "",
+    "context": "file operation error",
     "reference": "",
     "comment": ""
   },

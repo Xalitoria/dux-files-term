@@ -1,62 +1,320 @@
 [
   {
+    "term": "%1 already exists in this folder.",
+    "context": "%1 already exists in this folder.",
+    "reference": "Modules/ConflictDialog.qml:30",
+    "comment": "file conflict dialog explanation"
+  },
+  {
+    "term": "%1 will be deleted permanently. This cannot be undone.",
+    "context": "%1 will be deleted permanently. This cannot be undone.",
+    "reference": "Modules/MainWindow.qml:306",
+    "comment": "permanent delete confirmation explanation"
+  },
+  {
+    "term": "Already here",
+    "context": "Already here",
+    "reference": "Modules/ConflictDialog.qml:43",
+    "comment": "file conflict dialog label for the existing item"
+  },
+  {
     "term": "B",
     "context": "B",
-    "reference": "Modules/FileRow.qml:26",
+    "reference": "Common/FileFormat.qml:13",
     "comment": "file size unit"
+  },
+  {
+    "term": "Being added",
+    "context": "Being added",
+    "reference": "Modules/ConflictDialog.qml:49",
+    "comment": "file conflict dialog label for the incoming item"
+  },
+  {
+    "term": "Cancel",
+    "context": "Cancel",
+    "reference": "Modules/ConfirmDialog.qml:25, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:54, Modules/ConflictDialog.qml:63",
+    "comment": "dialog button to cancel"
+  },
+  {
+    "term": "Cancelled",
+    "context": "Cancelled",
+    "reference": "Modules/JobRow.qml:44",
+    "comment": "file operation was cancelled"
+  },
+  {
+    "term": "Copied",
+    "context": "Copied",
+    "reference": "Modules/MainWindow.qml:80",
+    "comment": "toast after copying files"
+  },
+  {
+    "term": "Copying",
+    "context": "Copying",
+    "reference": "Modules/JobRow.qml:24",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "Create",
+    "context": "Create",
+    "reference": "Modules/MainWindow.qml:296",
+    "comment": "dialog button creating an item"
   },
   {
     "term": "Dank Files",
     "context": "Dank Files",
-    "reference": "Modules/MainWindow.qml:17",
+    "reference": "Modules/MainWindow.qml:21",
     "comment": "main window title"
+  },
+  {
+    "term": "Delete",
+    "context": "Delete",
+    "reference": "Modules/ConfirmDialog.qml:10",
+    "comment": "confirm dialog default confirm button"
+  },
+  {
+    "term": "Delete permanently?",
+    "context": "Delete permanently?",
+    "reference": "Modules/MainWindow.qml:305",
+    "comment": "permanent delete confirmation header"
+  },
+  {
+    "term": "Deleting",
+    "context": "Deleting",
+    "reference": "Modules/JobRow.qml:32",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "Do this for the rest",
+    "context": "Do this for the rest",
+    "reference": "Modules/OperationErrorDialog.qml:46, Modules/ConflictDialog.qml:55",
+    "comment": "file conflict dialog option to reuse the answer"
+  },
+  {
+    "term": "Emptying the trash",
+    "context": "Emptying the trash",
+    "reference": "Modules/JobRow.qml:34",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "Estimating…",
+    "context": "Estimating…",
+    "reference": "Modules/JobRow.qml:48",
+    "comment": "file operation is still measuring the work"
+  },
+  {
+    "term": "File operations",
+    "context": "File operations",
+    "reference": "Modules/JobsPopover.qml:31",
+    "comment": "jobs popover header"
+  },
+  {
+    "term": "Finished",
+    "context": "Finished",
+    "reference": "Modules/JobRow.qml:50",
+    "comment": "file operation completed"
   },
   {
     "term": "GB",
     "context": "GB",
-    "reference": "Modules/FileRow.qml:26",
+    "reference": "Common/FileFormat.qml:13",
     "comment": "file size unit"
+  },
+  {
+    "term": "Keep both",
+    "context": "Keep both",
+    "reference": "Modules/ConflictDialog.qml:91",
+    "comment": "file conflict dialog button to keep both items"
   },
   {
     "term": "MB",
     "context": "MB",
-    "reference": "Modules/FileRow.qml:26",
+    "reference": "Common/FileFormat.qml:13",
     "comment": "file size unit"
+  },
+  {
+    "term": "Merge",
+    "context": "Merge",
+    "reference": "Modules/ConflictDialog.qml:70",
+    "comment": "file conflict dialog button to merge folders"
+  },
+  {
+    "term": "Moved",
+    "context": "Moved",
+    "reference": "Modules/MainWindow.qml:78",
+    "comment": "toast after moving files"
+  },
+  {
+    "term": "Moved to trash",
+    "context": "Moved to trash",
+    "reference": "Modules/MainWindow.qml:76",
+    "comment": "toast after trashing files"
+  },
+  {
+    "term": "Moving",
+    "context": "Moving",
+    "reference": "Modules/JobRow.qml:26",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "Moving to trash",
+    "context": "Moving to trash",
+    "reference": "Modules/JobRow.qml:28",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "Name",
+    "context": "Name",
+    "reference": "Modules/NameDialog.qml:33",
+    "comment": "label for a file name input"
+  },
+  {
+    "term": "New folder",
+    "context": "New folder",
+    "reference": "Modules/MainWindow.qml:295",
+    "comment": "new folder dialog header"
+  },
+  {
+    "term": "Nothing is running",
+    "context": "Nothing is running",
+    "reference": "Modules/JobsPopover.qml:48",
+    "comment": "jobs popover empty state"
+  },
+  {
+    "term": "Rename",
+    "context": "Rename",
+    "reference": "Modules/MainWindow.qml:287, Modules/MainWindow.qml:288",
+    "comment": "rename dialog header"
+  },
+  {
+    "term": "Renamed",
+    "context": "Renamed",
+    "reference": "Modules/MainWindow.qml:82",
+    "comment": "toast after renaming a file"
+  },
+  {
+    "term": "Replace",
+    "context": "Replace",
+    "reference": "Modules/ConflictDialog.qml:84",
+    "comment": "file conflict dialog button to overwrite the existing item"
+  },
+  {
+    "term": "Restoring",
+    "context": "Restoring",
+    "reference": "Modules/JobRow.qml:30",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "Save",
+    "context": "Save",
+    "reference": "Modules/NameDialog.qml:8",
+    "comment": "dialog button to confirm a name"
+  },
+  {
+    "term": "Skip",
+    "context": "Skip",
+    "reference": "Modules/OperationErrorDialog.qml:61, Modules/ConflictDialog.qml:77",
+    "comment": "file conflict dialog button to leave the item alone"
   },
   {
     "term": "TB",
     "context": "TB",
-    "reference": "Modules/FileRow.qml:26",
+    "reference": "Common/FileFormat.qml:13",
     "comment": "file size unit"
   },
   {
     "term": "This folder could not be opened",
     "context": "This folder could not be opened",
-    "reference": "Modules/MainWindow.qml:33",
+    "reference": "Modules/MainWindow.qml:37",
     "comment": "directory listing error"
   },
   {
     "term": "This folder is empty",
     "context": "This folder is empty",
-    "reference": "Modules/MainWindow.qml:116",
+    "reference": "Modules/MainWindow.qml:260",
     "comment": "empty directory placeholder"
   },
   {
     "term": "This folder no longer exists",
     "context": "This folder no longer exists",
-    "reference": "Modules/MainWindow.qml:29",
+    "reference": "Modules/MainWindow.qml:33",
     "comment": "directory listing error"
+  },
+  {
+    "term": "This item already exists",
+    "context": "This item already exists",
+    "reference": "Modules/ConflictDialog.qml:29, Common/FileFormat.qml:30",
+    "comment": "file conflict dialog header"
+  },
+  {
+    "term": "This item cannot be moved here directly",
+    "context": "This item cannot be moved here directly",
+    "reference": "Common/FileFormat.qml:34",
+    "comment": "file operation error"
+  },
+  {
+    "term": "This item could not be handled",
+    "context": "This item could not be handled",
+    "reference": "Common/FileFormat.qml:36, Common/FileFormat.qml:38",
+    "comment": "file operation error"
+  },
+  {
+    "term": "This item is in use",
+    "context": "This item is in use",
+    "reference": "Common/FileFormat.qml:32",
+    "comment": "file operation error"
+  },
+  {
+    "term": "This item no longer exists",
+    "context": "This item no longer exists",
+    "reference": "Common/FileFormat.qml:26",
+    "comment": "file operation error"
+  },
+  {
+    "term": "Try again",
+    "context": "Try again",
+    "reference": "Modules/OperationErrorDialog.qml:68",
+    "comment": "file operation error dialog button to retry"
+  },
+  {
+    "term": "Undo",
+    "context": "Undo",
+    "reference": "Modules/MainWindow.qml:113",
+    "comment": "toast action reversing the last operation"
+  },
+  {
+    "term": "Untitled folder",
+    "context": "Untitled folder",
+    "reference": "Modules/MainWindow.qml:182",
+    "comment": "default name for a new folder"
+  },
+  {
+    "term": "Waiting",
+    "context": "Waiting",
+    "reference": "Modules/JobRow.qml:46",
+    "comment": "file operation is queued"
+  },
+  {
+    "term": "Working",
+    "context": "Working",
+    "reference": "Modules/JobRow.qml:36",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "You do not have permission to do this",
+    "context": "You do not have permission to do this",
+    "reference": "Common/FileFormat.qml:28",
+    "comment": "file operation error"
   },
   {
     "term": "You do not have permission to view this folder",
     "context": "You do not have permission to view this folder",
-    "reference": "Modules/MainWindow.qml:31",
+    "reference": "Modules/MainWindow.qml:35",
     "comment": "directory listing error"
   },
   {
     "term": "kB",
     "context": "kB",
-    "reference": "Modules/FileRow.qml:26",
+    "reference": "Common/FileFormat.qml:13",
     "comment": "file size unit"
   }
 ]

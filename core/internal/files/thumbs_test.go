@@ -36,7 +36,7 @@ func TestThumbnailWriteAndRead(t *testing.T) {
 
 	source := filepath.Join(t.TempDir(), "photo.png")
 	writeTestPNG(t, source, 400, 200)
-	entry, err := svc.stat(source)
+	entry, err := svc.Stat(source)
 	require.NoError(t, err)
 	require.True(t, entry.Thumbnailable)
 
@@ -81,7 +81,7 @@ func TestThumbnailSmallerThanBoundIsNotUpscaled(t *testing.T) {
 
 	source := filepath.Join(t.TempDir(), "tiny.png")
 	writeTestPNG(t, source, 20, 10)
-	entry, err := svc.stat(source)
+	entry, err := svc.Stat(source)
 	require.NoError(t, err)
 
 	dst, err := svc.thumbs.Generate(entry, "large")
@@ -101,7 +101,7 @@ func TestThumbnailFailureLeavesMarker(t *testing.T) {
 
 	source := filepath.Join(t.TempDir(), "broken.png")
 	require.NoError(t, os.WriteFile(source, []byte("not a png"), 0o644))
-	entry, err := svc.stat(source)
+	entry, err := svc.Stat(source)
 	require.NoError(t, err)
 	entry.Mime = "image/png"
 
@@ -121,7 +121,7 @@ func TestThumbnailRejectsOversizeImages(t *testing.T) {
 
 	source := filepath.Join(t.TempDir(), "huge.png")
 	writeTestPNG(t, source, 8, 8)
-	entry, err := svc.stat(source)
+	entry, err := svc.Stat(source)
 	require.NoError(t, err)
 	entry.Size = imageSizeCap + 1
 

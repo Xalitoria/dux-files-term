@@ -49,7 +49,7 @@ func (c *countCache) put(path string, mtimeMs int64, count Count) {
 func countChildren(path string, includeHidden bool) Count {
 	f, err := os.Open(path)
 	if err != nil {
-		return Count{Code: string(CodeOf(wrap(path, err)))}
+		return Count{Code: string(CodeOf(Wrap(path, err)))}
 	}
 	defer f.Close()
 
@@ -66,7 +66,7 @@ func countChildren(path string, includeHidden bool) Count {
 			return Count{Count: total}
 		}
 		if err != nil {
-			return Count{Count: total, Code: string(CodeOf(wrap(path, err)))}
+			return Count{Count: total, Code: string(CodeOf(Wrap(path, err)))}
 		}
 	}
 	return Count{Count: CountCap, Capped: true}

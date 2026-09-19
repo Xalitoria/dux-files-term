@@ -111,11 +111,11 @@ func (s *Service) list(path string, opts ListOptions) (Page, error) {
 	return pageOf(entries, opts.Cursor, opts.Limit), nil
 }
 
-func (s *Service) stat(path string) (Entry, error) {
+func (s *Service) Stat(path string) (Entry, error) {
 	dir, name := splitPath(path)
 	entry, err := s.builder.entry(dir, name, hiddenNames(dir)[name])
 	if err != nil {
-		return Entry{}, wrap(path, err)
+		return Entry{}, Wrap(path, err)
 	}
 	if needsSniff(entry.Mime) && !entry.IsDir && !entry.SymlinkBroken {
 		if sniffed := s.builder.mime.Sniff(entry.Path); sniffed != "" {
@@ -131,7 +131,7 @@ func (s *Service) stat(path string) (Entry, error) {
 }
 
 func (s *Service) count(path string, includeHidden bool) Count {
-	entry, err := s.stat(path)
+	entry, err := s.Stat(path)
 	if err != nil {
 		return Count{Code: string(CodeOf(err))}
 	}
@@ -247,7 +247,7 @@ func (s *Service) thumbEntry(w *watch, path string) (Entry, bool) {
 			return entry, true
 		}
 	}
-	entry, err := s.stat(path)
+	entry, err := s.Stat(path)
 	if err != nil {
 		return Entry{}, false
 	}
@@ -261,7 +261,7 @@ func (s *Service) icons(keys []string) map[string][]string {
 			out[key] = mimeLadder(key, false)
 			continue
 		}
-		entry, err := s.stat(key)
+		entry, err := s.Stat(key)
 		if err != nil {
 			out[key] = []string{"emblem-unreadable", genericIcon}
 			continue

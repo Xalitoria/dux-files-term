@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
+	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
 	"github.com/AvengeMedia/dankfiles/core/internal/paths"
@@ -53,6 +54,7 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 	bus := ipc.NewEventBus()
 
 	fileService := files.NewService(bus, cacheHome())
+	opsManager := fileops.NewManager(bus, fileService)
 
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
 	if err := colorSchemeWatcher.Start(); err != nil {
@@ -66,6 +68,7 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		ColorScheme: colorSchemeWatcher,
 		Opener:      uriopen.Opener{},
 		Files:       fileService,
+		FileOps:     opsManager,
 	}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {

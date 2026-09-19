@@ -48,7 +48,7 @@ func (b *builder) readDir(dir string) ([]Entry, error) {
 	}
 	names, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, wrap(dir, err)
+		return nil, Wrap(dir, err)
 	}
 
 	hidden := hiddenNames(dir)

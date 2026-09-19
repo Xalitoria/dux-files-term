@@ -120,7 +120,7 @@ func (s *Service) handleStat(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	entry, err := s.stat(path)
+	entry, err := s.Stat(path)
 	if err != nil {
 		respondErr(w, req.ID, err)
 		return

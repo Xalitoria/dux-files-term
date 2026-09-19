@@ -3,13 +3,14 @@ module github.com/AvengeMedia/dankfiles/core
 go 1.26.4
 
 require (
-	github.com/AvengeMedia/dankgo v1.6.1
+	github.com/AvengeMedia/dankgo v1.6.3-0.20260918210430-d03946da44cd
 	github.com/adrg/xdg v0.5.3
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/image v0.46.0
+	golang.org/x/sys v0.48.0
 	golang.org/x/text v0.42.0
 )
 
@@ -33,5 +34,4 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/sys v0.48.0 // indirect
 )

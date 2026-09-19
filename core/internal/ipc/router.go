@@ -16,6 +16,12 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	}
 
 	switch {
+	case strings.HasPrefix(req.Method, "files.op."):
+		if deps.FileOps == nil {
+			RespondError(w, req.ID, "file operations unavailable")
+			return
+		}
+		deps.FileOps.Handle(ctx, w, req)
 	case strings.HasPrefix(req.Method, "ui."):
 		HandleUI(ctx, w, req, deps)
 	case strings.HasPrefix(req.Method, "system."):

@@ -20,20 +20,9 @@ DankListItem {
     required property string mime
 
     width: listView?.width ?? 0
+    isSelected: (listView?.currentIndex ?? -1) === index
     firstInGroup: index === 0
     lastInGroup: index === (listView?.count ?? 0) - 1
-
-    function formatSize(bytes) {
-        const units = [I18n.tr("B", "file size unit"), I18n.tr("kB", "file size unit"), I18n.tr("MB", "file size unit"), I18n.tr("GB", "file size unit"), I18n.tr("TB", "file size unit")];
-        let value = bytes;
-        let unit = 0;
-        while (value >= 1000 && unit < units.length - 1) {
-            value /= 1000;
-            unit++;
-        }
-        const digits = unit === 0 ? 0 : 1;
-        return `${value.toFixed(digits)} ${units[unit]}`;
-    }
 
     RowLayout {
         anchors.fill: parent
@@ -65,7 +54,7 @@ DankListItem {
 
         StyledText {
             visible: row.size >= 0
-            text: row.formatSize(row.size)
+            text: FileFormat.size(row.size)
             color: row.supportingContentColor
             font.pixelSize: Theme.fontSizeSmall
         }
@@ -73,7 +62,7 @@ DankListItem {
         StyledText {
             Layout.preferredWidth: Theme.spacingXL * 6
             horizontalAlignment: Text.AlignRight
-            text: Qt.locale().toString(new Date(row.mtimeMs), Locale.ShortFormat)
+            text: FileFormat.modified(row.mtimeMs)
             color: row.supportingContentColor
             font.pixelSize: Theme.fontSizeSmall
         }

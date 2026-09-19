@@ -1,0 +1,256 @@
+pragma Singleton
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import Quickshell
+import qs.Services
+
+Singleton {
+    id: root
+
+    property var transport: DankFilesService
+
+    readonly property bool connected: transport.connected
+
+    property var jobs: []
+    property var clipboardPaths: []
+    property bool clipboardCut: false
+
+    readonly property int activeCount: jobs.filter(job => job.state !== "done" && job.state !== "failed").length
+    readonly property bool hasClipboard: clipboardPaths.length > 0
+
+    signal requestFailed(string message)
+    signal jobFinished(var job)
+
+    property var _byId: ({})
+    property var _handler: data => root._onEvent(data)
+    property var _subscribed: null
+
+    Component.onCompleted: _attach()
+    onTransportChanged: _attach()
+
+    readonly property Connections _daemonLink: Connections {
+        target: root.transport
+        function onConnectedChanged() {
+            if (root.transport.connected)
+                root.refresh();
+        }
+    }
+
+    function _attach() {
+        if (_subscribed === transport)
+            return;
+        if (_subscribed)
+            _subscribed.unsubscribeTopic("jobs", _handler);
+        _subscribed = transport;
+        transport.subscribeTopic("jobs", _handler);
+    }
+
+    function copy(paths, dest, scope) {
+        _start("files.op.copy", {
+            "paths": paths,
+            "dest": dest,
+            "scope": scope || ""
+        });
+    }
+
+    function move(paths, dest, scope) {
+        _start("files.op.move", {
+            "paths": paths,
+            "dest": dest,
+            "scope": scope || ""
+        });
+    }
+
+    function rename(path, name, scope) {
+        _start("files.op.rename", {
+            "path": path,
+            "name": name,
+            "scope": scope || ""
+        });
+    }
+
+    function newFolder(dir, name, scope) {
+        _start("files.op.newFolder", {
+            "path": dir,
+            "name": name,
+            "scope": scope || ""
+        });
+    }
+
+    function newFile(dir, name, template, scope) {
+        _start("files.op.newFile", {
+            "path": dir,
+            "name": name,
+            "template": template || "",
+            "scope": scope || ""
+        });
+    }
+
+    function link(paths, dest, scope) {
+        _start("files.op.link", {
+            "paths": paths,
+            "dest": dest,
+            "scope": scope || ""
+        });
+    }
+
+    function trash(paths, scope) {
+        _start("files.op.trash", {
+            "paths": paths,
+            "scope": scope || ""
+        });
+    }
+
+    function restore(names, trashDir, scope) {
+        _start("files.op.restore", {
+            "names": names,
+            "trashDir": trashDir,
+            "scope": scope || ""
+        });
+    }
+
+    function deletePermanently(paths) {
+        _start("files.op.delete", {
+            "paths": paths
+        });
+    }
+
+    function emptyTrash() {
+        _start("files.op.emptyTrash", null);
+    }
+
+    function setPermissions(paths, mode, recursive) {
+        _start("files.op.setPermissions", {
+            "paths": paths,
+            "mode": mode,
+            "recursive": recursive === true
+        });
+    }
+
+    function respond(jobId, answerId, action, applyToAll) {
+        _start("files.op.respond", {
+            "jobId": jobId,
+            "id": answerId,
+            "action": action,
+            "applyToAll": applyToAll === true
+        });
+    }
+
+    function cancel(jobId) {
+        _start("files.op.cancel", {
+            "jobId": jobId
+        });
+    }
+
+    function undo(scope) {
+        _start("files.op.undo", {
+            "scope": scope || ""
+        });
+    }
+
+    function refresh() {
+        transport.sendRequest("files.op.jobs", null, response => {
+            if (response.error)
+                return;
+            _byId = ({});
+            for (const job of (response.result || {}).jobs || [])
+                _byId[job.id] = job;
+            _rebuild();
+        });
+    }
+
+    function cut(paths) {
+        clipboardPaths = paths.slice();
+        clipboardCut = true;
+    }
+
+    function copyToClipboard(paths) {
+        clipboardPaths = paths.slice();
+        clipboardCut = false;
+    }
+
+    function paste(dest, scope) {
+        if (clipboardPaths.length === 0)
+            return;
+        if (clipboardCut) {
+            move(clipboardPaths, dest, scope);
+            clipboardPaths = [];
+            clipboardCut = false;
+            return;
+        }
+        copy(clipboardPaths, dest, scope);
+    }
+
+    function _start(method, params) {
+        transport.sendRequest(method, params, response => {
+            if (response.error) {
+                root.requestFailed(response.error);
+                return;
+            }
+            const job = (response.result || {}).job;
+            if (job)
+                root._store(job);
+        });
+    }
+
+    function _onEvent(data) {
+        switch (data.kind) {
+        case "job":
+            _onJob(data.job);
+            return;
+        case "progress":
+            _onProgress(data.jobId, data.progress);
+            return;
+        }
+    }
+
+    function _onJob(job) {
+        if (!job)
+            return;
+        const finished = job.state === "done" || job.state === "failed";
+        _store(job);
+        if (!finished)
+            return;
+        jobFinished(job);
+        _historyTimeout.restart();
+    }
+
+    readonly property Timer _historyTimeout: Timer {
+        interval: 30000
+        onTriggered: root._dropFinished()
+    }
+
+    function _dropFinished() {
+        const live = ({});
+        for (const id in _byId) {
+            const job = _byId[id];
+            if (job.state === "done" || job.state === "failed")
+                continue;
+            live[id] = job;
+        }
+        _byId = live;
+        _rebuild();
+    }
+
+    function _onProgress(jobId, progress) {
+        const job = _byId[jobId];
+        if (!job)
+            return;
+        job.progress = progress;
+        _rebuild();
+    }
+
+    function _store(job) {
+        _byId[job.id] = job;
+        _rebuild();
+    }
+
+    function _rebuild() {
+        const list = [];
+        for (const id in _byId)
+            list.push(_byId[id]);
+        list.sort((a, b) => a.startedMs - b.startedMs);
+        jobs = list;
+    }
+}

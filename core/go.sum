@@ -1,5 +1,5 @@
-github.com/AvengeMedia/dankgo v1.6.1 h1:WMfQ99xF0oKMQPf9rhlGIh5PpHOUhmZHWsz/Wmhmr+s=
-github.com/AvengeMedia/dankgo v1.6.1/go.mod h1:w1W/vDrWJCLdjVI4E/mURiKUQLMCmiGiPLxZEeP5kp8=
+github.com/AvengeMedia/dankgo v1.6.3-0.20260918210430-d03946da44cd h1:8Pa1/uo973yP2TkjBeBEdVY20hwlCfwQMq5D3bFOf7U=
+github.com/AvengeMedia/dankgo v1.6.3-0.20260918210430-d03946da44cd/go.mod h1:H6yEdNZ+JJHpBSpvAEJVfXWKhIrttydVU3s2JLyTvQI=
 github.com/adrg/xdg v0.5.3 h1:xRnxJXne7+oWDatRhR1JLnvuccuIeCoBu2rtuLqQB78=
 github.com/adrg/xdg v0.5.3/go.mod h1:nlTsY+NNiCBGCK2tpm09vRqfVzrc2fLmXGpBLF0zlTQ=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=

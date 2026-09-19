@@ -13,6 +13,7 @@ const (
 	CodeAccess       Code = "EACCES"
 	CodeNotDir       Code = "ENOTDIR"
 	CodeInvalid      Code = "EINVAL"
+	CodeExists       Code = "EEXIST"
 	CodeCrossDevice  Code = "EXDEV"
 	CodeBusy         Code = "EBUSY"
 	CodeIO           Code = "EIO"
@@ -43,19 +44,21 @@ func CodeOf(err error) Code {
 	return CodeIO
 }
 
-func wrap(path string, err error) error {
+func Wrap(path string, err error) error {
 	if err == nil {
 		return nil
 	}
-	return &Error{Code: codeFromOS(err), Path: path, Err: err}
+	return &Error{Code: CodeFromOS(err), Path: path, Err: err}
 }
 
-func codeFromOS(err error) Code {
+func CodeFromOS(err error) Code {
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
 		return CodeNotFound
 	case errors.Is(err, fs.ErrPermission):
 		return CodeAccess
+	case errors.Is(err, fs.ErrExist), errors.Is(err, syscall.ENOTEMPTY):
+		return CodeExists
 	case errors.Is(err, syscall.ENOTDIR):
 		return CodeNotDir
 	case errors.Is(err, syscall.EXDEV):

@@ -1,0 +1,189 @@
+package fileops
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+)
+
+func undo(t *testing.T, m *Manager, bus *testBus, scope string) View {
+	t.Helper()
+	view, err := m.Undo(scope)
+	require.NoError(t, err)
+	return bus.wait(t, view.ID)
+}
+
+func TestUndoMovePutsFilesBack(t *testing.T) {
+	root := t.TempDir()
+	src := write(t, filepath.Join(root, "src", "a.txt"), "a")
+	dest := filepath.Join(root, "dest")
+	require.NoError(t, os.Mkdir(dest, 0o755))
+
+	manager, bus := newHarness(t)
+	run(t, manager, bus, spec{kind: KindMove, scope: "w1", sources: []string{src}, dest: dest})
+	require.NoFileExists(t, src)
+
+	view := undo(t, manager, bus, "w1")
+	require.Equal(t, StateDone, view.State)
+	require.Equal(t, "a", read(t, src))
+	require.NoFileExists(t, filepath.Join(dest, "a.txt"))
+}
+
+func TestUndoCopyDeletesTheCopies(t *testing.T) {
+	root := t.TempDir()
+	src := write(t, filepath.Join(root, "src", "a.txt"), "a")
+	dest := filepath.Join(root, "dest")
+	require.NoError(t, os.Mkdir(dest, 0o755))
+
+	manager, bus := newHarness(t)
+	run(t, manager, bus, spec{kind: KindCopy, scope: "w1", sources: []string{src}, dest: dest})
+
+	view := undo(t, manager, bus, "w1")
+	require.Equal(t, StateDone, view.State)
+	require.NoFileExists(t, filepath.Join(dest, "a.txt"))
+	require.Equal(t, "a", read(t, src))
+}
+
+func TestUndoTrashRestores(t *testing.T) {
+	trashHome(t)
+	root := t.TempDir()
+	src := write(t, filepath.Join(root, "a.txt"), "a")
+
+	manager, bus := newHarness(t)
+	run(t, manager, bus, spec{kind: KindTrash, scope: "w1", sources: []string{src}})
+	require.NoFileExists(t, src)
+
+	view := undo(t, manager, bus, "w1")
+	require.Equal(t, StateDone, view.State)
+	require.Equal(t, "a", read(t, src))
+}
+
+func TestUndoStopsWhenTargetChanged(t *testing.T) {
+	root := t.TempDir()
+	src := write(t, filepath.Join(root, "src", "a.txt"), "a")
+	dest := filepath.Join(root, "dest")
+	require.NoError(t, os.Mkdir(dest, 0o755))
+
+	manager, bus := newHarness(t)
+	run(t, manager, bus, spec{kind: KindMove, scope: "w1", sources: []string{src}, dest: dest})
+
+	moved := filepath.Join(dest, "a.txt")
+	write(t, moved, "edited since the move")
+	require.NoError(t, os.Chtimes(moved, time.Now().Add(time.Hour), time.Now().Add(time.Hour)))
+
+	view := undo(t, manager, bus, "w1")
+	require.Equal(t, StateFailed, view.State)
+	require.Contains(t, view.Error, "changed since")
+	require.Equal(t, "edited since the move", read(t, moved))
+	require.NoFileExists(t, src)
+}
+
+func TestUndoIsPerScopeAndEmptiesOut(t *testing.T) {
+	root := t.TempDir()
+	src := write(t, filepath.Join(root, "src", "a.txt"), "a")
+	dest := filepath.Join(root, "dest")
+	require.NoError(t, os.Mkdir(dest, 0o755))
+
+	manager, bus := newHarness(t)
+	run(t, manager, bus, spec{kind: KindMove, scope: "w1", sources: []string{src}, dest: dest})
+
+	_, err := manager.Undo("w2")
+	require.Error(t, err)
+
+	undo(t, manager, bus, "w1")
+	_, err = manager.Undo("w1")
+	require.Error(t, err)
+}
+
+func TestUndoOfAnUndoIsNotStacked(t *testing.T) {
+	root := t.TempDir()
+	src := write(t, filepath.Join(root, "src", "a.txt"), "a")
+	dest := filepath.Join(root, "dest")
+	require.NoError(t, os.Mkdir(dest, 0o755))
+
+	manager, bus := newHarness(t)
+	run(t, manager, bus, spec{kind: KindMove, scope: "w1", sources: []string{src}, dest: dest})
+	undo(t, manager, bus, "w1")
+
+	_, err := manager.Undo("w1")
+	require.Error(t, err)
+}
+
+func TestNewFolderRenameLinkAndPermissions(t *testing.T) {
+	root := t.TempDir()
+	manager, bus := newHarness(t)
+
+	run(t, manager, bus, spec{kind: KindNewFolder, scope: "w1", dest: root, name: "Fresh"})
+	require.DirExists(t, filepath.Join(root, "Fresh"))
+
+	run(t, manager, bus, spec{kind: KindNewFile, scope: "w1", dest: root, name: "note.txt"})
+	require.FileExists(t, filepath.Join(root, "note.txt"))
+
+	run(t, manager, bus, spec{kind: KindRename, scope: "w1", sources: []string{filepath.Join(root, "note.txt")}, name: "renamed.txt"})
+	require.FileExists(t, filepath.Join(root, "renamed.txt"))
+	require.NoFileExists(t, filepath.Join(root, "note.txt"))
+
+	undo(t, manager, bus, "w1")
+	require.FileExists(t, filepath.Join(root, "note.txt"))
+
+	run(t, manager, bus, spec{kind: KindLink, sources: []string{filepath.Join(root, "note.txt")}, dest: filepath.Join(root, "Fresh")})
+	target, err := os.Readlink(filepath.Join(root, "Fresh", "note.txt"))
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(root, "note.txt"), target)
+
+	run(t, manager, bus, spec{kind: KindSetPermissions, sources: []string{filepath.Join(root, "note.txt")}, mode: 0o600})
+	info, err := os.Lstat(filepath.Join(root, "note.txt"))
+	require.NoError(t, err)
+	require.Equal(t, os.FileMode(0o600), info.Mode().Perm())
+}
+
+func TestNewFileFromTemplate(t *testing.T) {
+	root := t.TempDir()
+	template := write(t, filepath.Join(root, "templates", "Sheet.csv"), "a,b\n")
+
+	manager, bus := newHarness(t)
+	view := run(t, manager, bus, spec{kind: KindNewFile, dest: root, name: "Budget.csv", template: template})
+
+	require.Equal(t, StateDone, view.State)
+	require.Equal(t, "a,b\n", read(t, filepath.Join(root, "Budget.csv")))
+}
+
+func TestRenameRefusesAnExistingName(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "a.txt"), "a")
+	write(t, filepath.Join(root, "b.txt"), "b")
+
+	manager, bus := newHarness(t)
+	view := run(t, manager, bus, spec{kind: KindRename, sources: []string{filepath.Join(root, "a.txt")}, name: "b.txt"})
+
+	require.Equal(t, StateFailed, view.State)
+	require.Equal(t, "b", read(t, filepath.Join(root, "b.txt")))
+}
+
+func TestPermanentDeleteRemovesTrees(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "dir", "a.txt"), "a")
+
+	manager, bus := newHarness(t)
+	view := run(t, manager, bus, spec{kind: KindDelete, scope: "w1", sources: []string{filepath.Join(root, "dir")}})
+
+	require.Equal(t, StateDone, view.State)
+	require.NoDirExists(t, filepath.Join(root, "dir"))
+
+	_, err := manager.Undo("w1")
+	require.Error(t, err, "permanent delete is not undoable")
+}
+
+func TestNewFileRefusesAnExistingName(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "a.txt"), "keep")
+
+	manager, bus := newHarness(t)
+	view := run(t, manager, bus, spec{kind: KindNewFile, dest: root, name: "a.txt"})
+
+	require.Equal(t, StateFailed, view.State)
+	require.Equal(t, "keep", read(t, filepath.Join(root, "a.txt")))
+}
