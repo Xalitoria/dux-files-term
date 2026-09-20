@@ -1,0 +1,13 @@
+# mini shared-mime-info fixture, not the host database
+80:text/x-changelog:ChangeLog
+60:application/x-compressed-tar:*.tar.gz
+50:application/gzip:*.gz
+50:image/png:*.png
+50:image/jpeg:*.jpg
+50:text/plain:*.txt
+50:text/markdown:*.md
+50:application/x-desktop:*.desktop
+50:application/x-shellscript:*.sh
+50:text/x-csrc:*.[ch]
+50:text/x-makefile:makefile
+50:application/x-cd-image:*.iso:cs

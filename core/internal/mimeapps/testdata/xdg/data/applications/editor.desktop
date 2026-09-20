@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Editor
+Name[de]=Bearbeiter
+Name[de_AT]=Schreibtisch
+GenericName=Text Editor
+Comment=Edit text files
+Exec=sh -c "true" %F
+Icon=accessories-text-editor
+MimeType=text/plain;text/markdown;

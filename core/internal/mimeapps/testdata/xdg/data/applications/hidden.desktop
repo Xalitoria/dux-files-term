@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Hidden
+Hidden=true
+Exec=sh -c "true" %f
+MimeType=image/png;

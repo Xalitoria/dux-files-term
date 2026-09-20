@@ -92,7 +92,7 @@ func TestRouteFilesList(t *testing.T) {
 	root := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(root, "x"), nil, 0o644))
 
-	out := routeAndRead(t, Request{ID: 3, Method: "files.list", Params: map[string]any{"path": root}}, Deps{Files: files.NewService(nil, t.TempDir())})
+	out := routeAndRead(t, Request{ID: 3, Method: "files.list", Params: map[string]any{"path": root}}, Deps{Files: files.NewService(nil, t.TempDir(), nil)})
 
 	result, ok := out["result"].(map[string]any)
 	require.True(t, ok)

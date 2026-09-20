@@ -6,11 +6,21 @@ import (
 	"strings"
 )
 
-// MimeResolver is the seam plan 04 replaces with a shared-mime-info backed
-// implementation; FromName must not touch the disk.
+// MimeResolver types an entry. FromName must not touch the disk.
 type MimeResolver interface {
 	FromName(name string) string
 	Sniff(path string) string
+}
+
+// IconResolver adds the shared-mime-info icon tables to the ladder; a
+// resolver that does not implement it falls back to the naming convention.
+type IconResolver interface {
+	MimeIcon(mimeType string) (specific, generic string)
+}
+
+// DesktopResolver reads the Name and Icon of a trusted desktop file.
+type DesktopResolver interface {
+	DesktopDisplay(path string, trusted bool) (name, icon string, ok bool)
 }
 
 type extensionResolver struct{}
@@ -65,6 +75,10 @@ func needsSniff(mimeType string) bool {
 		return false
 	}
 }
+
+// needsDesktop reports entries whose display name comes from the desktop file
+// itself, which only trusted ones get.
+func needsDesktop(e Entry) bool { return e.Mime == MimeDesktop && e.Executable }
 
 func mediaType(mimeType string) string {
 	cut := strings.IndexByte(mimeType, '/')

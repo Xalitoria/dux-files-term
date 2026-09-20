@@ -1,0 +1,296 @@
+package mimeapps
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+	"sync"
+)
+
+const (
+	groupDefaults = "Default Applications"
+	groupAdded    = "Added Associations"
+	groupRemoved  = "Removed Associations"
+	groupCache    = "MIME Cache"
+)
+
+type assocFile struct {
+	path     string
+	defaults map[string][]string
+	added    map[string][]string
+	removed  map[string][]string
+}
+
+// assocPaths is the mime-apps lookup order, highest precedence first. Each
+// directory contributes one $desktop-mimeapps.list per $XDG_CURRENT_DESKTOP
+// entry before its plain mimeapps.list.
+func assocPaths() []string {
+	desktops := currentDesktops()
+	var paths []string
+
+	add := func(dir string) {
+		for _, desktop := range desktops {
+			paths = append(paths, filepath.Join(dir, desktop+"-mimeapps.list"))
+		}
+		paths = append(paths, filepath.Join(dir, "mimeapps.list"))
+	}
+
+	add(xdgConfigHome())
+	for _, dir := range xdgConfigDirs() {
+		add(dir)
+	}
+	add(filepath.Join(xdgDataHome(), "applications"))
+	for _, dir := range xdgDataDirs() {
+		add(filepath.Join(dir, "applications"))
+	}
+	return paths
+}
+
+func currentDesktops() []string {
+	raw := os.Getenv("XDG_CURRENT_DESKTOP")
+	if raw == "" {
+		return nil
+	}
+	var out []string
+	for _, name := range strings.Split(raw, ":") {
+		if name = strings.ToLower(strings.TrimSpace(name)); name != "" {
+			out = append(out, name)
+		}
+	}
+	return out
+}
+
+func writePath() string { return filepath.Join(xdgConfigHome(), "mimeapps.list") }
+
+func loadAssocFiles() []assocFile {
+	var files []assocFile
+	for _, path := range assocPaths() {
+		groups := readGroups(path)
+		if groups == nil {
+			continue
+		}
+		files = append(files, assocFile{
+			path:     path,
+			defaults: listGroup(groups[groupDefaults]),
+			added:    listGroup(groups[groupAdded]),
+			removed:  listGroup(groups[groupRemoved]),
+		})
+	}
+	return files
+}
+
+func listGroup(g *iniGroup) map[string][]string {
+	out := map[string][]string{}
+	if g == nil {
+		return out
+	}
+	for key, value := range g.keys {
+		out[key] = splitList(value)
+	}
+	return out
+}
+
+func loadMimeinfoCaches() map[string][]string {
+	out := map[string][]string{}
+	for _, dir := range ApplicationDirs() {
+		groups := readGroups(filepath.Join(dir, "mimeinfo.cache"))
+		if groups[groupCache] == nil {
+			continue
+		}
+		for mimeType, value := range groups[groupCache].keys {
+			out[mimeType] = append(out[mimeType], splitList(value)...)
+		}
+	}
+	return out
+}
+
+// Default resolves the preferred desktop id for a mime type, skipping entries
+// whose desktop file is missing or not launchable here.
+func (s *Service) Default(mimeType string) string {
+	candidates := s.Associations(mimeType)
+	if len(candidates) == 0 {
+		return ""
+	}
+	return candidates[0].ID
+}
+
+func removedBefore(files []assocFile, mimeType, id string) bool {
+	for _, file := range files {
+		if slices.Contains(file.removed[mimeType], id) {
+			return true
+		}
+	}
+	return false
+}
+
+// Associations lists every launchable handler for a mime type, most preferred
+// first. The type is resolved before its ancestors, so an exact registration
+// beats a parent type's default, which is the order gio produces.
+func (s *Service) Associations(mimeType string) []*Entry {
+	files := loadAssocFiles()
+	cache := loadMimeinfoCaches()
+
+	seen := map[string]bool{}
+	var out []*Entry
+
+	add := func(m, id string, blockers []assocFile) {
+		if id == "" || seen[id] || removedBefore(blockers, m, id) {
+			return
+		}
+		entry := s.entries.byIdentifier(id)
+		if !entry.Launchable() {
+			return
+		}
+		seen[id] = true
+		out = append(out, entry)
+	}
+
+	for _, m := range s.detector.db.Chain(mimeType) {
+		for i, file := range files {
+			for _, id := range file.defaults[m] {
+				add(m, id, files[:i])
+			}
+			for _, id := range file.added[m] {
+				add(m, id, files[:i])
+			}
+		}
+		for _, id := range cache[m] {
+			add(m, id, files)
+		}
+		for _, entry := range s.entries.all() {
+			if entry.Hidden || !claimsMime(entry, m, s.detector.db) {
+				continue
+			}
+			add(m, entry.ID, files)
+		}
+	}
+	return out
+}
+
+func claimsMime(entry *Entry, mimeType string, db *DB) bool {
+	for _, claimed := range entry.MimeTypes {
+		if db.Canonical(claimed) == mimeType {
+			return true
+		}
+	}
+	return false
+}
+
+var writeMu sync.Mutex
+
+// SetDefault makes desktopID the default for a mime type, rewriting only the
+// Default Applications group of the user's mimeapps.list.
+func (s *Service) SetDefault(mimeType, desktopID string) error {
+	if !safeIniField(mimeType) || !safeIniField(desktopID) {
+		return fmt.Errorf("invalid mime type or desktop id")
+	}
+	if !s.entries.byIdentifier(desktopID).Launchable() {
+		return fmt.Errorf("desktop entry %q is not launchable", desktopID)
+	}
+
+	writeMu.Lock()
+	defer writeMu.Unlock()
+
+	path := writePath()
+	original, _ := os.ReadFile(path)
+	updated := setDefaultLine(original, s.detector.db.Canonical(mimeType), desktopID)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	return atomicWrite(path, updated)
+}
+
+func safeIniField(s string) bool {
+	return s != "" && !strings.ContainsAny(s, "\n\r[]=")
+}
+
+// setDefaultLine replaces the key inside [Default Applications], leaving every
+// other line of the file byte for byte as it was.
+func setDefaultLine(original []byte, mimeType, desktopID string) []byte {
+	line := mimeType + "=" + desktopID
+	lines := strings.Split(strings.TrimRight(string(original), "\n"), "\n")
+	if len(lines) == 1 && lines[0] == "" {
+		lines = nil
+	}
+
+	start, end := -1, -1
+	for i, raw := range lines {
+		trimmed := strings.TrimSpace(raw)
+		if !strings.HasPrefix(trimmed, "[") || !strings.HasSuffix(trimmed, "]") {
+			continue
+		}
+		if trimmed == "["+groupDefaults+"]" {
+			start = i
+			continue
+		}
+		if start >= 0 && end < 0 {
+			end = i
+		}
+	}
+
+	if start < 0 {
+		if len(lines) > 0 {
+			lines = append(lines, "")
+		}
+		return joinLines(append(lines, "["+groupDefaults+"]", line))
+	}
+	if end < 0 {
+		end = len(lines)
+	}
+
+	for i := start + 1; i < end; i++ {
+		if strings.HasPrefix(strings.TrimSpace(lines[i]), mimeType+"=") {
+			lines[i] = line
+			return joinLines(lines)
+		}
+	}
+
+	insert := end
+	for insert > start+1 && strings.TrimSpace(lines[insert-1]) == "" {
+		insert--
+	}
+	return joinLines(slices.Insert(lines, insert, line))
+}
+
+func joinLines(lines []string) []byte {
+	return []byte(strings.Join(lines, "\n") + "\n")
+}
+
+func atomicWrite(path string, data []byte) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".mimeapps-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmp.Name())
+
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), path)
+}
+
+// writableConfig probes whether mimeapps.list can be written here, which a
+// sandbox without a config grant cannot do.
+func writableConfig() bool {
+	path := writePath()
+	if f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
+		f.Close()
+		return true
+	}
+	probe, err := os.CreateTemp(filepath.Dir(path), ".mimeapps-probe-*")
+	if err != nil {
+		return false
+	}
+	probe.Close()
+	os.Remove(probe.Name())
+	return true
+}

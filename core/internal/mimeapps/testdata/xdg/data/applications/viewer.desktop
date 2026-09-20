@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Viewer
+Exec=sh -c "true" %f
+Icon=image-viewer
+MimeType=image/png;image/jpeg;

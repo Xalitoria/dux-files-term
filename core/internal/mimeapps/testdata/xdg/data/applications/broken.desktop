@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Broken
+TryExec=dfiles-definitely-not-installed
+Exec=dfiles-definitely-not-installed %f
+MimeType=text/plain;image/png;

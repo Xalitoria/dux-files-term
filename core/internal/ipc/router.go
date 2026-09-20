@@ -3,6 +3,8 @@ package ipc
 import (
 	"context"
 	"strings"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 )
 
 func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
@@ -16,6 +18,12 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	}
 
 	switch {
+	case mimeapps.Handles(req.Method):
+		if deps.Apps == nil {
+			RespondError(w, req.ID, "application service unavailable")
+			return
+		}
+		deps.Apps.Handle(ctx, w, req)
 	case strings.HasPrefix(req.Method, "files.op."):
 		if deps.FileOps == nil {
 			RespondError(w, req.ID, "file operations unavailable")

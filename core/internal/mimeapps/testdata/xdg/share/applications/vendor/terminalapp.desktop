@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Terminal App
+Terminal=true
+Exec=sh -c "true" %f
+MimeType=text/x-csrc;

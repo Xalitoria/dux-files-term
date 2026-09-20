@@ -56,6 +56,15 @@ var Methods = []MethodSpec{
 	{Name: "files.op.jobs", Group: "files.op", Desc: "List running, queued and recently finished jobs"},
 	{Name: "files.op.undo", Group: "files.op", Desc: "Undo the last undoable operation in a scope", Params: []ParamSpec{opt("scope", "undo stack key, one per window")}},
 
+	{Name: "files.open", Group: "files.apps", Desc: "Open paths with their default application", Params: []ParamSpec{req("paths", "absolute paths"), opt("cwd", "working directory for the launched app"), opt("activationToken", "xdg activation token from the compositor"), opt("terminal", "terminal to use for Terminal=true entries")}},
+	{Name: "files.openWith", Group: "files.apps", Desc: "Open paths with a named application", Params: []ParamSpec{req("paths", "absolute paths"), req("desktopId", "desktop entry id, for example org.gnome.gedit.desktop"), opt("cwd", "working directory for the launched app"), opt("activationToken", "xdg activation token from the compositor")}},
+	{Name: "files.run", Group: "files.apps", Desc: "Run an executable file or a trusted desktop entry", Params: []ParamSpec{req("path", "absolute path"), opt("cwd", "working directory"), opt("activationToken", "xdg activation token from the compositor")}},
+	{Name: "files.openTerminal", Group: "files.apps", Desc: "Open a terminal in a directory", Params: []ParamSpec{req("path", "absolute directory path"), opt("terminal", "terminal command, defaults to $TERMINAL then autodetection")}},
+	{Name: "files.apps.forMime", Group: "files.apps", Desc: "Applications that handle a mime type, most preferred first", Params: []ParamSpec{opt("mime", "mime type"), opt("path", "absolute path to type instead")}},
+	{Name: "files.apps.all", Group: "files.apps", Desc: "Every launchable application, for the Other application picker"},
+	{Name: "files.apps.setDefault", Group: "files.apps", Desc: "Set the default application for a mime type", Params: []ParamSpec{req("mime", "mime type"), req("desktopId", "desktop entry id")}},
+	{Name: "files.apps.terminals", Group: "files.apps", Desc: "Terminal emulators installed on this system"},
+
 	{Name: "system.colorScheme.get", Group: "system", Desc: "Current portal color scheme (0 no-preference, 1 dark, 2 light)"},
 	{Name: "system.openUri", Group: "system", Desc: "Open a URI with the default handler", Params: []ParamSpec{req("uri", "")}},
 }

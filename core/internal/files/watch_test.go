@@ -73,7 +73,7 @@ func (f *fakeNotifier) Close() error {
 
 func newTestService(t *testing.T) *Service {
 	t.Helper()
-	svc := NewService(&fakeBus{}, t.TempDir())
+	svc := NewService(&fakeBus{}, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 	return svc
 }
@@ -81,7 +81,7 @@ func newTestService(t *testing.T) *Service {
 func newWatchedDir(t *testing.T) (*Service, *fakeBus, string, *watch) {
 	t.Helper()
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()
@@ -131,7 +131,7 @@ func TestWatchRenameIsRemoveAndAdd(t *testing.T) {
 
 func TestWatchBatchCarriesInsertIndex(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()
@@ -154,7 +154,7 @@ func TestWatchBatchCarriesInsertIndex(t *testing.T) {
 
 func TestWatchReportsAMoveAsRemoveAndAdd(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()
@@ -205,7 +205,7 @@ func TestWatchHidesHiddenEntriesUntilRequested(t *testing.T) {
 
 func TestWatchResyncOnOverflow(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	fake := newFakeNotifier()
@@ -226,7 +226,7 @@ func TestWatchResyncOnOverflow(t *testing.T) {
 
 func TestWatchGoneWhenDirectoryDisappears(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := filepath.Join(t.TempDir(), "doomed")
@@ -260,7 +260,7 @@ func TestWatchClosesWithItsConnection(t *testing.T) {
 
 func TestWatchBuffersEventsUntilSubscribed(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()
@@ -278,7 +278,7 @@ func TestWatchBuffersEventsUntilSubscribed(t *testing.T) {
 
 func TestWatchDropsOverflowingBufferForOneResync(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()

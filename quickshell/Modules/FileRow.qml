@@ -18,6 +18,9 @@ DankListItem {
     required property string iconName
     required property string thumbnail
     required property string mime
+    required property string displayName
+    required property bool untrusted
+    required property bool isExecutable
 
     width: listView?.width ?? 0
     isSelected: (listView?.currentIndex ?? -1) === index
@@ -39,10 +42,17 @@ DankListItem {
 
         StyledText {
             Layout.fillWidth: true
-            text: row.name
+            text: row.displayName !== "" ? row.displayName : row.name
             color: row.contentColor
             font.pixelSize: Theme.fontSizeMedium
             elide: Text.ElideMiddle
+        }
+
+        DankIcon {
+            visible: row.untrusted
+            name: "warning"
+            size: Theme.fontSizeSmall
+            color: Theme.error
         }
 
         DankIcon {

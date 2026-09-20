@@ -14,8 +14,8 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
+	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 	"github.com/AvengeMedia/dankfiles/core/internal/paths"
-	"github.com/AvengeMedia/dankfiles/core/internal/uriopen"
 	"github.com/AvengeMedia/dankgo/log"
 )
 
@@ -53,7 +53,8 @@ func (s *daemonServices) Close() {
 func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 	bus := ipc.NewEventBus()
 
-	fileService := files.NewService(bus, cacheHome())
+	appService := mimeapps.NewService()
+	fileService := files.NewService(bus, cacheHome(), appService.Detector())
 	opsManager := fileops.NewManager(bus, fileService)
 
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
@@ -66,9 +67,9 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		Pending:     &ipc.PendingOpen{},
 		Version:     Version,
 		ColorScheme: colorSchemeWatcher,
-		Opener:      uriopen.Opener{},
 		Files:       fileService,
 		FileOps:     opsManager,
+		Apps:        appService,
 	}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {

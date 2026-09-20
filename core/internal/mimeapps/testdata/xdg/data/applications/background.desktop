@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Background Handler
+NoDisplay=true
+Exec=sh -c "true" %f
+MimeType=text/markdown;

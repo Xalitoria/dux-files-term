@@ -10,6 +10,7 @@ const genericIcon = "text-x-generic"
 type iconIndex struct {
 	once     sync.Once
 	userDirs map[string]string
+	mimeIcon func(mimeType string) (specific, generic string)
 }
 
 func (i *iconIndex) dirs() map[string]string {
@@ -30,7 +31,28 @@ func (i *iconIndex) ladder(e Entry) []string {
 	case e.SymlinkBroken:
 		return []string{"inode-symlink", "emblem-unreadable", genericIcon}
 	}
-	return mimeLadder(e.Mime, e.Executable)
+	return i.decorate(mimeLadder(e.Mime, e.Executable), e.Mime)
+}
+
+// decorate puts the database's own icon name first and its generic icon
+// before the naming-convention fallbacks.
+func (i *iconIndex) decorate(ladder []string, mimeType string) []string {
+	if i.mimeIcon == nil || mimeType == "" {
+		return ladder
+	}
+	specific, generic := i.mimeIcon(mimeType)
+	if specific != "" {
+		ladder = append([]string{specific}, ladder...)
+	}
+	if generic == "" {
+		return ladder
+	}
+	for cut, name := range ladder {
+		if strings.HasSuffix(name, "-x-generic") {
+			return append(append(append([]string{}, ladder[:cut]...), generic), ladder[cut:]...)
+		}
+	}
+	return append(ladder, generic)
 }
 
 func (i *iconIndex) folderLadder(path string) []string {

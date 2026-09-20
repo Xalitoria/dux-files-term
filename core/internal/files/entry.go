@@ -10,6 +10,7 @@ import (
 const (
 	MimeDirectory = "inode/directory"
 	MimeSymlink   = "inode/symlink"
+	MimeDesktop   = "application/x-desktop"
 )
 
 type Entry struct {
@@ -33,6 +34,8 @@ type Entry struct {
 	Thumbnail     string `json:"thumbnail"`
 	Thumbnailable bool   `json:"thumbnailable"`
 	Unreadable    bool   `json:"unreadable"`
+	DisplayName   string `json:"displayName"`
+	Untrusted     bool   `json:"untrusted"`
 
 	nameKey []byte
 }
@@ -97,6 +100,7 @@ func (b *builder) fill(e *Entry, info fs.FileInfo, full string) {
 	if e.Mime == "" {
 		e.Mime = b.mime.FromName(e.Name)
 	}
+	e.Untrusted = e.Mime == MimeDesktop && !e.Executable
 	e.Thumbnailable = b.supports(e.Mime)
 	e.IconName = b.icons.best(*e)
 	e.nameKey = b.keys.key(e.Name)

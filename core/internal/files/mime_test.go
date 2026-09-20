@@ -78,7 +78,7 @@ func TestFolderIconsFollowUserDirs(t *testing.T) {
 
 func TestWatchEnrichesMimeAfterSnapshot(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()

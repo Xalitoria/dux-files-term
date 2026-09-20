@@ -26,6 +26,7 @@ type Page struct {
 
 type builder struct {
 	mime     MimeResolver
+	desktop  DesktopResolver
 	owners   *ownerCache
 	icons    *iconIndex
 	keys     *nameKeys
@@ -39,7 +40,30 @@ func newBuilder(resolver MimeResolver, supports func(string) bool) *builder {
 	if supports == nil {
 		supports = func(string) bool { return false }
 	}
-	return &builder{mime: resolver, owners: newOwnerCache(), icons: &iconIndex{}, keys: newNameKeys(), supports: supports}
+
+	b := &builder{mime: resolver, owners: newOwnerCache(), icons: &iconIndex{}, keys: newNameKeys(), supports: supports}
+	if icons, ok := resolver.(IconResolver); ok {
+		b.icons.mimeIcon = icons.MimeIcon
+	}
+	if desktop, ok := resolver.(DesktopResolver); ok {
+		b.desktop = desktop
+	}
+	return b
+}
+
+// display fills in the name and icon a trusted desktop file is listed under.
+func (b *builder) display(e *Entry) {
+	if b.desktop == nil || !needsDesktop(*e) {
+		return
+	}
+	name, icon, ok := b.desktop.DesktopDisplay(e.Path, true)
+	if !ok {
+		return
+	}
+	e.DisplayName = name
+	if icon != "" {
+		e.IconName = icon
+	}
 }
 
 func (b *builder) readDir(dir string) ([]Entry, error) {

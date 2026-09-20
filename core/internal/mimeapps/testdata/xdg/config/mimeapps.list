@@ -1,0 +1,9 @@
+[Default Applications]
+text/plain=ghost.desktop;editor.desktop;
+image/png=viewer.desktop
+
+[Added Associations]
+text/markdown=editor.desktop;viewer.desktop;
+
+[Removed Associations]
+image/png=system-viewer.desktop;

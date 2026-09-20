@@ -28,11 +28,11 @@ type Service struct {
 	nextID  int
 }
 
-func NewService(bus Publisher, cacheHome string) *Service {
+func NewService(bus Publisher, cacheHome string, resolver MimeResolver) *Service {
 	thumbs := NewThumbs(cacheHome)
 	return &Service{
 		bus:         bus,
-		builder:     newBuilder(nil, thumbs.Supports),
+		builder:     newBuilder(resolver, thumbs.Supports),
 		pool:        newPool(min(4, runtime.NumCPU())),
 		thumbs:      thumbs,
 		counts:      newCountCache(),
@@ -127,6 +127,7 @@ func (s *Service) Stat(path string) (Entry, error) {
 		entry.Thumbnail, _ = s.thumbs.Lookup(entry.Path, entry.MtimeMs, "normal")
 	}
 	entry.IconName = s.builder.icons.best(entry)
+	s.builder.display(&entry)
 	return entry, nil
 }
 

@@ -2,7 +2,7 @@ package ipc
 
 import "context"
 
-func HandleSystem(_ context.Context, w *ConnWriter, req Request, deps Deps) {
+func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	switch req.Method {
 	case "system.colorScheme.get":
 		if deps.ColorScheme == nil {
@@ -11,7 +11,7 @@ func HandleSystem(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 		}
 		Respond(w, req.ID, deps.ColorScheme.State())
 	case "system.openUri":
-		if deps.Opener == nil {
+		if deps.Apps == nil {
 			RespondError(w, req.ID, "uri opener unavailable")
 			return
 		}
@@ -20,7 +20,7 @@ func HandleSystem(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 			RespondError(w, req.ID, "uri is required")
 			return
 		}
-		if err := deps.Opener.OpenURI(uri); err != nil {
+		if err := deps.Apps.OpenURI(ctx, uri); err != nil {
 			RespondError(w, req.ID, err.Error())
 			return
 		}

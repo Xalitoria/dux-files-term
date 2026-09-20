@@ -31,7 +31,7 @@ func writeTestPNG(t *testing.T, path string, width, height int) {
 
 func TestThumbnailWriteAndRead(t *testing.T) {
 	cache := t.TempDir()
-	svc := NewService(&fakeBus{}, cache)
+	svc := NewService(&fakeBus{}, cache, nil)
 	t.Cleanup(svc.Close)
 
 	source := filepath.Join(t.TempDir(), "photo.png")
@@ -76,7 +76,7 @@ func TestThumbnailWriteAndRead(t *testing.T) {
 }
 
 func TestThumbnailSmallerThanBoundIsNotUpscaled(t *testing.T) {
-	svc := NewService(&fakeBus{}, t.TempDir())
+	svc := NewService(&fakeBus{}, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	source := filepath.Join(t.TempDir(), "tiny.png")
@@ -96,7 +96,7 @@ func TestThumbnailSmallerThanBoundIsNotUpscaled(t *testing.T) {
 }
 
 func TestThumbnailFailureLeavesMarker(t *testing.T) {
-	svc := NewService(&fakeBus{}, t.TempDir())
+	svc := NewService(&fakeBus{}, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	source := filepath.Join(t.TempDir(), "broken.png")
@@ -116,7 +116,7 @@ func TestThumbnailFailureLeavesMarker(t *testing.T) {
 }
 
 func TestThumbnailRejectsOversizeImages(t *testing.T) {
-	svc := NewService(&fakeBus{}, t.TempDir())
+	svc := NewService(&fakeBus{}, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	source := filepath.Join(t.TempDir(), "huge.png")
@@ -130,7 +130,7 @@ func TestThumbnailRejectsOversizeImages(t *testing.T) {
 }
 
 func TestThumbnailSupportFollowsHostTools(t *testing.T) {
-	svc := NewService(&fakeBus{}, t.TempDir())
+	svc := NewService(&fakeBus{}, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	assert.True(t, svc.thumbs.Supports("image/jpeg"))
@@ -142,7 +142,7 @@ func TestThumbnailSupportFollowsHostTools(t *testing.T) {
 }
 
 func TestSnapshotMarksThumbnailableFromExtension(t *testing.T) {
-	svc := NewService(&fakeBus{}, t.TempDir())
+	svc := NewService(&fakeBus{}, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()
@@ -157,7 +157,7 @@ func TestSnapshotMarksThumbnailableFromExtension(t *testing.T) {
 
 func TestHandleThumbnailServesCacheAndStreamsLateResults(t *testing.T) {
 	bus := &fakeBus{}
-	svc := NewService(bus, t.TempDir())
+	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	root := t.TempDir()
@@ -191,7 +191,7 @@ func TestHandleThumbnailServesCacheAndStreamsLateResults(t *testing.T) {
 }
 
 func TestHandleThumbnailWithoutWatchGeneratesInline(t *testing.T) {
-	svc := NewService(&fakeBus{}, t.TempDir())
+	svc := NewService(&fakeBus{}, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
 	source := filepath.Join(t.TempDir(), "photo.png")

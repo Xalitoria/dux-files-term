@@ -6,9 +6,21 @@
     "comment": "file conflict dialog explanation"
   },
   {
+    "term": "%1 can be run as a program. Open it in an editor instead to read it first.",
+    "context": "%1 can be run as a program. Open it in an editor instead to read it first.",
+    "reference": "Modules/ExecutableDialog.qml:23",
+    "comment": "executable file dialog explanation"
+  },
+  {
+    "term": "%1 has not been marked as trusted. Running it allows it to start any program.",
+    "context": "%1 has not been marked as trusted. Running it allows it to start any program.",
+    "reference": "Modules/MainWindow.qml:472",
+    "comment": "untrusted desktop file dialog explanation"
+  },
+  {
     "term": "%1 will be deleted permanently. This cannot be undone.",
     "context": "%1 will be deleted permanently. This cannot be undone.",
-    "reference": "Modules/MainWindow.qml:306",
+    "reference": "Modules/MainWindow.qml:514",
     "comment": "permanent delete confirmation explanation"
   },
   {
@@ -16,6 +28,12 @@
     "context": "Already here",
     "reference": "Modules/ConflictDialog.qml:43",
     "comment": "file conflict dialog label for the existing item"
+  },
+  {
+    "term": "Always use this application",
+    "context": "Always use this application",
+    "reference": "Modules/OpenWithDialog.qml:88",
+    "comment": "open with dialog option that sets the default"
   },
   {
     "term": "B",
@@ -32,7 +50,7 @@
   {
     "term": "Cancel",
     "context": "Cancel",
-    "reference": "Modules/ConfirmDialog.qml:25, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:54, Modules/ConflictDialog.qml:63",
+    "reference": "Modules/OpenWithDialog.qml:95, Modules/ConfirmDialog.qml:25, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:54, Modules/ExecutableDialog.qml:31, Modules/ConflictDialog.qml:63",
     "comment": "dialog button to cancel"
   },
   {
@@ -44,7 +62,7 @@
   {
     "term": "Copied",
     "context": "Copied",
-    "reference": "Modules/MainWindow.qml:80",
+    "reference": "Modules/MainWindow.qml:140",
     "comment": "toast after copying files"
   },
   {
@@ -56,13 +74,13 @@
   {
     "term": "Create",
     "context": "Create",
-    "reference": "Modules/MainWindow.qml:296",
+    "reference": "Modules/MainWindow.qml:504",
     "comment": "dialog button creating an item"
   },
   {
     "term": "Dank Files",
     "context": "Dank Files",
-    "reference": "Modules/MainWindow.qml:21",
+    "reference": "Modules/MainWindow.qml:22",
     "comment": "main window title"
   },
   {
@@ -74,7 +92,7 @@
   {
     "term": "Delete permanently?",
     "context": "Delete permanently?",
-    "reference": "Modules/MainWindow.qml:305",
+    "reference": "Modules/MainWindow.qml:513",
     "comment": "permanent delete confirmation header"
   },
   {
@@ -140,13 +158,13 @@
   {
     "term": "Moved",
     "context": "Moved",
-    "reference": "Modules/MainWindow.qml:78",
+    "reference": "Modules/MainWindow.qml:138",
     "comment": "toast after moving files"
   },
   {
     "term": "Moved to trash",
     "context": "Moved to trash",
-    "reference": "Modules/MainWindow.qml:76",
+    "reference": "Modules/MainWindow.qml:136",
     "comment": "toast after trashing files"
   },
   {
@@ -170,7 +188,7 @@
   {
     "term": "New folder",
     "context": "New folder",
-    "reference": "Modules/MainWindow.qml:295",
+    "reference": "Modules/MainWindow.qml:503",
     "comment": "new folder dialog header"
   },
   {
@@ -180,15 +198,45 @@
     "comment": "jobs popover empty state"
   },
   {
+    "term": "Open",
+    "context": "Open",
+    "reference": "Modules/MainWindow.qml:387, Modules/OpenWithDialog.qml:101",
+    "comment": "context menu entry opening a file"
+  },
+  {
+    "term": "Open in editor",
+    "context": "Open in editor",
+    "reference": "Modules/ExecutableDialog.qml:37",
+    "comment": "executable file dialog action opening the file as text"
+  },
+  {
+    "term": "Open in terminal",
+    "context": "Open in terminal",
+    "reference": "Modules/MainWindow.qml:412",
+    "comment": "context menu entry opening a terminal"
+  },
+  {
+    "term": "Open with",
+    "context": "Open with",
+    "reference": "Modules/MainWindow.qml:398, Modules/OpenWithDialog.qml:55",
+    "comment": "open with dialog header"
+  },
+  {
+    "term": "Other application…",
+    "context": "Other application…",
+    "reference": "Modules/MainWindow.qml:445",
+    "comment": "open with menu entry opening the full application picker"
+  },
+  {
     "term": "Rename",
     "context": "Rename",
-    "reference": "Modules/MainWindow.qml:287, Modules/MainWindow.qml:288",
+    "reference": "Modules/MainWindow.qml:495, Modules/MainWindow.qml:496",
     "comment": "rename dialog header"
   },
   {
     "term": "Renamed",
     "context": "Renamed",
-    "reference": "Modules/MainWindow.qml:82",
+    "reference": "Modules/MainWindow.qml:142",
     "comment": "toast after renaming a file"
   },
   {
@@ -204,10 +252,34 @@
     "comment": "file operation in progress"
   },
   {
+    "term": "Run",
+    "context": "Run",
+    "reference": "Modules/ExecutableDialog.qml:46",
+    "comment": "executable file dialog action running the file"
+  },
+  {
+    "term": "Run this desktop file?",
+    "context": "Run this desktop file?",
+    "reference": "Modules/MainWindow.qml:471",
+    "comment": "untrusted desktop file dialog header"
+  },
+  {
+    "term": "Run this file?",
+    "context": "Run this file?",
+    "reference": "Modules/ExecutableDialog.qml:22",
+    "comment": "executable file dialog header"
+  },
+  {
     "term": "Save",
     "context": "Save",
     "reference": "Modules/NameDialog.qml:8",
     "comment": "dialog button to confirm a name"
+  },
+  {
+    "term": "Search applications",
+    "context": "Search applications",
+    "reference": "Modules/OpenWithDialog.qml:63",
+    "comment": "open with dialog search placeholder"
   },
   {
     "term": "Skip",
@@ -224,19 +296,19 @@
   {
     "term": "This folder could not be opened",
     "context": "This folder could not be opened",
-    "reference": "Modules/MainWindow.qml:37",
+    "reference": "Modules/MainWindow.qml:38",
     "comment": "directory listing error"
   },
   {
     "term": "This folder is empty",
     "context": "This folder is empty",
-    "reference": "Modules/MainWindow.qml:260",
+    "reference": "Modules/MainWindow.qml:367",
     "comment": "empty directory placeholder"
   },
   {
     "term": "This folder no longer exists",
     "context": "This folder no longer exists",
-    "reference": "Modules/MainWindow.qml:33",
+    "reference": "Modules/MainWindow.qml:34",
     "comment": "directory listing error"
   },
   {
@@ -270,6 +342,12 @@
     "comment": "file operation error"
   },
   {
+    "term": "Trust and run",
+    "context": "Trust and run",
+    "reference": "Modules/MainWindow.qml:473",
+    "comment": "untrusted desktop file dialog action"
+  },
+  {
     "term": "Try again",
     "context": "Try again",
     "reference": "Modules/OperationErrorDialog.qml:68",
@@ -278,13 +356,13 @@
   {
     "term": "Undo",
     "context": "Undo",
-    "reference": "Modules/MainWindow.qml:113",
+    "reference": "Modules/MainWindow.qml:179",
     "comment": "toast action reversing the last operation"
   },
   {
     "term": "Untitled folder",
     "context": "Untitled folder",
-    "reference": "Modules/MainWindow.qml:182",
+    "reference": "Modules/MainWindow.qml:282",
     "comment": "default name for a new folder"
   },
   {
@@ -308,7 +386,7 @@
   {
     "term": "You do not have permission to view this folder",
     "context": "You do not have permission to view this folder",
-    "reference": "Modules/MainWindow.qml:35",
+    "reference": "Modules/MainWindow.qml:36",
     "comment": "directory listing error"
   },
   {

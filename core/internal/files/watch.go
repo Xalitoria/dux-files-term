@@ -289,7 +289,7 @@ func (w *watch) enrich(entries []Entry) {
 		if e.Unreadable || e.IsDir || e.SymlinkBroken {
 			continue
 		}
-		if !needsSniff(e.Mime) && !e.Thumbnailable {
+		if !needsSniff(e.Mime) && !e.Thumbnailable && !needsDesktop(e) {
 			continue
 		}
 		pending = append(pending, e)
@@ -318,7 +318,8 @@ func (w *watch) enrichChunk(chunk []Entry) {
 			updated.Thumbnail, _ = w.svc.thumbs.Lookup(updated.Path, updated.MtimeMs, "normal")
 		}
 		updated.IconName = w.svc.builder.icons.best(updated)
-		if updated.Mime == e.Mime && updated.IconName == e.IconName && updated.Thumbnail == e.Thumbnail && updated.Thumbnailable == e.Thumbnailable {
+		w.svc.builder.display(&updated)
+		if updated.Mime == e.Mime && updated.IconName == e.IconName && updated.Thumbnail == e.Thumbnail && updated.Thumbnailable == e.Thumbnailable && updated.DisplayName == e.DisplayName {
 			continue
 		}
 		changed = append(changed, updated)

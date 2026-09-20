@@ -15,7 +15,8 @@ FloatingWindow {
 
     property string currentPath: Paths.strip(Paths.home)
     readonly property string opScope: "main"
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible
+    property string pendingTrust: ""
+    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible
     readonly property var currentEntry: fileList.currentIndex >= 0 && fileList.currentIndex < directory.count ? directory.entries.get(fileList.currentIndex) : null
 
     title: I18n.tr("Dank Files", "main window title")
@@ -45,6 +46,65 @@ FloatingWindow {
 
     function selection() {
         return currentEntry ? [currentEntry.path] : [];
+    }
+
+    function reportError(response) {
+        if (response.error)
+            ToastService.info(FileFormat.operationError(response.code, response.error));
+    }
+
+    function activate(entry) {
+        if (!entry)
+            return;
+        if (entry.isDir) {
+            currentPath = entry.path;
+            return;
+        }
+        if (entry.untrusted) {
+            trustDialog.subject = entry.name;
+            trustDialog.pending = entry.path;
+            trustDialog.open();
+            return;
+        }
+        if (FileFormat.isRunnable(entry.mime, entry.isExecutable)) {
+            executableDialog.ask(entry.path, entry.name);
+            return;
+        }
+        AppsService.open([entry.path], response => window.reportError(response));
+    }
+
+    function openWithCurrent() {
+        if (!currentEntry)
+            return;
+        openWithDialog.ask(currentEntry.mime, [currentEntry.path]);
+    }
+
+    function openContainingFolder() {
+        if (!currentEntry)
+            return;
+        const parent = currentEntry.path.substring(0, currentEntry.path.lastIndexOf("/"));
+        currentPath = parent === "" ? "/" : parent;
+    }
+
+    function openTerminalHere() {
+        AppsService.openTerminal(currentPath, response => window.reportError(response));
+    }
+
+    function showMenuFor(index, pointX, pointY) {
+        fileList.currentIndex = index;
+        openWithMenu.close();
+        fileMenu.openAt(pointX, pointY);
+    }
+
+    function loadOpenWithMenu() {
+        openWithMenu.apps = [];
+        if (!currentEntry)
+            return;
+        AppsService.appsForMime(currentEntry.mime, currentEntry.path, response => {
+            if (response.error)
+                return;
+            openWithMenu.apps = (response.apps || []).slice(0, 5);
+        });
     }
 
     function trashSelection() {
@@ -100,6 +160,12 @@ FloatingWindow {
         }
 
         function onJobFinished(job) {
+            if (job.kind === "setPermissions" && window.pendingTrust !== "") {
+                const target = window.pendingTrust;
+                window.pendingTrust = "";
+                if (job.state !== "failed")
+                    AppsService.run(target, response => window.reportError(response));
+            }
             if (job.state === "failed") {
                 ToastService.info(FileFormat.operationError(job.code, job.error));
                 return;
@@ -126,6 +192,40 @@ FloatingWindow {
         onWindowActiveChanged: {
             if (windowActive)
                 directory.refresh();
+        }
+
+        Shortcut {
+            enabled: !window.dialogOpen
+            sequences: ["Return", "Enter"]
+            onActivated: window.activate(window.currentEntry)
+        }
+
+        Shortcut {
+            enabled: !window.dialogOpen
+            sequences: ["Ctrl+Return", "Ctrl+Enter"]
+            onActivated: window.openContainingFolder()
+        }
+
+        Shortcut {
+            enabled: !window.dialogOpen && window.currentEntry !== null
+            sequences: ["Shift+F10", "Menu"]
+            onActivated: {
+                const row = fileList.currentItem;
+                const point = row ? row.mapToItem(surface, Theme.spacingL, row.height) : Qt.point(Theme.spacingL, Theme.spacingL);
+                window.showMenuFor(fileList.currentIndex, point.x, point.y);
+            }
+        }
+
+        Shortcut {
+            enabled: !window.dialogOpen
+            sequences: ["Ctrl+Shift+O"]
+            onActivated: window.openWithCurrent()
+        }
+
+        Shortcut {
+            enabled: !window.dialogOpen
+            sequences: ["Ctrl+Alt+T"]
+            onActivated: window.openTerminalHere()
         }
 
         Shortcut {
@@ -223,6 +323,7 @@ FloatingWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: Theme.spacingL
+            focus: true
             clip: true
             spacing: Theme.groupedListGap
             model: directory.entries
@@ -230,10 +331,16 @@ FloatingWindow {
             currentIndex: -1
 
             delegate: FileRow {
-                onClicked: {
+                onClicked: fileList.currentIndex = index
+
+                onDoubleClicked: {
                     fileList.currentIndex = index;
-                    if (isDir)
-                        window.currentPath = path;
+                    window.activate(directory.entries.get(index));
+                }
+
+                onContextMenuRequested: (mouseX, mouseY) => {
+                    const point = mapToItem(surface, mouseX, mouseY);
+                    window.showMenuFor(index, point.x, point.y);
                 }
             }
 
@@ -268,6 +375,107 @@ FloatingWindow {
             text: window.errorText(directory.errorCode)
             color: Theme.surfaceVariantText
             font.pixelSize: Theme.fontSizeLarge
+        }
+    }
+
+    ContextMenu {
+        id: fileMenu
+
+        anchorItem: surface
+
+        ContextMenuItem {
+            text: I18n.tr("Open", "context menu entry opening a file")
+            iconName: "open_in_new"
+            onClicked: {
+                fileMenu.close();
+                window.activate(window.currentEntry);
+            }
+        }
+
+        ContextMenuItem {
+            id: openWithItem
+
+            text: I18n.tr("Open with", "open with dialog header")
+            iconName: "apps"
+            submenu: true
+            enabled: window.currentEntry !== null && !window.currentEntry.isDir
+            onEntered: {
+                if (!enabled)
+                    return;
+                window.loadOpenWithMenu();
+                openWithMenu.openAt(fileMenu.x + fileMenu.width - Theme.spacingM, fileMenu.y + y);
+            }
+            onClicked: entered()
+        }
+
+        ContextMenuItem {
+            text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
+            iconName: "terminal"
+            onClicked: {
+                fileMenu.close();
+                window.openTerminalHere();
+            }
+        }
+    }
+
+    ContextMenu {
+        id: openWithMenu
+
+        property var apps: []
+
+        anchorItem: surface
+
+        Repeater {
+            model: openWithMenu.apps
+
+            ContextMenuItem {
+                required property var modelData
+
+                text: modelData.name
+                iconName: modelData.isDefault ? "check" : ""
+                onClicked: {
+                    openWithMenu.close();
+                    fileMenu.close();
+                    AppsService.openWith(window.selection(), modelData.id, response => window.reportError(response));
+                }
+            }
+        }
+
+        ContextMenuItem {
+            text: I18n.tr("Other application…", "open with menu entry opening the full application picker")
+            iconName: "more_horiz"
+            onClicked: {
+                openWithMenu.close();
+                fileMenu.close();
+                window.openWithCurrent();
+            }
+        }
+    }
+
+    OpenWithDialog {
+        id: openWithDialog
+    }
+
+    ExecutableDialog {
+        id: executableDialog
+
+        onRunRequested: AppsService.run(path, response => window.reportError(response))
+        onEditRequested: openWithDialog.ask("text/plain", [path])
+    }
+
+    ConfirmDialog {
+        id: trustDialog
+
+        property string pending: ""
+
+        title: I18n.tr("Run this desktop file?", "untrusted desktop file dialog header")
+        message: I18n.tr("%1 has not been marked as trusted. Running it allows it to start any program.", "untrusted desktop file dialog explanation").arg(subject)
+        confirmText: I18n.tr("Trust and run", "untrusted desktop file dialog action")
+        danger: false
+        onConfirmed: {
+            window.pendingTrust = pending;
+            FileOpsService.setPermissions([pending], "755", false);
+            pending = "";
         }
     }
 

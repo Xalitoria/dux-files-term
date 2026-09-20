@@ -74,6 +74,8 @@ Singleton {
     property alias focusRingColor: adapter.focusRingColor
     // "" follows the system language, otherwise a bundled translation code such as "de"
     property alias language: adapter.language
+    // "" autodetects from $TERMINAL and the known emulators
+    property alias terminal: adapter.terminal
 
     readonly property var locale: language !== "" ? Qt.locale(language) : Qt.locale()
 
@@ -124,6 +126,7 @@ Singleton {
             property real focusRingWidth: 1.5
             property string focusRingColor: "primary"
             property string language: ""
+            property string terminal: ""
         }
     }
 }

@@ -39,6 +39,23 @@ Singleton {
         }
     }
 
+    // A file the user would run rather than open: the execute bit plus a type
+    // that is either a program or a script.
+    function isRunnable(mime, executable) {
+        if (!executable)
+            return false;
+        switch (true) {
+        case mime === "":
+        case mime.startsWith("text/"):
+        case mime.endsWith("script"):
+        case mime === "application/x-executable":
+        case mime === "application/x-sharedlib":
+        case mime === "application/x-pie-executable":
+            return true;
+        }
+        return false;
+    }
+
     function modified(mtimeMs) {
         if (!mtimeMs)
             return "";
