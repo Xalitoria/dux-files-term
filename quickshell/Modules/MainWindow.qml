@@ -16,7 +16,7 @@ FloatingWindow {
     property string currentPath: Paths.strip(Paths.home)
     readonly property string opScope: "main"
     property string pendingTrust: ""
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible
+    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible
     readonly property var currentEntry: fileList.currentIndex >= 0 && fileList.currentIndex < directory.count ? directory.entries.get(fileList.currentIndex) : null
 
     title: I18n.tr("Dank Files", "main window title")
@@ -153,6 +153,26 @@ FloatingWindow {
     }
 
     Connections {
+        target: DevicesService
+
+        function onRequestFailed(message, code) {
+            ToastService.info(FileFormat.operationError(code, message));
+        }
+    }
+
+    Connections {
+        target: NetworkService
+
+        function onRequestFailed(message, code) {
+            ToastService.info(FileFormat.operationError(code, message));
+        }
+
+        function onAskRequested(ask) {
+            credentialDialog.present(ask);
+        }
+    }
+
+    Connections {
         target: FileOpsService
 
         function onRequestFailed(message) {
@@ -170,6 +190,7 @@ FloatingWindow {
                 ToastService.info(FileFormat.operationError(job.code, job.error));
                 return;
             }
+            DevicesService.refreshUsage(true);
             if (job.cancelled || job.scope !== window.opScope || !job.undoable)
                 return;
             const message = window.toastFor(job);
@@ -282,10 +303,23 @@ FloatingWindow {
             onActivated: newFolderDialog.ask(I18n.tr("Untitled folder", "default name for a new folder"))
         }
 
+        Sidebar {
+            id: sidebar
+
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.margins: Theme.spacingM
+            width: Theme.sidebarWidth
+            onNavigateRequested: path => window.currentPath = path
+            onUnlockRequested: device => unlockDialog.ask(device)
+            onConnectRequested: connectDialog.ask()
+        }
+
         StyledText {
             id: pathLabel
 
-            anchors.left: parent.left
+            anchors.left: sidebar.right
             anchors.right: jobsButton.left
             anchors.leftMargin: Theme.spacingL
             anchors.rightMargin: Theme.spacingL
@@ -320,7 +354,7 @@ FloatingWindow {
 
             anchors.top: jobsButton.bottom
             anchors.bottom: parent.bottom
-            anchors.left: parent.left
+            anchors.left: sidebar.right
             anchors.right: parent.right
             anchors.margins: Theme.spacingL
             focus: true
@@ -516,6 +550,28 @@ FloatingWindow {
             FileOpsService.deletePermanently(pending);
             pending = [];
         }
+    }
+
+    UnlockDialog {
+        id: unlockDialog
+
+        onUnlocked: mountPoint => {
+            if (mountPoint !== "")
+                window.currentPath = mountPoint;
+        }
+    }
+
+    ConnectServerDialog {
+        id: connectDialog
+
+        onConnected: path => {
+            if (path !== "")
+                window.currentPath = path;
+        }
+    }
+
+    CredentialDialog {
+        id: credentialDialog
     }
 
     Toast {

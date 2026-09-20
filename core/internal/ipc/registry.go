@@ -23,7 +23,7 @@ var Methods = []MethodSpec{
 	{Name: "ping", Group: "core", Desc: "Liveness check"},
 	{Name: "version", Group: "core", Desc: "Daemon and API version"},
 	{Name: "describe", Group: "core", Desc: "List all IPC methods and their params"},
-	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs")}},
+	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network")}},
 	{Name: "unsubscribe", Group: "core", Desc: "Unsubscribe from event topics", Params: []ParamSpec{opt("topics", "topics to drop")}},
 
 	{Name: "ui.show", Group: "ui", Desc: "Show the file manager window"},
@@ -64,6 +64,23 @@ var Methods = []MethodSpec{
 	{Name: "files.apps.all", Group: "files.apps", Desc: "Every launchable application, for the Other application picker"},
 	{Name: "files.apps.setDefault", Group: "files.apps", Desc: "Set the default application for a mime type", Params: []ParamSpec{req("mime", "mime type"), req("desktopId", "desktop entry id")}},
 	{Name: "files.apps.terminals", Group: "files.apps", Desc: "Terminal emulators installed on this system"},
+
+	{Name: "devices.list", Group: "devices", Desc: "Local drives and volumes udisks2 knows about"},
+	{Name: "devices.usage", Group: "devices", Desc: "Disk usage for mounted devices, cached for 30 seconds", Params: []ParamSpec{opt("paths", "mount points, default every mounted device"), opt("force", "ignore the cache")}},
+	{Name: "devices.mount", Group: "devices", Desc: "Mount a device", Params: []ParamSpec{req("id", "device id from devices.list")}},
+	{Name: "devices.unmount", Group: "devices", Desc: "Unmount a device", Params: []ParamSpec{req("id", "device id from devices.list"), opt("force", "unmount even while busy")}},
+	{Name: "devices.eject", Group: "devices", Desc: "Unmount and eject removable media", Params: []ParamSpec{req("id", "device id from devices.list")}},
+	{Name: "devices.powerOff", Group: "devices", Desc: "Power off a drive", Params: []ParamSpec{req("id", "device id from devices.list")}},
+	{Name: "devices.unlock", Group: "devices", Desc: "Unlock a LUKS device", Params: []ParamSpec{req("id", "device id from devices.list"), req("passphrase", "passphrase, never stored"), opt("mount", "mount the cleartext device afterwards")}},
+	{Name: "devices.lock", Group: "devices", Desc: "Lock a LUKS device", Params: []ParamSpec{req("id", "device id from devices.list")}},
+
+	{Name: "network.mounts", Group: "network", Desc: "gvfs mounts and portable devices waiting to be mounted"},
+	{Name: "network.connect", Group: "network", Desc: "Mount a network location, asking on the network topic when gvfs needs credentials", Params: []ParamSpec{req("uri", "for example sftp://host/path")}},
+	{Name: "network.disconnect", Group: "network", Desc: "Unmount a gvfs mount", Params: []ParamSpec{req("id", "mount id, uri or path from network.mounts")}},
+	{Name: "network.answer", Group: "network", Desc: "Answer a question gvfs asked during a connect", Params: []ParamSpec{req("id", "question id from the network topic"), opt("password", ""), opt("user", ""), opt("domain", ""), opt("anonymous", "connect anonymously"), opt("save", "0 never, 1 session, 2 permanently"), opt("choice", "index for a question"), opt("abort", "give up on the mount")}},
+	{Name: "network.recent", Group: "network", Desc: "Servers connected to before"},
+	{Name: "network.forget", Group: "network", Desc: "Drop a server from the recent list", Params: []ParamSpec{req("uri", "server uri")}},
+	{Name: "network.mountPortable", Group: "network", Desc: "Mount a phone or camera gvfs has detected", Params: []ParamSpec{req("monitor", "volume monitor bus name"), req("id", "volume id")}},
 
 	{Name: "system.colorScheme.get", Group: "system", Desc: "Current portal color scheme (0 no-preference, 1 dark, 2 light)"},
 	{Name: "system.openUri", Group: "system", Desc: "Open a URI with the default handler", Params: []ParamSpec{req("uri", "")}},

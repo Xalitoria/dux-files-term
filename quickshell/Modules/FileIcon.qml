@@ -48,7 +48,19 @@ Item {
         case name === "inode-symlink":
             return "link";
         case name === "emblem-unreadable":
+        case name === "lock":
             return "lock";
+        case name.startsWith("drive-removable"):
+            return "usb";
+        case name.startsWith("drive-"):
+            return "hard_drive";
+        case name === "media-optical":
+            return "album";
+        case name === "multimedia-player":
+        case name === "phone":
+            return "smartphone";
+        case name === "camera-photo":
+            return "photo_camera";
         case name === "application-pdf":
             return "picture_as_pdf";
         case name.startsWith("image"):

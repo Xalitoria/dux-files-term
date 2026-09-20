@@ -359,6 +359,7 @@ Singleton {
     readonly property int mediumBreakpoint: 768
     readonly property real iconButtonSize: 40
     readonly property real minimumTouchTargetSize: 48
+    readonly property real sidebarWidth: 240
     readonly property real listItemHeight: 56
     readonly property real listItemTwoLineHeight: 72
     readonly property real avatarSize: 36

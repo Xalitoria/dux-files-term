@@ -32,6 +32,7 @@ Singleton {
             return I18n.tr("This item is in use", "file operation error");
         case "EXDEV":
             return I18n.tr("This item cannot be moved here directly", "file operation error");
+        case "NOTSUPPORTED":
         case "":
             return fallback || I18n.tr("This item could not be handled", "file operation error");
         default:

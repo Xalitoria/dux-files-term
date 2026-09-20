@@ -14,20 +14,38 @@
   {
     "term": "%1 has not been marked as trusted. Running it allows it to start any program.",
     "context": "%1 has not been marked as trusted. Running it allows it to start any program.",
-    "reference": "Modules/MainWindow.qml:472",
+    "reference": "Modules/MainWindow.qml:506",
     "comment": "untrusted desktop file dialog explanation"
+  },
+  {
+    "term": "%1 is encrypted. Enter its passphrase to unlock it.",
+    "context": "%1 is encrypted. Enter its passphrase to unlock it.",
+    "reference": "Modules/UnlockDialog.qml:39",
+    "comment": "unlock dialog explanation"
   },
   {
     "term": "%1 will be deleted permanently. This cannot be undone.",
     "context": "%1 will be deleted permanently. This cannot be undone.",
-    "reference": "Modules/MainWindow.qml:514",
+    "reference": "Modules/MainWindow.qml:548",
     "comment": "permanent delete confirmation explanation"
+  },
+  {
+    "term": "Address",
+    "context": "Address",
+    "reference": "Modules/ConnectServerDialog.qml:62",
+    "comment": "label for a server address input"
   },
   {
     "term": "Already here",
     "context": "Already here",
     "reference": "Modules/ConflictDialog.qml:43",
     "comment": "file conflict dialog label for the existing item"
+  },
+  {
+    "term": "Always",
+    "context": "Always",
+    "reference": "Modules/CredentialDialog.qml:13",
+    "comment": "credential dialog option that stores the password in the keyring"
   },
   {
     "term": "Always use this application",
@@ -50,7 +68,7 @@
   {
     "term": "Cancel",
     "context": "Cancel",
-    "reference": "Modules/OpenWithDialog.qml:95, Modules/ConfirmDialog.qml:25, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:54, Modules/ExecutableDialog.qml:31, Modules/ConflictDialog.qml:63",
+    "reference": "Modules/OpenWithDialog.qml:95, Modules/ConfirmDialog.qml:25, Modules/ConnectServerDialog.qml:96, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:54, Modules/ExecutableDialog.qml:31, Modules/CredentialDialog.qml:145, Modules/ConflictDialog.qml:63, Modules/UnlockDialog.qml:59",
     "comment": "dialog button to cancel"
   },
   {
@@ -58,6 +76,36 @@
     "context": "Cancelled",
     "reference": "Modules/JobRow.qml:44",
     "comment": "file operation was cancelled"
+  },
+  {
+    "term": "Confirm",
+    "context": "Confirm",
+    "reference": "Modules/CredentialDialog.qml:54",
+    "comment": "dialog header for a question the server asked"
+  },
+  {
+    "term": "Connect",
+    "context": "Connect",
+    "reference": "Modules/ConnectServerDialog.qml:102",
+    "comment": "connect to server dialog action"
+  },
+  {
+    "term": "Connect anonymously",
+    "context": "Connect anonymously",
+    "reference": "Modules/CredentialDialog.qml:109",
+    "comment": "credential dialog option that skips the login"
+  },
+  {
+    "term": "Connect to Server",
+    "context": "Connect to Server",
+    "reference": "Modules/ConnectServerDialog.qml:38",
+    "comment": "connect to server dialog header"
+  },
+  {
+    "term": "Connect to Server…",
+    "context": "Connect to Server…",
+    "reference": "Modules/NetworkSection.qml:40",
+    "comment": "sidebar entry opening the connect to server dialog"
   },
   {
     "term": "Copied",
@@ -74,7 +122,7 @@
   {
     "term": "Create",
     "context": "Create",
-    "reference": "Modules/MainWindow.qml:504",
+    "reference": "Modules/MainWindow.qml:538",
     "comment": "dialog button creating an item"
   },
   {
@@ -92,7 +140,7 @@
   {
     "term": "Delete permanently?",
     "context": "Delete permanently?",
-    "reference": "Modules/MainWindow.qml:513",
+    "reference": "Modules/MainWindow.qml:547",
     "comment": "permanent delete confirmation header"
   },
   {
@@ -102,10 +150,28 @@
     "comment": "file operation in progress"
   },
   {
+    "term": "Devices",
+    "context": "Devices",
+    "reference": "Modules/DevicesSection.qml:64",
+    "comment": "sidebar section listing drives and volumes"
+  },
+  {
     "term": "Do this for the rest",
     "context": "Do this for the rest",
     "reference": "Modules/OperationErrorDialog.qml:46, Modules/ConflictDialog.qml:55",
     "comment": "file conflict dialog option to reuse the answer"
+  },
+  {
+    "term": "Domain",
+    "context": "Domain",
+    "reference": "Modules/CredentialDialog.qml:85",
+    "comment": "label for a network domain input"
+  },
+  {
+    "term": "Drives are unavailable because udisks2 is not running",
+    "context": "Drives are unavailable because udisks2 is not running",
+    "reference": "Modules/DevicesSection.qml:65",
+    "comment": "sidebar explanation when the device service is missing"
   },
   {
     "term": "Emptying the trash",
@@ -180,15 +246,39 @@
     "comment": "file operation in progress"
   },
   {
+    "term": "My Computer",
+    "context": "My Computer",
+    "reference": "Modules/DevicesSection.qml:74",
+    "comment": "sidebar entry for the drive the system runs from"
+  },
+  {
     "term": "Name",
     "context": "Name",
     "reference": "Modules/NameDialog.qml:33",
     "comment": "label for a file name input"
   },
   {
+    "term": "Network",
+    "context": "Network",
+    "reference": "Modules/NetworkSection.qml:16",
+    "comment": "sidebar section listing remote locations"
+  },
+  {
+    "term": "Network locations are unavailable because gvfs is not running",
+    "context": "Network locations are unavailable because gvfs is not running",
+    "reference": "Modules/NetworkSection.qml:17",
+    "comment": "sidebar explanation when the network service is missing"
+  },
+  {
+    "term": "Never",
+    "context": "Never",
+    "reference": "Modules/CredentialDialog.qml:13",
+    "comment": "credential dialog option that forgets the password"
+  },
+  {
     "term": "New folder",
     "context": "New folder",
-    "reference": "Modules/MainWindow.qml:503",
+    "reference": "Modules/MainWindow.qml:537",
     "comment": "new folder dialog header"
   },
   {
@@ -200,7 +290,7 @@
   {
     "term": "Open",
     "context": "Open",
-    "reference": "Modules/MainWindow.qml:387, Modules/OpenWithDialog.qml:101",
+    "reference": "Modules/MainWindow.qml:421, Modules/OpenWithDialog.qml:101",
     "comment": "context menu entry opening a file"
   },
   {
@@ -212,25 +302,55 @@
   {
     "term": "Open in terminal",
     "context": "Open in terminal",
-    "reference": "Modules/MainWindow.qml:412",
+    "reference": "Modules/MainWindow.qml:446",
     "comment": "context menu entry opening a terminal"
   },
   {
     "term": "Open with",
     "context": "Open with",
-    "reference": "Modules/MainWindow.qml:398, Modules/OpenWithDialog.qml:55",
+    "reference": "Modules/MainWindow.qml:432, Modules/OpenWithDialog.qml:55",
     "comment": "open with dialog header"
   },
   {
     "term": "Other application…",
     "context": "Other application…",
-    "reference": "Modules/MainWindow.qml:445",
+    "reference": "Modules/MainWindow.qml:479",
     "comment": "open with menu entry opening the full application picker"
+  },
+  {
+    "term": "Passphrase",
+    "context": "Passphrase",
+    "reference": "Modules/UnlockDialog.qml:51",
+    "comment": "label for an encrypted device passphrase input"
+  },
+  {
+    "term": "Password",
+    "context": "Password",
+    "reference": "Modules/CredentialDialog.qml:98",
+    "comment": "label for a password input"
+  },
+  {
+    "term": "Protocol",
+    "context": "Protocol",
+    "reference": "Modules/ConnectServerDialog.qml:49",
+    "comment": "label for the network protocol picker"
+  },
+  {
+    "term": "Recent",
+    "context": "Recent",
+    "reference": "Modules/ConnectServerDialog.qml:71",
+    "comment": "header above previously used servers"
+  },
+  {
+    "term": "Remember password",
+    "context": "Remember password",
+    "reference": "Modules/CredentialDialog.qml:117",
+    "comment": "credential dialog option controlling password storage"
   },
   {
     "term": "Rename",
     "context": "Rename",
-    "reference": "Modules/MainWindow.qml:495, Modules/MainWindow.qml:496",
+    "reference": "Modules/MainWindow.qml:529, Modules/MainWindow.qml:530",
     "comment": "rename dialog header"
   },
   {
@@ -260,7 +380,7 @@
   {
     "term": "Run this desktop file?",
     "context": "Run this desktop file?",
-    "reference": "Modules/MainWindow.qml:471",
+    "reference": "Modules/MainWindow.qml:505",
     "comment": "untrusted desktop file dialog header"
   },
   {
@@ -280,6 +400,12 @@
     "context": "Search applications",
     "reference": "Modules/OpenWithDialog.qml:63",
     "comment": "open with dialog search placeholder"
+  },
+  {
+    "term": "Sign in",
+    "context": "Sign in",
+    "reference": "Modules/CredentialDialog.qml:54, Modules/CredentialDialog.qml:152",
+    "comment": "credential dialog header"
   },
   {
     "term": "Skip",
@@ -302,7 +428,7 @@
   {
     "term": "This folder is empty",
     "context": "This folder is empty",
-    "reference": "Modules/MainWindow.qml:367",
+    "reference": "Modules/MainWindow.qml:401",
     "comment": "empty directory placeholder"
   },
   {
@@ -326,7 +452,7 @@
   {
     "term": "This item could not be handled",
     "context": "This item could not be handled",
-    "reference": "Common/FileFormat.qml:36, Common/FileFormat.qml:38",
+    "reference": "Common/FileFormat.qml:37, Common/FileFormat.qml:39",
     "comment": "file operation error"
   },
   {
@@ -342,9 +468,15 @@
     "comment": "file operation error"
   },
   {
+    "term": "This session",
+    "context": "This session",
+    "reference": "Modules/CredentialDialog.qml:13",
+    "comment": "credential dialog option that keeps the password until logout"
+  },
+  {
     "term": "Trust and run",
     "context": "Trust and run",
-    "reference": "Modules/MainWindow.qml:473",
+    "reference": "Modules/MainWindow.qml:507",
     "comment": "untrusted desktop file dialog action"
   },
   {
@@ -356,14 +488,26 @@
   {
     "term": "Undo",
     "context": "Undo",
-    "reference": "Modules/MainWindow.qml:179",
+    "reference": "Modules/MainWindow.qml:200",
     "comment": "toast action reversing the last operation"
+  },
+  {
+    "term": "Unlock",
+    "context": "Unlock",
+    "reference": "Modules/UnlockDialog.qml:38, Modules/UnlockDialog.qml:65",
+    "comment": "unlock dialog header for an encrypted device"
   },
   {
     "term": "Untitled folder",
     "context": "Untitled folder",
-    "reference": "Modules/MainWindow.qml:282",
+    "reference": "Modules/MainWindow.qml:303",
     "comment": "default name for a new folder"
+  },
+  {
+    "term": "Username",
+    "context": "Username",
+    "reference": "Modules/CredentialDialog.qml:75",
+    "comment": "label for a user name input"
   },
   {
     "term": "Waiting",

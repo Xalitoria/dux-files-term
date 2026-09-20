@@ -11,10 +11,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
+	"github.com/AvengeMedia/dankfiles/core/internal/devices"
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
+	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
 	"github.com/AvengeMedia/dankfiles/core/internal/paths"
 	"github.com/AvengeMedia/dankgo/log"
 )
@@ -29,6 +31,8 @@ type daemonServices struct {
 	ipc      *ipc.Server
 	ipcErrCh <-chan error
 	files    *files.Service
+	devices  *devices.Service
+	network  *netmount.Service
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -45,6 +49,12 @@ func (s *daemonServices) Close() {
 	if s.files != nil {
 		s.files.Close()
 	}
+	if s.devices != nil {
+		s.devices.Close()
+	}
+	if s.network != nil {
+		s.network.Close()
+	}
 	if s.ipc != nil {
 		s.ipc.Close()
 	}
@@ -56,6 +66,16 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 	appService := mimeapps.NewService()
 	fileService := files.NewService(bus, cacheHome(), appService.Detector())
 	opsManager := fileops.NewManager(bus, fileService)
+
+	deviceService := devices.NewService(bus, uint32(os.Getuid()))
+	if err := deviceService.Start(); err != nil {
+		log.Warnf("udisks2 unavailable: %v", err)
+	}
+
+	networkService := netmount.NewService(bus, configHome())
+	if err := networkService.Start(); err != nil {
+		log.Warnf("gvfs unavailable: %v", err)
+	}
 
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
 	if err := colorSchemeWatcher.Start(); err != nil {
@@ -70,13 +90,24 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		Files:       fileService,
 		FileOps:     opsManager,
 		Apps:        appService,
+		Devices:     deviceService,
+		Network:     networkService,
 	}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {
 		return nil, err
 	}
 
-	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService}, nil
+	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService}, nil
+}
+
+func configHome() string {
+	dir, err := paths.ConfigDir()
+	if err != nil {
+		log.Warnf("config dir unavailable: %v", err)
+		return os.TempDir()
+	}
+	return dir
 }
 
 func cacheHome() string {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"strings"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/devices"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
+	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
 )
 
 func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
@@ -18,6 +20,18 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	}
 
 	switch {
+	case devices.Handles(req.Method):
+		if deps.Devices == nil {
+			RespondError(w, req.ID, "device service unavailable")
+			return
+		}
+		deps.Devices.Handle(w, req)
+	case netmount.Handles(req.Method):
+		if deps.Network == nil {
+			RespondError(w, req.ID, "network service unavailable")
+			return
+		}
+		deps.Network.Handle(w, req)
 	case mimeapps.Handles(req.Method):
 		if deps.Apps == nil {
 			RespondError(w, req.ID, "application service unavailable")

@@ -21,6 +21,13 @@
     "comment": ""
   },
   {
+    "term": "%1 is encrypted. Enter its passphrase to unlock it.",
+    "translation": "",
+    "context": "unlock dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 will be deleted permanently. This cannot be undone.",
     "translation": "",
     "context": "permanent delete confirmation explanation",
@@ -28,9 +35,23 @@
     "comment": ""
   },
   {
+    "term": "Address",
+    "translation": "",
+    "context": "label for a server address input",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Already here",
     "translation": "",
     "context": "file conflict dialog label for the existing item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Always",
+    "translation": "",
+    "context": "credential dialog option that stores the password in the keyring",
     "reference": "",
     "comment": ""
   },
@@ -66,6 +87,41 @@
     "term": "Cancelled",
     "translation": "",
     "context": "file operation was cancelled",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Confirm",
+    "translation": "",
+    "context": "dialog header for a question the server asked",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Connect",
+    "translation": "",
+    "context": "connect to server dialog action",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Connect anonymously",
+    "translation": "",
+    "context": "credential dialog option that skips the login",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Connect to Server",
+    "translation": "",
+    "context": "connect to server dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Connect to Server…",
+    "translation": "",
+    "context": "sidebar entry opening the connect to server dialog",
     "reference": "",
     "comment": ""
   },
@@ -119,9 +175,30 @@
     "comment": ""
   },
   {
+    "term": "Devices",
+    "translation": "",
+    "context": "sidebar section listing drives and volumes",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Do this for the rest",
     "translation": "",
     "context": "file conflict dialog option to reuse the answer",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Domain",
+    "translation": "",
+    "context": "label for a network domain input",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Drives are unavailable because udisks2 is not running",
+    "translation": "",
+    "context": "sidebar explanation when the device service is missing",
     "reference": "",
     "comment": ""
   },
@@ -210,9 +287,37 @@
     "comment": ""
   },
   {
+    "term": "My Computer",
+    "translation": "",
+    "context": "sidebar entry for the drive the system runs from",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Name",
     "translation": "",
     "context": "label for a file name input",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Network",
+    "translation": "",
+    "context": "sidebar section listing remote locations",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Network locations are unavailable because gvfs is not running",
+    "translation": "",
+    "context": "sidebar explanation when the network service is missing",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Never",
+    "translation": "",
+    "context": "credential dialog option that forgets the password",
     "reference": "",
     "comment": ""
   },
@@ -262,6 +367,41 @@
     "term": "Other application…",
     "translation": "",
     "context": "open with menu entry opening the full application picker",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Passphrase",
+    "translation": "",
+    "context": "label for an encrypted device passphrase input",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Password",
+    "translation": "",
+    "context": "label for a password input",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Protocol",
+    "translation": "",
+    "context": "label for the network protocol picker",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Recent",
+    "translation": "",
+    "context": "header above previously used servers",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Remember password",
+    "translation": "",
+    "context": "credential dialog option controlling password storage",
     "reference": "",
     "comment": ""
   },
@@ -325,6 +465,13 @@
     "term": "Search applications",
     "translation": "",
     "context": "open with dialog search placeholder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sign in",
+    "translation": "",
+    "context": "credential dialog header",
     "reference": "",
     "comment": ""
   },
@@ -399,6 +546,13 @@
     "comment": ""
   },
   {
+    "term": "This session",
+    "translation": "",
+    "context": "credential dialog option that keeps the password until logout",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Trust and run",
     "translation": "",
     "context": "untrusted desktop file dialog action",
@@ -420,9 +574,23 @@
     "comment": ""
   },
   {
+    "term": "Unlock",
+    "translation": "",
+    "context": "unlock dialog header for an encrypted device",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Untitled folder",
     "translation": "",
     "context": "default name for a new folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Username",
+    "translation": "",
+    "context": "label for a user name input",
     "reference": "",
     "comment": ""
   },
