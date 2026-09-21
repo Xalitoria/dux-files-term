@@ -10,6 +10,7 @@ DATA_DIR=$(PREFIX)/share
 ICON_DIR=$(DATA_DIR)/icons/hicolor/scalable/apps
 APPLICATIONS_DIR=$(DATA_DIR)/applications
 METAINFO_DIR=$(DATA_DIR)/metainfo
+POLKIT_ACTIONS_DIR ?= /usr/share/polkit-1/actions
 
 USER_HOME := $(if $(SUDO_USER),$(shell getent passwd $(SUDO_USER) | cut -d: -f6),$(HOME))
 USER_CONFIG_HOME := $(if $(SUDO_USER),$(USER_HOME)/.config,$(or $(XDG_CONFIG_HOME),$(USER_HOME)/.config))
@@ -19,7 +20,7 @@ SHELL_DIR=quickshell
 ASSETS_DIR=assets
 DESKTOP_ID=com.danklinux.dankfiles
 
-.PHONY: all build dev run clean test fmt vet lint-qml update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-systemd help
+.PHONY: all build dev run clean test fmt vet lint-qml update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-polkit install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-polkit uninstall-systemd help
 
 all: build
 
@@ -89,6 +90,12 @@ install-metainfo:
 	@echo "Installing AppStream metainfo..."
 	@install -D -m 644 $(ASSETS_DIR)/$(DESKTOP_ID).metainfo.xml $(DESTDIR)$(METAINFO_DIR)/$(DESKTOP_ID).metainfo.xml
 
+install-polkit:
+	@echo "Installing polkit policy to $(DESTDIR)$(POLKIT_ACTIONS_DIR)..."
+	@install -d -m 755 $(DESTDIR)$(POLKIT_ACTIONS_DIR)
+	@sed 's|/usr/bin/dfiles|$(INSTALL_DIR)/$(BINARY_NAME)|g' $(ASSETS_DIR)/$(DESKTOP_ID).policy > $(DESTDIR)$(POLKIT_ACTIONS_DIR)/$(DESKTOP_ID).policy
+	@chmod 644 $(DESTDIR)$(POLKIT_ACTIONS_DIR)/$(DESKTOP_ID).policy
+
 install-systemd:
 	@echo "Installing systemd user service to $(SYSTEMD_USER_DIR)..."
 	@mkdir -p $(SYSTEMD_USER_DIR)
@@ -96,7 +103,7 @@ install-systemd:
 	@chmod 644 $(SYSTEMD_USER_DIR)/$(BINARY_NAME).service
 	@if [ -n "$(SUDO_USER)" ]; then chown $(SUDO_USER) $(SYSTEMD_USER_DIR)/$(BINARY_NAME).service; fi
 
-install: install-bin install-icon install-desktop install-metainfo
+install: install-bin install-icon install-desktop install-metainfo install-polkit
 	@echo ""
 	@echo "Installation complete."
 	@echo "Launch with 'dfiles show' or the Dank Files desktop entry."
@@ -113,11 +120,14 @@ uninstall-desktop:
 	@rm -f $(DESTDIR)$(APPLICATIONS_DIR)/$(DESKTOP_ID).desktop
 	@test -n "$(DESTDIR)" || update-desktop-database -q $(APPLICATIONS_DIR) 2>/dev/null || true
 
+uninstall-polkit:
+	@rm -f $(DESTDIR)$(POLKIT_ACTIONS_DIR)/$(DESKTOP_ID).policy
+
 uninstall-systemd:
 	@rm -f $(SYSTEMD_USER_DIR)/$(BINARY_NAME).service
 	@echo "Stop/disable the service manually if running: systemctl --user disable --now $(BINARY_NAME)"
 
-uninstall: uninstall-desktop uninstall-icon uninstall-bin uninstall-systemd
+uninstall: uninstall-desktop uninstall-icon uninstall-bin uninstall-polkit uninstall-systemd
 	@echo "Uninstallation complete."
 
 help:
@@ -136,6 +146,6 @@ help:
 	@echo "  i18n-check         - Fail if local i18n is out of sync with POEditor"
 	@echo ""
 	@echo "Install (PREFIX=$(PREFIX)):"
-	@echo "  install            - Binary (UI embedded), icon, desktop entry, metainfo"
+	@echo "  install            - Binary (UI embedded), icon, desktop entry, metainfo, polkit policy"
 	@echo "  install-systemd    - Optional systemd user unit (autostarts with the session)"
 	@echo "  uninstall          - Remove everything"

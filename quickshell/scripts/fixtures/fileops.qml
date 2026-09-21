@@ -12,6 +12,7 @@ ShellRoot {
     property var sent: []
     property var handler: null
     property var jobsResponse: ({})
+    property var elevationResponse: ({})
     property var nextError: ""
     property var finished: []
     property var requestErrors: []
@@ -86,6 +87,12 @@ ShellRoot {
             if (method === "files.op.jobs") {
                 callback({
                     "result": fixture.jobsResponse
+                });
+                return;
+            }
+            if (method === "system.elevation") {
+                callback({
+                    "result": fixture.elevationResponse
                 });
                 return;
             }
@@ -215,6 +222,40 @@ ShellRoot {
         };
         FileOpsService.refresh();
         check("relist replaces the store", states(), ["j9:queued"]);
+
+        check("no elevation before asking", FileOpsService.canElevate, false);
+        elevationResponse = {
+            "available": false,
+            "route": "pkexec",
+            "reason": "NOPOLICY"
+        };
+        FileOpsService.refreshElevation();
+        check("elevation reason kept", FileOpsService.elevation.reason, "NOPOLICY");
+        check("elevation unavailable", FileOpsService.canElevate, false);
+        elevationResponse = {
+            "available": true,
+            "route": "pkexec"
+        };
+        FileOpsService.refreshElevation();
+        check("elevation available", FileOpsService.canElevate, true);
+        check("elevation reason cleared", FileOpsService.elevation.reason, "");
+
+        FileOpsService.respond("j9", "e1", "retryElevated", false);
+        check("retry elevated respond params", sent[sent.length - 1].params, {
+            "jobId": "j9",
+            "id": "e1",
+            "action": "retryElevated",
+            "applyToAll": false
+        });
+
+        FileOpsService.setOwner(["/tmp/a.txt"], "root", "", true);
+        check("set owner request", sent[sent.length - 1].method, "files.op.setOwner");
+        check("set owner params", sent[sent.length - 1].params, {
+            "paths": ["/tmp/a.txt"],
+            "owner": "root",
+            "group": "",
+            "recursive": true
+        });
 
         if (failures === 0)
             log.info("FIXTURE PASS");

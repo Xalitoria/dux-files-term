@@ -3,6 +3,7 @@ package fileops
 import (
 	"context"
 	"errors"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -103,6 +104,25 @@ func specOf(req ipc.Request) (spec, error) {
 		}
 	case "files.op.emptyTrash":
 		s.kind = KindEmptyTrash
+	case "files.op.setOwner":
+		s.kind = KindSetOwner
+		sources, err := absPaths(req, "paths")
+		if err != nil {
+			return spec{}, err
+		}
+		s.sources = sources
+		s.recursive = params.BoolLoose(req.Params, "recursive")
+		s.uid, err = lookupID(textParam(req.Params, "owner"), user.Lookup, func(u *user.User) string { return u.Uid })
+		if err != nil {
+			return spec{}, err
+		}
+		s.gid, err = lookupID(textParam(req.Params, "group"), user.LookupGroup, func(g *user.Group) string { return g.Gid })
+		if err != nil {
+			return spec{}, err
+		}
+		if len(s.sources) == 0 || (s.uid < 0 && s.gid < 0) {
+			return spec{}, invalid("files.op.setOwner requires paths and an owner or a group")
+		}
 	case "files.op.setPermissions":
 		s.kind = KindSetPermissions
 		sources, err := absPaths(req, "paths")
@@ -158,9 +178,48 @@ func (m *Manager) handleUndo(w *ipc.ConnWriter, req ipc.Request) {
 	ipc.Respond(w, req.ID, map[string]any{"job": view})
 }
 
+// maxID excludes (uid_t)-1, which the kernel reads as "leave unchanged".
+const maxID = 1<<32 - 1
+
+// lookupID accepts a name or a numeric id; empty keeps the current value.
+func lookupID[T any](raw string, lookup func(string) (*T, error), id func(*T) string) (int, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return -1, nil
+	}
+	if number, err := strconv.Atoi(raw); err == nil && number >= 0 {
+		if number >= maxID {
+			return -1, invalid("owner or group id out of range: " + raw)
+		}
+		return number, nil
+	}
+	found, err := lookup(raw)
+	if err != nil {
+		return -1, invalid("unknown owner or group: " + raw)
+	}
+	number, err := strconv.Atoi(id(found))
+	if err != nil || number < 0 || number >= maxID {
+		return -1, invalid("unknown owner or group: " + raw)
+	}
+	return number, nil
+}
+
+// textParam reads a string or a JSON number, since a uid arrives either way.
+func textParam(p map[string]any, key string) string {
+	switch value := p[key].(type) {
+	case string:
+		return value
+	case float64:
+		return strconv.FormatInt(int64(value), 10)
+	case int:
+		return strconv.Itoa(value)
+	}
+	return ""
+}
+
 func knownAction(action Action) bool {
 	switch action {
-	case ActionSkip, ActionReplace, ActionKeepBoth, ActionMerge, ActionRetry, ActionCancel:
+	case ActionSkip, ActionReplace, ActionKeepBoth, ActionMerge, ActionRetry, ActionRetryElevated, ActionCancel:
 		return true
 	}
 	return false

@@ -51,7 +51,8 @@ var Methods = []MethodSpec{
 	{Name: "files.op.delete", Group: "files.op", Desc: "Delete paths permanently", Params: []ParamSpec{req("paths", "absolute paths")}},
 	{Name: "files.op.emptyTrash", Group: "files.op", Desc: "Delete every trashed item permanently"},
 	{Name: "files.op.setPermissions", Group: "files.op", Desc: "Change mode bits", Params: []ParamSpec{req("paths", "absolute paths"), req("mode", "octal mode, for example 644"), opt("recursive", "apply to the whole tree")}},
-	{Name: "files.op.respond", Group: "files.op", Desc: "Answer a paused job", Params: []ParamSpec{req("jobId", "job id"), req("id", "conflict or error id"), req("action", "skip|replace|keepBoth|merge|retry|cancel"), opt("applyToAll", "apply to the rest of the job")}},
+	{Name: "files.op.setOwner", Group: "files.op", Desc: "Change owner and/or group", Params: []ParamSpec{req("paths", "absolute paths"), opt("owner", "user name or uid"), opt("group", "group name or gid"), opt("recursive", "apply to the whole tree")}},
+	{Name: "files.op.respond", Group: "files.op", Desc: "Answer a paused job", Params: []ParamSpec{req("jobId", "job id"), req("id", "conflict or error id"), req("action", "skip|replace|keepBoth|merge|retry|retryElevated|cancel"), opt("applyToAll", "apply to the rest of the job")}},
 	{Name: "files.op.cancel", Group: "files.op", Desc: "Cancel a running or queued job", Params: []ParamSpec{req("jobId", "job id")}},
 	{Name: "files.op.jobs", Group: "files.op", Desc: "List running, queued and recently finished jobs"},
 	{Name: "files.op.undo", Group: "files.op", Desc: "Undo the last undoable operation in a scope", Params: []ParamSpec{opt("scope", "undo stack key, one per window")}},
@@ -83,6 +84,7 @@ var Methods = []MethodSpec{
 	{Name: "network.mountPortable", Group: "network", Desc: "Mount a phone or camera gvfs has detected", Params: []ParamSpec{req("monitor", "volume monitor bus name"), req("id", "volume id")}},
 
 	{Name: "system.colorScheme.get", Group: "system", Desc: "Current portal color scheme (0 no-preference, 1 dark, 2 light)"},
+	{Name: "system.elevation", Group: "system", Desc: "Whether failed operations can be retried as administrator, and why not"},
 	{Name: "system.openUri", Group: "system", Desc: "Open a URI with the default handler", Params: []ParamSpec{req("uri", "")}},
 }
 

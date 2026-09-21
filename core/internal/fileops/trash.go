@@ -26,7 +26,7 @@ func (r *runner) trash() error {
 		}
 
 		var entry trash.Entry
-		err := r.retry(path, func() error {
+		err := r.retryLocal(path, func() error {
 			var putErr error
 			entry, putErr = trash.Put(path)
 			return putErr
@@ -61,7 +61,7 @@ func (r *runner) restore() error {
 
 		source := filepath.Join(item.dst, "files", item.src)
 		var target string
-		err := r.retry(source, func() error {
+		err := r.retryLocal(source, func() error {
 			var resolveErr error
 			target, resolveErr = restoreTarget(item.dst, item.src)
 			return resolveErr
@@ -156,7 +156,7 @@ func (r *runner) emptyTrash() error {
 		if r.job.closed() {
 			return nil
 		}
-		if err := r.retry(entry.FilesPath, func() error { return os.RemoveAll(entry.FilesPath) }); err != nil {
+		if err := r.retry(entry.FilesPath, func(fs FS) error { return fs.RemoveAll(entry.FilesPath) }); err != nil {
 			if errors.Is(err, errSkipped) {
 				continue
 			}

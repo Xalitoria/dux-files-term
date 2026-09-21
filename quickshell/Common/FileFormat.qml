@@ -40,6 +40,19 @@ Singleton {
         }
     }
 
+    function elevationUnavailable(reason) {
+        switch (reason) {
+        case "SANDBOXED":
+            return I18n.tr("Administrator access is not available inside the sandbox", "file operation error dialog explanation");
+        case "NOPKEXEC":
+            return I18n.tr("Administrator access is not available because pkexec is not installed", "file operation error dialog explanation");
+        case "NOPOLICY":
+            return I18n.tr("Administrator access is not available because the Dank Files polkit policy is not installed", "file operation error dialog explanation");
+        default:
+            return I18n.tr("Administrator access is not available", "file operation error dialog explanation");
+        }
+    }
+
     // A file the user would run rather than open: the execute bit plus a type
     // that is either a program or a script.
     function isRunnable(mime, executable) {

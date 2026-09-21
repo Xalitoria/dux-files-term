@@ -44,4 +44,5 @@ func init() {
 	rootCmd.AddCommand(toggleCmd)
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(ipcCmd)
+	rootCmd.AddCommand(helperCmd)
 }

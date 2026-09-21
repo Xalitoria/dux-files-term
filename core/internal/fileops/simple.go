@@ -3,7 +3,6 @@ package fileops
 import (
 	"context"
 	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -19,7 +18,7 @@ func (r *runner) rename() error {
 	if _, err := os.Lstat(dst); err == nil {
 		return errors.New("a file named " + r.job.spec.name + " already exists")
 	}
-	if err := r.retry(src, func() error { return os.Rename(src, dst) }); err != nil {
+	if err := r.retry(src, func(fs FS) error { return fs.Rename(src, dst, true) }); err != nil {
 		return skipToNil(err)
 	}
 
@@ -32,7 +31,7 @@ func (r *runner) newFolder() error {
 	path := r.target()
 	r.setTotals(1, 0, false)
 
-	if err := r.retry(path, func() error { return os.Mkdir(path, 0o755) }); err != nil {
+	if err := r.retry(path, func(fs FS) error { return fs.Mkdir(path, 0o755) }); err != nil {
 		return skipToNil(err)
 	}
 	r.remember(KindDelete, path, "")
@@ -50,7 +49,7 @@ func (r *runner) newFile() error {
 
 	template := r.job.spec.template
 	if template == "" {
-		if err := r.retry(path, func() error { return create(path) }); err != nil {
+		if err := r.retry(path, func(fs FS) error { return create(fs, path) }); err != nil {
 			return skipToNil(err)
 		}
 		r.remember(KindDelete, path, "")
@@ -59,22 +58,22 @@ func (r *runner) newFile() error {
 	}
 
 	var info os.FileInfo
-	if err := r.retry(template, func() error {
+	if err := r.retry(template, func(fs FS) error {
 		var statErr error
-		info, statErr = os.Lstat(template)
+		info, statErr = fs.Lstat(template)
 		return statErr
 	}); err != nil {
 		return skipToNil(err)
 	}
-	if err := r.transferFile(template, path, info, false); err != nil {
+	if err := r.transferFile(template, path, info, false, true); err != nil {
 		return skipToNil(err)
 	}
 	r.remember(KindDelete, path, "")
 	return nil
 }
 
-func create(path string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+func create(fs FS, path string) error {
+	file, err := fs.Create(path, 0o644)
 	if err != nil {
 		return err
 	}
@@ -93,7 +92,7 @@ func (r *runner) link() error {
 		if _, err := os.Lstat(dst); err == nil {
 			dst = uniquePath(dst)
 		}
-		if err := r.retry(dst, func() error { return os.Symlink(src, dst) }); err != nil {
+		if err := r.retry(dst, func(fs FS) error { return fs.Symlink(src, dst) }); err != nil {
 			if errors.Is(err, errSkipped) {
 				continue
 			}
@@ -106,7 +105,7 @@ func (r *runner) link() error {
 }
 
 func (r *runner) setPermissions() error {
-	mode := fs.FileMode(r.job.spec.mode).Perm()
+	mode := os.FileMode(r.job.spec.mode).Perm()
 	sources := r.job.spec.sources
 	r.setTotals(len(sources), 0, false)
 
@@ -114,7 +113,7 @@ func (r *runner) setPermissions() error {
 		if r.job.closed() {
 			return nil
 		}
-		err := r.retry(path, func() error { return chmodTree(path, mode, r.job.spec.recursive) })
+		err := r.retry(path, func(fs FS) error { return fs.Chmod(path, mode, r.job.spec.recursive) })
 		switch {
 		case errors.Is(err, errSkipped):
 			continue
@@ -128,19 +127,26 @@ func (r *runner) setPermissions() error {
 	return nil
 }
 
-func chmodTree(path string, mode fs.FileMode, recursive bool) error {
-	if !recursive {
-		return os.Chmod(path, mode)
-	}
-	return filepath.WalkDir(path, func(child string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if entry.Type()&fs.ModeSymlink != 0 {
+func (r *runner) setOwner() error {
+	sources := r.job.spec.sources
+	r.setTotals(len(sources), 0, false)
+
+	for _, path := range sources {
+		if r.job.closed() {
 			return nil
 		}
-		return os.Chmod(child, mode)
-	})
+		err := r.retry(path, func(fs FS) error { return fs.Lchown(path, r.job.spec.uid, r.job.spec.gid, r.job.spec.recursive) })
+		switch {
+		case errors.Is(err, errSkipped):
+			continue
+		case errors.Is(err, context.Canceled):
+			return nil
+		case err != nil:
+			return err
+		}
+		r.advance(path, 1, 0)
+	}
+	return nil
 }
 
 func (r *runner) deleteAll() error {
@@ -155,7 +161,7 @@ func (r *runner) deleteAll() error {
 		if !r.guarded(path) {
 			return errors.New("changed since the operation it would undo: " + path)
 		}
-		err := r.retry(path, func() error { return os.RemoveAll(path) })
+		err := r.retry(path, func(fs FS) error { return fs.RemoveAll(path) })
 		switch {
 		case errors.Is(err, errSkipped):
 			continue

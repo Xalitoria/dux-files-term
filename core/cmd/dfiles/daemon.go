@@ -12,6 +12,7 @@ import (
 
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
+	"github.com/AvengeMedia/dankfiles/core/internal/elevate"
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
@@ -66,6 +67,7 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 	appService := mimeapps.NewService()
 	fileService := files.NewService(bus, cacheHome(), appService.Detector())
 	opsManager := fileops.NewManager(bus, fileService)
+	opsManager.SetElevator(elevate.NewClient())
 
 	deviceService := devices.NewService(bus, uint32(os.Getuid()))
 	if err := deviceService.Start(); err != nil {

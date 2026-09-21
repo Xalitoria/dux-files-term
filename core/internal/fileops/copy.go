@@ -60,9 +60,9 @@ func (r *runner) transferAll(move bool) error {
 
 func (r *runner) transfer(src, dst string, move bool) (outcome, error) {
 	var info os.FileInfo
-	if err := r.retry(src, func() error {
+	if err := r.retry(src, func(fs FS) error {
 		var statErr error
-		info, statErr = os.Lstat(src)
+		info, statErr = fs.Lstat(src)
 		return statErr
 	}); err != nil {
 		return outcome{}, err
@@ -89,9 +89,9 @@ func (r *runner) transfer(src, dst string, move bool) (outcome, error) {
 	case info.IsDir():
 		return outcome{dst: dst, undoable: undoable}, r.transferDir(src, dst, move, res.merge)
 	case info.Mode()&fs.ModeSymlink != 0:
-		return outcome{dst: dst, undoable: undoable}, r.transferLink(src, dst, move)
+		return outcome{dst: dst, undoable: undoable}, r.transferLink(src, dst, move, res.unknown)
 	case info.Mode().IsRegular():
-		return outcome{dst: dst, undoable: undoable}, r.transferFile(src, dst, info, move)
+		return outcome{dst: dst, undoable: undoable}, r.transferFile(src, dst, info, move, res.unknown)
 	default:
 		r.skip()
 		return outcome{}, errSkipped
@@ -102,7 +102,11 @@ func (r *runner) renameInto(src, dst string, info os.FileInfo) bool {
 	if !sameDevice(src, filepath.Dir(dst)) {
 		return false
 	}
-	if _, err := os.Lstat(dst); err == nil && info.IsDir() {
+	_, statErr := os.Lstat(dst)
+	switch {
+	case statErr == nil && info.IsDir():
+		return false
+	case statErr != nil && !errors.Is(statErr, fs.ErrNotExist):
 		return false
 	}
 	if err := os.Rename(src, dst); err != nil {
@@ -142,27 +146,33 @@ func (r *runner) clearTarget(dst string, res resolution, srcIsDir bool) error {
 	if !target.IsDir() && !srcIsDir {
 		return nil
 	}
-	return r.retry(dst, func() error { return os.RemoveAll(dst) })
+	return r.retry(dst, func(fs FS) error { return fs.RemoveAll(dst) })
 }
 
 func (r *runner) transferDir(src, dst string, move, merge bool) error {
 	var info os.FileInfo
-	if err := r.retry(src, func() error {
+	if err := r.retry(src, func(fs FS) error {
 		var statErr error
-		info, statErr = os.Stat(src)
+		info, statErr = fs.Lstat(src)
 		return statErr
 	}); err != nil {
 		return err
 	}
 
-	if err := r.retry(dst, func() error { return os.MkdirAll(dst, info.Mode().Perm()|0o700) }); err != nil {
+	dstFS := local
+	if err := r.retry(dst, func(fs FS) error {
+		dstFS = fs
+		return fs.MkdirAll(dst, info.Mode().Perm()|0o700)
+	}); err != nil {
 		return err
 	}
 
 	var children []os.DirEntry
-	if err := r.retry(src, func() error {
+	srcFS := local
+	if err := r.retry(src, func(fs FS) error {
 		var readErr error
-		children, readErr = os.ReadDir(src)
+		children, readErr = fs.ReadDir(src)
+		srcFS = fs
 		return readErr
 	}); err != nil {
 		return err
@@ -184,32 +194,37 @@ func (r *runner) transferDir(src, dst string, move, merge bool) error {
 		}
 	}
 
-	r.preserve(src, dst, info)
+	r.preserve(src, dst, info, dstFS)
 	r.advance(dst, 1, 0)
 	if move {
-		os.Remove(src)
+		_ = srcFS.Remove(src)
 	}
 	return nil
 }
 
-func (r *runner) transferLink(src, dst string, move bool) error {
+func (r *runner) transferLink(src, dst string, move, noReplace bool) error {
 	var target string
-	if err := r.retry(src, func() error {
+	if err := r.retry(src, func(fs FS) error {
 		var readErr error
-		target, readErr = os.Readlink(src)
+		target, readErr = fs.Readlink(src)
 		return readErr
 	}); err != nil {
 		return err
 	}
 
 	tmp := r.tempPath(dst)
-	if err := r.retry(dst, func() error {
-		os.Remove(tmp)
-		return os.Symlink(target, tmp)
+	made := &creation{path: tmp}
+	if err := r.retry(dst, func(fs FS) error {
+		made.discard()
+		if err := fs.Symlink(target, tmp); err != nil {
+			return err
+		}
+		made.fs = fs
+		return nil
 	}); err != nil {
 		return err
 	}
-	if err := r.commit(tmp, dst); err != nil {
+	if err := r.commit(tmp, dst, made, noReplace); err != nil {
 		return err
 	}
 
@@ -217,18 +232,19 @@ func (r *runner) transferLink(src, dst string, move bool) error {
 	return r.dropSource(src, move)
 }
 
-func (r *runner) transferFile(src, dst string, info os.FileInfo, move bool) error {
+func (r *runner) transferFile(src, dst string, info os.FileInfo, move, noReplace bool) error {
 	tmp := r.tempPath(dst)
-	if err := r.retry(src, func() error {
-		os.Remove(tmp)
-		return r.copyBytes(src, tmp, info)
+	made := &creation{path: tmp}
+	if err := r.retryLocal(src, func() error {
+		made.discard()
+		return r.copyBytes(src, tmp, info, made)
 	}); err != nil {
-		os.Remove(tmp)
+		made.discard()
 		return err
 	}
 
-	r.preserve(src, tmp, info)
-	if err := r.commit(tmp, dst); err != nil {
+	r.preserve(src, tmp, info, made.fs)
+	if err := r.commit(tmp, dst, made, noReplace); err != nil {
 		return err
 	}
 
@@ -236,9 +252,11 @@ func (r *runner) transferFile(src, dst string, info os.FileInfo, move bool) erro
 	return r.dropSource(src, move)
 }
 
-func (r *runner) commit(tmp, dst string) error {
-	if err := r.retry(dst, func() error { return os.Rename(tmp, dst) }); err != nil {
-		os.Remove(tmp)
+// commit refuses to replace a target whose existence could not be checked,
+// which is what turns a silent overwrite into an EEXIST prompt.
+func (r *runner) commit(tmp, dst string, made *creation, noReplace bool) error {
+	if err := r.retry(dst, func(fs FS) error { return fs.Rename(tmp, dst, noReplace) }); err != nil {
+		made.discard()
 		return err
 	}
 	return nil
@@ -250,49 +268,78 @@ func (r *runner) dropSource(src string, move bool) error {
 	if !move {
 		return nil
 	}
-	return r.retry(src, func() error { return os.Remove(src) })
+	return r.retry(src, func(fs FS) error { return fs.Remove(src) })
 }
 
-func (r *runner) copyBytes(src, tmp string, info os.FileInfo) error {
-	in, err := os.Open(src)
-	if err != nil {
+// copyBytes opens each side through its own retry, so an unreadable source
+// and an unwritable target are elevated independently and a file read as
+// administrator into the user's folder still ends up owned by the user.
+func (r *runner) copyBytes(src, tmp string, info os.FileInfo, made *creation) error {
+	var in io.ReadCloser
+	if err := r.retry(src, func(fs FS) error {
+		opened, err := fs.Open(src)
+		in = opened
+		return err
+	}); err != nil {
 		return err
 	}
 	defer in.Close()
 
-	out, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, info.Mode().Perm())
-	if err != nil {
+	var out Writer
+	if err := r.retry(tmp, func(fs FS) error {
+		created, err := fs.Create(tmp, info.Mode().Perm())
+		if err != nil {
+			return err
+		}
+		out = created
+		made.fs = fs
+		return nil
+	}); err != nil {
 		return err
 	}
-	defer out.Close()
 
 	buf := make([]byte, copyChunk)
 	for {
 		if r.job.closed() {
+			made.abort(out)
 			return context.Canceled
 		}
 		n, readErr := in.Read(buf)
 		if n > 0 {
 			if _, writeErr := out.Write(buf[:n]); writeErr != nil {
+				made.abort(out)
 				return writeErr
 			}
 			r.advance(src, 0, int64(n))
 		}
 		if readErr == io.EOF {
-			return out.Close()
+			if err := out.Close(); err != nil {
+				made.discard()
+				return err
+			}
+			return nil
 		}
 		if readErr != nil {
+			made.abort(out)
 			return readErr
 		}
 	}
 }
 
-func (r *runner) preserve(src, dst string, info os.FileInfo) {
-	if err := os.Chmod(dst, info.Mode().Perm()); err != nil {
+// preserve goes through the route that created dst; xattrs are copied only
+// for a local target, the helper has no op for them.
+func (r *runner) preserve(src, dst string, info os.FileInfo, through FS) {
+	if through == nil {
+		through = local
+	}
+	if err := through.Chmod(dst, info.Mode().Perm(), false); err != nil {
 		r.warn(dst, err)
 	}
-	if err := os.Chtimes(dst, info.ModTime(), info.ModTime()); err != nil {
+	if err := through.Chtimes(dst, info.ModTime()); err != nil {
 		r.warn(dst, err)
+	}
+	if through != local {
+		return
 	}
 	if err := copyXattrs(src, dst); err != nil {
 		r.warn(dst, err)

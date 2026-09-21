@@ -29,6 +29,7 @@ type runner struct {
 	stater      Stater
 	conflictAll Action
 	errorAll    Action
+	elevateRest bool
 	scanned     map[string]scanResult
 	estimating  bool
 }
@@ -60,6 +61,8 @@ func execute(j *job) error {
 		return r.emptyTrash()
 	case KindSetPermissions:
 		return r.setPermissions()
+	case KindSetOwner:
+		return r.setOwner()
 	}
 	return errors.New("unknown operation: " + string(j.spec.kind))
 }
@@ -96,20 +99,38 @@ func (g guard) matches(path string) bool {
 }
 
 // retry runs step until it succeeds, the user skips it, or the job is
-// cancelled; errSkipped tells the caller to move on to the next item.
-func (r *runner) retry(path string, step func() error) error {
+// cancelled; errSkipped tells the caller to move on to the next item. A
+// denied step may be retried through the elevated route when one exists.
+func (r *runner) retry(path string, step func(FS) error) error {
+	return r.attempt(path, step, true)
+}
+
+// retryLocal is for steps that have no elevated form, so the prompt never
+// offers one.
+func (r *runner) retryLocal(path string, step func() error) error {
+	return r.attempt(path, func(FS) error { return step() }, false)
+}
+
+func (r *runner) attempt(path string, step func(FS) error, mayElevate bool) error {
+	elevated := false
 	for {
-		err := step()
+		err := step(r.fs(elevated))
 		if err == nil {
 			return nil
+		}
+		if errors.Is(err, errSkipped) || errors.Is(err, context.Canceled) {
+			return err
 		}
 		if r.job.closed() {
 			return context.Canceled
 		}
 
-		switch r.answerError(path, err) {
+		offer := mayElevate && r.canElevate(err)
+		switch r.answerError(path, err, offer, !elevated) {
 		case ActionRetry:
-			continue
+			elevated = false
+		case ActionRetryElevated:
+			elevated = offer
 		case ActionSkip:
 			r.skip()
 			return errSkipped
@@ -119,9 +140,29 @@ func (r *runner) retry(path string, step func() error) error {
 	}
 }
 
-func (r *runner) answerError(path string, err error) Action {
-	if r.errorAll != "" {
+func (r *runner) fs(elevated bool) FS {
+	if elevated && r.job.mgr.elevator != nil {
+		return r.job.mgr.elevator
+	}
+	return local
+}
+
+func (r *runner) canElevate(err error) bool {
+	if codeOf(err) != string(files.CodeAccess) {
+		return false
+	}
+	return r.job.mgr.elevationAvailable()
+}
+
+// answerError applies a sticky answer or asks. Choosing "retry elevated"
+// once holds for the rest of the job, but only for the first, unelevated
+// failure of a step, so an elevated failure is shown instead of looping.
+func (r *runner) answerError(path string, err error, offer, firstTry bool) Action {
+	switch {
+	case r.errorAll != "":
 		return r.errorAll
+	case r.elevateRest && offer && firstTry:
+		return ActionRetryElevated
 	}
 
 	code := codeOf(err)
@@ -130,12 +171,18 @@ func (r *runner) answerError(path string, err error) Action {
 		Path:        path,
 		Code:        code,
 		Message:     err.Error(),
-		Escalatable: code == string(files.CodeAccess),
+		Escalatable: offer,
 		Actions:     []Action{ActionRetry, ActionSkip, ActionCancel},
+	}
+	if offer {
+		failure.Actions = []Action{ActionRetryElevated, ActionRetry, ActionSkip, ActionCancel}
 	}
 
 	answer := r.job.ask(event{Kind: "error", JobID: r.job.id, Failure: failure}, StatePausedError)
-	if answer.ApplyToAll && answer.Action != ActionRetry {
+	switch {
+	case answer.Action == ActionRetryElevated:
+		r.elevateRest = true
+	case answer.ApplyToAll && answer.Action != ActionRetry:
 		r.errorAll = answer.Action
 	}
 	return answer.Action

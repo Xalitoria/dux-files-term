@@ -10,6 +10,8 @@ OverlayDialog {
     readonly property var paused: FileOpsService.jobs.filter(job => job.state === "paused-error")
     readonly property var current: paused.length > 0 ? paused[0] : null
     readonly property var failure: current ? current.failure : null
+    readonly property bool elevationOffered: offers("retryElevated")
+    readonly property bool deniedUnelevated: failure !== null && failure.code === "EACCES" && !elevationOffered
     property bool applyToAll: false
 
     function answer(action) {
@@ -41,6 +43,15 @@ OverlayDialog {
             wrapMode: Text.WordWrap
         }
 
+        StyledText {
+            Layout.fillWidth: true
+            visible: root.deniedUnelevated
+            text: FileOpsService.canElevate ? I18n.tr("This step cannot be retried as administrator", "file operation error dialog explanation") : FileFormat.elevationUnavailable(FileOpsService.elevation.reason)
+            color: Theme.surfaceVariantText
+            font.pixelSize: Theme.fontSizeSmall
+            wrapMode: Text.WordWrap
+        }
+
         DankToggle {
             Layout.fillWidth: true
             text: I18n.tr("Do this for the rest", "file conflict dialog option to reuse the answer")
@@ -66,9 +77,16 @@ OverlayDialog {
         DankButton {
             visible: root.offers("retry")
             text: I18n.tr("Try again", "file operation error dialog button to retry")
+            backgroundColor: root.elevationOffered ? Theme.secondaryContainer : Theme.primary
+            textColor: root.elevationOffered ? Theme.onSecondaryContainer : Theme.primaryText
+            onClicked: root.answer("retry")
+        },
+        DankButton {
+            visible: root.elevationOffered
+            text: I18n.tr("Retry as administrator", "file operation error dialog button to retry with elevated rights")
             backgroundColor: Theme.primary
             textColor: Theme.primaryText
-            onClicked: root.answer("retry")
+            onClicked: root.answer("retryElevated")
         }
     ]
 }

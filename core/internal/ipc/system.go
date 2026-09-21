@@ -10,6 +10,12 @@ func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			return
 		}
 		Respond(w, req.ID, deps.ColorScheme.State())
+	case "system.elevation":
+		if deps.FileOps == nil {
+			Respond(w, req.ID, map[string]any{"available": false, "reason": "NOROUTE"})
+			return
+		}
+		Respond(w, req.ID, deps.FileOps.Elevation())
 	case "system.openUri":
 		if deps.Apps == nil {
 			RespondError(w, req.ID, "uri opener unavailable")

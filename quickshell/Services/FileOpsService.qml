@@ -19,6 +19,13 @@ Singleton {
     readonly property int activeCount: jobs.filter(job => job.state !== "done" && job.state !== "failed").length
     readonly property bool hasClipboard: clipboardPaths.length > 0
 
+    property var elevation: ({
+            "available": false,
+            "route": "",
+            "reason": ""
+        })
+    readonly property bool canElevate: elevation.available === true
+
     signal requestFailed(string message)
     signal jobFinished(var job)
 
@@ -32,8 +39,10 @@ Singleton {
     readonly property Connections _daemonLink: Connections {
         target: root.transport
         function onConnectedChanged() {
-            if (root.transport.connected)
-                root.refresh();
+            if (!root.transport.connected)
+                return;
+            root.refresh();
+            root.refreshElevation();
         }
     }
 
@@ -128,6 +137,15 @@ Singleton {
         });
     }
 
+    function setOwner(paths, owner, group, recursive) {
+        _start("files.op.setOwner", {
+            "paths": paths,
+            "owner": owner || "",
+            "group": group || "",
+            "recursive": recursive === true
+        });
+    }
+
     function respond(jobId, answerId, action, applyToAll) {
         _start("files.op.respond", {
             "jobId": jobId,
@@ -157,6 +175,19 @@ Singleton {
             for (const job of (response.result || {}).jobs || [])
                 _byId[job.id] = job;
             _rebuild();
+        });
+    }
+
+    function refreshElevation() {
+        transport.sendRequest("system.elevation", null, response => {
+            if (response.error)
+                return;
+            const result = response.result || {};
+            elevation = {
+                "available": result.available === true,
+                "route": result.route || "",
+                "reason": result.reason || ""
+            };
         });
     }
 

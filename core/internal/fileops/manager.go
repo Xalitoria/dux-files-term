@@ -43,9 +43,10 @@ type guard struct {
 }
 
 type Manager struct {
-	bus    Publisher
-	stater Stater
-	slots  chan struct{}
+	bus      Publisher
+	stater   Stater
+	elevator Elevator
+	slots    chan struct{}
 
 	mu       sync.Mutex
 	nextID   int
@@ -63,6 +64,37 @@ func NewManager(bus Publisher, stater Stater) *Manager {
 		active: map[string]*job{},
 		undo:   map[string][]*undoRecord{},
 	}
+}
+
+// SetElevator installs the "retry as administrator" route; call it before
+// the first job.
+func (m *Manager) SetElevator(e Elevator) {
+	m.elevator = e
+}
+
+type Elevation struct {
+	Available bool   `json:"available"`
+	Route     string `json:"route,omitempty"`
+	Reason    string `json:"reason,omitempty"`
+}
+
+func (m *Manager) Elevation() Elevation {
+	if m.elevator == nil {
+		return Elevation{Reason: "NOROUTE"}
+	}
+	err := m.elevator.Available()
+	if err == nil {
+		return Elevation{Available: true, Route: m.elevator.Route()}
+	}
+	var unavailable *Unavailable
+	if errors.As(err, &unavailable) {
+		return Elevation{Route: m.elevator.Route(), Reason: unavailable.Reason}
+	}
+	return Elevation{Route: m.elevator.Route(), Reason: err.Error()}
+}
+
+func (m *Manager) elevationAvailable() bool {
+	return m.elevator != nil && m.elevator.Available() == nil
 }
 
 func (m *Manager) enqueue(s spec) *job {

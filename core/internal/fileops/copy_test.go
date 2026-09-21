@@ -209,6 +209,7 @@ func TestDeniedErrorIsEscalatable(t *testing.T) {
 	require.NoError(t, os.Mkdir(dest, 0o500))
 
 	manager, bus := newHarness(t)
+	manager.SetElevator(&fakeElevator{})
 	var seen Failure
 	bus.onFailure = func(f Failure) Answer {
 		seen = f
@@ -218,6 +219,7 @@ func TestDeniedErrorIsEscalatable(t *testing.T) {
 
 	require.Equal(t, "EACCES", seen.Code)
 	require.True(t, seen.Escalatable)
+	require.Contains(t, seen.Actions, ActionRetryElevated)
 }
 
 func TestCancelMidCopyLeavesNoTempFile(t *testing.T) {

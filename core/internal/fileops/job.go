@@ -35,6 +35,7 @@ const (
 	KindDelete         Kind = "delete"
 	KindEmptyTrash     Kind = "emptyTrash"
 	KindSetPermissions Kind = "setPermissions"
+	KindSetOwner       Kind = "setOwner"
 )
 
 type Action string
@@ -46,6 +47,8 @@ const (
 	ActionMerge    Action = "merge"
 	ActionRetry    Action = "retry"
 	ActionCancel   Action = "cancel"
+
+	ActionRetryElevated Action = "retryElevated"
 )
 
 type Progress struct {
@@ -110,6 +113,8 @@ type spec struct {
 	name      string
 	template  string
 	mode      uint32
+	uid       int
+	gid       int
 	recursive bool
 	pairs     []pair
 	guards    []guard

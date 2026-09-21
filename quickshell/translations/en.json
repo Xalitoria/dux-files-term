@@ -36,6 +36,30 @@
     "comment": "label for a server address input"
   },
   {
+    "term": "Administrator access is not available",
+    "context": "Administrator access is not available",
+    "reference": "Common/FileFormat.qml:52",
+    "comment": "file operation error dialog explanation"
+  },
+  {
+    "term": "Administrator access is not available because pkexec is not installed",
+    "context": "Administrator access is not available because pkexec is not installed",
+    "reference": "Common/FileFormat.qml:48",
+    "comment": "file operation error dialog explanation"
+  },
+  {
+    "term": "Administrator access is not available because the Dank Files polkit policy is not installed",
+    "context": "Administrator access is not available because the Dank Files polkit policy is not installed",
+    "reference": "Common/FileFormat.qml:50",
+    "comment": "file operation error dialog explanation"
+  },
+  {
+    "term": "Administrator access is not available inside the sandbox",
+    "context": "Administrator access is not available inside the sandbox",
+    "reference": "Common/FileFormat.qml:46",
+    "comment": "file operation error dialog explanation"
+  },
+  {
     "term": "Already here",
     "context": "Already here",
     "reference": "Modules/ConflictDialog.qml:43",
@@ -68,7 +92,7 @@
   {
     "term": "Cancel",
     "context": "Cancel",
-    "reference": "Modules/OpenWithDialog.qml:95, Modules/ConfirmDialog.qml:25, Modules/ConnectServerDialog.qml:96, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:54, Modules/ExecutableDialog.qml:31, Modules/CredentialDialog.qml:145, Modules/ConflictDialog.qml:63, Modules/UnlockDialog.qml:59",
+    "reference": "Modules/OpenWithDialog.qml:95, Modules/ConfirmDialog.qml:25, Modules/ConnectServerDialog.qml:96, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:65, Modules/ExecutableDialog.qml:31, Modules/CredentialDialog.qml:145, Modules/ConflictDialog.qml:63, Modules/UnlockDialog.qml:59",
     "comment": "dialog button to cancel"
   },
   {
@@ -158,7 +182,7 @@
   {
     "term": "Do this for the rest",
     "context": "Do this for the rest",
-    "reference": "Modules/OperationErrorDialog.qml:46, Modules/ConflictDialog.qml:55",
+    "reference": "Modules/OperationErrorDialog.qml:57, Modules/ConflictDialog.qml:55",
     "comment": "file conflict dialog option to reuse the answer"
   },
   {
@@ -372,6 +396,12 @@
     "comment": "file operation in progress"
   },
   {
+    "term": "Retry as administrator",
+    "context": "Retry as administrator",
+    "reference": "Modules/OperationErrorDialog.qml:86",
+    "comment": "file operation error dialog button to retry with elevated rights"
+  },
+  {
     "term": "Run",
     "context": "Run",
     "reference": "Modules/ExecutableDialog.qml:46",
@@ -410,7 +440,7 @@
   {
     "term": "Skip",
     "context": "Skip",
-    "reference": "Modules/OperationErrorDialog.qml:61, Modules/ConflictDialog.qml:77",
+    "reference": "Modules/OperationErrorDialog.qml:72, Modules/ConflictDialog.qml:77",
     "comment": "file conflict dialog button to leave the item alone"
   },
   {
@@ -474,6 +504,12 @@
     "comment": "credential dialog option that keeps the password until logout"
   },
   {
+    "term": "This step cannot be retried as administrator",
+    "context": "This step cannot be retried as administrator",
+    "reference": "Modules/OperationErrorDialog.qml:49",
+    "comment": "file operation error dialog explanation"
+  },
+  {
     "term": "Trust and run",
     "context": "Trust and run",
     "reference": "Modules/MainWindow.qml:507",
@@ -482,7 +518,7 @@
   {
     "term": "Try again",
     "context": "Try again",
-    "reference": "Modules/OperationErrorDialog.qml:68",
+    "reference": "Modules/OperationErrorDialog.qml:79",
     "comment": "file operation error dialog button to retry"
   },
   {

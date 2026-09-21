@@ -42,6 +42,34 @@
     "comment": ""
   },
   {
+    "term": "Administrator access is not available",
+    "translation": "",
+    "context": "file operation error dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Administrator access is not available because pkexec is not installed",
+    "translation": "",
+    "context": "file operation error dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Administrator access is not available because the Dank Files polkit policy is not installed",
+    "translation": "",
+    "context": "file operation error dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Administrator access is not available inside the sandbox",
+    "translation": "",
+    "context": "file operation error dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Already here",
     "translation": "",
     "context": "file conflict dialog label for the existing item",
@@ -434,6 +462,13 @@
     "comment": ""
   },
   {
+    "term": "Retry as administrator",
+    "translation": "",
+    "context": "file operation error dialog button to retry with elevated rights",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Run",
     "translation": "",
     "context": "executable file dialog action running the file",
@@ -549,6 +584,13 @@
     "term": "This session",
     "translation": "",
     "context": "credential dialog option that keeps the password until logout",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This step cannot be retried as administrator",
+    "translation": "",
+    "context": "file operation error dialog explanation",
     "reference": "",
     "comment": ""
   },

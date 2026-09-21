@@ -1,6 +1,8 @@
 package fileops
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,12 +17,18 @@ type resolution struct {
 	merge    bool
 	replaced bool
 	abort    bool
+	// unknown: the target could not be stat'ed, so nothing may replace it
+	// silently later.
+	unknown bool
 }
 
 func (r *runner) resolve(src, dst string, srcIsDir bool) resolution {
 	target, err := os.Lstat(dst)
-	if err != nil {
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
 		return resolution{dst: dst}
+	case err != nil:
+		return resolution{dst: dst, unknown: true}
 	}
 
 	action := r.conflictAll
