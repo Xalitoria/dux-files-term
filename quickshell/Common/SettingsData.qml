@@ -76,6 +76,12 @@ Singleton {
     property alias language: adapter.language
     // "" autodetects from $TERMINAL and the known emulators
     property alias terminal: adapter.terminal
+    // "hide" keeps the daemon warm, "quit" stops it with the last window
+    property alias closeBehavior: adapter.closeBehavior
+    // "current" replaces the active pane, "tab" opens a new tab
+    property alias openLocationIn: adapter.openLocationIn
+    property alias bookmarks: adapter.bookmarks
+    property alias sidebarCollapsed: adapter.sidebarCollapsed
 
     readonly property var locale: language !== "" ? Qt.locale(language) : Qt.locale()
 
@@ -127,6 +133,10 @@ Singleton {
             property string focusRingColor: "primary"
             property string language: ""
             property string terminal: ""
+            property string closeBehavior: "hide"
+            property string openLocationIn: "current"
+            property var bookmarks: []
+            property bool sidebarCollapsed: false
         }
     }
 }

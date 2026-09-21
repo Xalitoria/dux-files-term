@@ -98,9 +98,30 @@
     "comment": ""
   },
   {
+    "term": "Back",
+    "translation": "",
+    "context": "tooltip on the button going to the previous location",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Being added",
     "translation": "",
     "context": "file conflict dialog label for the incoming item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Bookmark this folder",
+    "translation": "",
+    "context": "tooltip on the bookmark button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Bookmarks",
+    "translation": "",
+    "context": "sidebar section listing saved folders",
     "reference": "",
     "comment": ""
   },
@@ -115,6 +136,13 @@
     "term": "Cancelled",
     "translation": "",
     "context": "file operation was cancelled",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Close tab",
+    "translation": "",
+    "context": "tooltip on the button closing a tab",
     "reference": "",
     "comment": ""
   },
@@ -157,6 +185,13 @@
     "term": "Copied",
     "translation": "",
     "context": "toast after copying files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Copy location path",
+    "translation": "",
+    "context": "menu entry copying the current path to the clipboard",
     "reference": "",
     "comment": ""
   },
@@ -266,9 +301,23 @@
     "comment": ""
   },
   {
+    "term": "Forward",
+    "translation": "",
+    "context": "tooltip on the button going to the next location",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "GB",
     "translation": "",
     "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Home",
+    "translation": "",
+    "context": "sidebar entry for the user's home folder",
     "reference": "",
     "comment": ""
   },
@@ -290,6 +339,13 @@
     "term": "Merge",
     "translation": "",
     "context": "file conflict dialog button to merge folders",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "More actions",
+    "translation": "",
+    "context": "tooltip on the overflow menu button",
     "reference": "",
     "comment": ""
   },
@@ -371,9 +427,16 @@
     "comment": ""
   },
   {
+    "term": "New tab",
+    "translation": "",
+    "context": "tooltip on the button opening a new tab",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Not available",
     "translation": "",
-    "context": "explanation for a feature the environment does not permit",
+    "context": "explanation for a feature the environment does not permit | status for a feature the environment does not allow",
     "reference": "",
     "comment": ""
   },
@@ -420,6 +483,13 @@
     "comment": ""
   },
   {
+    "term": "Open in new tab",
+    "translation": "",
+    "context": "context menu entry opening a folder in a new tab",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open in terminal",
     "translation": "",
     "context": "context menu entry opening a terminal",
@@ -455,6 +525,13 @@
     "comment": ""
   },
   {
+    "term": "Properties",
+    "translation": "",
+    "context": "menu entry showing details about the current folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Protocol",
     "translation": "",
     "context": "label for the network protocol picker",
@@ -469,9 +546,23 @@
     "comment": ""
   },
   {
+    "term": "Reload",
+    "translation": "",
+    "context": "menu entry re-reading the current folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Remember password",
     "translation": "",
     "context": "credential dialog option controlling password storage",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Remove bookmark",
+    "translation": "",
+    "context": "tooltip on the bookmark button",
     "reference": "",
     "comment": ""
   },
@@ -546,6 +637,13 @@
     "comment": ""
   },
   {
+    "term": "Search in Files",
+    "translation": "",
+    "context": "placeholder in the search field",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Sign in",
     "translation": "",
     "context": "credential dialog header",
@@ -556,6 +654,55 @@
     "term": "Skip",
     "translation": "",
     "context": "file conflict dialog button to leave the item alone",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sort ascending",
+    "translation": "",
+    "context": "tooltip on the sort direction button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sort by date modified",
+    "translation": "",
+    "context": "tooltip on the sort button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sort by name",
+    "translation": "",
+    "context": "tooltip on the sort button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sort by size",
+    "translation": "",
+    "context": "tooltip on the sort button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sort by type",
+    "translation": "",
+    "context": "tooltip on the sort button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sort descending",
+    "translation": "",
+    "context": "tooltip on the sort direction button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Split view",
+    "translation": "",
+    "context": "tooltip on the button showing a second pane",
     "reference": "",
     "comment": ""
   },
@@ -640,6 +787,13 @@
     "term": "This step cannot be retried as administrator",
     "translation": "",
     "context": "file operation error dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Toggle sidebar",
+    "translation": "",
+    "context": "tooltip on the button showing or hiding the sidebar",
     "reference": "",
     "comment": ""
   },

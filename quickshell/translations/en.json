@@ -14,7 +14,7 @@
   {
     "term": "%1 has not been marked as trusted. Running it allows it to start any program.",
     "context": "%1 has not been marked as trusted. Running it allows it to start any program.",
-    "reference": "Modules/MainWindow.qml:508",
+    "reference": "Modules/MainWindow.qml:925",
     "comment": "untrusted desktop file dialog explanation"
   },
   {
@@ -26,7 +26,7 @@
   {
     "term": "%1 will be deleted permanently. This cannot be undone.",
     "context": "%1 will be deleted permanently. This cannot be undone.",
-    "reference": "Modules/MainWindow.qml:550",
+    "reference": "Modules/MainWindow.qml:967",
     "comment": "permanent delete confirmation explanation"
   },
   {
@@ -84,10 +84,28 @@
     "comment": "file size unit"
   },
   {
+    "term": "Back",
+    "context": "Back",
+    "reference": "Modules/NavButtonPair.qml:63",
+    "comment": "tooltip on the button going to the previous location"
+  },
+  {
     "term": "Being added",
     "context": "Being added",
     "reference": "Modules/ConflictDialog.qml:49",
     "comment": "file conflict dialog label for the incoming item"
+  },
+  {
+    "term": "Bookmark this folder",
+    "context": "Bookmark this folder",
+    "reference": "Modules/FilesTopbar.qml:84",
+    "comment": "tooltip on the bookmark button"
+  },
+  {
+    "term": "Bookmarks",
+    "context": "Bookmarks",
+    "reference": "Modules/BookmarksSection.qml:39",
+    "comment": "sidebar section listing saved folders"
   },
   {
     "term": "Cancel",
@@ -100,6 +118,12 @@
     "context": "Cancelled",
     "reference": "Modules/JobRow.qml:44",
     "comment": "file operation was cancelled"
+  },
+  {
+    "term": "Close tab",
+    "context": "Close tab",
+    "reference": "Modules/FilesTab.qml:71",
+    "comment": "tooltip on the button closing a tab"
   },
   {
     "term": "Confirm",
@@ -134,8 +158,14 @@
   {
     "term": "Copied",
     "context": "Copied",
-    "reference": "Modules/MainWindow.qml:141",
+    "reference": "Modules/MainWindow.qml:348",
     "comment": "toast after copying files"
+  },
+  {
+    "term": "Copy location path",
+    "context": "Copy location path",
+    "reference": "Modules/FilesTopbar.qml:130",
+    "comment": "menu entry copying the current path to the clipboard"
   },
   {
     "term": "Copying",
@@ -146,13 +176,13 @@
   {
     "term": "Create",
     "context": "Create",
-    "reference": "Modules/MainWindow.qml:540",
+    "reference": "Modules/MainWindow.qml:957",
     "comment": "dialog button creating an item"
   },
   {
     "term": "Dank Files",
     "context": "Dank Files",
-    "reference": "Modules/MainWindow.qml:22",
+    "reference": "Modules/MainWindow.qml:50",
     "comment": "main window title"
   },
   {
@@ -164,7 +194,7 @@
   {
     "term": "Delete permanently?",
     "context": "Delete permanently?",
-    "reference": "Modules/MainWindow.qml:549",
+    "reference": "Modules/MainWindow.qml:966",
     "comment": "permanent delete confirmation header"
   },
   {
@@ -228,10 +258,22 @@
     "comment": "file operation completed"
   },
   {
+    "term": "Forward",
+    "context": "Forward",
+    "reference": "Modules/NavButtonPair.qml:71",
+    "comment": "tooltip on the button going to the next location"
+  },
+  {
     "term": "GB",
     "context": "GB",
     "reference": "Common/FileFormat.qml:13",
     "comment": "file size unit"
+  },
+  {
+    "term": "Home",
+    "context": "Home",
+    "reference": "Modules/MainWindow.qml:177, Modules/BookmarksSection.qml:20",
+    "comment": "sidebar entry for the user's home folder"
   },
   {
     "term": "Keep both",
@@ -252,15 +294,21 @@
     "comment": "file conflict dialog button to merge folders"
   },
   {
+    "term": "More actions",
+    "context": "More actions",
+    "reference": "Modules/FilesTopbar.qml:111",
+    "comment": "tooltip on the overflow menu button"
+  },
+  {
     "term": "Moved",
     "context": "Moved",
-    "reference": "Modules/MainWindow.qml:139",
+    "reference": "Modules/MainWindow.qml:346",
     "comment": "toast after moving files"
   },
   {
     "term": "Moved to trash",
     "context": "Moved to trash",
-    "reference": "Modules/MainWindow.qml:137",
+    "reference": "Modules/MainWindow.qml:344",
     "comment": "toast after trashing files"
   },
   {
@@ -314,14 +362,20 @@
   {
     "term": "New folder",
     "context": "New folder",
-    "reference": "Modules/MainWindow.qml:539",
+    "reference": "Modules/MainWindow.qml:956",
     "comment": "new folder dialog header"
+  },
+  {
+    "term": "New tab",
+    "context": "New tab",
+    "reference": "Modules/TabRow.qml:75",
+    "comment": "tooltip on the button opening a new tab"
   },
   {
     "term": "Not available",
     "context": "Not available",
-    "reference": "Common/FileFormat.qml:71",
-    "comment": "explanation for a feature the environment does not permit"
+    "reference": "Modules/MainWindow.qml:561, Common/FileFormat.qml:71",
+    "comment": "explanation for a feature the environment does not permit | status for a feature the environment does not allow"
   },
   {
     "term": "Not available because the sandbox cannot start programs on the host",
@@ -350,7 +404,7 @@
   {
     "term": "Open",
     "context": "Open",
-    "reference": "Modules/MainWindow.qml:422, Modules/OpenWithDialog.qml:101",
+    "reference": "Modules/MainWindow.qml:829, Modules/OpenWithDialog.qml:101",
     "comment": "context menu entry opening a file"
   },
   {
@@ -360,21 +414,27 @@
     "comment": "executable file dialog action opening the file as text"
   },
   {
+    "term": "Open in new tab",
+    "context": "Open in new tab",
+    "reference": "Modules/MainWindow.qml:854",
+    "comment": "context menu entry opening a folder in a new tab"
+  },
+  {
     "term": "Open in terminal",
     "context": "Open in terminal",
-    "reference": "Modules/MainWindow.qml:448",
+    "reference": "Modules/MainWindow.qml:865, Modules/FilesTopbar.qml:149",
     "comment": "context menu entry opening a terminal"
   },
   {
     "term": "Open with",
     "context": "Open with",
-    "reference": "Modules/MainWindow.qml:433, Modules/OpenWithDialog.qml:55",
+    "reference": "Modules/MainWindow.qml:840, Modules/OpenWithDialog.qml:55",
     "comment": "open with dialog header"
   },
   {
     "term": "Other application…",
     "context": "Other application…",
-    "reference": "Modules/MainWindow.qml:481",
+    "reference": "Modules/MainWindow.qml:898",
     "comment": "open with menu entry opening the full application picker"
   },
   {
@@ -390,6 +450,12 @@
     "comment": "label for a password input"
   },
   {
+    "term": "Properties",
+    "context": "Properties",
+    "reference": "Modules/FilesTopbar.qml:121",
+    "comment": "menu entry showing details about the current folder"
+  },
+  {
     "term": "Protocol",
     "context": "Protocol",
     "reference": "Modules/ConnectServerDialog.qml:49",
@@ -402,21 +468,33 @@
     "comment": "header above previously used servers"
   },
   {
+    "term": "Reload",
+    "context": "Reload",
+    "reference": "Modules/FilesTopbar.qml:139",
+    "comment": "menu entry re-reading the current folder"
+  },
+  {
     "term": "Remember password",
     "context": "Remember password",
     "reference": "Modules/CredentialDialog.qml:117",
     "comment": "credential dialog option controlling password storage"
   },
   {
+    "term": "Remove bookmark",
+    "context": "Remove bookmark",
+    "reference": "Modules/FilesTopbar.qml:84, Modules/BookmarksSection.qml:51",
+    "comment": "tooltip on the bookmark button"
+  },
+  {
     "term": "Rename",
     "context": "Rename",
-    "reference": "Modules/MainWindow.qml:531, Modules/MainWindow.qml:532",
+    "reference": "Modules/MainWindow.qml:948, Modules/MainWindow.qml:949",
     "comment": "rename dialog header"
   },
   {
     "term": "Renamed",
     "context": "Renamed",
-    "reference": "Modules/MainWindow.qml:143",
+    "reference": "Modules/MainWindow.qml:350",
     "comment": "toast after renaming a file"
   },
   {
@@ -446,7 +524,7 @@
   {
     "term": "Run this desktop file?",
     "context": "Run this desktop file?",
-    "reference": "Modules/MainWindow.qml:507",
+    "reference": "Modules/MainWindow.qml:924",
     "comment": "untrusted desktop file dialog header"
   },
   {
@@ -468,6 +546,12 @@
     "comment": "open with dialog search placeholder"
   },
   {
+    "term": "Search in Files",
+    "context": "Search in Files",
+    "reference": "Modules/FilesTopbar.qml:170",
+    "comment": "placeholder in the search field"
+  },
+  {
     "term": "Sign in",
     "context": "Sign in",
     "reference": "Modules/CredentialDialog.qml:54, Modules/CredentialDialog.qml:152",
@@ -478,6 +562,48 @@
     "context": "Skip",
     "reference": "Modules/OperationErrorDialog.qml:72, Modules/ConflictDialog.qml:77",
     "comment": "file conflict dialog button to leave the item alone"
+  },
+  {
+    "term": "Sort ascending",
+    "context": "Sort ascending",
+    "reference": "Modules/SortSplitButton.qml:113",
+    "comment": "tooltip on the sort direction button"
+  },
+  {
+    "term": "Sort by date modified",
+    "context": "Sort by date modified",
+    "reference": "Modules/SortSplitButton.qml:31",
+    "comment": "tooltip on the sort button"
+  },
+  {
+    "term": "Sort by name",
+    "context": "Sort by name",
+    "reference": "Modules/SortSplitButton.qml:37",
+    "comment": "tooltip on the sort button"
+  },
+  {
+    "term": "Sort by size",
+    "context": "Sort by size",
+    "reference": "Modules/SortSplitButton.qml:33",
+    "comment": "tooltip on the sort button"
+  },
+  {
+    "term": "Sort by type",
+    "context": "Sort by type",
+    "reference": "Modules/SortSplitButton.qml:35",
+    "comment": "tooltip on the sort button"
+  },
+  {
+    "term": "Sort descending",
+    "context": "Sort descending",
+    "reference": "Modules/SortSplitButton.qml:113",
+    "comment": "tooltip on the sort direction button"
+  },
+  {
+    "term": "Split view",
+    "context": "Split view",
+    "reference": "Modules/FilesTopbar.qml:93",
+    "comment": "tooltip on the button showing a second pane"
   },
   {
     "term": "TB",
@@ -494,19 +620,19 @@
   {
     "term": "This folder could not be opened",
     "context": "This folder could not be opened",
-    "reference": "Modules/MainWindow.qml:38",
+    "reference": "Modules/FilesPane.qml:81",
     "comment": "directory listing error"
   },
   {
     "term": "This folder is empty",
     "context": "This folder is empty",
-    "reference": "Modules/MainWindow.qml:402",
+    "reference": "Modules/FilesPane.qml:191",
     "comment": "empty directory placeholder"
   },
   {
     "term": "This folder no longer exists",
     "context": "This folder no longer exists",
-    "reference": "Modules/MainWindow.qml:34",
+    "reference": "Modules/FilesPane.qml:77",
     "comment": "directory listing error"
   },
   {
@@ -552,9 +678,15 @@
     "comment": "file operation error dialog explanation"
   },
   {
+    "term": "Toggle sidebar",
+    "context": "Toggle sidebar",
+    "reference": "Modules/FilesTopbar.qml:58",
+    "comment": "tooltip on the button showing or hiding the sidebar"
+  },
+  {
     "term": "Trust and run",
     "context": "Trust and run",
-    "reference": "Modules/MainWindow.qml:509",
+    "reference": "Modules/MainWindow.qml:926",
     "comment": "untrusted desktop file dialog action"
   },
   {
@@ -566,7 +698,7 @@
   {
     "term": "Undo",
     "context": "Undo",
-    "reference": "Modules/MainWindow.qml:201",
+    "reference": "Modules/MainWindow.qml:401",
     "comment": "toast action reversing the last operation"
   },
   {
@@ -578,7 +710,7 @@
   {
     "term": "Untitled folder",
     "context": "Untitled folder",
-    "reference": "Modules/MainWindow.qml:304",
+    "reference": "Modules/MainWindow.qml:820",
     "comment": "default name for a new folder"
   },
   {
@@ -608,7 +740,7 @@
   {
     "term": "You do not have permission to view this folder",
     "context": "You do not have permission to view this folder",
-    "reference": "Modules/MainWindow.qml:36",
+    "reference": "Modules/FilesPane.qml:79",
     "comment": "directory listing error"
   },
   {

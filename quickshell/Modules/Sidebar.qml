@@ -8,6 +8,8 @@ import qs.DankCommon.Widgets
 DankFlickable {
     id: sidebar
 
+    property string currentPath: ""
+
     signal navigateRequested(string path)
     signal unlockRequested(var device)
     signal connectRequested
@@ -23,7 +25,13 @@ DankFlickable {
         id: sections
 
         width: sidebar.width
-        spacing: Theme.spacingL
+        spacing: FilesMetrics.sidebarSectionSpacing
+
+        BookmarksSection {
+            width: sections.width
+            currentPath: sidebar.currentPath
+            onNavigateRequested: path => sidebar.navigateRequested(path)
+        }
 
         DevicesSection {
             width: sections.width

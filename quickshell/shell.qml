@@ -95,7 +95,7 @@ ShellRoot {
     function applyPendingPath() {
         if (!windowLoader.item || pendingPath === "")
             return;
-        windowLoader.item.currentPath = pendingPath;
+        windowLoader.item.openRequest = pendingPath;
         pendingPath = "";
     }
 

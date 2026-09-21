@@ -48,6 +48,8 @@ func (s *Service) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 		s.handleThumbnail(w, req)
 	case "files.icon":
 		s.handleIcon(w, req)
+	case "files.userDirs":
+		ipc.Respond(w, req.ID, map[string]any{"dirs": listUserDirs()})
 	default:
 		respondCode(w, req.ID, CodeNotSupported, "unknown files method: "+req.Method)
 	}

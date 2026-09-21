@@ -38,6 +38,7 @@ var Methods = []MethodSpec{
 	{Name: "files.stat", Group: "files", Desc: "Metadata for a single path", Params: []ParamSpec{req("path", "absolute path")}},
 	{Name: "files.count", Group: "files", Desc: "Child counts for directories, capped at 10000", Params: []ParamSpec{req("paths", "absolute directory paths"), opt("includeHidden", "count dot-prefixed entries")}},
 	{Name: "files.thumbnail", Group: "files", Desc: "Thumbnail cache paths, generating what is missing", Params: []ParamSpec{req("paths", "absolute file paths"), opt("size", "normal|large|x-large|xx-large"), opt("watchId", "deliver late results on this watch topic")}},
+	{Name: "files.userDirs", Group: "files", Desc: "XDG user directories, home first"},
 	{Name: "files.icon", Group: "files", Desc: "Icon name ladders for paths or mime types", Params: []ParamSpec{opt("paths", "absolute paths"), opt("mimes", "mime types")}},
 
 	{Name: "files.op.copy", Group: "files.op", Desc: "Copy paths into a directory", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory"), opt("scope", "undo stack key, one per window")}},

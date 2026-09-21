@@ -14,16 +14,21 @@ StyledButton {
     property string actionTooltip: ""
     property real ringValue: -1
     property bool busy: false
+    property bool selected: false
 
     signal actionTriggered
 
     readonly property bool showAction: actionIcon !== "" && (hovered || actionArea.containsMouse)
-    readonly property color contentColor: enabled ? Theme.surfaceText : Theme.onSurface_38
+    readonly property color contentColor: {
+        if (!enabled)
+            return Theme.onSurface_38;
+        return selected ? Theme.onSecondaryContainer : Theme.surfaceText;
+    }
 
     width: parent?.width ?? 0
-    implicitHeight: Theme.listItemHeight - Theme.spacingM
+    implicitHeight: FilesMetrics.sidebarRowHeight
     radius: Theme.cornerRadiusM
-    color: "transparent"
+    color: selected ? Theme.secondaryContainer : "transparent"
 
     StateLayer {
         control: row
@@ -39,8 +44,8 @@ StyledButton {
         DankRingGauge {
             id: gauge
 
-            Layout.preferredWidth: Theme.iconSizeLarge
-            Layout.preferredHeight: Theme.iconSizeLarge
+            Layout.preferredWidth: FilesMetrics.sidebarIconSize
+            Layout.preferredHeight: FilesMetrics.sidebarIconSize
             value: row.ringValue
             strokeWidth: Theme.spacingXXS
             ringColor: row.ringValue >= 0.9 ? Theme.error : Theme.primary

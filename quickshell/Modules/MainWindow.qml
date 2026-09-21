@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Window
 import Quickshell
 import qs.Common
-import qs.Models
 import qs.Services
 import qs.DankCommon.Widgets
 
@@ -13,35 +12,255 @@ FloatingWindow {
 
     signal hideRequested
 
-    property string currentPath: Paths.strip(Paths.home)
-    readonly property string opScope: "main"
+    property var tabs: []
+    property int currentTab: 0
+    property int activePaneIndex: 0
+    property bool splitView: false
+    property real splitRatio: 0.5
+    property bool showHidden: false
+    property string sortKey: "name"
+    property bool sortDescending: false
+    property bool sidebarOverlayOpen: false
     property string pendingTrust: ""
+    property string openRequest: ""
+    property bool applyingTab: false
+
+    readonly property string opScope: "main"
+    readonly property var secondPane: splitLoader.item
+    readonly property var activePane: splitView && activePaneIndex === 1 && secondPane ? secondPane : primaryPane
+    readonly property string currentPath: activePane.path
+    readonly property var currentEntry: activePane.currentEntry
+    readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
+    readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
     readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible
-    readonly property var currentEntry: fileList.currentIndex >= 0 && fileList.currentIndex < directory.count ? directory.entries.get(fileList.currentIndex) : null
+    readonly property bool shortcutsEnabled: !dialogOpen && !primaryPane.editingPath && !(secondPane?.editingPath ?? false)
 
     title: I18n.tr("Dank Files", "main window title")
-    implicitWidth: 960
-    implicitHeight: 640
+    implicitWidth: SessionData.windowWidth
+    implicitHeight: SessionData.windowHeight
     minimumSize: Qt.size(480, 320)
     color: Theme.surface
     visible: true
 
-    onClosed: hideRequested()
+    onClosed: requestClose()
+    onMaximizedChanged: SessionData.maximized = maximized
 
-    function errorText(code) {
-        switch (code) {
-        case "ENOENT":
-            return I18n.tr("This folder no longer exists", "directory listing error");
-        case "EACCES":
-            return I18n.tr("You do not have permission to view this folder", "directory listing error");
-        default:
-            return I18n.tr("This folder could not be opened", "directory listing error");
-        }
+    onWidthChanged: {
+        if (!maximized)
+            SessionData.windowWidth = width;
     }
 
-    function navigateUp() {
-        const parent = currentPath.substring(0, currentPath.lastIndexOf("/"));
-        currentPath = parent === "" ? "/" : parent;
+    onHeightChanged: {
+        if (!maximized)
+            SessionData.windowHeight = height;
+    }
+
+    onOpenRequestChanged: {
+        if (openRequest === "")
+            return;
+        openPath(openRequest, SettingsData.openLocationIn === "tab");
+        openRequest = "";
+    }
+
+    onCompactChanged: {
+        if (!compact)
+            sidebarOverlayOpen = false;
+    }
+
+    Component.onCompleted: {
+        restoreSession();
+        maximized = SessionData.maximized;
+    }
+
+    function requestClose() {
+        if (SettingsData.closeBehavior === "quit") {
+            DankFilesService.quit();
+            return;
+        }
+        hideRequested();
+    }
+
+    function toggleSidebar() {
+        if (compact) {
+            sidebarOverlayOpen = !sidebarOverlayOpen;
+            return;
+        }
+        SettingsData.sidebarCollapsed = !SettingsData.sidebarCollapsed;
+    }
+
+    function setSplitRatio(value) {
+        splitRatio = Math.max(FilesMetrics.minimumPaneFraction, Math.min(1 - FilesMetrics.minimumPaneFraction, value));
+        SessionData.splitRatio = splitRatio;
+    }
+
+    function resizeSplit(fraction) {
+        setSplitRatio(splitRatio + fraction);
+    }
+
+    function tabState(index) {
+        return tabs[index] ?? null;
+    }
+
+    function paneStates() {
+        const stored = tabState(currentTab)?.panes ?? [];
+        return [primaryPane.saveState(), secondPane ? secondPane.saveState() : (stored[1] ?? null)];
+    }
+
+    function captureTabs() {
+        if (applyingTab || tabs.length === 0)
+            return;
+        const next = tabs.slice();
+        next[currentTab] = {
+            "panes": paneStates(),
+            "active": activePaneIndex
+        };
+        tabs = next;
+        SessionData.tabs = tabs;
+        SessionData.currentTab = currentTab;
+    }
+
+    function applyTab(index) {
+        const state = tabState(index);
+        if (!state)
+            return;
+        applyingTab = true;
+        primaryPane.restoreState(state.panes?.[0] ?? {
+            "path": Paths.strip(Paths.home)
+        });
+        if (secondPane)
+            secondPane.restoreState(state.panes?.[1] ?? {
+                "path": primaryPane.path
+            });
+        activePaneIndex = secondPane ? (state.active ?? 0) : 0;
+        applyingTab = false;
+    }
+
+    function selectTab(index) {
+        if (index === currentTab || index < 0 || index >= tabs.length)
+            return;
+        captureTabs();
+        currentTab = index;
+        applyTab(index);
+        SessionData.currentTab = currentTab;
+    }
+
+    function newTab(path) {
+        captureTabs();
+        const next = tabs.slice();
+        next.push({
+            "panes": [
+                {
+                    "path": path === "" ? currentPath : path
+                },
+                null],
+            "active": 0
+        });
+        tabs = next;
+        currentTab = next.length - 1;
+        applyTab(currentTab);
+        SessionData.tabs = tabs;
+        SessionData.currentTab = currentTab;
+    }
+
+    function closeTab(index) {
+        if (tabs.length <= 1)
+            return;
+        const next = tabs.slice();
+        next.splice(index, 1);
+        const target = index < currentTab ? currentTab - 1 : Math.min(currentTab, next.length - 1);
+        tabs = next;
+        currentTab = target;
+        applyTab(target);
+        SessionData.tabs = tabs;
+        SessionData.currentTab = currentTab;
+    }
+
+    function cycleTab(step) {
+        if (tabs.length < 2)
+            return;
+        selectTab((currentTab + step + tabs.length) % tabs.length);
+    }
+
+    function tabLabel(state) {
+        const path = state?.panes?.[0]?.path ?? "";
+        if (path === "" || path === Paths.strip(Paths.home))
+            return I18n.tr("Home", "sidebar entry for the user's home folder");
+        if (path === "/")
+            return "/";
+        return path.substring(path.lastIndexOf("/") + 1);
+    }
+
+    function restoreSession() {
+        splitView = SessionData.splitView;
+        splitRatio = SessionData.splitRatio;
+        const stored = SessionData.tabs;
+        tabs = Array.isArray(stored) && stored.length > 0 ? stored : [
+            {
+                "panes": [
+                    {
+                        "path": Paths.strip(Paths.home)
+                    },
+                    null],
+                "active": 0
+            }
+        ];
+        currentTab = Math.max(0, Math.min(SessionData.currentTab, tabs.length - 1));
+        applyTab(currentTab);
+    }
+
+    function openPath(path, inNewTab) {
+        if (path === "")
+            return;
+        if (inNewTab) {
+            newTab(path);
+            return;
+        }
+        activePane.navigate(path);
+    }
+
+    function focusPane(index) {
+        activePaneIndex = splitView && secondPane ? index : 0;
+        activePane.focusBody();
+    }
+
+    function swapPaneFocus() {
+        if (!splitView || !secondPane)
+            return;
+        focusPane(activePaneIndex === 0 ? 1 : 0);
+    }
+
+    function toggleSplit() {
+        captureTabs();
+        splitView = !splitView;
+        SessionData.splitView = splitView;
+        if (!splitView) {
+            activePaneIndex = 0;
+            return;
+        }
+        Qt.callLater(() => {
+            if (!window.secondPane)
+                return;
+            const stored = window.tabState(window.currentTab)?.panes?.[1];
+            window.secondPane.restoreState(stored ?? {
+                "path": window.primaryPane.path
+            });
+        });
+    }
+
+    function cycleSort() {
+        switch (sortKey) {
+        case "name":
+            sortKey = "mtime";
+            return;
+        case "mtime":
+            sortKey = "size";
+            return;
+        case "size":
+            sortKey = "type";
+            return;
+        default:
+            sortKey = "name";
+        }
     }
 
     function selection() {
@@ -57,7 +276,7 @@ FloatingWindow {
         if (!entry)
             return;
         if (entry.isDir) {
-            currentPath = entry.path;
+            activePane.navigate(entry.path);
             return;
         }
         const canRun = SandboxService.available("run");
@@ -84,7 +303,7 @@ FloatingWindow {
         if (!currentEntry)
             return;
         const parent = currentEntry.path.substring(0, currentEntry.path.lastIndexOf("/"));
-        currentPath = parent === "" ? "/" : parent;
+        activePane.navigate(parent === "" ? "/" : parent);
     }
 
     function openTerminalHere() {
@@ -92,9 +311,9 @@ FloatingWindow {
     }
 
     function showMenuFor(index, pointX, pointY) {
-        fileList.currentIndex = index;
         openWithMenu.close();
-        fileMenu.openAt(pointX, pointY);
+        const point = activePane.mapToItem(surface, pointX, pointY);
+        fileMenu.openAt(point.x, point.y);
     }
 
     function loadOpenWithMenu() {
@@ -144,13 +363,6 @@ FloatingWindow {
         default:
             return "";
         }
-    }
-
-    DirectoryModel {
-        id: directory
-
-        path: window.currentPath
-        onGone: window.navigateUp()
     }
 
     Connections {
@@ -204,6 +416,28 @@ FloatingWindow {
         }
     }
 
+    FloatingWindowControls {
+        id: windowControls
+
+        targetWindow: window
+    }
+
+    Component {
+        id: secondPaneComponent
+
+        FilesPane {
+            active: window.activePaneIndex === 1
+            showHidden: window.showHidden
+            sortKey: window.sortKey
+            sortDescending: window.sortDescending
+            showActiveOutline: window.splitView
+            onActivateRequested: entry => window.activate(entry)
+            onContextMenuRequested: (index, pointX, pointY) => window.showMenuFor(index, pointX, pointY)
+            onFocusRequested: window.activePaneIndex = 1
+            onPathChanged: window.captureTabs()
+        }
+    }
+
     Item {
         id: surface
 
@@ -211,206 +445,391 @@ FloatingWindow {
         readonly property bool isFloatingWindowSurface: true
         readonly property bool windowActive: Window.active
 
+        LayoutMirroring.enabled: I18n.isRtl
+        LayoutMirroring.childrenInherit: true
+
         onWindowActiveChanged: {
-            if (windowActive)
-                directory.refresh();
+            if (!windowActive)
+                return;
+            primaryPane.refresh();
+            window.secondPane?.refresh();
         }
 
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Return", "Enter"]
-            onActivated: window.activate(window.currentEntry)
-        }
+        DankWindowHeader {
+            id: header
 
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+Return", "Ctrl+Enter"]
-            onActivated: window.openContainingFolder()
-        }
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            controls: windowControls
+            title: window.title
+            onCloseRequested: window.requestClose()
 
-        Shortcut {
-            enabled: !window.dialogOpen && window.currentEntry !== null
-            sequences: ["Shift+F10", "Menu"]
-            onActivated: {
-                const row = fileList.currentItem;
-                const point = row ? row.mapToItem(surface, Theme.spacingL, row.height) : Qt.point(Theme.spacingL, Theme.spacingL);
-                window.showMenuFor(fileList.currentIndex, point.x, point.y);
+            DankIconButton {
+                id: jobsButton
+
+                anchors.verticalCenter: parent.verticalCenter
+                visible: FileOpsService.jobs.length > 0
+                iconName: FileOpsService.activeCount > 0 ? "sync" : "check_circle"
+                size: "s"
+                onClicked: jobsPopover.visible ? jobsPopover.close() : jobsPopover.open()
+
+                JobsPopover {
+                    id: jobsPopover
+
+                    y: jobsButton.height + Theme.spacingS
+                    x: jobsButton.width - width
+                }
             }
         }
 
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+Shift+O"]
-            onActivated: window.openWithCurrent()
-        }
+        Item {
+            id: sidebarSlot
 
-        Shortcut {
-            enabled: !window.dialogOpen && SandboxService.available("terminal")
-            sequences: ["Ctrl+Alt+T"]
-            onActivated: window.openTerminalHere()
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+H"]
-            onActivated: directory.setShowHidden(!directory.includeHidden)
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+C"]
-            onActivated: FileOpsService.copyToClipboard(window.selection())
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+X"]
-            onActivated: FileOpsService.cut(window.selection())
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+V"]
-            onActivated: FileOpsService.paste(window.currentPath, window.opScope)
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["F2"]
-            onActivated: window.renameSelection()
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Delete"]
-            onActivated: window.trashSelection()
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Shift+Delete"]
-            onActivated: window.deleteSelection()
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+Z"]
-            onActivated: FileOpsService.undo(window.opScope)
-        }
-
-        Shortcut {
-            enabled: !window.dialogOpen
-            sequences: ["Ctrl+Shift+N"]
-            onActivated: newFolderDialog.ask(I18n.tr("Untitled folder", "default name for a new folder"))
-        }
-
-        Sidebar {
-            id: sidebar
-
-            anchors.top: parent.top
+            anchors.top: header.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            anchors.margins: Theme.spacingM
-            width: Theme.sidebarWidth
-            onNavigateRequested: path => window.currentPath = path
-            onUnlockRequested: device => unlockDialog.ask(device)
-            onConnectRequested: connectDialog.ask()
-        }
-
-        StyledText {
-            id: pathLabel
-
-            anchors.left: sidebar.right
-            anchors.right: jobsButton.left
-            anchors.leftMargin: Theme.spacingL
-            anchors.rightMargin: Theme.spacingL
-            anchors.verticalCenter: jobsButton.verticalCenter
-            text: Paths.shortenHome(window.currentPath)
-            color: Theme.surfaceText
-            font.pixelSize: Theme.fontSizeLarge
-            elide: Text.ElideMiddle
-        }
-
-        DankIconButton {
-            id: jobsButton
-
-            anchors.top: parent.top
-            anchors.right: parent.right
-            anchors.margins: Theme.spacingL
-            visible: FileOpsService.jobs.length > 0
-            iconName: FileOpsService.activeCount > 0 ? "sync" : "check_circle"
-            size: "s"
-            onClicked: jobsPopover.visible ? jobsPopover.close() : jobsPopover.open()
-
-            JobsPopover {
-                id: jobsPopover
-
-                y: jobsButton.height + Theme.spacingS
-                x: jobsButton.width - width
-            }
-        }
-
-        DankListView {
-            id: fileList
-
-            anchors.top: jobsButton.bottom
-            anchors.bottom: parent.bottom
-            anchors.left: sidebar.right
-            anchors.right: parent.right
-            anchors.margins: Theme.spacingL
-            focus: true
+            width: window.sidebarDocked ? FilesMetrics.sidebarWidth : 0
             clip: true
-            spacing: Theme.groupedListGap
-            model: directory.entries
-            cacheBuffer: Math.max(0, height)
-            currentIndex: -1
 
-            delegate: FileRow {
-                onClicked: fileList.currentIndex = index
-
-                onDoubleClicked: {
-                    fileList.currentIndex = index;
-                    window.activate(directory.entries.get(index));
-                }
-
-                onContextMenuRequested: (mouseX, mouseY) => {
-                    const point = mapToItem(surface, mouseX, mouseY);
-                    window.showMenuFor(index, point.x, point.y);
+            Behavior on width {
+                enabled: Theme.animationsEnabled
+                NumberAnimation {
+                    duration: Theme.expressiveDurations.expressiveDefaultSpatial
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.expressiveCurves.expressiveDefaultSpatial
                 }
             }
 
-            onContentYChanged: scrollSettle.restart()
-            onCountChanged: scrollSettle.restart()
+            Sidebar {
+                id: dockedSidebar
 
-            Timer {
-                id: scrollSettle
+                anchors.fill: parent
+                anchors.margins: FilesMetrics.sidebarPadding
+                visible: parent.width > 0
+                currentPath: window.currentPath
+                onNavigateRequested: path => window.openPath(path, false)
+                onUnlockRequested: device => unlockDialog.ask(device)
+                onConnectRequested: connectDialog.ask()
+            }
+        }
 
-                interval: Theme.mediumDuration
-                onTriggered: {
-                    const first = fileList.indexAt(fileList.width / 2, fileList.contentY);
-                    const last = fileList.indexAt(fileList.width / 2, fileList.contentY + fileList.height - 1);
-                    directory.requestThumbnails(Math.max(first, 0), last < 0 ? fileList.count - 1 : last);
-                    if (last < 0 || last >= fileList.count - 1)
-                        directory.loadMore();
+        Rectangle {
+            anchors.left: sidebarSlot.right
+            anchors.top: header.bottom
+            anchors.bottom: parent.bottom
+            width: Theme.dividerWidth
+            visible: sidebarSlot.width > 0
+            color: Theme.outlineVariant
+        }
+
+        Item {
+            id: content
+
+            anchors.top: header.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: sidebarSlot.right
+            anchors.right: parent.right
+            anchors.margins: FilesMetrics.contentMargin
+
+            TabRow {
+                id: tabRow
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                visible: window.tabs.length > 1
+                height: visible ? implicitHeight : 0
+                tabs: window.tabs.map(state => window.tabLabel(state))
+                currentIndex: window.currentTab
+                onTabSelected: index => window.selectTab(index)
+                onTabClosed: index => window.closeTab(index)
+                onTabAdded: window.newTab("")
+            }
+
+            FilesTopbar {
+                id: topbar
+
+                anchors.top: tabRow.bottom
+                anchors.topMargin: tabRow.visible ? FilesMetrics.contentSpacing : 0
+                anchors.left: parent.left
+                anchors.right: parent.right
+                splitView: window.splitView
+                bookmarked: BookmarksService.has(window.currentPath)
+                backEnabled: window.activePane.canGoBack
+                forwardEnabled: window.activePane.canGoForward
+                sortKey: window.sortKey
+                sortDescending: window.sortDescending
+                onSidebarToggled: window.toggleSidebar()
+                onBackRequested: window.activePane.back()
+                onForwardRequested: window.activePane.forward()
+                onSplitToggled: window.toggleSplit()
+                onBookmarkToggled: BookmarksService.toggle(window.currentPath)
+                onSortCycled: window.cycleSort()
+                onSortDirectionToggled: window.sortDescending = !window.sortDescending
+                onCopyPathRequested: Paths.copyPathToClipboard(window.currentPath)
+                onReloadRequested: window.activePane.refresh()
+                onTerminalRequested: window.openTerminalHere()
+                onPropertiesRequested: ToastService.info(I18n.tr("Not available", "status for a feature the environment does not allow"))
+            }
+
+            Item {
+                id: panesRow
+
+                anchors.top: topbar.bottom
+                anchors.topMargin: FilesMetrics.contentSpacing
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                readonly property real usableWidth: width - (window.splitView ? FilesMetrics.splitterWidth : 0)
+
+                FilesPane {
+                    id: primaryPane
+
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    width: window.splitView ? panesRow.usableWidth * window.splitRatio : panesRow.width
+                    active: window.activePaneIndex === 0
+                    showHidden: window.showHidden
+                    sortKey: window.sortKey
+                    sortDescending: window.sortDescending
+                    showActiveOutline: window.splitView
+                    onActivateRequested: entry => window.activate(entry)
+                    onContextMenuRequested: (index, pointX, pointY) => window.showMenuFor(index, pointX, pointY)
+                    onFocusRequested: window.activePaneIndex = 0
+                    onPathChanged: window.captureTabs()
+                }
+
+                PaneSplitter {
+                    id: splitter
+
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: primaryPane.right
+                    visible: window.splitView
+                    onMoved: delta => window.resizeSplit(delta / Math.max(1, panesRow.usableWidth))
+                    onReset: window.setSplitRatio(0.5)
+                }
+
+                Loader {
+                    id: splitLoader
+
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.left: splitter.right
+                    anchors.right: parent.right
+                    active: window.splitView
+                    sourceComponent: secondPaneComponent
                 }
             }
         }
 
-        StyledText {
-            anchors.centerIn: parent
-            visible: !directory.loading && directory.error === "" && directory.count === 0
-            text: I18n.tr("This folder is empty", "empty directory placeholder")
-            color: Theme.surfaceVariantText
-            font.pixelSize: Theme.fontSizeLarge
+        Rectangle {
+            anchors.top: header.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            visible: opacity > 0
+            opacity: window.sidebarOverlayOpen ? 1 : 0
+            color: Theme.withAlpha(Theme.scrimColor, Theme.scrimAlpha)
+
+            Behavior on opacity {
+                enabled: Theme.animationsEnabled
+                NumberAnimation {
+                    duration: Theme.shortDuration
+                    easing.type: Theme.standardEasing
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: window.sidebarOverlayOpen = false
+            }
         }
 
-        StyledText {
-            anchors.centerIn: parent
-            visible: directory.error !== ""
-            text: window.errorText(directory.errorCode)
-            color: Theme.surfaceVariantText
-            font.pixelSize: Theme.fontSizeLarge
+        Rectangle {
+            id: sidebarOverlay
+
+            anchors.top: header.bottom
+            anchors.bottom: parent.bottom
+            width: FilesMetrics.sidebarWidth
+            visible: x > -width
+            x: window.sidebarOverlayOpen ? 0 : -width
+            color: Theme.surfaceContainer
+
+            Behavior on x {
+                enabled: Theme.animationsEnabled
+                NumberAnimation {
+                    duration: Theme.expressiveDurations.expressiveDefaultSpatial
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.expressiveCurves.expressiveDefaultSpatial
+                }
+            }
+
+            Sidebar {
+                anchors.fill: parent
+                anchors.margins: FilesMetrics.sidebarPadding
+                currentPath: window.currentPath
+                onNavigateRequested: path => {
+                    window.sidebarOverlayOpen = false;
+                    window.openPath(path, false);
+                }
+                onUnlockRequested: device => unlockDialog.ask(device)
+                onConnectRequested: connectDialog.ask()
+            }
         }
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Return", "Enter"]
+        onActivated: window.activate(window.currentEntry)
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+Return", "Ctrl+Enter"]
+        onActivated: window.openContainingFolder()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled && window.currentEntry !== null
+        sequences: ["Shift+F10", "Menu"]
+        onActivated: window.showMenuFor(window.activePane.currentIndex, Theme.spacingL, Theme.spacingL)
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Alt+Left"]
+        onActivated: window.activePane.back()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Alt+Right"]
+        onActivated: window.activePane.forward()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Alt+Up"]
+        onActivated: window.activePane.up()
+    }
+
+    Shortcut {
+        enabled: !window.dialogOpen
+        sequences: ["Ctrl+L"]
+        onActivated: window.activePane.editPath()
+    }
+
+    Shortcut {
+        enabled: !window.dialogOpen
+        sequences: ["Ctrl+F"]
+        onActivated: topbar.focusSearch()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+T"]
+        onActivated: window.newTab("")
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+W"]
+        onActivated: window.closeTab(window.currentTab)
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+Tab"]
+        onActivated: window.cycleTab(1)
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+Shift+Tab"]
+        onActivated: window.cycleTab(-1)
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["F5"]
+        onActivated: window.activePane.refresh()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["F6"]
+        onActivated: window.swapPaneFocus()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+Shift+O"]
+        onActivated: window.openWithCurrent()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled && SandboxService.available("terminal")
+        sequences: ["Ctrl+Alt+T"]
+        onActivated: window.openTerminalHere()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+H"]
+        onActivated: window.showHidden = !window.showHidden
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+C"]
+        onActivated: FileOpsService.copyToClipboard(window.selection())
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+X"]
+        onActivated: FileOpsService.cut(window.selection())
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+V"]
+        onActivated: FileOpsService.paste(window.currentPath, window.opScope)
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["F2"]
+        onActivated: window.renameSelection()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Delete"]
+        onActivated: window.trashSelection()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Shift+Delete"]
+        onActivated: window.deleteSelection()
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+Z"]
+        onActivated: FileOpsService.undo(window.opScope)
+    }
+
+    Shortcut {
+        enabled: window.shortcutsEnabled
+        sequences: ["Ctrl+Shift+N"]
+        onActivated: newFolderDialog.ask(I18n.tr("Untitled folder", "default name for a new folder"))
     }
 
     ContextMenu {
@@ -441,6 +860,16 @@ FloatingWindow {
                 openWithMenu.openAt(fileMenu.x + fileMenu.width - Theme.spacingM, fileMenu.y + y);
             }
             onClicked: entered()
+        }
+
+        ContextMenuItem {
+            text: I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
+            iconName: "tab"
+            enabled: window.currentEntry !== null && window.currentEntry.isDir
+            onClicked: {
+                fileMenu.close();
+                window.newTab(window.currentEntry.path);
+            }
         }
 
         ContextMenuItem {
@@ -559,7 +988,7 @@ FloatingWindow {
 
         onUnlocked: mountPoint => {
             if (mountPoint !== "")
-                window.currentPath = mountPoint;
+                window.openPath(mountPoint, false);
         }
     }
 
@@ -568,7 +997,7 @@ FloatingWindow {
 
         onConnected: path => {
             if (path !== "")
-                window.currentPath = path;
+                window.openPath(path, false);
         }
     }
 
@@ -577,6 +1006,6 @@ FloatingWindow {
     }
 
     Toast {
-        anchors.fill: parent
+        anchors.fill: surface
     }
 }

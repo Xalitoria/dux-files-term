@@ -10,6 +10,16 @@ Singleton {
 
     readonly property bool connected: DankFilesService.connected
 
+    property var userDirs: []
+
+    function refreshUserDirs() {
+        _send("files.userDirs", {}, response => {
+            if (response.error)
+                return;
+            root.userDirs = response.dirs || [];
+        });
+    }
+
     function watch(path, options, callback) {
         _send("files.watch", Object.assign({
             "path": path
@@ -83,6 +93,17 @@ Singleton {
         if (opts.cursor)
             params.cursor = opts.cursor;
         return params;
+    }
+
+    Component.onCompleted: refreshUserDirs()
+
+    Connections {
+        target: DankFilesService
+
+        function onConnectionStateChanged() {
+            if (DankFilesService.connected)
+                root.refreshUserDirs();
+        }
     }
 
     function _send(method, params, callback) {
