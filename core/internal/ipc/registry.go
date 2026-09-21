@@ -83,6 +83,7 @@ var Methods = []MethodSpec{
 	{Name: "network.forget", Group: "network", Desc: "Drop a server from the recent list", Params: []ParamSpec{req("uri", "server uri")}},
 	{Name: "network.mountPortable", Group: "network", Desc: "Mount a phone or camera gvfs has detected", Params: []ParamSpec{req("monitor", "volume monitor bus name"), req("id", "volume id")}},
 
+	{Name: "system.capabilities", Group: "system", Desc: "What the environment permits: sandbox state, host access, bus policies, portal versions and the per-feature table with reason codes"},
 	{Name: "system.colorScheme.get", Group: "system", Desc: "Current portal color scheme (0 no-preference, 1 dark, 2 light)"},
 	{Name: "system.elevation", Group: "system", Desc: "Whether failed operations can be retried as administrator, and why not"},
 	{Name: "system.openUri", Group: "system", Desc: "Open a URI with the default handler", Params: []ParamSpec{req("uri", "")}},

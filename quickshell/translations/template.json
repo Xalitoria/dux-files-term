@@ -224,6 +224,13 @@
     "comment": ""
   },
   {
+    "term": "Drives are unavailable because the sandbox cannot reach udisks2",
+    "translation": "",
+    "context": "explanation when the flatpak lacks the udisks2 permission",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Drives are unavailable because udisks2 is not running",
     "translation": "",
     "context": "sidebar explanation when the device service is missing",
@@ -343,6 +350,13 @@
     "comment": ""
   },
   {
+    "term": "Network locations are unavailable because the sandbox cannot reach gvfs",
+    "translation": "",
+    "context": "explanation when the flatpak lacks the gvfs permissions",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Never",
     "translation": "",
     "context": "credential dialog option that forgets the password",
@@ -353,6 +367,34 @@
     "term": "New folder",
     "translation": "",
     "context": "new folder dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Not available",
+    "translation": "",
+    "context": "explanation for a feature the environment does not permit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Not available because the sandbox cannot start programs on the host",
+    "translation": "",
+    "context": "explanation for a feature that needs flatpak-spawn",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Not available inside the sandbox",
+    "translation": "",
+    "context": "explanation for a feature the flatpak sandbox blocks",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Not available without access to the host filesystem",
+    "translation": "",
+    "context": "explanation for a feature that needs the flatpak host filesystem permission",
     "reference": "",
     "comment": ""
   },
@@ -521,6 +563,13 @@
     "term": "TB",
     "translation": "",
     "context": "file size unit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The system application chooser opens instead",
+    "translation": "",
+    "context": "explanation when open with is handed to the desktop portal",
     "reference": "",
     "comment": ""
   },

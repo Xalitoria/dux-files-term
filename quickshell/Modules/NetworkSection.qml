@@ -14,7 +14,15 @@ SidebarSection {
     signal connectRequested
 
     title: I18n.tr("Network", "sidebar section listing remote locations")
-    emptyText: NetworkService.available ? "" : I18n.tr("Network locations are unavailable because gvfs is not running", "sidebar explanation when the network service is missing")
+    emptyText: {
+        if (NetworkService.available)
+            return "";
+        if (!SandboxService.loaded)
+            return "";
+        if (!SandboxService.available("network"))
+            return FileFormat.featureUnavailable(SandboxService.reason("network"));
+        return I18n.tr("Network locations are unavailable because gvfs is not running", "sidebar explanation when the network service is missing");
+    }
     showEmpty: true
 
     Repeater {

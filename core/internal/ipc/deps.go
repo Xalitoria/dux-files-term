@@ -7,6 +7,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
+	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 )
 
 type Deps struct {
@@ -19,4 +20,5 @@ type Deps struct {
 	Apps        *mimeapps.Service
 	Devices     *devices.Service
 	Network     *netmount.Service
+	Sandbox     sandbox.Capabilities
 }

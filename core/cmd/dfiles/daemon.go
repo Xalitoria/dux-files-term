@@ -19,6 +19,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
 	"github.com/AvengeMedia/dankfiles/core/internal/paths"
+	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 	"github.com/AvengeMedia/dankgo/log"
 )
 
@@ -62,6 +63,12 @@ func (s *daemonServices) Close() {
 }
 
 func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
+	caps := sandbox.Current()
+	if caps.Sandboxed {
+		log.Infof("sandboxed as %s (host filesystem: %v)", caps.AppID, caps.HostFilesystem)
+	}
+	sandbox.ExportHostDirs(caps)
+
 	bus := ipc.NewEventBus()
 
 	appService := mimeapps.NewService()
@@ -94,6 +101,7 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		Apps:        appService,
 		Devices:     deviceService,
 		Network:     networkService,
+		Sandbox:     caps,
 	}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {

@@ -22,5 +22,8 @@ jobs:
         with:
           go-version-file: core/go.mod
 
+      # qml-tests needs quickshell; the QML tests workflow runs it in an arch container.
       - name: run pre-commit hooks
         uses: j178/prek-action@v2
+        env:
+          SKIP: qml-tests

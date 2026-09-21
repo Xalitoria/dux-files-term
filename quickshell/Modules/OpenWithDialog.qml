@@ -84,7 +84,7 @@ OverlayDialog {
 
     DankToggle {
         width: parent.width
-        visible: root.mime !== ""
+        visible: root.mime !== "" && SandboxService.available("setDefault")
         text: I18n.tr("Always use this application", "open with dialog option that sets the default")
         checked: root.rememberChoice
         onToggled: checked => root.rememberChoice = checked

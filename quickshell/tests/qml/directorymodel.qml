@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.Models
 import qs.Services
 
@@ -93,11 +92,6 @@ ShellRoot {
         function icons(paths, callback) {
             callback({});
         }
-    }
-
-    readonly property Process finish: Process {
-        id: finish
-        command: ["sh", "-c", "kill $PPID"]
     }
 
     readonly property DirectoryModel model: DirectoryModel {
@@ -233,6 +227,6 @@ ShellRoot {
         check("error clears entries", names(), []);
 
         log.info(failures === 0 ? "FIXTURE PASS" : `FIXTURE FAIL (${failures})`);
-        finish.running = true;
+        Qt.callLater(Qt.quit);
     }
 }

@@ -1,0 +1,55 @@
+name: QML tests
+
+on:
+  push:
+    paths:
+      - "quickshell/**"
+      - "dank-qml-common"
+      - "Makefile"
+      - "core/Makefile"
+      - "flake.nix"
+      - ".pre-commit-config.yaml"
+      - ".github/workflows/qml-tests.yml"
+      - ".github/workflows/prek.yml"
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "quickshell/**"
+      - "dank-qml-common"
+      - "Makefile"
+      - "core/Makefile"
+      - "flake.nix"
+      - ".pre-commit-config.yaml"
+      - ".github/workflows/qml-tests.yml"
+      - ".github/workflows/prek.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-qml:
+    runs-on: ubuntu-latest
+    container: archlinux:base
+    timeout-minutes: 10
+    steps:
+      - name: Install test dependencies
+        run: |
+          pacman-key --init
+          pacman -Syu --noconfirm --needed git make nodejs python quickshell qt6-declarative
+
+      - name: Record runtime versions
+        run: pacman -Q quickshell qt6-declarative nodejs
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Run QML pre-commit hook
+        uses: j178/prek-action@v2
+        with:
+          extra-args: qml-tests --all-files
+        env:
+          GIT_CONFIG_COUNT: "1"

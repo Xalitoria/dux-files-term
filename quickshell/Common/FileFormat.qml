@@ -53,6 +53,25 @@ Singleton {
         }
     }
 
+    function featureUnavailable(reason) {
+        switch (reason) {
+        case "SANDBOXED":
+            return I18n.tr("Not available inside the sandbox", "explanation for a feature the flatpak sandbox blocks");
+        case "NOHOSTFS":
+            return I18n.tr("Not available without access to the host filesystem", "explanation for a feature that needs the flatpak host filesystem permission");
+        case "NOUDISKS":
+            return I18n.tr("Drives are unavailable because the sandbox cannot reach udisks2", "explanation when the flatpak lacks the udisks2 permission");
+        case "NOGVFS":
+            return I18n.tr("Network locations are unavailable because the sandbox cannot reach gvfs", "explanation when the flatpak lacks the gvfs permissions");
+        case "NOHOSTSPAWN":
+            return I18n.tr("Not available because the sandbox cannot start programs on the host", "explanation for a feature that needs flatpak-spawn");
+        case "PORTALCHOOSER":
+            return I18n.tr("The system application chooser opens instead", "explanation when open with is handed to the desktop portal");
+        default:
+            return I18n.tr("Not available", "explanation for a feature the environment does not permit");
+        }
+    }
+
     // A file the user would run rather than open: the execute bit plus a type
     // that is either a program or a script.
     function isRunnable(mime, executable) {

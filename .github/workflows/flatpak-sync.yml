@@ -1,0 +1,135 @@
+name: Flatpak Sync
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: release tag to sync, e.g. v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: flatpak-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.ref_name, '-')
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: Create GitHub App token
+        id: app_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: master
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ steps.app_token.outputs.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ./core/go.mod
+
+      - name: Update metainfo and module manifests
+        run: |
+          set -euo pipefail
+          python3 scripts/flatpak-sync.py metainfo "$TAG"
+          for attempt in 1 2 3; do
+            make flatpak-modules && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep 30
+          done
+
+      - name: Commit source updates
+        id: source
+        run: |
+          set -euo pipefail
+          git config user.name "dms-ci[bot]"
+          git config user.email "dms-ci[bot]@users.noreply.github.com"
+          git add assets/com.danklinux.dankfiles.metainfo.xml distro/flatpak/go.mod.yml distro/flatpak/modules.txt
+          if git diff --cached --quiet; then
+            echo "pin=$(git rev-parse "${TAG}^{commit}")" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "flatpak: sync metainfo and module manifests for ${TAG}"
+          if ! git push origin HEAD:master; then
+            git pull --rebase origin master
+            git push origin HEAD:master
+          fi
+          echo "pin=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Pin manifest
+        run: |
+          set -euo pipefail
+          python3 scripts/flatpak-sync.py pin "$TAG" "${{ steps.source.outputs.pin }}"
+          git add distro/flatpak/com.danklinux.dankfiles.yml
+          if git diff --cached --quiet; then
+            echo "manifest already pinned"
+            exit 0
+          fi
+          git commit -m "flatpak: pin manifest to ${TAG}"
+          if ! git push origin HEAD:master; then
+            git pull --rebase origin master
+            git push origin HEAD:master
+          fi
+
+      # The metainfo changelog rides along with the pinned git source, so only
+      # the build files need to reach Flathub. Their buildbot tests the PR;
+      # merging it publishes.
+      - name: Open Flathub PR
+        env:
+          GH_TOKEN: ${{ secrets.FLATHUB_TOKEN }}
+          APP_ID: com.danklinux.dankfiles
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          branch="release/${TAG}"
+
+          if ! gh repo view "flathub/${APP_ID}" > /dev/null 2>&1; then
+            echo "flathub/${APP_ID} does not exist yet; skipping the Flathub PR" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git clone --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/flathub/${APP_ID}.git" _flathub
+          cp "distro/flatpak/${APP_ID}.yml" distro/flatpak/go.mod.yml distro/flatpak/modules.txt _flathub/
+
+          cd _flathub
+          if git diff --quiet; then
+            echo "Flathub already matches ${TAG}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          git config user.name "dms-ci[bot]"
+          git config user.email "dms-ci[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git commit -am "Update to ${version}"
+          git push -f origin "$branch"
+
+          existing=$(gh pr list --repo "flathub/${APP_ID}" --head "$branch" \
+            --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "Updated existing Flathub PR #${existing}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          url=$(gh pr create --repo "flathub/${APP_ID}" --head "$branch" --base master \
+            --title "Update to ${version}" \
+            --body "Update to ${version}.
+
+          Release notes: https://github.com/${{ github.repository }}/releases/tag/${TAG}")
+          echo "Opened Flathub PR ${url}" >> "$GITHUB_STEP_SUMMARY"

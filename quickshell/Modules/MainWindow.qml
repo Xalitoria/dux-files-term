@@ -60,13 +60,14 @@ FloatingWindow {
             currentPath = entry.path;
             return;
         }
-        if (entry.untrusted) {
+        const canRun = SandboxService.available("run");
+        if (entry.untrusted && canRun) {
             trustDialog.subject = entry.name;
             trustDialog.pending = entry.path;
             trustDialog.open();
             return;
         }
-        if (FileFormat.isRunnable(entry.mime, entry.isExecutable)) {
+        if (canRun && FileFormat.isRunnable(entry.mime, entry.isExecutable)) {
             executableDialog.ask(entry.path, entry.name);
             return;
         }
@@ -244,7 +245,7 @@ FloatingWindow {
         }
 
         Shortcut {
-            enabled: !window.dialogOpen
+            enabled: !window.dialogOpen && SandboxService.available("terminal")
             sequences: ["Ctrl+Alt+T"]
             onActivated: window.openTerminalHere()
         }
@@ -443,6 +444,7 @@ FloatingWindow {
         }
 
         ContextMenuItem {
+            visible: SandboxService.available("terminal")
             text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
             iconName: "terminal"
             onClicked: {

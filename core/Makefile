@@ -32,7 +32,7 @@ sync-shell:
 	@rm -rf $(EMBED_DIR)
 	@mkdir -p $(EMBED_DIR)
 	@tar -C $(SHELL_SRC) --exclude=.qmlls.ini -chf - . | tar -C $(EMBED_DIR) -xf -
-	@rm -rf $(EMBED_DIR)/scripts $(EMBED_DIR)/.claude
+	@rm -rf $(EMBED_DIR)/scripts $(EMBED_DIR)/tests $(EMBED_DIR)/.claude
 	@rm -f $(EMBED_DIR)/translations/extract_translations.py
 
 build: sync-shell

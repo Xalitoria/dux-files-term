@@ -20,12 +20,34 @@ SHELL_DIR=quickshell
 ASSETS_DIR=assets
 DESKTOP_ID=com.danklinux.dankfiles
 
-.PHONY: all build dev run clean test fmt vet lint-qml update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-polkit install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-polkit uninstall-systemd help
+.PHONY: all build dev run clean test fmt vet lint-qml test-qml flatpak-build flatpak-run flatpak-lint flatpak-modules update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-polkit install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-polkit uninstall-systemd help
+
+FLATPAK_MANIFEST=distro/flatpak/$(DESKTOP_ID).yml
 
 all: build
 
 build:
 	@$(MAKE) -C $(CORE_DIR) build
+
+flatpak-build:
+	flatpak run org.flatpak.Builder \
+		--force-clean --user --install --repo=repo \
+		--mirror-screenshots-url=https://dl.flathub.org/media \
+		--compose-url-policy=full \
+		builddir $(FLATPAK_MANIFEST)
+
+flatpak-run:
+	flatpak run $(DESKTOP_ID)
+
+flatpak-lint:
+	flatpak run --command=flatpak-builder-lint org.flatpak.Builder \
+		manifest $(FLATPAK_MANIFEST)
+	flatpak run --command=flatpak-builder-lint org.flatpak.Builder \
+		repo repo
+
+flatpak-modules:
+	cd $(CORE_DIR) && GOWORK=off go run github.com/dennwc/flatpak-go-mod@latest \
+		-dest-pref $(CORE_DIR)/ -out ../distro/flatpak .
 
 dev:
 	@$(MAKE) -C $(CORE_DIR) dev
@@ -47,6 +69,9 @@ vet:
 
 lint-qml:
 	@./$(SHELL_DIR)/scripts/qmllint-entrypoints.sh
+
+test-qml:
+	@python3 $(SHELL_DIR)/tests/run-qml.py
 
 # Bump dank-qml-common everywhere it is pinned: submodule pointer + nix flake input.
 update-common:
@@ -137,6 +162,7 @@ help:
 	@echo "  run                - Build and run against the in-repo quickshell config"
 	@echo "  clean / test / fmt / vet"
 	@echo "  lint-qml           - qmllint shell.qml through the Quickshell tooling VFS (needs quickshell/.qmlls.ini)"
+	@echo "  test-qml           - Run the shell logic tests and the offscreen QML fixtures"
 	@echo "  update-common      - Bump the dank-qml-common submodule + flake input"
 	@echo "  i18n-extract       - Regenerate translations/en.json from I18n.tr() calls"
 	@echo "  i18n-local         - Re-extract and show added/removed terms (no POEditor)"
@@ -149,3 +175,9 @@ help:
 	@echo "  install            - Binary (UI embedded), icon, desktop entry, metainfo, polkit policy"
 	@echo "  install-systemd    - Optional systemd user unit (autostarts with the session)"
 	@echo "  uninstall          - Remove everything"
+	@echo ""
+	@echo "Flatpak:"
+	@echo "  flatpak-build      - Build and install the Flatpak locally (org.flatpak.Builder)"
+	@echo "  flatpak-run        - Run the installed Flatpak"
+	@echo "  flatpak-lint       - Lint the manifest and built repo"
+	@echo "  flatpak-modules    - Regenerate distro/flatpak/go.mod.yml + modules.txt from core/go.mod"

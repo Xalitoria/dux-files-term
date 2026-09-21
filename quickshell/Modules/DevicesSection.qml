@@ -62,7 +62,15 @@ SidebarSection {
     }
 
     title: I18n.tr("Devices", "sidebar section listing drives and volumes")
-    emptyText: DevicesService.available ? "" : I18n.tr("Drives are unavailable because udisks2 is not running", "sidebar explanation when the device service is missing")
+    emptyText: {
+        if (DevicesService.available)
+            return "";
+        if (!SandboxService.loaded)
+            return "";
+        if (!SandboxService.available("devices"))
+            return FileFormat.featureUnavailable(SandboxService.reason("devices"));
+        return I18n.tr("Drives are unavailable because udisks2 is not running", "sidebar explanation when the device service is missing");
+    }
     showEmpty: !DevicesService.available
 
     Repeater {

@@ -73,6 +73,7 @@
               cp -r ${dank-qml-common}/DankCommon core/internal/shellembed/dist/DankCommon
               chmod -R u+w core/internal/shellembed/dist/DankCommon
               rm -rf core/internal/shellembed/dist/scripts \
+                core/internal/shellembed/dist/tests \
                 core/internal/shellembed/dist/.claude
               rm -f core/internal/shellembed/dist/.qmlls.ini \
                 core/internal/shellembed/dist/translations/extract_translations.py

@@ -33,6 +33,16 @@ repos:
         pass_filenames: false
   - repo: local
     hooks:
+      - id: qml-tests
+        name: shell logic and QML fixture tests
+        entry: python3 quickshell/tests/run-qml.py
+        language: system
+        types: []
+        files: ^(quickshell/|dank-qml-common$|Makefile$|core/Makefile$|flake\.nix$|\.pre-commit-config\.yaml$|\.github/workflows/(qml-tests|prek)\.yml$)
+        pass_filenames: false
+        require_serial: true
+  - repo: local
+    hooks:
       - id: no-console-in-qml
         name: no console.* in QML (use Log service)
         entry: bash -c 'if grep -nE "console\.(log|error|info|warn|debug)" "$@"; then echo "Use the Log service (log.info/warn/error/debug/fatal) instead of console.*" >&2; exit 1; fi' --
