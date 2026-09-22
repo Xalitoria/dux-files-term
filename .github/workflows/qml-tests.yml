@@ -51,5 +51,9 @@ jobs:
         uses: j178/prek-action@v2
         with:
           extra-args: qml-tests --all-files
+        # GIT_CONFIG_COUNT promises git this many key/value pairs; without the
+        # pair every git call in the container dies before prek can start.
         env:
           GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: safe.directory
+          GIT_CONFIG_VALUE_0: "*"

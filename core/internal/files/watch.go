@@ -360,11 +360,13 @@ func (w *watch) applyChanged(changed []Entry, kind string) {
 	}
 }
 
+// The watch is closed before the event goes out, so a client that has been told
+// its directory is gone can never still resolve the watch id.
 func (w *watch) publishGone() {
+	w.close()
 	w.mu.Lock()
 	w.publishLocked(batch{Kind: "gone"})
 	w.mu.Unlock()
-	w.close()
 }
 
 func (w *watch) publishLocked(payload batch) {

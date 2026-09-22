@@ -229,13 +229,16 @@ func TestWatchGoneWhenDirectoryDisappears(t *testing.T) {
 	svc := NewService(bus, t.TempDir(), nil)
 	t.Cleanup(svc.Close)
 
-	root := filepath.Join(t.TempDir(), "doomed")
-	require.NoError(t, os.Mkdir(root, 0o755))
+	fake := newFakeNotifier()
+	svc.newNotifier = func() (notifier, error) { return fake, nil }
+
+	root := t.TempDir()
 	w, err := svc.Watch(context.Background(), root, nameSort(), false)
 	require.NoError(t, err)
 	svc.Attach([]string{w.topic})
 
-	require.NoError(t, os.Remove(root))
+	fake.events <- fsnotify.Event{Name: root, Op: fsnotify.Remove}
+
 	gone := bus.await(t, func(b batch) bool { return b.Kind == "gone" })
 	assert.Equal(t, w.id, gone.WatchID)
 
