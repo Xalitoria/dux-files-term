@@ -144,3 +144,27 @@ func TestJobsListingIsSafeWhileAJobRecords(t *testing.T) {
 	<-done
 	require.FileExists(t, filepath.Join(dest, "f39.txt"))
 }
+
+func TestDropActionOnTheSameDeviceIsAMove(t *testing.T) {
+	manager, _ := newHarness(t)
+	root := t.TempDir()
+	src := filepath.Join(root, "a.txt")
+	require.NoError(t, os.WriteFile(src, []byte("a"), 0o644))
+	dest := filepath.Join(root, "sub")
+	require.NoError(t, os.Mkdir(dest, 0o755))
+
+	result := call(t, manager, ipc.Request{Method: "files.op.dropAction", Params: map[string]any{"paths": src, "dest": dest}})["result"].(map[string]any)
+	require.Equal(t, "move", result["action"])
+	require.Equal(t, true, result["sameDevice"])
+}
+
+func TestDropActionRejectsBadParams(t *testing.T) {
+	manager, _ := newHarness(t)
+	for _, params := range []map[string]any{
+		{"paths": "relative/a.txt", "dest": t.TempDir()},
+		{"paths": filepath.Join(t.TempDir(), "a"), "dest": "relative"},
+	} {
+		out := call(t, manager, ipc.Request{Method: "files.op.dropAction", Params: params})
+		require.NotEmpty(t, out["error"])
+	}
+}

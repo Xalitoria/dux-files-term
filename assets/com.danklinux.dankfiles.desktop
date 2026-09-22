@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Dank Files
+Name=Files
 GenericName=File Manager
 Comment=File manager for the dank desktop
 Exec=dfiles open %f

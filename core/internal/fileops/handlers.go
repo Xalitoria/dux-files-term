@@ -33,6 +33,9 @@ func (m *Manager) Handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request) 
 	case "files.op.undo":
 		m.handleUndo(w, req)
 		return
+	case "files.op.dropAction":
+		handleDropAction(w, req)
+		return
 	}
 
 	s, err := specOf(req)
@@ -41,6 +44,34 @@ func (m *Manager) Handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request) 
 		return
 	}
 	ipc.Respond(w, req.ID, map[string]any{"job": m.enqueue(s).view()})
+}
+
+// handleDropAction answers what a plain drag onto dest would do, so the drag
+// ghost can say "move" or "copy" before the user lets go.
+func handleDropAction(w *ipc.ConnWriter, req ipc.Request) {
+	sources, err := absPaths(req, "paths")
+	if err != nil {
+		respondErr(w, req.ID, err)
+		return
+	}
+	dest := params.StringOpt(req.Params, "dest", "")
+	if len(sources) == 0 || !filepath.IsAbs(dest) {
+		respondErr(w, req.ID, invalid("files.op.dropAction requires paths and an absolute dest"))
+		return
+	}
+
+	same := true
+	for _, src := range sources {
+		if !sameDevice(src, dest) {
+			same = false
+			break
+		}
+	}
+	action := "copy"
+	if same {
+		action = "move"
+	}
+	ipc.Respond(w, req.ID, map[string]any{"action": action, "sameDevice": same})
 }
 
 func specOf(req ipc.Request) (spec, error) {

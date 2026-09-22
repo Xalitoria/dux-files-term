@@ -28,9 +28,65 @@
     "comment": ""
   },
   {
+    "term": "%1 items",
+    "translation": "",
+    "context": "number of items in a folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 selected",
+    "translation": "",
+    "context": "count of selected items",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 will be deleted permanently. This cannot be undone.",
     "translation": "",
     "context": "permanent delete confirmation explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "1 item",
+    "translation": "",
+    "context": "a folder holding a single item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "1 selected",
+    "translation": "",
+    "context": "a single selected item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "A name cannot be empty or contain a slash",
+    "translation": "",
+    "context": "inline rename validation message",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Accessed",
+    "translation": "",
+    "context": "properties row showing when an item was last read",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Add or remove one item",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Add or remove the item under the cursor",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
@@ -56,7 +112,7 @@
     "comment": ""
   },
   {
-    "term": "Administrator access is not available because the Dank Files polkit policy is not installed",
+    "term": "Administrator access is not available because the polkit policy is not installed",
     "translation": "",
     "context": "file operation error dialog explanation",
     "reference": "",
@@ -87,6 +143,20 @@
     "term": "Always use this application",
     "translation": "",
     "context": "open with dialog option that sets the default",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Apply",
+    "translation": "",
+    "context": "button applying the edited permissions",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Apply to everything inside",
+    "translation": "",
+    "context": "permissions option recursing into a folder",
     "reference": "",
     "comment": ""
   },
@@ -126,6 +196,13 @@
     "comment": ""
   },
   {
+    "term": "Broken link",
+    "translation": "",
+    "context": "file type shown for a symlink with no target",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Cancel",
     "translation": "",
     "context": "dialog button to cancel",
@@ -136,6 +213,20 @@
     "term": "Cancelled",
     "translation": "",
     "context": "file operation was cancelled",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Clear the selection",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Close",
+    "translation": "",
+    "context": "dialog button dismissing a dialog",
     "reference": "",
     "comment": ""
   },
@@ -189,6 +280,13 @@
     "comment": ""
   },
   {
+    "term": "Copy",
+    "translation": "",
+    "context": "context menu entry copying the selection",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Copy location path",
     "translation": "",
     "context": "menu entry copying the current path to the clipboard",
@@ -210,9 +308,16 @@
     "comment": ""
   },
   {
-    "term": "Dank Files",
+    "term": "Created",
     "translation": "",
-    "context": "main window title",
+    "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Cut",
+    "translation": "",
+    "context": "context menu entry marking the selection for a move",
     "reference": "",
     "comment": ""
   },
@@ -220,6 +325,13 @@
     "term": "Delete",
     "translation": "",
     "context": "confirm dialog default confirm button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Delete permanently",
+    "translation": "",
+    "context": "context menu entry deleting the selection for good",
     "reference": "",
     "comment": ""
   },
@@ -234,6 +346,13 @@
     "term": "Deleting",
     "translation": "",
     "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Details",
+    "translation": "",
+    "context": "properties tab with the basic facts about an item",
     "reference": "",
     "comment": ""
   },
@@ -287,6 +406,27 @@
     "comment": ""
   },
   {
+    "term": "Everyone",
+    "translation": "",
+    "context": "permissions row for other users",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Execute",
+    "translation": "",
+    "context": "permission bit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "File",
+    "translation": "",
+    "context": "file type shown when nothing more precise is known",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "File operations",
     "translation": "",
     "context": "jobs popover header",
@@ -294,9 +434,23 @@
     "comment": ""
   },
   {
+    "term": "Files",
+    "translation": "",
+    "context": "keyboard shortcut group | main window title",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Finished",
     "translation": "",
     "context": "file operation completed",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Folder",
+    "translation": "",
+    "context": "file type shown for a directory",
     "reference": "",
     "comment": ""
   },
@@ -315,6 +469,34 @@
     "comment": ""
   },
   {
+    "term": "Getting around",
+    "translation": "",
+    "context": "keyboard shortcut group",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Go to the parent folder",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Grid view",
+    "translation": "",
+    "context": "view mode showing items as tiles",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Group",
+    "translation": "",
+    "context": "permissions row for the owning group",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Home",
     "translation": "",
     "context": "sidebar entry for the user's home folder",
@@ -322,9 +504,72 @@
     "comment": ""
   },
   {
+    "term": "Invert the selection",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Jump to the first name starting with what you type",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Jump to the start, the end or the next screen",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Keep both",
     "translation": "",
     "context": "file conflict dialog button to keep both items",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Keyboard shortcuts",
+    "translation": "",
+    "context": "overlay listing every keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Larger icons",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Link",
+    "translation": "",
+    "context": "drag label for creating a symlink",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Links to",
+    "translation": "",
+    "context": "properties row showing a symlink target",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "List view",
+    "translation": "",
+    "context": "view mode showing one row per item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Location",
+    "translation": "",
+    "context": "properties row showing the folder an item lives in",
     "reference": "",
     "comment": ""
   },
@@ -343,9 +588,37 @@
     "comment": ""
   },
   {
+    "term": "Modified",
+    "translation": "",
+    "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "More actions",
     "translation": "",
     "context": "tooltip on the overflow menu button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move",
+    "translation": "",
+    "context": "drag label for moving files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move through the folder",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move to Trash",
+    "translation": "",
+    "context": "context menu entry trashing the selection",
     "reference": "",
     "comment": ""
   },
@@ -429,14 +702,21 @@
   {
     "term": "New tab",
     "translation": "",
-    "context": "tooltip on the button opening a new tab",
+    "context": "context menu entry opening a folder in a new tab | tooltip on the button opening a new tab",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Next tab",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
   {
     "term": "Not available",
     "translation": "",
-    "context": "explanation for a feature the environment does not permit | status for a feature the environment does not allow",
+    "context": "explanation for a feature the environment does not permit",
     "reference": "",
     "comment": ""
   },
@@ -469,6 +749,13 @@
     "comment": ""
   },
   {
+    "term": "Octal",
+    "translation": "",
+    "context": "permissions row showing the numeric mode",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open",
     "translation": "",
     "context": "context menu entry opening a file",
@@ -497,6 +784,27 @@
     "comment": ""
   },
   {
+    "term": "Open in the other pane",
+    "translation": "",
+    "context": "context menu entry opening a folder beside the current one",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open the containing folder",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open the context menu",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open with",
     "translation": "",
     "context": "open with dialog header",
@@ -507,6 +815,13 @@
     "term": "Other application…",
     "translation": "",
     "context": "open with menu entry opening the full application picker",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Owner",
+    "translation": "",
+    "context": "file list column header",
     "reference": "",
     "comment": ""
   },
@@ -525,6 +840,41 @@
     "comment": ""
   },
   {
+    "term": "Paste",
+    "translation": "",
+    "context": "context menu entry pasting the clipboard here",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Paste as link",
+    "translation": "",
+    "context": "context menu entry creating symlinks from the clipboard",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Paste into folder",
+    "translation": "",
+    "context": "context menu entry pasting the clipboard into the selected folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Permissions",
+    "translation": "",
+    "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Previous tab",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Properties",
     "translation": "",
     "context": "menu entry showing details about the current folder",
@@ -535,6 +885,20 @@
     "term": "Protocol",
     "translation": "",
     "context": "label for the network protocol picker",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Quick access",
+    "translation": "",
+    "context": "header above the shortcuts on the home folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Read",
+    "translation": "",
+    "context": "permission bit",
     "reference": "",
     "comment": ""
   },
@@ -584,6 +948,13 @@
     "term": "Replace",
     "translation": "",
     "context": "file conflict dialog button to overwrite the existing item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Resize icons",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
@@ -644,6 +1015,34 @@
     "comment": ""
   },
   {
+    "term": "Select a range",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Select all",
+    "translation": "",
+    "context": "menu entry selecting every item in the folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Selection",
+    "translation": "",
+    "context": "keyboard shortcut group",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show hidden files",
+    "translation": "",
+    "context": "menu entry listing dot files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Sign in",
     "translation": "",
     "context": "credential dialog header",
@@ -651,9 +1050,23 @@
     "comment": ""
   },
   {
+    "term": "Size",
+    "translation": "",
+    "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Skip",
     "translation": "",
     "context": "file conflict dialog button to leave the item alone",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Smaller icons",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
@@ -703,6 +1116,20 @@
     "term": "Split view",
     "translation": "",
     "context": "tooltip on the button showing a second pane",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Stop measuring",
+    "translation": "",
+    "context": "properties action halting the recursive size scan",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Switch pane",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
@@ -812,6 +1239,20 @@
     "comment": ""
   },
   {
+    "term": "Type",
+    "translation": "",
+    "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Type a location",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Undo",
     "translation": "",
     "context": "toast action reversing the last operation",
@@ -840,6 +1281,13 @@
     "comment": ""
   },
   {
+    "term": "View",
+    "translation": "",
+    "context": "keyboard shortcut group",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Waiting",
     "translation": "",
     "context": "file operation is queued",
@@ -850,6 +1298,13 @@
     "term": "Working",
     "translation": "",
     "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Write",
+    "translation": "",
+    "context": "permission bit",
     "reference": "",
     "comment": ""
   },

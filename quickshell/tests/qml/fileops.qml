@@ -191,17 +191,6 @@ ShellRoot {
         });
         check("ordered by start", states(), ["j1:done", "j2:running"]);
 
-        FileOpsService.cut(["/tmp/a.txt"]);
-        check("clipboard armed", FileOpsService.hasClipboard, true);
-        FileOpsService.paste("/tmp/other", "w1");
-        check("cut pastes as a move", sent[sent.length - 1].method, "files.op.move");
-        check("clipboard cleared after a cut paste", FileOpsService.hasClipboard, false);
-
-        FileOpsService.copyToClipboard(["/tmp/a.txt"]);
-        FileOpsService.paste("/tmp/other", "w1");
-        check("copy pastes as a copy", sent[sent.length - 1].method, "files.op.copy");
-        check("clipboard kept after a copy paste", FileOpsService.hasClipboard, true);
-
         nextError = "not connected to dfiles socket";
         FileOpsService.trash(["/tmp/a.txt"], "w1");
         check("request error surfaced", requestErrors, ["not connected to dfiles socket"]);

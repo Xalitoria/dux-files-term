@@ -1,6 +1,7 @@
 package ipc
 
 import (
+	"github.com/AvengeMedia/dankfiles/core/internal/clipboard"
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
@@ -20,5 +21,6 @@ type Deps struct {
 	Apps        *mimeapps.Service
 	Devices     *devices.Service
 	Network     *netmount.Service
+	Clipboard   *clipboard.Service
 	Sandbox     sandbox.Capabilities
 }

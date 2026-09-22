@@ -13,6 +13,7 @@ Item {
     signal tabSelected(int index)
     signal tabClosed(int index)
     signal tabAdded
+    signal tabDropHovered(int index)
 
     implicitHeight: FilesMetrics.tabHeight
     LayoutMirroring.enabled: I18n.isRtl
@@ -58,6 +59,7 @@ Item {
                     closable: row.tabs.length > 1
                     onClicked: row.tabSelected(index)
                     onCloseRequested: row.tabClosed(index)
+                    onDropHovered: row.tabDropHovered(index)
                 }
             }
         }

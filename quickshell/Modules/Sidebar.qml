@@ -13,6 +13,7 @@ DankFlickable {
     signal navigateRequested(string path)
     signal unlockRequested(var device)
     signal connectRequested
+    signal dropRequested(string path, var drop)
 
     contentHeight: sections.height
     clip: true
@@ -31,18 +32,21 @@ DankFlickable {
             width: sections.width
             currentPath: sidebar.currentPath
             onNavigateRequested: path => sidebar.navigateRequested(path)
+            onDropRequested: (path, drop) => sidebar.dropRequested(path, drop)
         }
 
         DevicesSection {
             width: sections.width
             onNavigateRequested: path => sidebar.navigateRequested(path)
             onUnlockRequested: device => sidebar.unlockRequested(device)
+            onDropRequested: (path, drop) => sidebar.dropRequested(path, drop)
         }
 
         NetworkSection {
             width: sections.width
             onNavigateRequested: path => sidebar.navigateRequested(path)
             onConnectRequested: sidebar.connectRequested()
+            onDropRequested: (path, drop) => sidebar.dropRequested(path, drop)
         }
     }
 }

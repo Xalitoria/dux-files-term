@@ -41,6 +41,29 @@ Singleton {
     readonly property real tabMaxWidth: Theme.sidebarWidth
     readonly property real tabSpacing: Theme.spacingXXS
 
+    readonly property var gridIconSizes: [64, 96, 128, 192]
+    readonly property var listIconSizes: [Theme.iconSizeMedium, Theme.iconSize, Theme.iconSizeLarge, Theme.iconSizeLarge * 1.5]
+    readonly property real gridTilePadding: Theme.spacingM
+    readonly property real gridTileRadius: Theme.cornerRadiusL
+    readonly property real gridGap: Theme.spacingS
+    readonly property real gridNameSpacing: Theme.spacingXS
+
+    readonly property real columnHeaderHeight: Theme.buttonHeightXS
+    readonly property real columnGap: Theme.spacingM
+    readonly property real columnMinWidth: Theme.spacingXL * 3
+    readonly property real sizeColumnWidth: Theme.spacingXL * 4
+    readonly property real modifiedColumnWidth: Theme.spacingXL * 6
+    readonly property real typeColumnWidth: Theme.spacingXL * 5
+    readonly property real ownerColumnWidth: Theme.spacingXL * 4
+    readonly property real permissionsColumnWidth: Theme.spacingXL * 4
+
+    readonly property real selectionFooterHeight: Theme.buttonHeightXS + Theme.spacingS
+    readonly property real emblemSize: Theme.fontSizeSmall
+    readonly property real quickAccessTileSize: 104
+    readonly property real dragGhostSize: Theme.iconSizeLarge * 2
+    readonly property real rubberBandMinimum: Theme.spacingS
+    readonly property int tabHoverDelay: 700
+
     readonly property real menuWidth: Theme.iconSize * 9
     readonly property int sidebarOverlayBreakpoint: Theme.mediumBreakpoint
 }

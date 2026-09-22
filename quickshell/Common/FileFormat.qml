@@ -47,7 +47,7 @@ Singleton {
         case "NOPKEXEC":
             return I18n.tr("Administrator access is not available because pkexec is not installed", "file operation error dialog explanation");
         case "NOPOLICY":
-            return I18n.tr("Administrator access is not available because the Dank Files polkit policy is not installed", "file operation error dialog explanation");
+            return I18n.tr("Administrator access is not available because the polkit policy is not installed", "file operation error dialog explanation");
         default:
             return I18n.tr("Administrator access is not available", "file operation error dialog explanation");
         }
@@ -87,6 +87,46 @@ Singleton {
             return true;
         }
         return false;
+    }
+
+    function typeLabel(entry) {
+        switch (true) {
+        case entry.isDir:
+            return I18n.tr("Folder", "file type shown for a directory");
+        case entry.symlinkBroken:
+            return I18n.tr("Broken link", "file type shown for a symlink with no target");
+        case entry.extension !== "":
+            return entry.extension.toUpperCase();
+        case entry.mime !== "":
+            return entry.mime;
+        default:
+            return I18n.tr("File", "file type shown when nothing more precise is known");
+        }
+    }
+
+    // Turns the daemon's fs.FileMode string into the three rwx triplets plus
+    // the octal digits the permissions tab edits.
+    function permissionBits(mode) {
+        const rwx = mode.length >= 9 ? mode.substring(mode.length - 9) : "---------";
+        const triplets = [];
+        for (let i = 0; i < 9; i += 3) {
+            triplets.push({
+                "read": rwx[i] === "r",
+                "write": rwx[i + 1] === "w",
+                "execute": rwx[i + 2] === "x" || rwx[i + 2] === "s" || rwx[i + 2] === "t"
+            });
+        }
+        return triplets;
+    }
+
+    function octalFor(triplets) {
+        return triplets.map(t => (t.read ? 4 : 0) + (t.write ? 2 : 0) + (t.execute ? 1 : 0)).join("");
+    }
+
+    function count(items) {
+        if (items === 1)
+            return I18n.tr("1 item", "a folder holding a single item");
+        return I18n.tr("%1 items", "number of items in a folder").arg(items);
     }
 
     function modified(mtimeMs) {

@@ -23,6 +23,7 @@ type Entry struct {
 	Size          int64  `json:"size"`
 	MtimeMs       int64  `json:"mtimeMs"`
 	CtimeMs       int64  `json:"ctimeMs"`
+	AtimeMs       int64  `json:"atimeMs"`
 	Mode          string `json:"mode"`
 	Owner         string `json:"owner"`
 	Group         string `json:"group"`
@@ -72,7 +73,7 @@ func (b *builder) unreadable(dir, name string, hidden bool) Entry {
 func (b *builder) fill(e *Entry, info fs.FileInfo, full string) {
 	e.Mode = info.Mode().String()
 	e.MtimeMs = info.ModTime().UnixMilli()
-	e.CtimeMs, e.Owner, e.Group = b.ownership(info)
+	e.CtimeMs, e.AtimeMs, e.Owner, e.Group = b.ownership(info)
 	e.Size = info.Size()
 	e.IsDir = info.IsDir()
 
@@ -117,11 +118,11 @@ func (b *builder) linkTarget(full string) string {
 	return filepath.Join(filepath.Dir(full), target)
 }
 
-func (b *builder) ownership(info fs.FileInfo) (ctimeMs int64, owner, group string) {
+func (b *builder) ownership(info fs.FileInfo) (ctimeMs, atimeMs int64, owner, group string) {
 	extra, ok := extraStat(info)
 	if !ok {
-		return info.ModTime().UnixMilli(), "", ""
+		return info.ModTime().UnixMilli(), info.ModTime().UnixMilli(), "", ""
 	}
 	owner, group = b.owners.names(extra.uid, extra.gid)
-	return extra.ctimeMs, owner, group
+	return extra.ctimeMs, extra.atimeMs, owner, group
 }

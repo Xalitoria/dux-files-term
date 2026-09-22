@@ -10,6 +10,7 @@ SidebarSection {
     property string currentPath: ""
 
     signal navigateRequested(string path)
+    signal dropRequested(string path, var drop)
 
     readonly property var entries: {
         const out = [];
@@ -48,8 +49,10 @@ SidebarSection {
             selected: modelData.path === section.currentPath
             actionIcon: modelData.removable ? "bookmark_remove" : ""
             actionTooltip: I18n.tr("Remove bookmark", "tooltip on the bookmark button")
+            dropPath: modelData.path
             onClicked: section.navigateRequested(modelData.path)
             onActionTriggered: BookmarksService.remove(modelData.path)
+            onDropped: drop => section.dropRequested(modelData.path, drop)
         }
     }
 }

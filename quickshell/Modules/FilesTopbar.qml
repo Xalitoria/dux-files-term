@@ -12,6 +12,7 @@ Item {
     property bool bookmarked: false
     property bool backEnabled: false
     property bool forwardEnabled: false
+    property string viewMode: "list"
     property string sortKey: "name"
     property bool sortDescending: false
 
@@ -22,6 +23,7 @@ Item {
     signal forwardRequested
     signal splitToggled
     signal bookmarkToggled
+    signal viewModeSelected(string mode)
     signal sortCycled
     signal sortDirectionToggled
     signal propertiesRequested
@@ -82,6 +84,14 @@ Item {
             backgroundColor: Theme.surfaceContainerHigh
             tooltipText: topbar.bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
             onClicked: topbar.bookmarkToggled()
+        }
+
+        FlatButton {
+            anchors.verticalCenter: parent.verticalCenter
+            iconName: topbar.viewMode === "grid" ? "grid_view" : "view_list"
+            backgroundColor: Theme.surfaceContainerHigh
+            tooltipText: topbar.viewMode === "grid" ? I18n.tr("List view", "view mode showing one row per item") : I18n.tr("Grid view", "view mode showing items as tiles")
+            onClicked: topbar.viewModeSelected(topbar.viewMode === "grid" ? "list" : "grid")
         }
 
         FlatButton {

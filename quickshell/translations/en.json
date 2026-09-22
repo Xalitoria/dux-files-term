@@ -14,7 +14,7 @@
   {
     "term": "%1 has not been marked as trusted. Running it allows it to start any program.",
     "context": "%1 has not been marked as trusted. Running it allows it to start any program.",
-    "reference": "Modules/MainWindow.qml:925",
+    "reference": "Modules/MainWindow.qml:1177",
     "comment": "untrusted desktop file dialog explanation"
   },
   {
@@ -24,10 +24,58 @@
     "comment": "unlock dialog explanation"
   },
   {
+    "term": "%1 items",
+    "context": "%1 items",
+    "reference": "Common/FileFormat.qml:129",
+    "comment": "number of items in a folder"
+  },
+  {
+    "term": "%1 selected",
+    "context": "%1 selected",
+    "reference": "Modules/SelectionFooter.qml:16",
+    "comment": "count of selected items"
+  },
+  {
     "term": "%1 will be deleted permanently. This cannot be undone.",
     "context": "%1 will be deleted permanently. This cannot be undone.",
-    "reference": "Modules/MainWindow.qml:967",
+    "reference": "Modules/MainWindow.qml:1219",
     "comment": "permanent delete confirmation explanation"
+  },
+  {
+    "term": "1 item",
+    "context": "1 item",
+    "reference": "Common/FileFormat.qml:128",
+    "comment": "a folder holding a single item"
+  },
+  {
+    "term": "1 selected",
+    "context": "1 selected",
+    "reference": "Modules/SelectionFooter.qml:16",
+    "comment": "a single selected item"
+  },
+  {
+    "term": "A name cannot be empty or contain a slash",
+    "context": "A name cannot be empty or contain a slash",
+    "reference": "Modules/InlineRename.qml:54",
+    "comment": "inline rename validation message"
+  },
+  {
+    "term": "Accessed",
+    "context": "Accessed",
+    "reference": "Modules/PropertiesDialog.qml:99",
+    "comment": "properties row showing when an item was last read"
+  },
+  {
+    "term": "Add or remove one item",
+    "context": "Add or remove one item",
+    "reference": "Common/Shortcuts.qml:222",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Add or remove the item under the cursor",
+    "context": "Add or remove the item under the cursor",
+    "reference": "Common/Shortcuts.qml:208",
+    "comment": "keyboard shortcut"
   },
   {
     "term": "Address",
@@ -48,8 +96,8 @@
     "comment": "file operation error dialog explanation"
   },
   {
-    "term": "Administrator access is not available because the Dank Files polkit policy is not installed",
-    "context": "Administrator access is not available because the Dank Files polkit policy is not installed",
+    "term": "Administrator access is not available because the polkit policy is not installed",
+    "context": "Administrator access is not available because the polkit policy is not installed",
     "reference": "Common/FileFormat.qml:50",
     "comment": "file operation error dialog explanation"
   },
@@ -78,6 +126,18 @@
     "comment": "open with dialog option that sets the default"
   },
   {
+    "term": "Apply",
+    "context": "Apply",
+    "reference": "Modules/PropertiesPermissions.qml:165, Modules/PropertiesPermissions.qml:207",
+    "comment": "button applying the edited permissions"
+  },
+  {
+    "term": "Apply to everything inside",
+    "context": "Apply to everything inside",
+    "reference": "Modules/PropertiesPermissions.qml:175",
+    "comment": "permissions option recursing into a folder"
+  },
+  {
     "term": "B",
     "context": "B",
     "reference": "Common/FileFormat.qml:13",
@@ -86,7 +146,7 @@
   {
     "term": "Back",
     "context": "Back",
-    "reference": "Modules/NavButtonPair.qml:63",
+    "reference": "Modules/NavButtonPair.qml:63, Common/Shortcuts.qml:75",
     "comment": "tooltip on the button going to the previous location"
   },
   {
@@ -98,7 +158,7 @@
   {
     "term": "Bookmark this folder",
     "context": "Bookmark this folder",
-    "reference": "Modules/FilesTopbar.qml:84",
+    "reference": "Modules/FilesTopbar.qml:85, Modules/QuickAccessBand.qml:127",
     "comment": "tooltip on the bookmark button"
   },
   {
@@ -108,9 +168,15 @@
     "comment": "sidebar section listing saved folders"
   },
   {
+    "term": "Broken link",
+    "context": "Broken link",
+    "reference": "Common/FileFormat.qml:97",
+    "comment": "file type shown for a symlink with no target"
+  },
+  {
     "term": "Cancel",
     "context": "Cancel",
-    "reference": "Modules/OpenWithDialog.qml:95, Modules/ConfirmDialog.qml:25, Modules/ConnectServerDialog.qml:96, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:65, Modules/ExecutableDialog.qml:31, Modules/CredentialDialog.qml:145, Modules/ConflictDialog.qml:63, Modules/UnlockDialog.qml:59",
+    "reference": "Modules/MainWindow.qml:1154, Modules/OpenWithDialog.qml:95, Modules/ConfirmDialog.qml:25, Modules/ConnectServerDialog.qml:96, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:65, Modules/ExecutableDialog.qml:31, Modules/CredentialDialog.qml:145, Modules/ConflictDialog.qml:63, Modules/UnlockDialog.qml:59",
     "comment": "dialog button to cancel"
   },
   {
@@ -120,9 +186,21 @@
     "comment": "file operation was cancelled"
   },
   {
+    "term": "Clear the selection",
+    "context": "Clear the selection",
+    "reference": "Modules/SelectionFooter.qml:51, Common/Shortcuts.qml:229",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Close",
+    "context": "Close",
+    "reference": "Modules/ShortcutsOverlay.qml:95, Modules/PropertiesDialog.qml:253",
+    "comment": "dialog button dismissing a dialog"
+  },
+  {
     "term": "Close tab",
     "context": "Close tab",
-    "reference": "Modules/FilesTab.qml:71",
+    "reference": "Modules/FilesTab.qml:90, Common/Shortcuts.qml:110",
     "comment": "tooltip on the button closing a tab"
   },
   {
@@ -152,19 +230,25 @@
   {
     "term": "Connect to Server…",
     "context": "Connect to Server…",
-    "reference": "Modules/NetworkSection.qml:48",
+    "reference": "Modules/NetworkSection.qml:51",
     "comment": "sidebar entry opening the connect to server dialog"
   },
   {
     "term": "Copied",
     "context": "Copied",
-    "reference": "Modules/MainWindow.qml:348",
+    "reference": "Modules/MainWindow.qml:625",
     "comment": "toast after copying files"
+  },
+  {
+    "term": "Copy",
+    "context": "Copy",
+    "reference": "Modules/MainWindow.qml:1127, Modules/DragGhost.qml:23, Modules/FileContextMenu.qml:61, Common/Shortcuts.qml:236",
+    "comment": "context menu entry copying the selection"
   },
   {
     "term": "Copy location path",
     "context": "Copy location path",
-    "reference": "Modules/FilesTopbar.qml:130",
+    "reference": "Modules/FilesTopbar.qml:139, Modules/FileContextMenu.qml:97",
     "comment": "menu entry copying the current path to the clipboard"
   },
   {
@@ -176,14 +260,20 @@
   {
     "term": "Create",
     "context": "Create",
-    "reference": "Modules/MainWindow.qml:957",
+    "reference": "Modules/MainWindow.qml:1209",
     "comment": "dialog button creating an item"
   },
   {
-    "term": "Dank Files",
-    "context": "Dank Files",
-    "reference": "Modules/MainWindow.qml:50",
-    "comment": "main window title"
+    "term": "Created",
+    "context": "Created",
+    "reference": "Modules/PropertiesDialog.qml:98, Common/FileColumns.qml:65",
+    "comment": "file list column header"
+  },
+  {
+    "term": "Cut",
+    "context": "Cut",
+    "reference": "Modules/FileContextMenu.qml:55, Common/Shortcuts.qml:243",
+    "comment": "context menu entry marking the selection for a move"
   },
   {
     "term": "Delete",
@@ -192,9 +282,15 @@
     "comment": "confirm dialog default confirm button"
   },
   {
+    "term": "Delete permanently",
+    "context": "Delete permanently",
+    "reference": "Modules/FileContextMenu.qml:89, Common/Shortcuts.qml:278",
+    "comment": "context menu entry deleting the selection for good"
+  },
+  {
     "term": "Delete permanently?",
     "context": "Delete permanently?",
-    "reference": "Modules/MainWindow.qml:966",
+    "reference": "Modules/MainWindow.qml:1218",
     "comment": "permanent delete confirmation header"
   },
   {
@@ -204,9 +300,15 @@
     "comment": "file operation in progress"
   },
   {
+    "term": "Details",
+    "context": "Details",
+    "reference": "Modules/PropertiesDialog.qml:137",
+    "comment": "properties tab with the basic facts about an item"
+  },
+  {
     "term": "Devices",
     "context": "Devices",
-    "reference": "Modules/DevicesSection.qml:64",
+    "reference": "Modules/DevicesSection.qml:65",
     "comment": "sidebar section listing drives and volumes"
   },
   {
@@ -230,7 +332,7 @@
   {
     "term": "Drives are unavailable because udisks2 is not running",
     "context": "Drives are unavailable because udisks2 is not running",
-    "reference": "Modules/DevicesSection.qml:72",
+    "reference": "Modules/DevicesSection.qml:73",
     "comment": "sidebar explanation when the device service is missing"
   },
   {
@@ -246,10 +348,34 @@
     "comment": "file operation is still measuring the work"
   },
   {
+    "term": "Everyone",
+    "context": "Everyone",
+    "reference": "Modules/PropertiesPermissions.qml:72",
+    "comment": "permissions row for other users"
+  },
+  {
+    "term": "Execute",
+    "context": "Execute",
+    "reference": "Modules/PropertiesPermissions.qml:57",
+    "comment": "permission bit"
+  },
+  {
+    "term": "File",
+    "context": "File",
+    "reference": "Common/FileFormat.qml:103",
+    "comment": "file type shown when nothing more precise is known"
+  },
+  {
     "term": "File operations",
     "context": "File operations",
     "reference": "Modules/JobsPopover.qml:31",
     "comment": "jobs popover header"
+  },
+  {
+    "term": "Files",
+    "context": "Files",
+    "reference": "Modules/MainWindow.qml:47, Common/Shortcuts.qml:325",
+    "comment": "keyboard shortcut group | main window title"
   },
   {
     "term": "Finished",
@@ -258,9 +384,15 @@
     "comment": "file operation completed"
   },
   {
+    "term": "Folder",
+    "context": "Folder",
+    "reference": "Common/FileFormat.qml:95",
+    "comment": "file type shown for a directory"
+  },
+  {
     "term": "Forward",
     "context": "Forward",
-    "reference": "Modules/NavButtonPair.qml:71",
+    "reference": "Modules/NavButtonPair.qml:71, Common/Shortcuts.qml:82",
     "comment": "tooltip on the button going to the next location"
   },
   {
@@ -270,16 +402,94 @@
     "comment": "file size unit"
   },
   {
+    "term": "Getting around",
+    "context": "Getting around",
+    "reference": "Common/Shortcuts.qml:313",
+    "comment": "keyboard shortcut group"
+  },
+  {
+    "term": "Go to the parent folder",
+    "context": "Go to the parent folder",
+    "reference": "Common/Shortcuts.qml:68",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Grid view",
+    "context": "Grid view",
+    "reference": "Modules/FilesTopbar.qml:93, Common/Shortcuts.qml:145",
+    "comment": "view mode showing items as tiles"
+  },
+  {
+    "term": "Group",
+    "context": "Group",
+    "reference": "Modules/PropertiesPermissions.qml:68, Modules/PropertiesPermissions.qml:199",
+    "comment": "permissions row for the owning group"
+  },
+  {
     "term": "Home",
     "context": "Home",
-    "reference": "Modules/MainWindow.qml:177, Modules/BookmarksSection.qml:20",
+    "reference": "Modules/MainWindow.qml:196, Modules/BookmarksSection.qml:20",
     "comment": "sidebar entry for the user's home folder"
+  },
+  {
+    "term": "Invert the selection",
+    "context": "Invert the selection",
+    "reference": "Common/Shortcuts.qml:201",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Jump to the first name starting with what you type",
+    "context": "Jump to the first name starting with what you type",
+    "reference": "Common/Shortcuts.qml:61",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Jump to the start, the end or the next screen",
+    "context": "Jump to the start, the end or the next screen",
+    "reference": "Common/Shortcuts.qml:54",
+    "comment": "keyboard shortcut"
   },
   {
     "term": "Keep both",
     "context": "Keep both",
     "reference": "Modules/ConflictDialog.qml:91",
     "comment": "file conflict dialog button to keep both items"
+  },
+  {
+    "term": "Keyboard shortcuts",
+    "context": "Keyboard shortcuts",
+    "reference": "Modules/ShortcutsOverlay.qml:12, Common/Shortcuts.qml:187",
+    "comment": "overlay listing every keyboard shortcut"
+  },
+  {
+    "term": "Larger icons",
+    "context": "Larger icons",
+    "reference": "Common/Shortcuts.qml:152",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Link",
+    "context": "Link",
+    "reference": "Modules/MainWindow.qml:1145, Modules/DragGhost.qml:25",
+    "comment": "drag label for creating a symlink"
+  },
+  {
+    "term": "Links to",
+    "context": "Links to",
+    "reference": "Modules/PropertiesDialog.qml:94",
+    "comment": "properties row showing a symlink target"
+  },
+  {
+    "term": "List view",
+    "context": "List view",
+    "reference": "Modules/FilesTopbar.qml:93, Common/Shortcuts.qml:138",
+    "comment": "view mode showing one row per item"
+  },
+  {
+    "term": "Location",
+    "context": "Location",
+    "reference": "Modules/PropertiesDialog.qml:86",
+    "comment": "properties row showing the folder an item lives in"
   },
   {
     "term": "MB",
@@ -294,21 +504,45 @@
     "comment": "file conflict dialog button to merge folders"
   },
   {
+    "term": "Modified",
+    "context": "Modified",
+    "reference": "Modules/PropertiesDialog.qml:97, Common/FileColumns.qml:57",
+    "comment": "file list column header"
+  },
+  {
     "term": "More actions",
     "context": "More actions",
-    "reference": "Modules/FilesTopbar.qml:111",
+    "reference": "Modules/FilesTopbar.qml:120",
     "comment": "tooltip on the overflow menu button"
+  },
+  {
+    "term": "Move",
+    "context": "Move",
+    "reference": "Modules/MainWindow.qml:1136, Modules/DragGhost.qml:27",
+    "comment": "drag label for moving files"
+  },
+  {
+    "term": "Move through the folder",
+    "context": "Move through the folder",
+    "reference": "Common/Shortcuts.qml:47",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Move to Trash",
+    "context": "Move to Trash",
+    "reference": "Modules/FileContextMenu.qml:82, Common/Shortcuts.qml:271",
+    "comment": "context menu entry trashing the selection"
   },
   {
     "term": "Moved",
     "context": "Moved",
-    "reference": "Modules/MainWindow.qml:346",
+    "reference": "Modules/MainWindow.qml:623",
     "comment": "toast after moving files"
   },
   {
     "term": "Moved to trash",
     "context": "Moved to trash",
-    "reference": "Modules/MainWindow.qml:344",
+    "reference": "Modules/MainWindow.qml:621",
     "comment": "toast after trashing files"
   },
   {
@@ -326,25 +560,25 @@
   {
     "term": "My Computer",
     "context": "My Computer",
-    "reference": "Modules/DevicesSection.qml:82",
+    "reference": "Modules/DevicesSection.qml:83",
     "comment": "sidebar entry for the drive the system runs from"
   },
   {
     "term": "Name",
     "context": "Name",
-    "reference": "Modules/NameDialog.qml:33",
+    "reference": "Modules/PropertiesDialog.qml:183, Modules/NameDialog.qml:33, Common/FileColumns.qml:53",
     "comment": "label for a file name input"
   },
   {
     "term": "Network",
     "context": "Network",
-    "reference": "Modules/NetworkSection.qml:16",
+    "reference": "Modules/NetworkSection.qml:17",
     "comment": "sidebar section listing remote locations"
   },
   {
     "term": "Network locations are unavailable because gvfs is not running",
     "context": "Network locations are unavailable because gvfs is not running",
-    "reference": "Modules/NetworkSection.qml:24",
+    "reference": "Modules/NetworkSection.qml:25",
     "comment": "sidebar explanation when the network service is missing"
   },
   {
@@ -362,20 +596,26 @@
   {
     "term": "New folder",
     "context": "New folder",
-    "reference": "Modules/MainWindow.qml:956",
+    "reference": "Modules/MainWindow.qml:1208, Modules/FileContextMenu.qml:112, Common/Shortcuts.qml:292",
     "comment": "new folder dialog header"
   },
   {
     "term": "New tab",
     "context": "New tab",
-    "reference": "Modules/TabRow.qml:75",
-    "comment": "tooltip on the button opening a new tab"
+    "reference": "Modules/TabRow.qml:77, Common/Shortcuts.qml:103",
+    "comment": "context menu entry opening a folder in a new tab | tooltip on the button opening a new tab"
+  },
+  {
+    "term": "Next tab",
+    "context": "Next tab",
+    "reference": "Common/Shortcuts.qml:117",
+    "comment": "keyboard shortcut"
   },
   {
     "term": "Not available",
     "context": "Not available",
-    "reference": "Modules/MainWindow.qml:561, Common/FileFormat.qml:71",
-    "comment": "explanation for a feature the environment does not permit | status for a feature the environment does not allow"
+    "reference": "Modules/PropertiesOpenWith.qml:35, Common/FileFormat.qml:71",
+    "comment": "explanation for a feature the environment does not permit"
   },
   {
     "term": "Not available because the sandbox cannot start programs on the host",
@@ -402,9 +642,15 @@
     "comment": "jobs popover empty state"
   },
   {
+    "term": "Octal",
+    "context": "Octal",
+    "reference": "Modules/PropertiesPermissions.qml:150",
+    "comment": "permissions row showing the numeric mode"
+  },
+  {
     "term": "Open",
     "context": "Open",
-    "reference": "Modules/MainWindow.qml:829, Modules/OpenWithDialog.qml:101",
+    "reference": "Modules/OpenWithDialog.qml:101, Modules/FileContextMenu.qml:28, Common/Shortcuts.qml:19",
     "comment": "context menu entry opening a file"
   },
   {
@@ -416,26 +662,50 @@
   {
     "term": "Open in new tab",
     "context": "Open in new tab",
-    "reference": "Modules/MainWindow.qml:854",
+    "reference": "Modules/FileContextMenu.qml:40",
     "comment": "context menu entry opening a folder in a new tab"
   },
   {
     "term": "Open in terminal",
     "context": "Open in terminal",
-    "reference": "Modules/MainWindow.qml:865, Modules/FilesTopbar.qml:149",
+    "reference": "Modules/FilesTopbar.qml:158, Modules/FileContextMenu.qml:151, Common/Shortcuts.qml:40",
     "comment": "context menu entry opening a terminal"
+  },
+  {
+    "term": "Open in the other pane",
+    "context": "Open in the other pane",
+    "reference": "Modules/FileContextMenu.qml:46",
+    "comment": "context menu entry opening a folder beside the current one"
+  },
+  {
+    "term": "Open the containing folder",
+    "context": "Open the containing folder",
+    "reference": "Common/Shortcuts.qml:26",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Open the context menu",
+    "context": "Open the context menu",
+    "reference": "Common/Shortcuts.qml:306",
+    "comment": "keyboard shortcut"
   },
   {
     "term": "Open with",
     "context": "Open with",
-    "reference": "Modules/MainWindow.qml:840, Modules/OpenWithDialog.qml:55",
+    "reference": "Modules/OpenWithDialog.qml:55, Modules/PropertiesDialog.qml:143, Modules/FileContextMenu.qml:34, Common/Shortcuts.qml:33",
     "comment": "open with dialog header"
   },
   {
     "term": "Other application…",
     "context": "Other application…",
-    "reference": "Modules/MainWindow.qml:898",
+    "reference": "Modules/MainWindow.qml:1075",
     "comment": "open with menu entry opening the full application picker"
+  },
+  {
+    "term": "Owner",
+    "context": "Owner",
+    "reference": "Modules/PropertiesPermissions.qml:64, Modules/PropertiesPermissions.qml:190, Common/FileColumns.qml:61",
+    "comment": "file list column header"
   },
   {
     "term": "Passphrase",
@@ -450,9 +720,39 @@
     "comment": "label for a password input"
   },
   {
+    "term": "Paste",
+    "context": "Paste",
+    "reference": "Modules/FileContextMenu.qml:118, Common/Shortcuts.qml:250",
+    "comment": "context menu entry pasting the clipboard here"
+  },
+  {
+    "term": "Paste as link",
+    "context": "Paste as link",
+    "reference": "Modules/FileContextMenu.qml:124, Common/Shortcuts.qml:257",
+    "comment": "context menu entry creating symlinks from the clipboard"
+  },
+  {
+    "term": "Paste into folder",
+    "context": "Paste into folder",
+    "reference": "Modules/FileContextMenu.qml:67",
+    "comment": "context menu entry pasting the clipboard into the selected folder"
+  },
+  {
+    "term": "Permissions",
+    "context": "Permissions",
+    "reference": "Modules/PropertiesDialog.qml:140, Common/FileColumns.qml:63",
+    "comment": "file list column header"
+  },
+  {
+    "term": "Previous tab",
+    "context": "Previous tab",
+    "reference": "Common/Shortcuts.qml:124",
+    "comment": "keyboard shortcut"
+  },
+  {
     "term": "Properties",
     "context": "Properties",
-    "reference": "Modules/FilesTopbar.qml:121",
+    "reference": "Modules/FilesTopbar.qml:130, Modules/FileContextMenu.qml:103, Modules/FileContextMenu.qml:161, Common/Shortcuts.qml:299",
     "comment": "menu entry showing details about the current folder"
   },
   {
@@ -460,6 +760,18 @@
     "context": "Protocol",
     "reference": "Modules/ConnectServerDialog.qml:49",
     "comment": "label for the network protocol picker"
+  },
+  {
+    "term": "Quick access",
+    "context": "Quick access",
+    "reference": "Modules/QuickAccessBand.qml:47",
+    "comment": "header above the shortcuts on the home folder"
+  },
+  {
+    "term": "Read",
+    "context": "Read",
+    "reference": "Modules/PropertiesPermissions.qml:49",
+    "comment": "permission bit"
   },
   {
     "term": "Recent",
@@ -470,7 +782,7 @@
   {
     "term": "Reload",
     "context": "Reload",
-    "reference": "Modules/FilesTopbar.qml:139",
+    "reference": "Modules/FilesTopbar.qml:148, Modules/FileContextMenu.qml:145, Common/Shortcuts.qml:180",
     "comment": "menu entry re-reading the current folder"
   },
   {
@@ -482,19 +794,19 @@
   {
     "term": "Remove bookmark",
     "context": "Remove bookmark",
-    "reference": "Modules/FilesTopbar.qml:84, Modules/BookmarksSection.qml:51",
+    "reference": "Modules/FilesTopbar.qml:85, Modules/BookmarksSection.qml:51, Modules/QuickAccessBand.qml:127",
     "comment": "tooltip on the bookmark button"
   },
   {
     "term": "Rename",
     "context": "Rename",
-    "reference": "Modules/MainWindow.qml:948, Modules/MainWindow.qml:949",
+    "reference": "Modules/MainWindow.qml:1200, Modules/MainWindow.qml:1201, Modules/FileContextMenu.qml:73, Common/Shortcuts.qml:264",
     "comment": "rename dialog header"
   },
   {
     "term": "Renamed",
     "context": "Renamed",
-    "reference": "Modules/MainWindow.qml:350",
+    "reference": "Modules/MainWindow.qml:627",
     "comment": "toast after renaming a file"
   },
   {
@@ -502,6 +814,12 @@
     "context": "Replace",
     "reference": "Modules/ConflictDialog.qml:84",
     "comment": "file conflict dialog button to overwrite the existing item"
+  },
+  {
+    "term": "Resize icons",
+    "context": "Resize icons",
+    "reference": "Common/Shortcuts.qml:166",
+    "comment": "keyboard shortcut"
   },
   {
     "term": "Restoring",
@@ -524,7 +842,7 @@
   {
     "term": "Run this desktop file?",
     "context": "Run this desktop file?",
-    "reference": "Modules/MainWindow.qml:924",
+    "reference": "Modules/MainWindow.qml:1176",
     "comment": "untrusted desktop file dialog header"
   },
   {
@@ -548,8 +866,32 @@
   {
     "term": "Search in Files",
     "context": "Search in Files",
-    "reference": "Modules/FilesTopbar.qml:170",
+    "reference": "Modules/FilesTopbar.qml:179, Common/Shortcuts.qml:96",
     "comment": "placeholder in the search field"
+  },
+  {
+    "term": "Select a range",
+    "context": "Select a range",
+    "reference": "Common/Shortcuts.qml:215",
+    "comment": "keyboard shortcut"
+  },
+  {
+    "term": "Select all",
+    "context": "Select all",
+    "reference": "Modules/FileContextMenu.qml:133, Common/Shortcuts.qml:194",
+    "comment": "menu entry selecting every item in the folder"
+  },
+  {
+    "term": "Selection",
+    "context": "Selection",
+    "reference": "Common/Shortcuts.qml:321",
+    "comment": "keyboard shortcut group"
+  },
+  {
+    "term": "Show hidden files",
+    "context": "Show hidden files",
+    "reference": "Modules/FileContextMenu.qml:139, Common/Shortcuts.qml:173",
+    "comment": "menu entry listing dot files"
   },
   {
     "term": "Sign in",
@@ -558,10 +900,22 @@
     "comment": "credential dialog header"
   },
   {
+    "term": "Size",
+    "context": "Size",
+    "reference": "Modules/PropertiesDialog.qml:82, Common/FileColumns.qml:55",
+    "comment": "file list column header"
+  },
+  {
     "term": "Skip",
     "context": "Skip",
     "reference": "Modules/OperationErrorDialog.qml:72, Modules/ConflictDialog.qml:77",
     "comment": "file conflict dialog button to leave the item alone"
+  },
+  {
+    "term": "Smaller icons",
+    "context": "Smaller icons",
+    "reference": "Common/Shortcuts.qml:159",
+    "comment": "keyboard shortcut"
   },
   {
     "term": "Sort ascending",
@@ -602,8 +956,20 @@
   {
     "term": "Split view",
     "context": "Split view",
-    "reference": "Modules/FilesTopbar.qml:93",
+    "reference": "Modules/FilesTopbar.qml:102",
     "comment": "tooltip on the button showing a second pane"
+  },
+  {
+    "term": "Stop measuring",
+    "context": "Stop measuring",
+    "reference": "Modules/PropertiesDialog.qml:199",
+    "comment": "properties action halting the recursive size scan"
+  },
+  {
+    "term": "Switch pane",
+    "context": "Switch pane",
+    "reference": "Common/Shortcuts.qml:131",
+    "comment": "keyboard shortcut"
   },
   {
     "term": "TB",
@@ -620,19 +986,19 @@
   {
     "term": "This folder could not be opened",
     "context": "This folder could not be opened",
-    "reference": "Modules/FilesPane.qml:81",
+    "reference": "Modules/FileViewBody.qml:437",
     "comment": "directory listing error"
   },
   {
     "term": "This folder is empty",
     "context": "This folder is empty",
-    "reference": "Modules/FilesPane.qml:191",
+    "reference": "Modules/FileViewBody.qml:403",
     "comment": "empty directory placeholder"
   },
   {
     "term": "This folder no longer exists",
     "context": "This folder no longer exists",
-    "reference": "Modules/FilesPane.qml:77",
+    "reference": "Modules/FileViewBody.qml:433",
     "comment": "directory listing error"
   },
   {
@@ -680,13 +1046,13 @@
   {
     "term": "Toggle sidebar",
     "context": "Toggle sidebar",
-    "reference": "Modules/FilesTopbar.qml:58",
+    "reference": "Modules/FilesTopbar.qml:59",
     "comment": "tooltip on the button showing or hiding the sidebar"
   },
   {
     "term": "Trust and run",
     "context": "Trust and run",
-    "reference": "Modules/MainWindow.qml:926",
+    "reference": "Modules/MainWindow.qml:1178",
     "comment": "untrusted desktop file dialog action"
   },
   {
@@ -696,9 +1062,21 @@
     "comment": "file operation error dialog button to retry"
   },
   {
+    "term": "Type",
+    "context": "Type",
+    "reference": "Modules/PropertiesDialog.qml:78, Common/FileColumns.qml:59",
+    "comment": "file list column header"
+  },
+  {
+    "term": "Type a location",
+    "context": "Type a location",
+    "reference": "Common/Shortcuts.qml:89",
+    "comment": "keyboard shortcut"
+  },
+  {
     "term": "Undo",
     "context": "Undo",
-    "reference": "Modules/MainWindow.qml:401",
+    "reference": "Modules/MainWindow.qml:678, Common/Shortcuts.qml:285",
     "comment": "toast action reversing the last operation"
   },
   {
@@ -710,7 +1088,7 @@
   {
     "term": "Untitled folder",
     "context": "Untitled folder",
-    "reference": "Modules/MainWindow.qml:820",
+    "reference": "Modules/MainWindow.qml:387",
     "comment": "default name for a new folder"
   },
   {
@@ -718,6 +1096,12 @@
     "context": "Username",
     "reference": "Modules/CredentialDialog.qml:75",
     "comment": "label for a user name input"
+  },
+  {
+    "term": "View",
+    "context": "View",
+    "reference": "Common/Shortcuts.qml:317",
+    "comment": "keyboard shortcut group"
   },
   {
     "term": "Waiting",
@@ -732,6 +1116,12 @@
     "comment": "file operation in progress"
   },
   {
+    "term": "Write",
+    "context": "Write",
+    "reference": "Modules/PropertiesPermissions.qml:53",
+    "comment": "permission bit"
+  },
+  {
     "term": "You do not have permission to do this",
     "context": "You do not have permission to do this",
     "reference": "Common/FileFormat.qml:28",
@@ -740,7 +1130,7 @@
   {
     "term": "You do not have permission to view this folder",
     "context": "You do not have permission to view this folder",
-    "reference": "Modules/FilesPane.qml:79",
+    "reference": "Modules/FileViewBody.qml:435",
     "comment": "directory listing error"
   },
   {

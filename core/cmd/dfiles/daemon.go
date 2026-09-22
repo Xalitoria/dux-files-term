@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/clipboard"
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
 	"github.com/AvengeMedia/dankfiles/core/internal/elevate"
@@ -30,11 +31,12 @@ var daemonCmd = &cobra.Command{
 }
 
 type daemonServices struct {
-	ipc      *ipc.Server
-	ipcErrCh <-chan error
-	files    *files.Service
-	devices  *devices.Service
-	network  *netmount.Service
+	ipc       *ipc.Server
+	ipcErrCh  <-chan error
+	files     *files.Service
+	devices   *devices.Service
+	network   *netmount.Service
+	clipboard *clipboard.Service
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -56,6 +58,9 @@ func (s *daemonServices) Close() {
 	}
 	if s.network != nil {
 		s.network.Close()
+	}
+	if s.clipboard != nil {
+		s.clipboard.Close()
 	}
 	if s.ipc != nil {
 		s.ipc.Close()
@@ -86,6 +91,8 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		log.Warnf("gvfs unavailable: %v", err)
 	}
 
+	clipboardService := clipboard.NewService()
+
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
 	if err := colorSchemeWatcher.Start(); err != nil {
 		log.Warnf("color-scheme portal watcher unavailable: %v", err)
@@ -101,6 +108,7 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		Apps:        appService,
 		Devices:     deviceService,
 		Network:     networkService,
+		Clipboard:   clipboardService,
 		Sandbox:     caps,
 	}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
@@ -108,7 +116,7 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		return nil, err
 	}
 
-	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService}, nil
+	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService}, nil
 }
 
 func configHome() string {

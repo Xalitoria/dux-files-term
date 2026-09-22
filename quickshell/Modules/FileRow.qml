@@ -1,80 +1,120 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts
 import qs.Common
 import qs.DankCommon.Widgets
 
-DankListItem {
+FileItemSurface {
     id: row
 
-    required property int index
     required property string name
-    required property string path
-    required property bool isDir
     required property bool isSymlink
+    required property bool symlinkBroken
     required property real size
     required property real mtimeMs
+    required property real ctimeMs
+    required property string mode
+    required property string owner
     required property string iconName
     required property string thumbnail
     required property string mime
+    required property string extension
     required property string displayName
     required property bool untrusted
-    required property bool isExecutable
+    required property bool unreadable
+    required property bool hidden
 
-    width: listView?.width ?? 0
-    isSelected: (listView?.currentIndex ?? -1) === index
-    firstInGroup: index === 0
-    lastInGroup: index === (listView?.count ?? 0) - 1
+    readonly property var entry: ({
+            "isDir": isDir,
+            "symlinkBroken": symlinkBroken,
+            "extension": extension,
+            "mime": mime,
+            "size": size,
+            "mtimeMs": mtimeMs,
+            "ctimeMs": ctimeMs,
+            "owner": owner,
+            "mode": mode,
+            "childCount": view?.childCounts?.[path] ?? -1
+        })
 
-    RowLayout {
-        anchors.fill: parent
-        anchors.leftMargin: Theme.spacingL
-        anchors.rightMargin: Theme.spacingL
-        spacing: Theme.spacingM
+    width: view?.width ?? 0
+    height: view?.rowHeight ?? Theme.listItemHeight
+    selected: view?.selection?.contains(path) ?? false
+    cursor: view?.selection?.showsCursor(path) ?? false
+    cut: view?.cutSet?.[path] === true
+    renaming: (view?.renamingPath ?? "") === path
 
-        FileIcon {
-            iconName: row.iconName
-            thumbnail: row.thumbnail !== "" ? row.thumbnail : row.mime === "image/svg+xml" ? row.path : ""
-            size: Theme.iconSize
-            color: row.isDir ? Theme.primary : row.contentColor
+    FileItemVisual {
+        id: visual
+
+        anchors.left: parent.left
+        anchors.leftMargin: Theme.spacingM
+        anchors.verticalCenter: parent.verticalCenter
+        iconSize: row.view?.iconSize ?? Theme.iconSize
+        iconName: row.iconName
+        thumbnail: row.thumbnail
+        path: row.path
+        mime: row.mime
+        isDir: row.isDir
+        isSymlink: row.isSymlink
+        symlinkBroken: row.symlinkBroken
+        untrusted: row.untrusted
+        unreadable: row.unreadable
+        hidden: row.hidden
+        cut: row.cut
+        tint: row.contentColor
+    }
+
+    Row {
+        id: columns
+
+        anchors.right: parent.right
+        anchors.rightMargin: Theme.spacingM
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: FilesMetrics.columnGap
+
+        Repeater {
+            model: row.view?.columnIds ?? []
+
+            StyledText {
+                required property string modelData
+
+                width: row.view.columnWidth(modelData)
+                horizontalAlignment: FileColumns.specFor(modelData)?.align ?? Text.AlignLeft
+                text: FileColumns.value(modelData, row.entry)
+                color: row.supportingColor
+                font.pixelSize: Theme.fontSizeSmall
+                elide: Text.ElideRight
+            }
         }
+    }
 
-        StyledText {
-            Layout.fillWidth: true
-            text: row.displayName !== "" ? row.displayName : row.name
-            color: row.contentColor
-            font.pixelSize: Theme.fontSizeMedium
-            elide: Text.ElideMiddle
-        }
+    StyledText {
+        anchors.left: visual.right
+        anchors.leftMargin: Theme.spacingM
+        anchors.right: columns.left
+        anchors.rightMargin: FilesMetrics.columnGap
+        anchors.verticalCenter: parent.verticalCenter
+        visible: !row.renaming
+        opacity: row.cut ? Theme.pendingOpacity : 1
+        text: row.displayName !== "" ? row.displayName : row.name
+        color: row.contentColor
+        font.pixelSize: Theme.fontSizeMedium
+        elide: Text.ElideMiddle
+    }
 
-        DankIcon {
-            visible: row.untrusted
-            name: "warning"
-            size: Theme.fontSizeSmall
-            color: Theme.error
-        }
-
-        DankIcon {
-            visible: row.isSymlink
-            name: "link"
-            size: Theme.fontSizeSmall
-            color: row.supportingContentColor
-        }
-
-        StyledText {
-            visible: row.size >= 0
-            text: FileFormat.size(row.size)
-            color: row.supportingContentColor
-            font.pixelSize: Theme.fontSizeSmall
-        }
-
-        StyledText {
-            Layout.preferredWidth: Theme.spacingXL * 6
-            horizontalAlignment: Text.AlignRight
-            text: FileFormat.modified(row.mtimeMs)
-            color: row.supportingContentColor
-            font.pixelSize: Theme.fontSizeSmall
+    Loader {
+        anchors.left: visual.right
+        anchors.leftMargin: Theme.spacingM
+        anchors.right: columns.left
+        anchors.rightMargin: FilesMetrics.columnGap
+        anchors.verticalCenter: parent.verticalCenter
+        active: row.renaming
+        sourceComponent: InlineRename {
+            name: row.name
+            onCommitted: name => row.view.renameSubmitted(row.path, name)
+            onCancelled: row.view.renameCancelled()
+            Component.onCompleted: begin()
         }
     }
 }

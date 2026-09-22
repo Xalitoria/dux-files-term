@@ -13,11 +13,8 @@ Singleton {
     readonly property bool connected: transport.connected
 
     property var jobs: []
-    property var clipboardPaths: []
-    property bool clipboardCut: false
 
     readonly property int activeCount: jobs.filter(job => job.state !== "done" && job.state !== "failed").length
-    readonly property bool hasClipboard: clipboardPaths.length > 0
 
     property var elevation: ({
             "available": false,
@@ -189,28 +186,6 @@ Singleton {
                 "reason": result.reason || ""
             };
         });
-    }
-
-    function cut(paths) {
-        clipboardPaths = paths.slice();
-        clipboardCut = true;
-    }
-
-    function copyToClipboard(paths) {
-        clipboardPaths = paths.slice();
-        clipboardCut = false;
-    }
-
-    function paste(dest, scope) {
-        if (clipboardPaths.length === 0)
-            return;
-        if (clipboardCut) {
-            move(clipboardPaths, dest, scope);
-            clipboardPaths = [];
-            clipboardCut = false;
-            return;
-        }
-        copy(clipboardPaths, dest, scope);
     }
 
     function _start(method, params) {

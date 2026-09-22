@@ -16,7 +16,10 @@ StyledButton {
     property bool busy: false
     property bool selected: false
 
+    property string dropPath: ""
+
     signal actionTriggered
+    signal dropped(var drop)
 
     readonly property bool showAction: actionIcon !== "" && (hovered || actionArea.containsMouse)
     readonly property color contentColor: {
@@ -28,7 +31,15 @@ StyledButton {
     width: parent?.width ?? 0
     implicitHeight: FilesMetrics.sidebarRowHeight
     radius: Theme.cornerRadiusM
-    color: selected ? Theme.secondaryContainer : "transparent"
+    color: dropZone.containsDrag ? Theme.primaryContainer : selected ? Theme.secondaryContainer : "transparent"
+
+    DropArea {
+        id: dropZone
+
+        anchors.fill: parent
+        enabled: row.dropPath !== ""
+        onDropped: drop => row.dropped(drop)
+    }
 
     StateLayer {
         control: row

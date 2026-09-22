@@ -22,6 +22,11 @@ Singleton {
     property real splitRatio: 0.5
     property int currentTab: 0
     property var tabs: []
+    property string viewMode: "list"
+    property int gridZoom: 1
+    property int listZoom: 0
+    property var listColumns: ["size", "modified", "type"]
+    property var columnWidths: ({})
 
     readonly property var persistedState: ({
             "windowWidth": Math.round(windowWidth),
@@ -30,7 +35,12 @@ Singleton {
             "splitView": splitView,
             "splitRatio": splitRatio,
             "currentTab": currentTab,
-            "tabs": tabs
+            "tabs": tabs,
+            "viewMode": viewMode,
+            "gridZoom": gridZoom,
+            "listZoom": listZoom,
+            "listColumns": listColumns,
+            "columnWidths": columnWidths
         })
 
     property bool _loaded: false

@@ -11,6 +11,7 @@ SidebarSection {
     property string busyId: ""
 
     signal navigateRequested(string path)
+    signal dropRequested(string path, var drop)
     signal connectRequested
 
     title: I18n.tr("Network", "sidebar section listing remote locations")
@@ -35,7 +36,9 @@ SidebarSection {
             iconName: modelData.iconName
             actionIcon: "eject"
             busy: section.busyId === modelData.id
+            dropPath: modelData.path
             onClicked: section.navigateRequested(modelData.path)
+            onDropped: drop => section.dropRequested(modelData.path, drop)
             onActionTriggered: {
                 section.busyId = modelData.id;
                 NetworkService.disconnect(modelData.id, () => section.busyId = "");

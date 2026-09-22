@@ -26,16 +26,25 @@ FloatingWindow {
     property bool applyingTab: false
 
     readonly property string opScope: "main"
+    readonly property var cutSet: {
+        const set = ({});
+        if (!ClipboardService.cut)
+            return set;
+        for (const path of ClipboardService.paths)
+            set[path] = true;
+        return set;
+    }
+    readonly property bool shiftHeld: (window.activeModifiers & Qt.ShiftModifier) !== 0
+    property int activeModifiers: Qt.NoModifier
     readonly property var secondPane: splitLoader.item
     readonly property var activePane: splitView && activePaneIndex === 1 && secondPane ? secondPane : primaryPane
     readonly property string currentPath: activePane.path
-    readonly property var currentEntry: activePane.currentEntry
     readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
     readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible
-    readonly property bool shortcutsEnabled: !dialogOpen && !primaryPane.editingPath && !(secondPane?.editingPath ?? false)
+    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible
+    readonly property bool shortcutsEnabled: !dialogOpen && !primaryPane.editingPath && !(secondPane?.editingPath ?? false) && !primaryPane.renaming && !(secondPane?.renaming ?? false)
 
-    title: I18n.tr("Dank Files", "main window title")
+    title: I18n.tr("Files", "main window title")
     implicitWidth: SessionData.windowWidth
     implicitHeight: SessionData.windowHeight
     minimumSize: Qt.size(480, 320)
@@ -247,6 +256,17 @@ FloatingWindow {
         });
     }
 
+    function setSort(key) {
+        if (key === "")
+            return;
+        if (sortKey === key) {
+            sortDescending = !sortDescending;
+            return;
+        }
+        sortKey = key;
+        sortDescending = false;
+    }
+
     function cycleSort() {
         switch (sortKey) {
         case "name":
@@ -263,8 +283,152 @@ FloatingWindow {
         }
     }
 
-    function selection() {
-        return currentEntry ? [currentEntry.path] : [];
+    // The one place that decides what an action does. The keyboard table, the
+    // context menus and the topbar all dispatch through it.
+    function runAction(id) {
+        switch (id) {
+        case "open":
+            activate(firstSelected());
+            return;
+        case "openContainingFolder":
+            openContainingFolder();
+            return;
+        case "openWith":
+            openWithCurrent();
+            return;
+        case "openTerminal":
+            openTerminalHere();
+            return;
+        case "newTab":
+            newTab(firstSelected()?.path ?? "");
+            return;
+        case "openInPane":
+            openInOtherPane(firstSelected()?.path ?? "");
+            return;
+        case "closeTab":
+            closeTab(currentTab);
+            return;
+        case "nextTab":
+            cycleTab(1);
+            return;
+        case "previousTab":
+            cycleTab(-1);
+            return;
+        case "back":
+            activePane.back();
+            return;
+        case "forward":
+            activePane.forward();
+            return;
+        case "editPath":
+            activePane.editPath();
+            return;
+        case "search":
+            topbar.focusSearch();
+            return;
+        case "swapPane":
+            swapPaneFocus();
+            return;
+        case "listView":
+            SessionData.viewMode = "list";
+            return;
+        case "gridView":
+            SessionData.viewMode = "grid";
+            return;
+        case "zoomIn":
+            activePane.body.zoomBy(1);
+            return;
+        case "zoomOut":
+            activePane.body.zoomBy(-1);
+            return;
+        case "showHidden":
+            showHidden = !showHidden;
+            return;
+        case "reload":
+            activePane.refresh();
+            return;
+        case "shortcuts":
+            shortcutsOverlay.open();
+            return;
+        case "selectAll":
+            activePane.selection.selectAll(activePane.body.directory.entries);
+            return;
+        case "invertSelection":
+            activePane.selection.invert(activePane.body.directory.entries);
+            return;
+        case "copy":
+            ClipboardService.copy(selectedPaths());
+            return;
+        case "cut":
+            ClipboardService.cutPaths(selectedPaths());
+            return;
+        case "paste":
+            pasteInto(currentPath, false);
+            return;
+        case "pasteInto":
+            pasteInto(firstSelected()?.path ?? currentPath, false);
+            return;
+        case "pasteLink":
+            pasteInto(currentPath, true);
+            return;
+        case "rename":
+            renameSelection();
+            return;
+        case "trash":
+            trashSelection();
+            return;
+        case "deletePermanently":
+            deleteSelection();
+            return;
+        case "undo":
+            FileOpsService.undo(opScope);
+            return;
+        case "newFolder":
+            newFolderDialog.ask(I18n.tr("Untitled folder", "default name for a new folder"));
+            return;
+        case "properties":
+            showProperties();
+            return;
+        case "copyPath":
+            Paths.copyPathToClipboard(selectedPaths().join("\n"));
+            return;
+        case "contextMenu":
+            showItemMenu(Theme.spacingL, Theme.spacingL, Qt.NoModifier);
+            return;
+        }
+    }
+
+    function openInOtherPane(path) {
+        if (path === "")
+            return;
+        if (!splitView)
+            toggleSplit();
+        Qt.callLater(() => {
+            const target = window.activePaneIndex === 0 ? window.secondPane : window.primaryPane;
+            target?.navigate(path);
+        });
+    }
+
+    function selectedPaths() {
+        return activePane.selection.paths;
+    }
+
+    function selectedEntries() {
+        return activePane.selectedEntries;
+    }
+
+    function selectionIsDirectory() {
+        const entries = selectedEntries();
+        return entries.length > 0 && entries.every(entry => entry.isDir);
+    }
+
+    function selectionIsFile() {
+        const entries = selectedEntries();
+        return entries.length > 0 && entries.every(entry => !entry.isDir);
+    }
+
+    function firstSelected() {
+        return selectedEntries()[0] ?? null;
     }
 
     function reportError(response) {
@@ -294,15 +458,17 @@ FloatingWindow {
     }
 
     function openWithCurrent() {
-        if (!currentEntry)
+        const entry = firstSelected();
+        if (!entry)
             return;
-        openWithDialog.ask(currentEntry.mime, [currentEntry.path]);
+        openWithDialog.ask(entry.mime, selectedPaths());
     }
 
     function openContainingFolder() {
-        if (!currentEntry)
+        const entry = firstSelected();
+        if (!entry)
             return;
-        const parent = currentEntry.path.substring(0, currentEntry.path.lastIndexOf("/"));
+        const parent = entry.path.substring(0, entry.path.lastIndexOf("/"));
         activePane.navigate(parent === "" ? "/" : parent);
     }
 
@@ -310,17 +476,39 @@ FloatingWindow {
         AppsService.openTerminal(currentPath, response => window.reportError(response));
     }
 
-    function showMenuFor(index, pointX, pointY) {
+    function showItemMenu(pointX, pointY, modifiers) {
+        activeModifiers = modifiers ?? Qt.NoModifier;
         openWithMenu.close();
+        backgroundMenu.close();
         const point = activePane.mapToItem(surface, pointX, pointY);
-        fileMenu.openAt(point.x, point.y);
+        itemMenu.openAt(point.x, point.y);
+    }
+
+    function showColumnsMenu(pointX, pointY) {
+        itemMenu.close();
+        backgroundMenu.close();
+        const point = activePane.mapToItem(surface, pointX, pointY);
+        columnsMenu.openAt(point.x, point.y);
+    }
+
+    function toggleColumn(id) {
+        const shown = SessionData.listColumns;
+        SessionData.listColumns = shown.includes(id) ? shown.filter(entry => entry !== id) : shown.concat([id]);
+    }
+
+    function showBackgroundMenu(pointX, pointY) {
+        openWithMenu.close();
+        itemMenu.close();
+        const point = activePane.mapToItem(surface, pointX, pointY);
+        backgroundMenu.openAt(point.x, point.y);
     }
 
     function loadOpenWithMenu() {
         openWithMenu.apps = [];
-        if (!currentEntry)
+        const entry = firstSelected();
+        if (!entry)
             return;
-        AppsService.appsForMime(currentEntry.mime, currentEntry.path, response => {
+        AppsService.appsForMime(entry.mime, entry.path, response => {
             if (response.error)
                 return;
             openWithMenu.apps = (response.apps || []).slice(0, 5);
@@ -328,26 +516,103 @@ FloatingWindow {
     }
 
     function trashSelection() {
-        const paths = selection();
+        const paths = selectedPaths();
         if (paths.length === 0)
             return;
         FileOpsService.trash(paths, opScope);
     }
 
     function deleteSelection() {
-        const paths = selection();
+        const paths = selectedPaths();
         if (paths.length === 0)
             return;
         confirmDialog.pending = paths;
-        confirmDialog.subject = currentEntry.name;
+        confirmDialog.subject = paths.length === 1 ? firstSelected().name : FileFormat.count(paths.length);
         confirmDialog.open();
     }
 
     function renameSelection() {
-        if (!currentEntry)
+        const entry = firstSelected();
+        if (!entry)
             return;
-        renameDialog.target = currentEntry.path;
-        renameDialog.ask(currentEntry.name);
+        activePane.beginRename(entry.path);
+    }
+
+    function pasteInto(dest, asLink) {
+        ClipboardService.read(result => {
+            if (result.paths.length === 0)
+                return;
+            if (asLink) {
+                FileOpsService.link(result.paths, dest, window.opScope);
+                return;
+            }
+            if (result.cut) {
+                FileOpsService.move(result.paths, dest, window.opScope);
+                ClipboardService.clear();
+                return;
+            }
+            FileOpsService.copy(result.paths, dest, window.opScope);
+        });
+    }
+
+    function showProperties() {
+        const entries = selectedEntries();
+        if (entries.length > 0) {
+            propertiesDialog.show(entries);
+            return;
+        }
+        DirectoryService.list(currentPath, {
+            "limit": 1
+        }, () => {});
+        DankFilesService.sendRequest("files.stat", {
+            "path": currentPath
+        }, response => {
+            if (response.error) {
+                ToastService.info(FileFormat.operationError(response.code, response.error));
+                return;
+            }
+            propertiesDialog.show([(response.result || {}).entry]);
+        });
+    }
+
+    function applyDrop(paths, dest, action) {
+        switch (action) {
+        case "copy":
+            FileOpsService.copy(paths, dest, opScope);
+            return;
+        case "move":
+            FileOpsService.move(paths, dest, opScope);
+            return;
+        case "ask":
+            dropMenu.present(paths, dest);
+            return;
+        }
+        FileOpsService.transport.sendRequest("files.op.dropAction", {
+            "paths": paths,
+            "dest": dest
+        }, response => {
+            const resolved = (response.result || {}).action === "move" ? "move" : "copy";
+            window.applyDrop(paths, dest, resolved);
+        });
+    }
+
+    function beginDrag(paths) {
+        if (paths.length === 0)
+            return;
+        const entry = window.firstSelected();
+        DragService.begin(paths, currentPath);
+        dragGhost.count = paths.length;
+        dragGhost.iconName = entry?.iconName ?? "";
+        dragGhost.thumbnail = entry?.thumbnail ?? "";
+        dragGhost.mime = entry?.mime ?? "";
+        dragGhost.path = entry?.path ?? "";
+        dragGhost.isDir = entry?.isDir ?? false;
+        dragSource.Drag.mimeData = DragService.mimeData();
+        dragGhost.grabToImage(result => {
+            dragSource.Drag.imageSource = result.url;
+            dragSource.Drag.startDrag();
+            DragService.end();
+        });
     }
 
     function toastFor(job) {
@@ -431,8 +696,15 @@ FloatingWindow {
             sortKey: window.sortKey
             sortDescending: window.sortDescending
             showActiveOutline: window.splitView
+            cutSet: window.cutSet
             onActivateRequested: entry => window.activate(entry)
-            onContextMenuRequested: (index, pointX, pointY) => window.showMenuFor(index, pointX, pointY)
+            onItemMenuRequested: (index, pointX, pointY, modifiers) => window.showItemMenu(pointX, pointY, modifiers)
+            onBackgroundMenuRequested: (pointX, pointY) => window.showBackgroundMenu(pointX, pointY)
+            onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
+            onDragRequested: paths => window.beginDrag(paths)
+            onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
+            onSortRequested: key => window.setSort(key)
+            onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
             onFocusRequested: window.activePaneIndex = 1
             onPathChanged: window.captureTabs()
         }
@@ -511,6 +783,7 @@ FloatingWindow {
                 onNavigateRequested: path => window.openPath(path, false)
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
+                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.actionFor(drop.modifiers ?? Qt.NoModifier))
             }
         }
 
@@ -545,6 +818,7 @@ FloatingWindow {
                 onTabSelected: index => window.selectTab(index)
                 onTabClosed: index => window.closeTab(index)
                 onTabAdded: window.newTab("")
+                onTabDropHovered: index => window.selectTab(index)
             }
 
             FilesTopbar {
@@ -560,6 +834,7 @@ FloatingWindow {
                 forwardEnabled: window.activePane.canGoForward
                 sortKey: window.sortKey
                 sortDescending: window.sortDescending
+                viewMode: SessionData.viewMode
                 onSidebarToggled: window.toggleSidebar()
                 onBackRequested: window.activePane.back()
                 onForwardRequested: window.activePane.forward()
@@ -568,9 +843,10 @@ FloatingWindow {
                 onSortCycled: window.cycleSort()
                 onSortDirectionToggled: window.sortDescending = !window.sortDescending
                 onCopyPathRequested: Paths.copyPathToClipboard(window.currentPath)
-                onReloadRequested: window.activePane.refresh()
+                onViewModeSelected: mode => SessionData.viewMode = mode
+                onReloadRequested: window.runAction("reload")
                 onTerminalRequested: window.openTerminalHere()
-                onPropertiesRequested: ToastService.info(I18n.tr("Not available", "status for a feature the environment does not allow"))
+                onPropertiesRequested: window.runAction("properties")
             }
 
             Item {
@@ -596,8 +872,15 @@ FloatingWindow {
                     sortKey: window.sortKey
                     sortDescending: window.sortDescending
                     showActiveOutline: window.splitView
+                    cutSet: window.cutSet
                     onActivateRequested: entry => window.activate(entry)
-                    onContextMenuRequested: (index, pointX, pointY) => window.showMenuFor(index, pointX, pointY)
+                    onItemMenuRequested: (index, pointX, pointY, modifiers) => window.showItemMenu(pointX, pointY, modifiers)
+                    onBackgroundMenuRequested: (pointX, pointY) => window.showBackgroundMenu(pointX, pointY)
+                    onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
+                    onDragRequested: paths => window.beginDrag(paths)
+                    onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
+                    onSortRequested: key => window.setSort(key)
+                    onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
                     onFocusRequested: window.activePaneIndex = 0
                     onPathChanged: window.captureTabs()
                 }
@@ -678,209 +961,89 @@ FloatingWindow {
                 }
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
+                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.actionFor(drop.modifiers ?? Qt.NoModifier))
             }
         }
     }
 
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Return", "Enter"]
-        onActivated: window.activate(window.currentEntry)
+    // One Shortcut per table row, so the keyboard map lives in exactly one
+    // place and every binding dispatches through runAction like the menus do.
+    Instantiator {
+        model: Shortcuts.bound("window")
+
+        Shortcut {
+            required property var modelData
+
+            enabled: window.shortcutsEnabled
+            sequences: modelData.keys
+            onActivated: window.runAction(modelData.id)
+        }
     }
 
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+Return", "Ctrl+Enter"]
-        onActivated: window.openContainingFolder()
+    Instantiator {
+        model: Shortcuts.bound("selection")
+
+        Shortcut {
+            required property var modelData
+
+            enabled: window.shortcutsEnabled && window.selectedPaths().length > 0
+            sequences: modelData.keys
+            onActivated: window.runAction(modelData.id)
+        }
     }
 
-    Shortcut {
-        enabled: window.shortcutsEnabled && window.currentEntry !== null
-        sequences: ["Shift+F10", "Menu"]
-        onActivated: window.showMenuFor(window.activePane.currentIndex, Theme.spacingL, Theme.spacingL)
+    Instantiator {
+        model: Shortcuts.bound("path")
+
+        Shortcut {
+            required property var modelData
+
+            enabled: !window.dialogOpen
+            sequences: modelData.keys
+            onActivated: window.runAction(modelData.id)
+        }
     }
 
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Alt+Left"]
-        onActivated: window.activePane.back()
-    }
+    FileContextMenu {
+        id: itemMenu
 
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Alt+Right"]
-        onActivated: window.activePane.forward()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Alt+Up"]
-        onActivated: window.activePane.up()
-    }
-
-    Shortcut {
-        enabled: !window.dialogOpen
-        sequences: ["Ctrl+L"]
-        onActivated: window.activePane.editPath()
-    }
-
-    Shortcut {
-        enabled: !window.dialogOpen
-        sequences: ["Ctrl+F"]
-        onActivated: topbar.focusSearch()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+T"]
-        onActivated: window.newTab("")
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+W"]
-        onActivated: window.closeTab(window.currentTab)
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+Tab"]
-        onActivated: window.cycleTab(1)
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+Shift+Tab"]
-        onActivated: window.cycleTab(-1)
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["F5"]
-        onActivated: window.activePane.refresh()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["F6"]
-        onActivated: window.swapPaneFocus()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+Shift+O"]
-        onActivated: window.openWithCurrent()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled && SandboxService.available("terminal")
-        sequences: ["Ctrl+Alt+T"]
-        onActivated: window.openTerminalHere()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+H"]
-        onActivated: window.showHidden = !window.showHidden
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+C"]
-        onActivated: FileOpsService.copyToClipboard(window.selection())
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+X"]
-        onActivated: FileOpsService.cut(window.selection())
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+V"]
-        onActivated: FileOpsService.paste(window.currentPath, window.opScope)
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["F2"]
-        onActivated: window.renameSelection()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Delete"]
-        onActivated: window.trashSelection()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Shift+Delete"]
-        onActivated: window.deleteSelection()
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+Z"]
-        onActivated: FileOpsService.undo(window.opScope)
-    }
-
-    Shortcut {
-        enabled: window.shortcutsEnabled
-        sequences: ["Ctrl+Shift+N"]
-        onActivated: newFolderDialog.ask(I18n.tr("Untitled folder", "default name for a new folder"))
+        anchorItem: surface
+        selectionCount: window.selectedPaths().length
+        hasDirectory: window.selectionIsDirectory()
+        hasFile: window.selectionIsFile()
+        hasClipboard: ClipboardService.hasFiles
+        shiftHeld: window.shiftHeld
+        onActionTriggered: id => window.runAction(id)
     }
 
     ContextMenu {
-        id: fileMenu
+        id: columnsMenu
 
         anchorItem: surface
 
-        ContextMenuItem {
-            text: I18n.tr("Open", "context menu entry opening a file")
-            iconName: "open_in_new"
-            onClicked: {
-                fileMenu.close();
-                window.activate(window.currentEntry);
+        Repeater {
+            model: FileColumns.optional
+
+            ContextMenuItem {
+                required property var modelData
+
+                text: FileColumns.label(modelData.id)
+                iconName: SessionData.listColumns.includes(modelData.id) ? "check" : ""
+                onClicked: {
+                    columnsMenu.close();
+                    window.toggleColumn(modelData.id);
+                }
             }
         }
+    }
 
-        ContextMenuItem {
-            id: openWithItem
+    FileContextMenu {
+        id: backgroundMenu
 
-            text: I18n.tr("Open with", "open with dialog header")
-            iconName: "apps"
-            submenu: true
-            enabled: window.currentEntry !== null && !window.currentEntry.isDir
-            onEntered: {
-                if (!enabled)
-                    return;
-                window.loadOpenWithMenu();
-                openWithMenu.openAt(fileMenu.x + fileMenu.width - Theme.spacingM, fileMenu.y + y);
-            }
-            onClicked: entered()
-        }
-
-        ContextMenuItem {
-            text: I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
-            iconName: "tab"
-            enabled: window.currentEntry !== null && window.currentEntry.isDir
-            onClicked: {
-                fileMenu.close();
-                window.newTab(window.currentEntry.path);
-            }
-        }
-
-        ContextMenuItem {
-            visible: SandboxService.available("terminal")
-            text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
-            iconName: "terminal"
-            onClicked: {
-                fileMenu.close();
-                window.openTerminalHere();
-            }
-        }
+        anchorItem: surface
+        forFolder: true
+        hasClipboard: ClipboardService.hasFiles
+        onActionTriggered: id => window.runAction(id)
     }
 
     ContextMenu {
@@ -900,8 +1063,8 @@ FloatingWindow {
                 iconName: modelData.isDefault ? "check" : ""
                 onClicked: {
                     openWithMenu.close();
-                    fileMenu.close();
-                    AppsService.openWith(window.selection(), modelData.id, response => window.reportError(response));
+                    itemMenu.close();
+                    AppsService.openWith(window.selectedPaths(), modelData.id, response => window.reportError(response));
                 }
             }
         }
@@ -911,9 +1074,84 @@ FloatingWindow {
             iconName: "more_horiz"
             onClicked: {
                 openWithMenu.close();
-                fileMenu.close();
+                itemMenu.close();
                 window.openWithCurrent();
             }
+        }
+    }
+
+    // The drag payload item is never seen: the pointer carries the grabbed
+    // ghost image, and the mime data is what other applications receive.
+    Item {
+        id: dragSource
+
+        Drag.dragType: Drag.Automatic
+        Drag.supportedActions: Qt.CopyAction | Qt.MoveAction | Qt.LinkAction
+    }
+
+    DragGhost {
+        id: dragGhost
+
+        x: -width * 2
+        y: -height * 2
+        action: DragService.action
+    }
+
+    PropertiesDialog {
+        id: propertiesDialog
+
+        onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
+    }
+
+    ShortcutsOverlay {
+        id: shortcutsOverlay
+    }
+
+    ContextMenu {
+        id: dropMenu
+
+        property var pending: []
+        property string dest: ""
+
+        anchorItem: surface
+
+        function present(paths, target) {
+            pending = paths;
+            dest = target;
+            openAt(surface.width / 2 - width / 2, surface.height / 2 - height / 2);
+        }
+
+        ContextMenuItem {
+            text: I18n.tr("Copy", "context menu entry copying the selection")
+            iconName: "content_copy"
+            onClicked: {
+                dropMenu.close();
+                FileOpsService.copy(dropMenu.pending, dropMenu.dest, window.opScope);
+            }
+        }
+
+        ContextMenuItem {
+            text: I18n.tr("Move", "drag label for moving files")
+            iconName: "drive_file_move"
+            onClicked: {
+                dropMenu.close();
+                FileOpsService.move(dropMenu.pending, dropMenu.dest, window.opScope);
+            }
+        }
+
+        ContextMenuItem {
+            text: I18n.tr("Link", "drag label for creating a symlink")
+            iconName: "add_link"
+            onClicked: {
+                dropMenu.close();
+                FileOpsService.link(dropMenu.pending, dropMenu.dest, window.opScope);
+            }
+        }
+
+        ContextMenuItem {
+            text: I18n.tr("Cancel", "dialog button to cancel")
+            iconName: "close"
+            onClicked: dropMenu.close()
         }
     }
 

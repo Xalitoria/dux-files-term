@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/clipboard"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
@@ -32,6 +33,12 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			return
 		}
 		deps.Network.Handle(w, req)
+	case clipboard.Handles(req.Method):
+		if deps.Clipboard == nil {
+			RespondError(w, req.ID, "clipboard unavailable")
+			return
+		}
+		deps.Clipboard.Handle(w, req)
 	case mimeapps.Handles(req.Method):
 		if deps.Apps == nil {
 			RespondError(w, req.ID, "application service unavailable")

@@ -13,18 +13,27 @@ FocusScope {
     property bool showHidden: false
     property string sortKey: "name"
     property bool sortDescending: false
+    property var cutSet: ({})
 
     readonly property alias path: history.path
     readonly property alias canGoBack: history.canGoBack
     readonly property alias canGoForward: history.canGoForward
     readonly property alias canGoUp: history.canGoUp
     readonly property alias editingPath: pathBar.editing
-    readonly property int currentIndex: fileList.currentIndex
-    readonly property var currentEntry: fileList.currentIndex >= 0 && fileList.currentIndex < directory.count ? directory.entries.get(fileList.currentIndex) : null
-    readonly property bool empty: !directory.loading && directory.error === "" && directory.count === 0
+    readonly property bool renaming: viewBody.renamingPath !== ""
+    readonly property alias selection: selectionModel
+    readonly property alias body: viewBody
+    readonly property var currentEntry: viewBody.cursorEntry()
+    readonly property var selectedEntries: viewBody.selectedEntries()
 
     signal activateRequested(var entry)
-    signal contextMenuRequested(int index, real pointX, real pointY)
+    signal itemMenuRequested(int index, real pointX, real pointY, int modifiers)
+    signal backgroundMenuRequested(real pointX, real pointY)
+    signal dropRequested(var paths, string dest, string action)
+    signal dragRequested(var paths)
+    signal renameRequested(string target, string name)
+    signal sortRequested(string key)
+    signal columnsMenuRequested(real pointX, real pointY)
     signal focusRequested
 
     function navigate(target) {
@@ -60,7 +69,11 @@ FocusScope {
     }
 
     function focusBody() {
-        fileList.forceActiveFocus();
+        viewBody.focusBody();
+    }
+
+    function beginRename(target) {
+        viewBody.beginRename(target);
     }
 
     function saveState() {
@@ -74,20 +87,9 @@ FocusScope {
 
     function marker() {
         return {
-            "contentY": fileList.contentY,
-            "index": fileList.currentIndex
+            "contentY": viewBody.view?.contentY ?? 0,
+            "cursor": selectionModel.cursorPath
         };
-    }
-
-    function errorText(code) {
-        switch (code) {
-        case "ENOENT":
-            return I18n.tr("This folder no longer exists", "directory listing error");
-        case "EACCES":
-            return I18n.tr("You do not have permission to view this folder", "directory listing error");
-        default:
-            return I18n.tr("This folder could not be opened", "directory listing error");
-        }
     }
 
     onShowHiddenChanged: directory.setShowHidden(showHidden)
@@ -104,11 +106,16 @@ FocusScope {
         onGone: history.up()
     }
 
+    SelectionModel {
+        id: selectionModel
+    }
+
     NavigationHistory {
         id: history
 
         onRestored: saved => {
-            fileList.currentIndex = saved?.index ?? -1;
+            if (saved?.cursor)
+                selectionModel.select(saved.cursor);
             restoreScroll.pending = saved?.contentY ?? 0;
             restoreScroll.restart();
         }
@@ -120,7 +127,12 @@ FocusScope {
         property real pending: 0
 
         interval: 0
-        onTriggered: fileList.contentY = Math.max(0, Math.min(pending, Math.max(0, fileList.contentHeight - fileList.height)))
+        onTriggered: {
+            const view = viewBody.view;
+            if (!view)
+                return;
+            view.contentY = Math.max(0, Math.min(pending, Math.max(0, view.contentHeight - view.height)));
+        }
     }
 
     Rectangle {
@@ -144,76 +156,49 @@ FocusScope {
             }
         }
 
-        DankListView {
-            id: fileList
+        FileViewBody {
+            id: viewBody
 
             anchors.top: pathBar.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: FilesMetrics.paneBodyMargin
-            clip: true
-            spacing: Theme.groupedListGap
-            model: directory.entries
-            cacheBuffer: Math.max(0, height)
-            currentIndex: -1
-
-            delegate: FileRow {
-                onClicked: {
-                    pane.focusRequested();
-                    fileList.currentIndex = index;
-                }
-
-                onDoubleClicked: {
-                    fileList.currentIndex = index;
-                    pane.activateRequested(directory.entries.get(index));
-                }
-
-                onContextMenuRequested: (mouseX, mouseY) => {
-                    pane.focusRequested();
-                    const point = mapToItem(pane, mouseX, mouseY);
-                    pane.contextMenuRequested(index, point.x, point.y);
-                }
+            directory: directory
+            selection: selectionModel
+            path: pane.path
+            showHidden: pane.showHidden
+            sortKey: pane.sortKey
+            sortDescending: pane.sortDescending
+            cutSet: pane.cutSet
+            onActivateRequested: entry => pane.activateRequested(entry)
+            onItemMenuRequested: (index, pointX, pointY, modifiers) => {
+                pane.focusRequested();
+                const point = mapToItem(pane, pointX, pointY);
+                pane.itemMenuRequested(index, point.x, point.y, modifiers);
             }
-
-            onContentYChanged: scrollSettle.restart()
-            onCountChanged: scrollSettle.restart()
-
-            Timer {
-                id: scrollSettle
-
-                interval: Theme.mediumDuration
-                onTriggered: {
-                    const first = fileList.indexAt(fileList.width / 2, fileList.contentY);
-                    const last = fileList.indexAt(fileList.width / 2, fileList.contentY + fileList.height - 1);
-                    directory.requestThumbnails(Math.max(first, 0), last < 0 ? fileList.count - 1 : last);
-                    if (last < 0 || last >= fileList.count - 1)
-                        directory.loadMore();
-                }
+            onBackgroundMenuRequested: (pointX, pointY) => {
+                pane.focusRequested();
+                const point = mapToItem(pane, pointX, pointY);
+                pane.backgroundMenuRequested(point.x, point.y);
             }
-        }
-
-        StyledText {
-            anchors.centerIn: fileList
-            visible: pane.empty
-            text: I18n.tr("This folder is empty", "empty directory placeholder")
-            color: Theme.surfaceVariantText
-            font.pixelSize: Theme.fontSizeLarge
-        }
-
-        StyledText {
-            anchors.centerIn: fileList
-            width: fileList.width - FilesMetrics.paneBodyMargin * 2
-            visible: directory.error !== ""
-            text: pane.errorText(directory.errorCode)
-            color: Theme.surfaceVariantText
-            font.pixelSize: Theme.fontSizeLarge
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-        }
-
-        TapHandler {
-            onTapped: pane.focusRequested()
+            onColumnsMenuRequested: (pointX, pointY) => {
+                const point = mapToItem(pane, pointX, pointY);
+                pane.columnsMenuRequested(point.x, point.y);
+            }
+            onDropRequested: (paths, dest, action) => pane.dropRequested(paths, dest, action)
+            onDragRequested: paths => pane.dragRequested(paths)
+            onRenameRequested: (target, name) => pane.renameRequested(target, name)
+            onSortRequested: key => pane.sortRequested(key)
+            onFocusRequested: pane.focusRequested()
+            onOpenRequested: target => {
+                pane.focusRequested();
+                if (target === "..") {
+                    pane.up();
+                    return;
+                }
+                pane.navigate(target);
+            }
         }
 
         MouseArea {

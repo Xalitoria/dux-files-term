@@ -48,6 +48,10 @@ func (s *Service) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 		s.handleThumbnail(w, req)
 	case "files.icon":
 		s.handleIcon(w, req)
+	case "files.size":
+		s.handleSize(ctx, w, req)
+	case "files.sizeCancel":
+		s.handleSizeCancel(w, req)
 	case "files.userDirs":
 		ipc.Respond(w, req.ID, map[string]any{"dirs": listUserDirs()})
 	default:
@@ -143,6 +147,25 @@ func (s *Service) handleCount(w *ipc.ConnWriter, req ipc.Request) {
 		counts[path] = s.count(path, includeHidden)
 	}
 	ipc.Respond(w, req.ID, map[string]any{"counts": counts})
+}
+
+func (s *Service) handleSize(ctx context.Context, w *ipc.ConnWriter, req ipc.Request) {
+	paths := pathsParam(req)
+	if len(paths) == 0 {
+		respondCode(w, req.ID, CodeInvalid, "files.size requires paths")
+		return
+	}
+	sc := s.startSize(ctx, paths)
+	ipc.Respond(w, req.ID, map[string]any{"scanId": sc.id, "topic": sizeTopic})
+}
+
+func (s *Service) handleSizeCancel(w *ipc.ConnWriter, req ipc.Request) {
+	id := params.StringOpt(req.Params, "scanId", "")
+	if id == "" {
+		respondCode(w, req.ID, CodeInvalid, "files.sizeCancel requires scanId")
+		return
+	}
+	ipc.Respond(w, req.ID, map[string]any{"cancelled": s.cancelScan(id)})
 }
 
 func (s *Service) handleThumbnail(w *ipc.ConnWriter, req ipc.Request) {

@@ -23,7 +23,7 @@ var Methods = []MethodSpec{
 	{Name: "ping", Group: "core", Desc: "Liveness check"},
 	{Name: "version", Group: "core", Desc: "Daemon and API version"},
 	{Name: "describe", Group: "core", Desc: "List all IPC methods and their params"},
-	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network")}},
+	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network,sizes")}},
 	{Name: "unsubscribe", Group: "core", Desc: "Unsubscribe from event topics", Params: []ParamSpec{opt("topics", "topics to drop")}},
 
 	{Name: "ui.show", Group: "ui", Desc: "Show the file manager window"},
@@ -40,6 +40,8 @@ var Methods = []MethodSpec{
 	{Name: "files.thumbnail", Group: "files", Desc: "Thumbnail cache paths, generating what is missing", Params: []ParamSpec{req("paths", "absolute file paths"), opt("size", "normal|large|x-large|xx-large"), opt("watchId", "deliver late results on this watch topic")}},
 	{Name: "files.userDirs", Group: "files", Desc: "XDG user directories, home first"},
 	{Name: "files.icon", Group: "files", Desc: "Icon name ladders for paths or mime types", Params: []ParamSpec{opt("paths", "absolute paths"), opt("mimes", "mime types")}},
+	{Name: "files.size", Group: "files", Desc: "Scan paths recursively, streaming totals on the sizes topic", Params: []ParamSpec{req("paths", "absolute paths")}},
+	{Name: "files.sizeCancel", Group: "files", Desc: "Stop a running recursive scan", Params: []ParamSpec{req("scanId", "id from files.size")}},
 
 	{Name: "files.op.copy", Group: "files.op", Desc: "Copy paths into a directory", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory"), opt("scope", "undo stack key, one per window")}},
 	{Name: "files.op.move", Group: "files.op", Desc: "Move paths into a directory", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory"), opt("scope", "undo stack key, one per window")}},
@@ -56,6 +58,7 @@ var Methods = []MethodSpec{
 	{Name: "files.op.respond", Group: "files.op", Desc: "Answer a paused job", Params: []ParamSpec{req("jobId", "job id"), req("id", "conflict or error id"), req("action", "skip|replace|keepBoth|merge|retry|retryElevated|cancel"), opt("applyToAll", "apply to the rest of the job")}},
 	{Name: "files.op.cancel", Group: "files.op", Desc: "Cancel a running or queued job", Params: []ParamSpec{req("jobId", "job id")}},
 	{Name: "files.op.jobs", Group: "files.op", Desc: "List running, queued and recently finished jobs"},
+	{Name: "files.op.dropAction", Group: "files.op", Desc: "What a plain drag of paths onto dest would do", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory")}},
 	{Name: "files.op.undo", Group: "files.op", Desc: "Undo the last undoable operation in a scope", Params: []ParamSpec{opt("scope", "undo stack key, one per window")}},
 
 	{Name: "files.open", Group: "files.apps", Desc: "Open paths with their default application", Params: []ParamSpec{req("paths", "absolute paths"), opt("cwd", "working directory for the launched app"), opt("activationToken", "xdg activation token from the compositor"), opt("terminal", "terminal to use for Terminal=true entries")}},
@@ -83,6 +86,10 @@ var Methods = []MethodSpec{
 	{Name: "network.recent", Group: "network", Desc: "Servers connected to before"},
 	{Name: "network.forget", Group: "network", Desc: "Drop a server from the recent list", Params: []ParamSpec{req("uri", "server uri")}},
 	{Name: "network.mountPortable", Group: "network", Desc: "Mount a phone or camera gvfs has detected", Params: []ParamSpec{req("monitor", "volume monitor bus name"), req("id", "volume id")}},
+
+	{Name: "clipboard.copy", Group: "clipboard", Desc: "Put paths on the system clipboard as a file selection", Params: []ParamSpec{req("paths", "absolute paths"), opt("cut", "mark the selection for a move")}},
+	{Name: "clipboard.paths", Group: "clipboard", Desc: "Read the file selection on the system clipboard"},
+	{Name: "clipboard.clear", Group: "clipboard", Desc: "Release the system clipboard"},
 
 	{Name: "system.capabilities", Group: "system", Desc: "What the environment permits: sandbox state, host access, bus policies, portal versions and the per-feature table with reason codes"},
 	{Name: "system.colorScheme.get", Group: "system", Desc: "Current portal color scheme (0 no-preference, 1 dark, 2 light)"},

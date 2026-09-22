@@ -12,6 +12,7 @@ SidebarSection {
 
     signal navigateRequested(string path)
     signal unlockRequested(var device)
+    signal dropRequested(string path, var drop)
 
     function activate(device) {
         if (device.encrypted && !device.unlocked) {
@@ -84,7 +85,9 @@ SidebarSection {
             ringValue: modelData.mounted ? DevicesService.usageRatio(modelData.mountPoint) : -1
             actionIcon: section.actionIconFor(modelData)
             busy: section.busyId === modelData.id
+            dropPath: modelData.mounted ? modelData.mountPoint : ""
             onClicked: section.activate(modelData)
+            onDropped: drop => section.dropRequested(modelData.mountPoint, drop)
             onActionTriggered: {
                 if (!modelData.mounted || modelData.system) {
                     section.activate(modelData);
@@ -123,7 +126,9 @@ SidebarSection {
             iconName: modelData.iconName
             actionIcon: "eject"
             busy: section.busyId === modelData.id
+            dropPath: modelData.path
             onClicked: section.navigateRequested(modelData.path)
+            onDropped: drop => section.dropRequested(modelData.path, drop)
             onActionTriggered: {
                 section.busyId = modelData.id;
                 NetworkService.disconnect(modelData.id, () => section.busyId = "");

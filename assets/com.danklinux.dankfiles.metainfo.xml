@@ -2,7 +2,7 @@
 <component type="desktop-application">
   <id>com.danklinux.dankfiles</id>
   <launchable type="desktop-id">com.danklinux.dankfiles.desktop</launchable>
-  <name>DankFiles</name>
+  <name>Files</name>
   <summary>File manager from the Dank Linux Suite</summary>
 
   <description>

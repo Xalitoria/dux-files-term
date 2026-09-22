@@ -53,6 +53,20 @@ Singleton {
         }, callback);
     }
 
+    function scanSize(paths, callback) {
+        _send("files.size", {
+            "paths": paths
+        }, callback);
+    }
+
+    function cancelScan(scanId) {
+        if (!scanId)
+            return;
+        _send("files.sizeCancel", {
+            "scanId": scanId
+        }, null);
+    }
+
     function thumbnails(paths, size, watchId, callback) {
         const params = {
             "paths": paths,

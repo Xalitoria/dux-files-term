@@ -23,9 +23,11 @@ type Service struct {
 
 	newNotifier func() (notifier, error)
 
-	mu      sync.Mutex
-	watches map[string]*watch
-	nextID  int
+	mu       sync.Mutex
+	watches  map[string]*watch
+	nextID   int
+	scans    map[string]*scan
+	nextScan int
 }
 
 func NewService(bus Publisher, cacheHome string, resolver MimeResolver) *Service {
@@ -38,6 +40,7 @@ func NewService(bus Publisher, cacheHome string, resolver MimeResolver) *Service
 		counts:      newCountCache(),
 		newNotifier: newFsnotifyWatcher,
 		watches:     map[string]*watch{},
+		scans:       map[string]*scan{},
 	}
 }
 
@@ -54,6 +57,7 @@ func (s *Service) Close() {
 	for _, w := range watches {
 		w.close()
 	}
+	s.closeScans()
 }
 
 func (s *Service) register(w *watch) string {

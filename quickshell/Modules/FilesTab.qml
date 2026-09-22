@@ -12,13 +12,14 @@ StyledButton {
     property bool closable: true
 
     signal closeRequested
+    signal dropHovered
 
     readonly property color contentColor: current ? Theme.primary : Theme.onSurfaceVariant
 
     implicitWidth: Math.max(FilesMetrics.tabMinWidth, Math.min(FilesMetrics.tabMaxWidth, title.implicitWidth + closeButton.width + Theme.spacingL))
     implicitHeight: FilesMetrics.tabHeight
     radius: Theme.cornerRadiusM
-    color: "transparent"
+    color: dropZone.containsDrag ? Theme.primaryContainer : "transparent"
     Accessible.role: Accessible.PageTab
     Accessible.name: label
     Accessible.selected: current
@@ -26,6 +27,24 @@ StyledButton {
     StateLayer {
         control: tab
         stateColor: Theme.primary
+    }
+
+    // Hovering a tab with a drag switches to it, so files can be dropped into
+    // a folder that is not the one on screen.
+    DropArea {
+        id: dropZone
+
+        anchors.fill: parent
+        onEntered: hoverSwitch.restart()
+        onExited: hoverSwitch.stop()
+        onDropped: hoverSwitch.stop()
+    }
+
+    Timer {
+        id: hoverSwitch
+
+        interval: FilesMetrics.tabHoverDelay
+        onTriggered: tab.dropHovered()
     }
 
     MouseArea {
