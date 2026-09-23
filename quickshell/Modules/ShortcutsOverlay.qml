@@ -4,8 +4,8 @@ import QtQuick
 import qs.Common
 import qs.DankCommon.Widgets
 
-// Rendered from the same table that binds the keys and generates
-// docs/shortcuts.md, so a shortcut can never be listed here and do nothing.
+// Rendered from the same table that binds the keys, so a shortcut can never be
+// listed here and do nothing. This overlay is the key map reference.
 OverlayDialog {
     id: overlay
 
