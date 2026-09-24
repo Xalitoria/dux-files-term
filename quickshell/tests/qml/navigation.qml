@@ -3,8 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import qs.Common
-import qs.Models
 import qs.Services
+import qs.DankCommon.FileBrowser
 
 ShellRoot {
     id: fixture

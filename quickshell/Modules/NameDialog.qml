@@ -37,10 +37,8 @@ OverlayDialog {
     }
 
     actions: [
-        DankButton {
+        TextButton {
             text: I18n.tr("Cancel", "dialog button to cancel")
-            backgroundColor: Theme.secondaryContainer
-            textColor: Theme.onSecondaryContainer
             onClicked: root.close()
         },
         DankButton {

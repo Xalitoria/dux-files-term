@@ -2,6 +2,7 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -55,10 +56,8 @@ OverlayDialog {
     }
 
     actions: [
-        DankButton {
+        TextButton {
             text: I18n.tr("Cancel", "dialog button to cancel")
-            backgroundColor: Theme.secondaryContainer
-            textColor: Theme.onSecondaryContainer
             onClicked: root.close()
         },
         DankButton {

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -46,7 +47,7 @@ OverlayDialog {
         StyledText {
             Layout.fillWidth: true
             visible: root.deniedUnelevated
-            text: FileOpsService.canElevate ? I18n.tr("This step cannot be retried as administrator", "file operation error dialog explanation") : FileFormat.elevationUnavailable(FileOpsService.elevation.reason)
+            text: FileOpsService.canElevate ? I18n.tr("This step cannot be retried as administrator", "file operation error dialog explanation") : FilesFormat.elevationUnavailable(FileOpsService.elevation.reason)
             color: Theme.surfaceVariantText
             font.pixelSize: Theme.fontSizeSmall
             wrapMode: Text.WordWrap
@@ -61,10 +62,8 @@ OverlayDialog {
     }
 
     actions: [
-        DankButton {
+        TextButton {
             text: I18n.tr("Cancel", "dialog button to cancel")
-            backgroundColor: "transparent"
-            textColor: Theme.primary
             onClicked: root.answer("cancel")
         },
         DankButton {

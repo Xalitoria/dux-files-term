@@ -4,8 +4,9 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
-SidebarSection {
+FilePlaceSection {
     id: section
 
     property string busyId: ""
@@ -21,7 +22,7 @@ SidebarSection {
         if (!SandboxService.loaded)
             return "";
         if (!SandboxService.available("network"))
-            return FileFormat.featureUnavailable(SandboxService.reason("network"));
+            return FilesFormat.featureUnavailable(SandboxService.reason("network"));
         return I18n.tr("Network locations are unavailable because gvfs is not running", "sidebar explanation when the network service is missing");
     }
     showEmpty: true
@@ -29,7 +30,7 @@ SidebarSection {
     Repeater {
         model: NetworkService.networkMounts
 
-        SidebarRow {
+        FilePlaceRow {
             required property var modelData
 
             label: modelData.name
@@ -46,7 +47,7 @@ SidebarSection {
         }
     }
 
-    SidebarRow {
+    FilePlaceRow {
         visible: NetworkService.available
         label: I18n.tr("Connect to Server…", "sidebar entry opening the connect to server dialog")
         iconName: "folder-remote"

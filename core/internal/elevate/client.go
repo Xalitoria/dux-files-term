@@ -19,10 +19,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/portal"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/helper"
 )
 

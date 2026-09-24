@@ -10,16 +10,16 @@ Column {
 
     property var paths: []
     property bool recursiveAllowed: false
-    property var triplets: FileFormat.permissionBits("----------")
+    property var triplets: FilesFormat.permissionBits("----------")
     property string owner: ""
     property string group: ""
     property bool recursive: false
 
-    readonly property string octal: FileFormat.octalFor(triplets)
+    readonly property string octal: FilesFormat.octalFor(triplets)
     readonly property bool canChangeOwner: FileOpsService.canElevate
 
     function reset(entry) {
-        triplets = FileFormat.permissionBits(entry?.mode ?? "----------");
+        triplets = FilesFormat.permissionBits(entry?.mode ?? "----------");
         owner = entry?.owner ?? "";
         group = entry?.group ?? "";
         ownerField.text = owner;
@@ -146,7 +146,7 @@ Column {
 
         StyledText {
             anchors.verticalCenter: parent.verticalCenter
-            width: Theme.spacingXL * 3
+            width: permissions.labelWidth
             text: I18n.tr("Octal", "permissions row showing the numeric mode")
             color: Theme.surfaceVariantText
             font.pixelSize: Theme.fontSizeSmall
@@ -214,7 +214,7 @@ Column {
     StyledText {
         width: parent.width
         visible: !permissions.canChangeOwner
-        text: FileFormat.elevationUnavailable(FileOpsService.elevation.reason)
+        text: FilesFormat.elevationUnavailable(FileOpsService.elevation.reason)
         color: Theme.surfaceVariantText
         font.pixelSize: Theme.fontSizeSmall
         wrapMode: Text.Wrap

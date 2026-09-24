@@ -4,6 +4,7 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 Item {
     id: topbar
@@ -12,11 +13,13 @@ Item {
     property bool bookmarked: false
     property bool backEnabled: false
     property bool forwardEnabled: false
+    property bool compact: false
     property string viewMode: "list"
     property string sortKey: "name"
     property bool sortDescending: false
 
-    readonly property alias searchText: search.text
+    readonly property string bookmarkLabel: bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
+    readonly property string viewModeLabel: viewMode === "grid" ? I18n.tr("List view", "view mode showing one row per item") : I18n.tr("Grid view", "view mode showing items as tiles")
 
     signal sidebarToggled
     signal backRequested
@@ -24,7 +27,7 @@ Item {
     signal splitToggled
     signal bookmarkToggled
     signal viewModeSelected(string mode)
-    signal sortCycled
+    signal sortKeySelected(string key)
     signal sortDirectionToggled
     signal propertiesRequested
     signal copyPathRequested
@@ -74,40 +77,44 @@ Item {
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        spacing: FilesMetrics.topbarGroupSpacing
+        spacing: FilesMetrics.topbarSpacing
 
         FlatButton {
             anchors.verticalCenter: parent.verticalCenter
+            visible: !topbar.compact
             iconName: "bookmark"
             iconFilled: topbar.bookmarked
             iconColor: topbar.bookmarked ? Theme.primary : Theme.surfaceText
-            backgroundColor: Theme.surfaceContainerHigh
-            tooltipText: topbar.bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
+            backgroundColor: Theme.chipSurface
+            tooltipText: topbar.bookmarkLabel
             onClicked: topbar.bookmarkToggled()
         }
 
         FlatButton {
             anchors.verticalCenter: parent.verticalCenter
+            visible: !topbar.compact
             iconName: topbar.viewMode === "grid" ? "grid_view" : "view_list"
-            backgroundColor: Theme.surfaceContainerHigh
-            tooltipText: topbar.viewMode === "grid" ? I18n.tr("List view", "view mode showing one row per item") : I18n.tr("Grid view", "view mode showing items as tiles")
+            backgroundColor: Theme.chipSurface
+            tooltipText: topbar.viewModeLabel
             onClicked: topbar.viewModeSelected(topbar.viewMode === "grid" ? "list" : "grid")
         }
 
         FlatButton {
             anchors.verticalCenter: parent.verticalCenter
+            visible: !topbar.compact
             iconName: "splitscreen_vertical_add"
             iconColor: topbar.splitView ? Theme.onPrimary : Theme.surfaceText
-            backgroundColor: topbar.splitView ? Theme.primary : Theme.surfaceContainerHigh
+            backgroundColor: topbar.splitView ? Theme.primary : Theme.chipSurface
             tooltipText: I18n.tr("Split view", "tooltip on the button showing a second pane")
             onClicked: topbar.splitToggled()
         }
 
-        SortSplitButton {
+        FileSortButton {
             anchors.verticalCenter: parent.verticalCenter
             sortKey: topbar.sortKey
             descending: topbar.sortDescending
-            onCycleRequested: topbar.sortCycled()
+            showLabel: !topbar.compact
+            onSortKeySelected: key => topbar.sortKeySelected(key)
             onDirectionToggled: topbar.sortDirectionToggled()
         }
 
@@ -116,17 +123,48 @@ Item {
 
             anchors.verticalCenter: parent.verticalCenter
             iconName: "more_vert"
-            backgroundColor: Theme.surfaceContainerHigh
+            backgroundColor: Theme.chipSurface
             tooltipText: I18n.tr("More actions", "tooltip on the overflow menu button")
             onClicked: overflowMenu.visible ? overflowMenu.close() : overflowMenu.open()
 
-            ContextMenu {
+            FileMenu {
                 id: overflowMenu
 
                 y: overflowButton.height + Theme.spacingXS
                 x: overflowButton.width - width
 
-                ContextMenuItem {
+                FileMenuItem {
+                    visible: topbar.compact
+                    text: topbar.bookmarkLabel
+                    iconName: topbar.bookmarked ? "bookmark_remove" : "bookmark"
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.bookmarkToggled();
+                    }
+                }
+
+                FileMenuItem {
+                    visible: topbar.compact
+                    text: topbar.viewModeLabel
+                    iconName: topbar.viewMode === "grid" ? "view_list" : "grid_view"
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.viewModeSelected(topbar.viewMode === "grid" ? "list" : "grid");
+                    }
+                }
+
+                FileMenuItem {
+                    visible: topbar.compact
+                    text: I18n.tr("Split view", "tooltip on the button showing a second pane")
+                    iconName: "splitscreen_vertical_add"
+                    checked: topbar.splitView
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.splitToggled();
+                    }
+                }
+
+                FileMenuItem {
                     text: I18n.tr("Properties", "menu entry showing details about the current folder")
                     iconName: "info"
                     onClicked: {
@@ -135,7 +173,7 @@ Item {
                     }
                 }
 
-                ContextMenuItem {
+                FileMenuItem {
                     text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
                     iconName: "content_copy"
                     onClicked: {
@@ -144,7 +182,7 @@ Item {
                     }
                 }
 
-                ContextMenuItem {
+                FileMenuItem {
                     text: I18n.tr("Reload", "menu entry re-reading the current folder")
                     iconName: "refresh"
                     onClicked: {
@@ -153,7 +191,7 @@ Item {
                     }
                 }
 
-                ContextMenuItem {
+                FileMenuItem {
                     visible: SandboxService.available("terminal")
                     text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
                     iconName: "terminal"
@@ -175,6 +213,7 @@ Item {
         anchors.rightMargin: FilesMetrics.topbarSpacing
         anchors.verticalCenter: parent.verticalCenter
         controlHeight: FilesMetrics.topbarControlSize
+        leftIconSize: Theme.iconSizeMedium
         backgroundColor: Theme.surfaceContainerLowest
         placeholderText: I18n.tr("Search in Files", "placeholder in the search field")
     }

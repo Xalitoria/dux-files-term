@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import qs.Models
 import qs.Services
+import qs.DankCommon.FileBrowser
 
 ShellRoot {
     id: fixture
@@ -86,13 +86,16 @@ ShellRoot {
         check("indexOf follows the new order", selection.indexOf(entries, "/home/me/b"), 2);
 
         selection.select("/home/me/b");
+        selection.keyboardCursor = true;
         check("no ring when the cursor is the one selected row", selection.showsCursor("/home/me/b"), false);
         selection.toggle("/home/me/d");
         check("ring once the selection is more than the cursor", selection.showsCursor("/home/me/d"), true);
         check("ring only on the cursor row", selection.showsCursor("/home/me/b"), false);
+        selection.keyboardCursor = false;
+        check("no ring after a pointer toggle", selection.showsCursor("/home/me/d"), false);
 
         selection.clear();
-        check("clear empties everything", [selection.count, selection.cursorPath, selection.anchorPath], [0, "", ""]);
+        check("clear empties everything", [selection.count, selection.cursorPath, selection.anchorPath, selection.keyboardCursor], [0, "", "", false]);
 
         if (failures === 0)
             log.info("FIXTURE PASS");

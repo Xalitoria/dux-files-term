@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 Item {
     id: row
@@ -80,10 +81,12 @@ Item {
                 font.pixelSize: Theme.fontSizeSmall
             }
 
-            DankIconButton {
+            DankActionButton {
                 visible: !row.finished
                 iconName: "close"
-                size: "s"
+                buttonSize: Theme.buttonHeightXS
+                iconSize: Theme.iconSizeSmall
+                tooltipText: I18n.tr("Cancel", "dialog button to cancel")
                 onClicked: FileOpsService.cancel(row.job.id)
             }
         }

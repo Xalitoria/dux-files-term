@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
+	"github.com/AvengeMedia/dankgo/files"
 )
 
 type resolution struct {

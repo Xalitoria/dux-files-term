@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.Common
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 DankListItem {
     id: row
@@ -53,7 +54,7 @@ DankListItem {
         DankIcon {
             visible: row.modelData.isDefault === true
             name: "check"
-            size: Theme.fontSizeLarge
+            size: Theme.iconSizeMedium
             color: Theme.primary
         }
     }

@@ -4,6 +4,7 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -163,7 +164,7 @@ OverlayDialog {
 
                 FileItemVisual {
                     anchors.verticalCenter: parent.verticalCenter
-                    iconSize: Theme.iconSizeLarge + Theme.spacingM
+                    iconSize: FilesMetrics.propertiesIconSize
                     iconName: root.primary?.iconName ?? ""
                     thumbnail: root.primary?.thumbnail ?? ""
                     path: root.primary?.path ?? ""
@@ -174,10 +175,8 @@ OverlayDialog {
                 }
 
                 DankTextField {
-                    id: nameField
-
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - Theme.iconSizeLarge - Theme.spacingM * 2 - (stopButton.visible ? stopButton.width + Theme.spacingM : 0)
+                    width: parent.width - FilesMetrics.propertiesIconSize - Theme.spacingM - (stopButton.visible ? stopButton.width + Theme.spacingM : 0)
                     visible: !root.multiple
                     outlined: true
                     labelText: I18n.tr("Name", "label for a file name input")
@@ -212,14 +211,14 @@ OverlayDialog {
                     spacing: Theme.spacingM
 
                     StyledText {
-                        width: Theme.spacingXL * 5
+                        width: FilesMetrics.propertiesLabelWidth
                         text: modelData.label
                         color: Theme.surfaceVariantText
                         font.pixelSize: Theme.fontSizeSmall
                     }
 
                     StyledText {
-                        width: parent.width - Theme.spacingXL * 5 - Theme.spacingM
+                        width: parent.width - FilesMetrics.propertiesLabelWidth - Theme.spacingM
                         text: modelData.value
                         color: Theme.surfaceText
                         font.pixelSize: Theme.fontSizeSmall
@@ -249,10 +248,8 @@ OverlayDialog {
     }
 
     actions: [
-        DankButton {
+        TextButton {
             text: I18n.tr("Close", "dialog button dismissing a dialog")
-            backgroundColor: Theme.secondaryContainer
-            textColor: Theme.onSecondaryContainer
             onClicked: {
                 root.stopScan();
                 root.close();

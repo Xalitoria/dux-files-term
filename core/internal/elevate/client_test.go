@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
 	"github.com/AvengeMedia/dankfiles/core/internal/helper"
 )
 

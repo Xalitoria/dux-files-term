@@ -9,8 +9,17 @@ Singleton {
     id: root
 
     readonly property bool connected: DankFilesService.connected
+    readonly property var capabilities: ({
+            "mkdir": true,
+            "rename": true,
+            "trash": SandboxService.available("trash")
+        })
 
     property var userDirs: []
+    property var _watchTopics: ({})
+    readonly property var _eventHandler: data => root.watchEvent(data)
+
+    signal watchEvent(var data)
 
     function refreshUserDirs() {
         _send("files.userDirs", {}, response => {
@@ -23,12 +32,27 @@ Singleton {
     function watch(path, options, callback) {
         _send("files.watch", Object.assign({
             "path": path
-        }, _options(options)), callback);
+        }, _options(options)), result => {
+            if (result.topic) {
+                const topics = Object.assign({}, root._watchTopics);
+                topics[result.watchId] = result.topic;
+                root._watchTopics = topics;
+                DankFilesService.subscribeTopic(result.topic, root._eventHandler);
+            }
+            callback?.(result);
+        });
     }
 
     function unwatch(watchId) {
         if (!watchId)
             return;
+        const topic = _watchTopics[watchId];
+        if (topic) {
+            const topics = Object.assign({}, _watchTopics);
+            delete topics[watchId];
+            _watchTopics = topics;
+            DankFilesService.unsubscribeTopic(topic, _eventHandler);
+        }
         _send("files.unwatch", {
             "watchId": watchId
         }, null);
@@ -44,6 +68,12 @@ Singleton {
         _send("files.list", Object.assign({
             "watchId": watchId
         }, _options(options)), callback);
+    }
+
+    function stat(path, callback) {
+        _send("files.stat", {
+            "path": path
+        }, callback);
     }
 
     function count(paths, includeHidden, callback) {
@@ -83,12 +113,23 @@ Singleton {
         }, callback);
     }
 
-    function subscribe(topic, handler) {
-        DankFilesService.subscribeTopic(topic, handler);
+    function mkdir(path, callback) {
+        _send("files.mkdir", {
+            "path": path
+        }, callback);
     }
 
-    function unsubscribe(topic, handler) {
-        DankFilesService.unsubscribeTopic(topic, handler);
+    function rename(path, name, callback) {
+        _send("files.rename", {
+            "path": path,
+            "name": name
+        }, callback);
+    }
+
+    function trash(paths, callback) {
+        _send("files.trash", {
+            "paths": paths
+        }, callback);
     }
 
     function _options(options) {
@@ -96,6 +137,8 @@ Singleton {
         const params = {};
         if (opts.includeHidden !== undefined)
             params.includeHidden = opts.includeHidden;
+        if (opts.filters !== undefined)
+            params.filters = opts.filters;
         if (opts.sortKey)
             params.sort = opts.sortKey;
         if (opts.sortDesc !== undefined)
@@ -115,6 +158,9 @@ Singleton {
         target: DankFilesService
 
         function onConnectionStateChanged() {
+            for (const watchId in root._watchTopics)
+                DankFilesService.unsubscribeTopic(root._watchTopics[watchId], root._eventHandler);
+            root._watchTopics = ({});
             if (DankFilesService.connected)
                 root.refreshUserDirs();
         }

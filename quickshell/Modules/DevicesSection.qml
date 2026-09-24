@@ -4,8 +4,9 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
-SidebarSection {
+FilePlaceSection {
     id: section
 
     property string busyId: ""
@@ -69,7 +70,7 @@ SidebarSection {
         if (!SandboxService.loaded)
             return "";
         if (!SandboxService.available("devices"))
-            return FileFormat.featureUnavailable(SandboxService.reason("devices"));
+            return FilesFormat.featureUnavailable(SandboxService.reason("devices"));
         return I18n.tr("Drives are unavailable because udisks2 is not running", "sidebar explanation when the device service is missing");
     }
     showEmpty: !DevicesService.available
@@ -77,7 +78,7 @@ SidebarSection {
     Repeater {
         model: DevicesService.devices
 
-        SidebarRow {
+        FilePlaceRow {
             required property var modelData
 
             label: modelData.system ? I18n.tr("My Computer", "sidebar entry for the drive the system runs from") : modelData.name
@@ -101,7 +102,7 @@ SidebarSection {
     Repeater {
         model: NetworkService.portables
 
-        SidebarRow {
+        FilePlaceRow {
             required property var modelData
 
             label: modelData.name
@@ -119,7 +120,7 @@ SidebarSection {
     Repeater {
         model: NetworkService.deviceMounts
 
-        SidebarRow {
+        FilePlaceRow {
             required property var modelData
 
             label: modelData.name

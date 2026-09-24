@@ -41,7 +41,7 @@ Column {
     StyledText {
         width: parent.width
         visible: !openWith.canSetDefault
-        text: FileFormat.featureUnavailable("PORTALCHOOSER")
+        text: FilesFormat.featureUnavailable("PORTALCHOOSER")
         color: Theme.surfaceVariantText
         font.pixelSize: Theme.fontSizeSmall
         wrapMode: Text.Wrap
@@ -49,7 +49,7 @@ Column {
 
     DankListView {
         width: parent.width
-        height: Theme.iconSize * 8
+        height: Theme.listItemHeight * 4
         clip: true
         spacing: Theme.groupedListGap
         model: openWith.apps

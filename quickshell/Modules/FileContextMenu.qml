@@ -3,11 +3,9 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
+import qs.DankCommon.FileBrowser
 
-// One menu for both cases: with a selection it acts on it, without one it acts
-// on the folder. Every row dispatches an action id, the same ids the keyboard
-// map uses, so there is one place that decides what an action does.
-ContextMenu {
+FileMenu {
     id: menu
 
     property int selectionCount: 0
@@ -175,7 +173,7 @@ ContextMenu {
 
             width: parent.width
             visible: modelData.visible !== false
-            height: visible ? (separator ? Theme.spacingXS : Theme.menuItemHeight) : 0
+            height: visible ? (separator ? Theme.spacingS * 2 : Theme.menuItemHeight) : 0
 
             Rectangle {
                 anchors.centerIn: parent
@@ -185,11 +183,12 @@ ContextMenu {
                 color: Theme.outlineVariant
             }
 
-            ContextMenuItem {
+            FileMenuItem {
                 anchors.fill: parent
                 visible: !slot.separator
                 text: slot.separator ? "" : slot.modelData.label
                 iconName: slot.separator ? "" : slot.modelData.icon
+                danger: slot.modelData.danger === true
                 enabled: !slot.separator && slot.modelData.enabled
                 onClicked: {
                     menu.close();

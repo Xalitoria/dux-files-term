@@ -10,11 +10,10 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
 )
 
 // fakeElevator stands in for the pkexec helper: it lifts the mode bits the

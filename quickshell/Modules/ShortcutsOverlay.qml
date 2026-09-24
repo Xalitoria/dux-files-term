@@ -4,8 +4,6 @@ import QtQuick
 import qs.Common
 import qs.DankCommon.Widgets
 
-// Rendered from the same table that binds the keys, so a shortcut can never be
-// listed here and do nothing. This overlay is the key map reference.
 OverlayDialog {
     id: overlay
 
@@ -14,7 +12,7 @@ OverlayDialog {
 
     DankFlickable {
         width: parent.width
-        height: Math.min(contentHeight, Theme.iconSize * 18)
+        height: Math.min(contentHeight, Theme.listItemHeight * 8)
         contentHeight: groups.implicitHeight
         clip: true
 
@@ -91,10 +89,8 @@ OverlayDialog {
     }
 
     actions: [
-        DankButton {
+        TextButton {
             text: I18n.tr("Close", "dialog button dismissing a dialog")
-            backgroundColor: Theme.secondaryContainer
-            textColor: Theme.onSecondaryContainer
             onClicked: overlay.close()
         }
     ]

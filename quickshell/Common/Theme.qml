@@ -283,8 +283,10 @@ Singleton {
 
     property color outlineButton: Qt.rgba(outline.r, outline.g, outline.b, 0.5)
     property color outlineLight: Qt.rgba(outline.r, outline.g, outline.b, 0.05)
-    property color outlineMedium: Qt.rgba(outline.r, outline.g, outline.b, 0.12)
-    property color outlineStrong: Qt.rgba(outline.r, outline.g, outline.b, 0.18)
+    readonly property real layerOutlineOpacity: Math.max(0, Math.min(1, SettingsData.blurLayerOutlineOpacity))
+    readonly property int layerOutlineWidth: layerOutlineOpacity > 0 ? 1 : 0
+    property color outlineMedium: withAlpha(outline, layerOutlineOpacity)
+    property color outlineStrong: withAlpha(outline, Math.min(1, layerOutlineOpacity * 1.5))
     property color outlineHeavy: Qt.rgba(outline.r, outline.g, outline.b, 0.2)
     property color gridLine: Qt.rgba(outline.r, outline.g, outline.b, 0.25)
 
@@ -325,6 +327,7 @@ Singleton {
 
     readonly property real radiusStrength: SettingsData.radiusStrength
     readonly property real shapeScale: Shape.scaleForStrength(radiusStrength)
+    readonly property real fixedRadius: -1
     readonly property real cornerRadius: cornerRadiusM
     readonly property real cornerRadiusXXS: Shape.radius("xxs", shapeScale)
     readonly property real cornerRadiusXS: Shape.radius("xs", shapeScale)
@@ -386,6 +389,7 @@ Singleton {
     readonly property real switchThumbSelected: 24
     readonly property real switchThumbPressed: 28
     readonly property real sliderStopSize: 4
+    readonly property real sliderTrackMinAlpha: 0.4
     readonly property real sliderTickSize: 3
     readonly property real menuItemHeight: 40
     readonly property real outlineWidth: 1
@@ -415,6 +419,12 @@ Singleton {
     readonly property real pressScale: 0.98
     readonly property real iconEnterScale: 0.6
     readonly property real dialogMaxWidth: 560
+    readonly property real navigationHeight: 64
+    readonly property real navigationRailWidth: 96
+    readonly property real navigationItemMinWidth: 80
+    readonly property real navigationIndicatorWidth: 56
+    readonly property real navigationIndicatorHeight: 32
+    readonly property real navigationVerticalPadding: 6
     readonly property real popupEnterScale: 0.92
     readonly property real pendingOpacity: 0.6
     readonly property real spinnerStrokeWidth: 2

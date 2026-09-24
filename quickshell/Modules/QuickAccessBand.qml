@@ -4,10 +4,8 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
-// The band above the home listing: every XDG user directory as a tile. The
-// counts are one bounded files.count for at most eight paths, refreshed only
-// when the directory list itself changes.
 Item {
     id: band
 
@@ -16,7 +14,7 @@ Item {
 
     signal opened(string path)
 
-    implicitHeight: dirs.length === 0 ? 0 : title.height + Theme.spacingS + tiles.implicitHeight
+    implicitHeight: dirs.length === 0 ? 0 : Theme.spacingM + title.height + Theme.spacingS + tiles.implicitHeight + Theme.spacingM
     visible: dirs.length > 0
 
     onDirsChanged: refresh()
@@ -43,10 +41,11 @@ Item {
         id: title
 
         anchors.top: parent.top
+        anchors.topMargin: Theme.spacingM
         anchors.left: parent.left
         text: I18n.tr("Quick access", "header above the shortcuts on the home folder")
         color: Theme.primary
-        font.pixelSize: Theme.fontSizeSmall
+        font.pixelSize: Theme.fontSizeMedium
         font.weight: Theme.fontWeightMedium
     }
 
@@ -62,7 +61,7 @@ Item {
         Repeater {
             model: band.dirs
 
-            Rectangle {
+            StyledButton {
                 id: tile
 
                 required property var modelData
@@ -71,15 +70,16 @@ Item {
 
                 width: FilesMetrics.quickAccessTileSize
                 height: FilesMetrics.quickAccessTileSize
+                focusPolicy: Qt.NoFocus
                 radius: FilesMetrics.gridTileRadius
                 color: "transparent"
+                Accessible.name: modelData.name
+                onClicked: band.opened(modelData.path)
 
                 StateLayer {
-                    id: hover
-
+                    control: tile
                     stateColor: Theme.surfaceText
                     cornerRadius: tile.radius
-                    onClicked: band.opened(tile.modelData.path)
                 }
 
                 Column {
@@ -90,7 +90,7 @@ Item {
                     FileIcon {
                         anchors.horizontalCenter: parent.horizontalCenter
                         iconName: tile.modelData.iconName
-                        size: Theme.iconSizeLarge + Theme.spacingM
+                        size: FilesMetrics.quickAccessIconSize
                         color: Theme.primary
                     }
 
@@ -98,7 +98,7 @@ Item {
                         width: parent.width
                         text: tile.modelData.name
                         color: Theme.surfaceText
-                        font.pixelSize: Theme.fontSizeSmall
+                        font.pixelSize: Theme.fontSizeMedium
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
                     }
@@ -117,12 +117,12 @@ Item {
                 DankActionButton {
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    anchors.margins: Theme.spacingXXS
-                    visible: tile.bookmarked || hover.containsMouse
-                    buttonSize: Theme.iconSizeMedium + Theme.spacingXS
+                    anchors.margins: Theme.spacingXS
+                    visible: tile.bookmarked || tile.hovered || hovered
+                    buttonSize: Theme.buttonHeightXS
                     iconName: "favorite"
                     iconFilled: tile.bookmarked
-                    iconSize: Theme.fontSizeMedium
+                    iconSize: Theme.iconSizeSmall
                     iconColor: tile.bookmarked ? Theme.primary : Theme.surfaceVariantText
                     tooltipText: tile.bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
                     onClicked: BookmarksService.toggle(tile.modelData.path)

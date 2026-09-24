@@ -26,11 +26,9 @@ StyledButton {
 
     StateLayer {
         control: tab
-        stateColor: Theme.primary
+        stateColor: tab.contentColor
     }
 
-    // Hovering a tab with a drag switches to it, so files can be dropped into
-    // a folder that is not the one on screen.
     DropArea {
         id: dropZone
 
@@ -47,10 +45,9 @@ StyledButton {
         onTriggered: tab.dropHovered()
     }
 
-    MouseArea {
-        anchors.fill: parent
+    TapHandler {
         acceptedButtons: Qt.MiddleButton
-        onClicked: {
+        onTapped: {
             if (tab.closable)
                 tab.closeRequested();
         }
@@ -71,7 +68,7 @@ StyledButton {
         text: tab.label
         color: tab.contentColor
         font.pixelSize: Theme.fontSizeSmall
-        font.weight: tab.current ? Font.Medium : Font.Normal
+        font.weight: tab.current ? Theme.fontWeightMedium : Theme.fontWeight
         elide: Text.ElideMiddle
     }
 

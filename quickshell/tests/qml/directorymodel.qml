@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import qs.Models
 import qs.Services
+import qs.DankCommon.FileBrowser
 
 ShellRoot {
     id: fixture
@@ -12,8 +12,9 @@ ShellRoot {
     property int failures: 0
     property var pageResponse: ({})
     property var watchResponse: ({})
-    property var eventHandler: null
     property var unwatched: []
+    property bool holdPages: false
+    property var heldPage: null
 
     function check(label, actual, expected) {
         const ok = JSON.stringify(actual) === JSON.stringify(expected);
@@ -60,24 +61,22 @@ ShellRoot {
     readonly property QtObject fakeService: QtObject {
         property bool connected: true
 
+        signal watchEvent(var data)
+
         function watch(path, options, callback) {
             callback(fixture.watchResponse);
         }
 
         function page(watchId, options, callback) {
+            if (fixture.holdPages) {
+                fixture.heldPage = () => callback(fixture.pageResponse);
+                return;
+            }
             callback(fixture.pageResponse);
         }
 
         function unwatch(watchId) {
             fixture.unwatched.push(watchId);
-        }
-
-        function subscribe(topic, handler) {
-            fixture.eventHandler = handler;
-        }
-
-        function unsubscribe(topic, handler) {
-            fixture.eventHandler = null;
         }
 
         function thumbnails(paths, size, watchId, callback) {
@@ -95,7 +94,7 @@ ShellRoot {
     }
 
     readonly property DirectoryModel model: DirectoryModel {
-        service: fixture.fakeService
+        backend: fixture.fakeService
     }
 
     Component.onCompleted: {
@@ -114,9 +113,8 @@ ShellRoot {
         check("snapshot entries", names(), ["a.txt", "c.txt", "d.txt"]);
         check("snapshot total", model.total, 3);
         check("watch id", model.watchId, "w1");
-        check("subscribed", eventHandler !== null, true);
 
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w1",
             "kind": "batch",
             "seq": 1,
@@ -126,7 +124,7 @@ ShellRoot {
         check("insert at index", names(), ["a.txt", "b.txt", "c.txt", "d.txt"]);
         check("total after insert", model.total, 4);
 
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w1",
             "kind": "batch",
             "seq": 2,
@@ -139,7 +137,7 @@ ShellRoot {
         check("changed entry", model.entries.get(0).size, 42);
         check("total after remove", model.total, 3);
 
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w1",
             "kind": "thumbnails",
             "seq": 3,
@@ -149,7 +147,7 @@ ShellRoot {
         });
         check("thumbnail applied", model.entries.get(1).thumbnail, "/cache/b.png");
 
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w2",
             "kind": "batch",
             "seq": 4,
@@ -164,7 +162,7 @@ ShellRoot {
             "seq": 9,
             "entries": [entry("resynced.txt")]
         };
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w1",
             "kind": "batch",
             "seq": 9,
@@ -172,7 +170,7 @@ ShellRoot {
         });
         check("seq gap re-lists", names(), ["resynced.txt"]);
 
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w1",
             "kind": "resync",
             "seq": 10
@@ -196,7 +194,7 @@ ShellRoot {
         model.requestThumbnails(0, 0);
         check("thumbnail request fills cache path", model.entries.get(0).thumbnail, "/cache/pic.png.png");
 
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w1",
             "kind": "batch",
             "seq": 11,
@@ -207,9 +205,28 @@ ShellRoot {
         });
         check("late thumbnailable schedules a retry", model._thumbnailRetry.running, true);
 
+        holdPages = true;
+        model.setSort("name", false);
+        fakeService.watchEvent({
+            "watchId": "w1",
+            "kind": "batch",
+            "seq": 12,
+            "added": [entry("late.txt")],
+            "addedAt": [1]
+        });
+        pageResponse = {
+            "total": 1,
+            "cursor": "",
+            "seq": 11,
+            "entries": [entry("pic.png")]
+        };
+        holdPages = false;
+        heldPage();
+        check("event during a page request applies after it", names(), ["pic.png", "late.txt"]);
+
         let goneSeen = false;
         model.gone.connect(() => goneSeen = true);
-        eventHandler({
+        fakeService.watchEvent({
             "watchId": "w1",
             "kind": "gone",
             "seq": 12

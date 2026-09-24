@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
+	"github.com/AvengeMedia/dankgo/files"
 )
 
 type State string

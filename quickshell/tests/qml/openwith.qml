@@ -113,12 +113,12 @@ ShellRoot {
             "code": "EACCES"
         });
 
-        check("a program asks before running", FileFormat.isRunnable("application/x-executable", true), true);
-        check("a script asks before running", FileFormat.isRunnable("application/x-shellscript", true), true);
-        check("an unknown executable asks", FileFormat.isRunnable("", true), true);
-        check("a text file with the bit asks", FileFormat.isRunnable("text/x-python", true), true);
-        check("an image never asks", FileFormat.isRunnable("image/png", true), false);
-        check("without the bit nothing asks", FileFormat.isRunnable("application/x-executable", false), false);
+        check("a program asks before running", FilesFormat.isRunnable("application/x-executable", true), true);
+        check("a script asks before running", FilesFormat.isRunnable("application/x-shellscript", true), true);
+        check("an unknown executable asks", FilesFormat.isRunnable("", true), true);
+        check("a text file with the bit asks", FilesFormat.isRunnable("text/x-python", true), true);
+        check("an image never asks", FilesFormat.isRunnable("image/png", true), false);
+        check("without the bit nothing asks", FilesFormat.isRunnable("application/x-executable", false), false);
 
         log.info(failures === 0 ? "FIXTURE PASS" : `FIXTURE FAIL (${failures})`);
         Qt.callLater(Qt.quit);

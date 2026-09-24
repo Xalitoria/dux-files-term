@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.Common
-import qs.Models
-import qs.DankCommon.Widgets
+import qs.Services
+import qs.DankCommon.FileBrowser
 
 FocusScope {
     id: pane
@@ -15,16 +15,17 @@ FocusScope {
     property bool sortDescending: false
     property var cutSet: ({})
 
-    readonly property alias path: history.path
-    readonly property alias canGoBack: history.canGoBack
-    readonly property alias canGoForward: history.canGoForward
-    readonly property alias canGoUp: history.canGoUp
-    readonly property alias editingPath: pathBar.editing
-    readonly property bool renaming: viewBody.renamingPath !== ""
-    readonly property alias selection: selectionModel
-    readonly property alias body: viewBody
-    readonly property var currentEntry: viewBody.cursorEntry()
-    readonly property var selectedEntries: viewBody.selectedEntries()
+    readonly property alias path: browser.path
+    readonly property alias canGoBack: browser.canGoBack
+    readonly property alias canGoForward: browser.canGoForward
+    readonly property alias canGoUp: browser.canGoUp
+    readonly property alias editingPath: browser.editingPath
+    readonly property alias renaming: browser.renaming
+    readonly property alias selection: browser.selection
+    readonly property alias body: browser.body
+    readonly property alias currentEntry: browser.currentEntry
+    readonly property alias selectedEntries: browser.selectedEntries
+    readonly property bool isHome: path === Paths.strip(Paths.home)
 
     signal activateRequested(var entry)
     signal itemMenuRequested(int index, real pointX, real pointY, int modifiers)
@@ -37,180 +38,117 @@ FocusScope {
     signal focusRequested
 
     function navigate(target) {
-        _stamp();
-        history.go(target);
+        browser.navigate(target);
     }
 
     function back() {
-        _stamp();
-        history.back();
+        browser.back();
     }
 
     function forward() {
-        _stamp();
-        history.forward();
+        browser.forward();
     }
 
     function up() {
-        _stamp();
-        history.up();
-    }
-
-    function _stamp() {
-        history.marker = marker();
+        browser.up();
     }
 
     function refresh() {
-        directory.refresh();
+        browser.refresh();
     }
 
     function editPath() {
-        pathBar.startEditing();
+        browser.editPath();
     }
 
     function focusBody() {
-        viewBody.focusBody();
+        browser.focusBody();
     }
 
     function beginRename(target) {
-        viewBody.beginRename(target);
+        browser.beginRename(target);
     }
 
     function saveState() {
-        _stamp();
-        return history.serialize();
+        return browser.saveState();
     }
 
     function restoreState(state) {
-        history.restore(state);
+        browser.restoreState(state);
     }
 
     function marker() {
-        return {
-            "contentY": viewBody.view?.contentY ?? 0,
-            "cursor": selectionModel.cursorPath
-        };
+        return browser.marker();
     }
 
-    onShowHiddenChanged: directory.setShowHidden(showHidden)
-    onSortKeyChanged: directory.setSort(sortKey, sortDescending)
-    onSortDescendingChanged: directory.setSort(sortKey, sortDescending)
-
-    DirectoryModel {
-        id: directory
-
-        path: pane.path
-        includeHidden: pane.showHidden
-        sortKey: pane.sortKey
-        sortDesc: pane.sortDescending
-        onGone: history.up()
+    function dropOn(dest, drop) {
+        const paths = DragService.pathsFrom(drop);
+        if (paths.length === 0 || paths.includes(dest))
+            return;
+        dropRequested(paths, dest, DragService.actionFor(drop.modifiers ?? Qt.NoModifier));
     }
 
-    SelectionModel {
-        id: selectionModel
-    }
-
-    NavigationHistory {
-        id: history
-
-        onRestored: saved => {
-            if (saved?.cursor)
-                selectionModel.select(saved.cursor);
-            restoreScroll.pending = saved?.contentY ?? 0;
-            restoreScroll.restart();
+    function setZoom(mode, level) {
+        if (mode === "grid") {
+            SessionData.gridZoom = level;
+            return;
         }
+        SessionData.listZoom = level;
     }
 
-    Timer {
-        id: restoreScroll
-
-        property real pending: 0
-
-        interval: 0
-        onTriggered: {
-            const view = viewBody.view;
-            if (!view)
-                return;
-            view.contentY = Math.max(0, Math.min(pending, Math.max(0, view.contentHeight - view.height)));
-        }
+    function setColumnWidth(id, width) {
+        const widths = Object.assign({}, SessionData.columnWidths);
+        widths[id] = width;
+        SessionData.columnWidths = widths;
     }
 
-    Rectangle {
+    FileBrowserView {
+        id: browser
+
         anchors.fill: parent
-        radius: FilesMetrics.paneRadius
-        color: Theme.surfaceContainerLow
-        border.width: pane.showActiveOutline && pane.active ? Theme.outlineWidthFocused : 0
-        border.color: Theme.primary
+        focus: true
+        showSidebar: false
+        showNavigation: false
+        showHidden: pane.showHidden
+        sortKey: pane.sortKey
+        sortDescending: pane.sortDescending
+        viewMode: SessionData.viewMode
+        gridZoom: SessionData.gridZoom
+        listZoom: SessionData.listZoom
+        listColumns: SessionData.listColumns
+        columnWidths: SessionData.columnWidths
+        dragEnabled: true
+        dropEnabled: true
+        showSelectionFooter: true
+        cutSet: pane.cutSet
+        header: pane.isHome ? quickAccess : null
+        emptyText: pane.isHome ? "" : I18n.tr("This folder is empty", "empty directory placeholder")
+        paneColor: Theme.foregroundColor(Theme.cardSurface, true)
+        paneRadius: FilesMetrics.paneRadius
+        paneMargin: FilesMetrics.paneBodyMargin
+        paneBorderWidth: pane.showActiveOutline && pane.active ? Theme.outlineWidthFocused : 0
+        paneBorderColor: Theme.primary
+        onActivateRequested: entry => pane.activateRequested(entry)
+        onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.itemMenuRequested(index, pointX, pointY, modifiers)
+        onBackgroundMenuRequested: (pointX, pointY) => pane.backgroundMenuRequested(pointX, pointY)
+        onColumnsMenuRequested: (pointX, pointY) => pane.columnsMenuRequested(pointX, pointY)
+        onItemsDropped: (dest, drop) => pane.dropOn(dest, drop)
+        onDragRequested: paths => pane.dragRequested(paths)
+        onRenameRequested: (target, name) => pane.renameRequested(target, name)
+        onSortRequested: key => pane.sortRequested(key)
+        onZoomRequested: (mode, level) => pane.setZoom(mode, level)
+        onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
+        onFocusRequested: pane.focusRequested()
+    }
 
-        PathBar {
-            id: pathBar
+    Component {
+        id: quickAccess
 
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.margins: FilesMetrics.paneBodyMargin
-            path: pane.path
-            onNavigated: target => {
+        QuickAccessBand {
+            width: browser.body.width
+            onOpened: target => {
                 pane.focusRequested();
                 pane.navigate(target);
-            }
-        }
-
-        FileViewBody {
-            id: viewBody
-
-            anchors.top: pathBar.bottom
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.margins: FilesMetrics.paneBodyMargin
-            directory: directory
-            selection: selectionModel
-            path: pane.path
-            showHidden: pane.showHidden
-            sortKey: pane.sortKey
-            sortDescending: pane.sortDescending
-            cutSet: pane.cutSet
-            onActivateRequested: entry => pane.activateRequested(entry)
-            onItemMenuRequested: (index, pointX, pointY, modifiers) => {
-                pane.focusRequested();
-                const point = mapToItem(pane, pointX, pointY);
-                pane.itemMenuRequested(index, point.x, point.y, modifiers);
-            }
-            onBackgroundMenuRequested: (pointX, pointY) => {
-                pane.focusRequested();
-                const point = mapToItem(pane, pointX, pointY);
-                pane.backgroundMenuRequested(point.x, point.y);
-            }
-            onColumnsMenuRequested: (pointX, pointY) => {
-                const point = mapToItem(pane, pointX, pointY);
-                pane.columnsMenuRequested(point.x, point.y);
-            }
-            onDropRequested: (paths, dest, action) => pane.dropRequested(paths, dest, action)
-            onDragRequested: paths => pane.dragRequested(paths)
-            onRenameRequested: (target, name) => pane.renameRequested(target, name)
-            onSortRequested: key => pane.sortRequested(key)
-            onFocusRequested: pane.focusRequested()
-            onOpenRequested: target => {
-                pane.focusRequested();
-                if (target === "..") {
-                    pane.up();
-                    return;
-                }
-                pane.navigate(target);
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.BackButton | Qt.ForwardButton
-            onClicked: mouse => {
-                pane.focusRequested();
-                if (mouse.button === Qt.BackButton) {
-                    pane.back();
-                    return;
-                }
-                pane.forward();
             }
         }
     }

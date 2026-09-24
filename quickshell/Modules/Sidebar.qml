@@ -15,7 +15,7 @@ DankFlickable {
     signal connectRequested
     signal dropRequested(string path, var drop)
 
-    contentHeight: sections.height
+    contentHeight: sections.height + FilesMetrics.sidebarPadding
     clip: true
     onVisibleChanged: {
         if (visible)

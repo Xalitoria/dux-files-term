@@ -4,6 +4,7 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -71,13 +72,13 @@ OverlayDialog {
             text: I18n.tr("Recent", "header above previously used servers")
             color: Theme.primary
             font.pixelSize: Theme.fontSizeSmall
-            font.weight: Font.DemiBold
+            font.weight: Theme.fontWeightMedium
         }
 
         Repeater {
             model: NetworkService.servers
 
-            SidebarRow {
+            FilePlaceRow {
                 required property var modelData
 
                 width: parent.width
@@ -92,10 +93,8 @@ OverlayDialog {
     }
 
     actions: [
-        DankButton {
+        TextButton {
             text: I18n.tr("Cancel", "dialog button to cancel")
-            backgroundColor: Theme.secondaryContainer
-            textColor: Theme.onSecondaryContainer
             onClicked: root.close()
         },
         DankButton {

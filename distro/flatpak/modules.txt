@@ -1,6 +1,7 @@
-# github.com/AvengeMedia/dankgo v1.6.3-0.20260918210430-d03946da44cd
-## explicit; go 1.26
+# github.com/AvengeMedia/dankgo v1.6.3-0.20260923232838-611ba62fa30d
+## explicit; go 1.26.0
 github.com/AvengeMedia/dankgo/dbusutil
+github.com/AvengeMedia/dankgo/files
 github.com/AvengeMedia/dankgo/ipc
 github.com/AvengeMedia/dankgo/ipc/params
 github.com/AvengeMedia/dankgo/log
@@ -8,7 +9,11 @@ github.com/AvengeMedia/dankgo/paths
 github.com/AvengeMedia/dankgo/portal
 github.com/AvengeMedia/dankgo/shellapp
 github.com/AvengeMedia/dankgo/shellapp/shellfs
+github.com/AvengeMedia/dankgo/syncmap
 github.com/AvengeMedia/dankgo/trash
+github.com/AvengeMedia/dankgo/wayland/client
+github.com/AvengeMedia/dankgo/wayland/ext_data_control
+github.com/AvengeMedia/dankgo/wlclipboard
 # github.com/aymanbagabas/go-osc52/v2 v2.0.1
 ## explicit; go 1.16
 github.com/aymanbagabas/go-osc52/v2

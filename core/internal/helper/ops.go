@@ -12,9 +12,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"golang.org/x/sys/unix"
-
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
 )
 
 var errSymlink = &files.Error{Code: files.CodeInvalid, Err: errors.New("path goes through a symlink")}

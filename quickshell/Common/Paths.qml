@@ -3,13 +3,10 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import QtCore
 
 Singleton {
     id: root
-
-    property var _trashCallback: null
 
     readonly property url home: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]
     readonly property url xdgCache: StandardPaths.standardLocations(StandardPaths.GenericCacheLocation)[0]
@@ -45,33 +42,32 @@ Singleton {
     function resolveIconPath(iconName: string): string {
         if (!iconName)
             return "";
-        return Quickshell.iconPath(iconName, true) || "";
+        return Quickshell.iconPath(iconName, true) || bundledIconPath(iconName);
     }
 
-    function trashPath(path: string, callback): void {
-        if (!path)
-            return;
-        _trashCallback = callback ?? null;
-        trashProcess.targetPath = path;
-        trashProcess.running = true;
+    function bundledIconPath(iconName: string): string {
+        switch (iconName) {
+        case "folder":
+        case "folder-documents":
+        case "folder-download":
+        case "folder-music":
+        case "folder-pictures":
+        case "folder-publicshare":
+        case "folder-remote":
+        case "folder-templates":
+        case "folder-videos":
+            return Qt.resolvedUrl(`../assets/icons/${iconName}.svg`).toString();
+        case "user-home":
+        case "user-desktop":
+        case "inode-directory":
+            return Qt.resolvedUrl("../assets/icons/folder.svg").toString();
+        default:
+            return "";
+        }
     }
 
     function copyPathToClipboard(path: string): void {
         Quickshell.clipboardText = path;
-    }
-
-    Process {
-        id: trashProcess
-
-        property string targetPath: ""
-
-        command: ["gio", "trash", targetPath]
-        onExited: exitCode => {
-            const cb = root._trashCallback;
-            root._trashCallback = null;
-            if (cb)
-                cb(exitCode === 0);
-        }
     }
 
     Component.onCompleted: mkdir(imagecache)

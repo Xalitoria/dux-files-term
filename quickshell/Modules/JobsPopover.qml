@@ -4,22 +4,29 @@ import QtQuick
 import QtQuick.Controls
 import qs.Common
 import qs.Services
+import qs.DankCommon.Common as DC
 import qs.DankCommon.Widgets
 
 Popup {
     id: root
 
-    width: Theme.dialogMaxWidth * 0.6
+    width: FilesMetrics.popoverWidth
     padding: Theme.spacingL
     modal: false
     focus: false
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
 
-    background: Rectangle {
-        radius: Theme.cornerRadiusL
-        color: Theme.surfaceContainer
-        border.width: Theme.outlineWidth
-        border.color: Theme.outlineVariant
+    background: Item {
+        DC.ElevationShadow {
+            anchors.fill: parent
+            level: Theme.elevationLevel2
+            fallbackOffset: Theme.spacingXS
+            targetRadius: Theme.cornerRadiusL
+            targetColor: Theme.surfaceContainer
+            borderColor: Theme.outlineMedium
+            borderWidth: Theme.layerOutlineWidth
+            shadowEnabled: Theme.elevationEnabled && SettingsData.popoutElevationEnabled
+        }
     }
 
     contentItem: Loader {
@@ -30,7 +37,8 @@ Popup {
             StyledText {
                 text: I18n.tr("File operations", "jobs popover header")
                 color: Theme.primary
-                font.pixelSize: Theme.fontSizeSmall
+                font.pixelSize: Theme.fontSizeMedium
+                font.weight: Theme.fontWeightMedium
             }
 
             Repeater {

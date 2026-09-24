@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -102,6 +102,21 @@ func TestRouteFilesList(t *testing.T) {
 func TestRouteFilesWithoutService(t *testing.T) {
 	out := routeAndRead(t, Request{ID: 4, Method: "files.list", Params: map[string]any{"path": t.TempDir()}}, Deps{})
 	assert.Equal(t, "file service unavailable", out["error"])
+}
+
+func TestRegisteredFilesMethodsReachTheService(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	deps := Deps{Files: files.NewService(nil, t.TempDir(), nil)}
+	t.Cleanup(deps.Files.Close)
+
+	for _, spec := range Methods {
+		if spec.Group != "files" {
+			continue
+		}
+		out := routeAndRead(t, Request{ID: 5, Method: spec.Name}, deps)
+		assert.NotEqual(t, string(files.CodeNotSupported), out["code"], spec.Name)
+	}
 }
 
 func TestRegistryCoversFilesList(t *testing.T) {

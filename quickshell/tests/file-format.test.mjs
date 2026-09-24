@@ -3,12 +3,15 @@ import test from "node:test";
 import vm from "node:vm";
 import { lift, source } from "./qml-script.mjs";
 
-const fileFormat = source("../Common/FileFormat.qml");
+const fileFormat = source("../DankCommon/FileBrowser/FileFormat.qml");
+const filesFormat = source("../Common/FilesFormat.qml");
 
 function context() {
     const ctx = vm.createContext({ I18n: { tr: term => term } });
-    for (const name of ["size", "operationError", "elevationUnavailable", "featureUnavailable", "isRunnable"])
+    for (const name of ["size", "operationError"])
         lift(fileFormat, name, ctx);
+    for (const name of ["elevationUnavailable", "featureUnavailable", "isRunnable"])
+        lift(filesFormat, name, ctx);
     return ctx;
 }
 

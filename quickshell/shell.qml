@@ -31,7 +31,7 @@ ShellRoot {
         DC.Log.backend = Log;
         DC.Host.session = SessionService;
         DC.Host.cache = CacheData;
-        DC.Host.files = DankFilesService;
+        DC.Host.files = DirectoryService;
     }
 
     function ownToplevel() {

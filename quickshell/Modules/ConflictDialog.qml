@@ -23,7 +23,6 @@ OverlayDialog {
         return conflict ? (conflict.actions || []).includes(action) : false;
     }
 
-    // Popup takes over visible once it opens, so the queue drives open/close.
     onConflictChanged: conflict ? open() : close()
     acceptEnabled: offers("keepBoth")
     title: I18n.tr("This item already exists", "file conflict dialog header")
@@ -59,10 +58,8 @@ OverlayDialog {
     }
 
     actions: [
-        DankButton {
+        TextButton {
             text: I18n.tr("Cancel", "dialog button to cancel")
-            backgroundColor: "transparent"
-            textColor: Theme.primary
             onClicked: root.answer("cancel")
         },
         DankButton {

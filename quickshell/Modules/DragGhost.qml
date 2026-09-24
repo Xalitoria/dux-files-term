@@ -3,9 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
-// What the pointer carries during a drag. It is rendered off to the side and
-// grabbed into an image, because a QDrag takes a pixmap, not a live item.
 Rectangle {
     id: ghost
 
@@ -59,8 +58,8 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 visible: ghost.count > 1
                 width: Math.max(height, badge.implicitWidth + Theme.spacingXS)
-                height: Theme.fontSizeLarge
-                radius: height / 2
+                height: Theme.iconSizeSmall
+                radius: Theme.fullRadius(width, height)
                 color: Theme.primary
 
                 StyledText {

@@ -9,11 +9,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/unix"
-
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
 )
 
 func runOp(t *testing.T, stdin []byte, args ...string) (string, error) {

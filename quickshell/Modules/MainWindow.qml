@@ -5,7 +5,9 @@ import QtQuick.Window
 import Quickshell
 import qs.Common
 import qs.Services
+import qs.DankCommon.Common as DC
 import qs.DankCommon.Widgets
+import qs.DankCommon.FileBrowser
 
 FloatingWindow {
     id: window
@@ -41,13 +43,13 @@ FloatingWindow {
     readonly property string currentPath: activePane.path
     readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
     readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || renameDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible
+    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible
     readonly property bool shortcutsEnabled: !dialogOpen && !primaryPane.editingPath && !(secondPane?.editingPath ?? false) && !primaryPane.renaming && !(secondPane?.renaming ?? false)
 
     title: I18n.tr("Files", "main window title")
     implicitWidth: SessionData.windowWidth
     implicitHeight: SessionData.windowHeight
-    minimumSize: Qt.size(480, 320)
+    minimumSize: Qt.size(FilesMetrics.windowMinWidth, FilesMetrics.windowMinHeight)
     color: Theme.surface
     visible: true
 
@@ -267,24 +269,11 @@ FloatingWindow {
         sortDescending = false;
     }
 
-    function cycleSort() {
-        switch (sortKey) {
-        case "name":
-            sortKey = "mtime";
-            return;
-        case "mtime":
-            sortKey = "size";
-            return;
-        case "size":
-            sortKey = "type";
-            return;
-        default:
-            sortKey = "name";
-        }
+    function selectSortKey(key) {
+        if (key !== "")
+            sortKey = key;
     }
 
-    // The one place that decides what an action does. The keyboard table, the
-    // context menus and the topbar all dispatch through it.
     function runAction(id) {
         switch (id) {
         case "open":
@@ -450,7 +439,7 @@ FloatingWindow {
             trustDialog.open();
             return;
         }
-        if (canRun && FileFormat.isRunnable(entry.mime, entry.isExecutable)) {
+        if (canRun && FilesFormat.isRunnable(entry.mime, entry.isExecutable)) {
             executableDialog.ask(entry.path, entry.name);
             return;
         }
@@ -737,19 +726,22 @@ FloatingWindow {
             title: window.title
             onCloseRequested: window.requestClose()
 
-            DankIconButton {
+            DankActionButton {
                 id: jobsButton
 
                 anchors.verticalCenter: parent.verticalCenter
                 visible: FileOpsService.jobs.length > 0
                 iconName: FileOpsService.activeCount > 0 ? "sync" : "check_circle"
-                size: "s"
+                buttonSize: Theme.buttonHeightXXS
+                iconSize: Theme.iconSizeSmall
+                iconColor: Theme.surfaceText
+                tooltipText: I18n.tr("File operations", "jobs popover header")
                 onClicked: jobsPopover.visible ? jobsPopover.close() : jobsPopover.open()
 
                 JobsPopover {
                     id: jobsPopover
 
-                    y: jobsButton.height + Theme.spacingS
+                    y: jobsButton.height + Theme.spacingXS
                     x: jobsButton.width - width
                 }
             }
@@ -834,13 +826,14 @@ FloatingWindow {
                 forwardEnabled: window.activePane.canGoForward
                 sortKey: window.sortKey
                 sortDescending: window.sortDescending
+                compact: window.compact
                 viewMode: SessionData.viewMode
                 onSidebarToggled: window.toggleSidebar()
                 onBackRequested: window.activePane.back()
                 onForwardRequested: window.activePane.forward()
                 onSplitToggled: window.toggleSplit()
                 onBookmarkToggled: BookmarksService.toggle(window.currentPath)
-                onSortCycled: window.cycleSort()
+                onSortKeySelected: key => window.selectSortKey(key)
                 onSortDirectionToggled: window.sortDescending = !window.sortDescending
                 onCopyPathRequested: Paths.copyPathToClipboard(window.currentPath)
                 onViewModeSelected: mode => SessionData.viewMode = mode
@@ -940,7 +933,18 @@ FloatingWindow {
             width: FilesMetrics.sidebarWidth
             visible: x > -width
             x: window.sidebarOverlayOpen ? 0 : -width
-            color: Theme.surfaceContainer
+            color: Theme.surfaceContainerLow
+            topRightRadius: Theme.windowRadius
+            bottomRightRadius: Theme.windowRadius
+
+            DC.ElevationShadow {
+                anchors.fill: parent
+                z: -1
+                level: Theme.elevationLevel1
+                targetRadius: Theme.windowRadius
+                targetColor: sidebarOverlay.color
+                shadowEnabled: Theme.elevationEnabled
+            }
 
             Behavior on x {
                 enabled: Theme.animationsEnabled
@@ -966,8 +970,6 @@ FloatingWindow {
         }
     }
 
-    // One Shortcut per table row, so the keyboard map lives in exactly one
-    // place and every binding dispatches through runAction like the menus do.
     Instantiator {
         model: Shortcuts.bound("window")
 
@@ -1016,7 +1018,7 @@ FloatingWindow {
         onActionTriggered: id => window.runAction(id)
     }
 
-    ContextMenu {
+    FileMenu {
         id: columnsMenu
 
         anchorItem: surface
@@ -1024,11 +1026,11 @@ FloatingWindow {
         Repeater {
             model: FileColumns.optional
 
-            ContextMenuItem {
+            FileMenuItem {
                 required property var modelData
 
                 text: FileColumns.label(modelData.id)
-                iconName: SessionData.listColumns.includes(modelData.id) ? "check" : ""
+                checked: SessionData.listColumns.includes(modelData.id)
                 onClicked: {
                     columnsMenu.close();
                     window.toggleColumn(modelData.id);
@@ -1046,7 +1048,7 @@ FloatingWindow {
         onActionTriggered: id => window.runAction(id)
     }
 
-    ContextMenu {
+    FileMenu {
         id: openWithMenu
 
         property var apps: []
@@ -1056,11 +1058,11 @@ FloatingWindow {
         Repeater {
             model: openWithMenu.apps
 
-            ContextMenuItem {
+            FileMenuItem {
                 required property var modelData
 
                 text: modelData.name
-                iconName: modelData.isDefault ? "check" : ""
+                checked: modelData.isDefault === true
                 onClicked: {
                     openWithMenu.close();
                     itemMenu.close();
@@ -1069,7 +1071,7 @@ FloatingWindow {
             }
         }
 
-        ContextMenuItem {
+        FileMenuItem {
             text: I18n.tr("Other application…", "open with menu entry opening the full application picker")
             iconName: "more_horiz"
             onClicked: {
@@ -1080,8 +1082,6 @@ FloatingWindow {
         }
     }
 
-    // The drag payload item is never seen: the pointer carries the grabbed
-    // ghost image, and the mime data is what other applications receive.
     Item {
         id: dragSource
 
@@ -1107,7 +1107,7 @@ FloatingWindow {
         id: shortcutsOverlay
     }
 
-    ContextMenu {
+    FileMenu {
         id: dropMenu
 
         property var pending: []
@@ -1121,7 +1121,7 @@ FloatingWindow {
             openAt(surface.width / 2 - width / 2, surface.height / 2 - height / 2);
         }
 
-        ContextMenuItem {
+        FileMenuItem {
             text: I18n.tr("Copy", "context menu entry copying the selection")
             iconName: "content_copy"
             onClicked: {
@@ -1130,7 +1130,7 @@ FloatingWindow {
             }
         }
 
-        ContextMenuItem {
+        FileMenuItem {
             text: I18n.tr("Move", "drag label for moving files")
             iconName: "drive_file_move"
             onClicked: {
@@ -1139,7 +1139,7 @@ FloatingWindow {
             }
         }
 
-        ContextMenuItem {
+        FileMenuItem {
             text: I18n.tr("Link", "drag label for creating a symlink")
             iconName: "add_link"
             onClicked: {
@@ -1148,7 +1148,7 @@ FloatingWindow {
             }
         }
 
-        ContextMenuItem {
+        FileMenuItem {
             text: I18n.tr("Cancel", "dialog button to cancel")
             iconName: "close"
             onClicked: dropMenu.close()
@@ -1188,16 +1188,6 @@ FloatingWindow {
 
     OperationErrorDialog {
         id: errorDialog
-    }
-
-    NameDialog {
-        id: renameDialog
-
-        property string target: ""
-
-        title: I18n.tr("Rename", "rename dialog header")
-        acceptText: I18n.tr("Rename", "rename dialog header")
-        onSubmitted: name => FileOpsService.rename(target, name, window.opScope)
     }
 
     NameDialog {

@@ -45,18 +45,5 @@ Popup {
         focus: root.takesFocus
         onAccepted: root.accepted()
         onRejected: root.rejected()
-
-        windowControls: QtObject {
-            readonly property bool canMinimize: false
-            readonly property bool canMaximize: false
-            readonly property var targetWindow: null
-
-            function tryStartMove() {
-            }
-            function tryToggleMaximize() {
-            }
-            function tryMinimize() {
-            }
-        }
     }
 }

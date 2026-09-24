@@ -3,8 +3,9 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
+import qs.DankCommon.FileBrowser
 
-SidebarSection {
+FilePlaceSection {
     id: section
 
     property string currentPath: ""
@@ -41,7 +42,7 @@ SidebarSection {
     Repeater {
         model: section.entries
 
-        SidebarRow {
+        FilePlaceRow {
             required property var modelData
 
             label: modelData.label

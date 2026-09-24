@@ -13,9 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"golang.org/x/sys/unix"
-
-	"github.com/AvengeMedia/dankfiles/core/internal/files"
 )
 
 const (

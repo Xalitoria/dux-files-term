@@ -7,39 +7,6 @@ import Quickshell
 Singleton {
     id: root
 
-    function size(bytes) {
-        if (bytes < 0)
-            return "";
-        const units = [I18n.tr("B", "file size unit"), I18n.tr("kB", "file size unit"), I18n.tr("MB", "file size unit"), I18n.tr("GB", "file size unit"), I18n.tr("TB", "file size unit")];
-        let value = bytes;
-        let unit = 0;
-        while (value >= 1000 && unit < units.length - 1) {
-            value /= 1000;
-            unit++;
-        }
-        return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
-    }
-
-    function operationError(code, fallback) {
-        switch (code) {
-        case "ENOENT":
-            return I18n.tr("This item no longer exists", "file operation error");
-        case "EACCES":
-            return I18n.tr("You do not have permission to do this", "file operation error");
-        case "EEXIST":
-            return I18n.tr("This item already exists", "file conflict dialog header");
-        case "EBUSY":
-            return I18n.tr("This item is in use", "file operation error");
-        case "EXDEV":
-            return I18n.tr("This item cannot be moved here directly", "file operation error");
-        case "NOTSUPPORTED":
-        case "":
-            return fallback || I18n.tr("This item could not be handled", "file operation error");
-        default:
-            return I18n.tr("This item could not be handled", "file operation error");
-        }
-    }
-
     function elevationUnavailable(reason) {
         switch (reason) {
         case "SANDBOXED":
@@ -72,8 +39,6 @@ Singleton {
         }
     }
 
-    // A file the user would run rather than open: the execute bit plus a type
-    // that is either a program or a script.
     function isRunnable(mime, executable) {
         if (!executable)
             return false;
@@ -89,23 +54,6 @@ Singleton {
         return false;
     }
 
-    function typeLabel(entry) {
-        switch (true) {
-        case entry.isDir:
-            return I18n.tr("Folder", "file type shown for a directory");
-        case entry.symlinkBroken:
-            return I18n.tr("Broken link", "file type shown for a symlink with no target");
-        case entry.extension !== "":
-            return entry.extension.toUpperCase();
-        case entry.mime !== "":
-            return entry.mime;
-        default:
-            return I18n.tr("File", "file type shown when nothing more precise is known");
-        }
-    }
-
-    // Turns the daemon's fs.FileMode string into the three rwx triplets plus
-    // the octal digits the permissions tab edits.
     function permissionBits(mode) {
         const rwx = mode.length >= 9 ? mode.substring(mode.length - 9) : "---------";
         const triplets = [];
@@ -121,17 +69,5 @@ Singleton {
 
     function octalFor(triplets) {
         return triplets.map(t => (t.read ? 4 : 0) + (t.write ? 2 : 0) + (t.execute ? 1 : 0)).join("");
-    }
-
-    function count(items) {
-        if (items === 1)
-            return I18n.tr("1 item", "a folder holding a single item");
-        return I18n.tr("%1 items", "number of items in a folder").arg(items);
-    }
-
-    function modified(mtimeMs) {
-        if (!mtimeMs)
-            return "";
-        return new Date(mtimeMs).toLocaleString(Qt.locale(), Locale.ShortFormat);
     }
 }
