@@ -36,6 +36,8 @@ const (
 	KindEmptyTrash     Kind = "emptyTrash"
 	KindSetPermissions Kind = "setPermissions"
 	KindSetOwner       Kind = "setOwner"
+	KindCompress       Kind = "compress"
+	KindExtract        Kind = "extract"
 )
 
 type Action string
@@ -112,6 +114,7 @@ type spec struct {
 	dest      string
 	name      string
 	template  string
+	format    string
 	mode      uint32
 	uid       int
 	gid       int

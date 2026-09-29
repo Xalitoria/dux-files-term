@@ -12,14 +12,20 @@ Singleton {
     readonly property var capabilities: ({
             "mkdir": true,
             "rename": true,
-            "trash": SandboxService.available("trash")
+            "trash": SandboxService.available("trash"),
+            "search": DankFilesService.capabilities.includes("search")
         })
 
     property var userDirs: []
     property var _watchTopics: ({})
+    property var _searchTopics: ({})
     readonly property var _eventHandler: data => root.watchEvent(data)
+    readonly property var _searchHandler: data => root._onSearchEvent(data)
 
     signal watchEvent(var data)
+    signal searchEvent(var data)
+
+    readonly property string templatesDir: userDirs.find(dir => dir.key === "templates")?.path ?? ""
 
     function refreshUserDirs() {
         _send("files.userDirs", {}, response => {
@@ -113,6 +119,47 @@ Singleton {
         }, callback);
     }
 
+    function search(rootPath, query, options, callback) {
+        const params = Object.assign({
+            "root": rootPath,
+            "query": query
+        }, options || {});
+        _send("search.start", params, result => {
+            if (result.topic) {
+                const topics = Object.assign({}, root._searchTopics);
+                topics[result.searchId] = result.topic;
+                root._searchTopics = topics;
+                DankFilesService.subscribeTopic(result.topic, root._searchHandler);
+            }
+            callback?.(result);
+        });
+    }
+
+    function cancelSearch(searchId) {
+        if (!searchId)
+            return;
+        _forgetSearch(searchId);
+        _send("search.cancel", {
+            "searchId": searchId
+        }, null);
+    }
+
+    function _forgetSearch(searchId) {
+        const topic = _searchTopics[searchId];
+        if (!topic)
+            return;
+        const topics = Object.assign({}, _searchTopics);
+        delete topics[searchId];
+        _searchTopics = topics;
+        DankFilesService.unsubscribeTopic(topic, _searchHandler);
+    }
+
+    function _onSearchEvent(data) {
+        searchEvent(data);
+        if (data.kind === "done")
+            _forgetSearch(data.searchId);
+    }
+
     function mkdir(path, callback) {
         _send("files.mkdir", {
             "path": path
@@ -161,6 +208,9 @@ Singleton {
             for (const watchId in root._watchTopics)
                 DankFilesService.unsubscribeTopic(root._watchTopics[watchId], root._eventHandler);
             root._watchTopics = ({});
+            for (const searchId in root._searchTopics)
+                DankFilesService.unsubscribeTopic(root._searchTopics[searchId], root._searchHandler);
+            root._searchTopics = ({});
             if (DankFilesService.connected)
                 root.refreshUserDirs();
         }

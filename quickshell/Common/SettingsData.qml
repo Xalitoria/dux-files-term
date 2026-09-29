@@ -81,8 +81,26 @@ Singleton {
     property alias closeBehavior: adapter.closeBehavior
     // "current" replaces the active pane, "tab" opens a new tab
     property alias openLocationIn: adapter.openLocationIn
-    property alias bookmarks: adapter.bookmarks
     property alias sidebarCollapsed: adapter.sidebarCollapsed
+    // "list" | "grid", the view a new window starts in
+    property alias defaultView: adapter.defaultView
+    // name | size | mtime | type
+    property alias defaultSort: adapter.defaultSort
+    property alias defaultSortDescending: adapter.defaultSortDescending
+    property alias showHidden: adapter.showHidden
+    property alias confirmTrash: adapter.confirmTrash
+    // "double" | "single"
+    property alias clickToOpen: adapter.clickToOpen
+    // "auto" decides from the device, else "copy" | "move" | "ask"
+    property alias dragAction: adapter.dragAction
+    property alias thumbnails: adapter.thumbnails
+    // 0 means no cap
+    property alias thumbnailSizeLimitMb: adapter.thumbnailSizeLimitMb
+    property alias networkThumbnails: adapter.networkThumbnails
+    property alias showSystemPartitions: adapter.showSystemPartitions
+    property alias mountOnClick: adapter.mountOnClick
+    property alias searchHidden: adapter.searchHidden
+    property alias gtkBookmarksOffered: adapter.gtkBookmarksOffered
 
     readonly property var locale: language !== "" ? Qt.locale(language) : Qt.locale()
 
@@ -136,8 +154,21 @@ Singleton {
             property string terminal: ""
             property string closeBehavior: "hide"
             property string openLocationIn: "current"
-            property var bookmarks: []
             property bool sidebarCollapsed: false
+            property string defaultView: "list"
+            property string defaultSort: "name"
+            property bool defaultSortDescending: false
+            property bool showHidden: false
+            property bool confirmTrash: false
+            property string clickToOpen: "double"
+            property string dragAction: "auto"
+            property bool thumbnails: true
+            property int thumbnailSizeLimitMb: 64
+            property bool networkThumbnails: false
+            property bool showSystemPartitions: false
+            property bool mountOnClick: true
+            property bool searchHidden: false
+            property bool gtkBookmarksOffered: false
         }
     }
 }

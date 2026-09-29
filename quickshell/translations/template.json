@@ -7,9 +7,23 @@
     "comment": ""
   },
   {
+    "term": "%1 bookmarks imported",
+    "translation": "",
+    "context": "toast after importing gtk bookmarks",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 can be run as a program. Open it in an editor instead to read it first.",
     "translation": "",
     "context": "executable file dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 folders could not be read",
+    "translation": "",
+    "context": "search results header note",
     "reference": "",
     "comment": ""
   },
@@ -28,16 +42,9 @@
     "comment": ""
   },
   {
-    "term": "%1 items",
+    "term": "%1 matching “%2”",
     "translation": "",
-    "context": "number of items in a folder",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "%1 selected",
-    "translation": "",
-    "context": "count of selected items",
+    "context": "filter bar above a folder listing, count then the typed text",
     "reference": "",
     "comment": ""
   },
@@ -49,23 +56,37 @@
     "comment": ""
   },
   {
-    "term": "1 item",
+    "term": "%1 will be moved to the trash.",
     "translation": "",
-    "context": "a folder holding a single item",
+    "context": "trash confirmation explanation",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "1 selected",
+    "term": "1 MB to 100 MB",
     "translation": "",
-    "context": "a single selected item",
+    "context": "search filter chip for medium files",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "A name cannot be empty or contain a slash",
+    "term": "50 uses Material shapes. Lower values reduce rounding; higher values increase it.",
     "translation": "",
-    "context": "inline rename validation message",
+    "context": "radius strength slider description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "API",
+    "translation": "",
+    "context": "about page daemon api version column label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "About",
+    "translation": "",
+    "context": "settings sidebar tab label",
     "reference": "",
     "comment": ""
   },
@@ -140,9 +161,44 @@
     "comment": ""
   },
   {
+    "term": "Always use the dark theme.",
+    "translation": "",
+    "context": "theme mode setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Always use the light theme.",
+    "translation": "",
+    "context": "theme mode setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Always use this application",
     "translation": "",
     "context": "open with dialog option that sets the default",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Any size",
+    "translation": "",
+    "context": "search filter chip clearing the size range",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Any time",
+    "translation": "",
+    "context": "search filter chip clearing the date range",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Appearance",
+    "translation": "",
+    "context": "settings sidebar tab label",
     "reference": "",
     "comment": ""
   },
@@ -161,9 +217,65 @@
     "comment": ""
   },
   {
-    "term": "B",
+    "term": "Archive",
     "translation": "",
-    "context": "file size unit",
+    "context": "default name for a new archive",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Archive created",
+    "translation": "",
+    "context": "toast after compressing files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Archives",
+    "translation": "",
+    "context": "search filter chip for compressed files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Ask every time",
+    "translation": "",
+    "context": "drag default action option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Audio",
+    "translation": "",
+    "context": "search filter chip for sound files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Auto",
+    "translation": "",
+    "context": "color source button group option following DMS | theme mode button group option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Automatic",
+    "translation": "",
+    "context": "terminal dropdown option following $TERMINAL and the installed emulators",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Automatic follows $TERMINAL, then the first installed emulator.",
+    "translation": "",
+    "context": "terminal setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Available",
+    "translation": "",
+    "context": "capability status on the about page",
     "reference": "",
     "comment": ""
   },
@@ -171,6 +283,27 @@
     "term": "Back",
     "translation": "",
     "context": "tooltip on the button going to the previous location",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Backend",
+    "translation": "",
+    "context": "about page daemon section header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Balanced",
+    "translation": "",
+    "context": "spring bounce option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Behaviour",
+    "translation": "",
+    "context": "settings sidebar tab label",
     "reference": "",
     "comment": ""
   },
@@ -196,13 +329,6 @@
     "comment": ""
   },
   {
-    "term": "Broken link",
-    "translation": "",
-    "context": "file type shown for a symlink with no target",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Cancel",
     "translation": "",
     "context": "dialog button to cancel",
@@ -217,6 +343,20 @@
     "comment": ""
   },
   {
+    "term": "Capabilities",
+    "translation": "",
+    "context": "about page daemon capabilities label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Choose a JSON color theme file.",
+    "translation": "",
+    "context": "custom theme hint when none selected",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Clear the selection",
     "translation": "",
     "context": "keyboard shortcut",
@@ -226,7 +366,14 @@
   {
     "term": "Close",
     "translation": "",
-    "context": "dialog button dismissing a dialog",
+    "context": "dialog button dismissing a dialog | dialog button to close",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Close behavior",
+    "translation": "",
+    "context": "close behavior setting label",
     "reference": "",
     "comment": ""
   },
@@ -238,9 +385,37 @@
     "comment": ""
   },
   {
+    "term": "Color source",
+    "translation": "",
+    "context": "color source setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Compress",
+    "translation": "",
+    "context": "compress dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Compress…",
+    "translation": "",
+    "context": "context menu entry packing the selection into an archive",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Confirm",
     "translation": "",
     "context": "dialog header for a question the server asked",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Confirm before moving to the trash",
+    "translation": "",
+    "context": "setting label",
     "reference": "",
     "comment": ""
   },
@@ -273,6 +448,13 @@
     "comment": ""
   },
   {
+    "term": "Connected",
+    "translation": "",
+    "context": "about page daemon status value",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Copied",
     "translation": "",
     "context": "toast after copying files",
@@ -301,6 +483,13 @@
     "comment": ""
   },
   {
+    "term": "Could not read that file, expected a JSON color theme.",
+    "translation": "",
+    "context": "custom theme error when file is invalid",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Create",
     "translation": "",
     "context": "dialog button creating an item",
@@ -315,9 +504,65 @@
     "comment": ""
   },
   {
+    "term": "Ctrl copies, Shift moves and Alt asks regardless.",
+    "translation": "",
+    "context": "drag default action setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Ctrl+H still toggles them for the current window.",
+    "translation": "",
+    "context": "show hidden files setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Custom",
+    "translation": "",
+    "context": "color source button group option for a custom theme file",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Cut",
     "translation": "",
     "context": "context menu entry marking the selection for a move",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "DankMaterialShell not detected, using the %1 preset.",
+    "translation": "",
+    "context": "auto color source status when DMS is missing",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Dark",
+    "translation": "",
+    "context": "theme mode button group option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Decrease",
+    "translation": "",
+    "context": "slider row step down button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Default applications",
+    "translation": "",
+    "context": "capability row on the about page",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Default view",
+    "translation": "",
+    "context": "setting label for the view a new window starts in",
     "reference": "",
     "comment": ""
   },
@@ -371,9 +616,44 @@
     "comment": ""
   },
   {
+    "term": "Docs",
+    "translation": "",
+    "context": "about page resource button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Documents",
+    "translation": "",
+    "context": "search filter chip for text and office files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Domain",
     "translation": "",
     "context": "label for a network domain input",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Double click",
+    "translation": "",
+    "context": "click to open option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Drag and drop",
+    "translation": "",
+    "context": "behaviour settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Drives and mounting",
+    "translation": "",
+    "context": "settings sidebar tab hint",
     "reference": "",
     "comment": ""
   },
@@ -388,6 +668,27 @@
     "term": "Drives are unavailable because udisks2 is not running",
     "translation": "",
     "context": "sidebar explanation when the device service is missing",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Dropping without a modifier",
+    "translation": "",
+    "context": "drag default action setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Duration",
+    "translation": "",
+    "context": "animation duration slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Empty file",
+    "translation": "",
+    "context": "new document menu entry creating a blank file",
     "reference": "",
     "comment": ""
   },
@@ -420,9 +721,16 @@
     "comment": ""
   },
   {
-    "term": "File",
+    "term": "Extract here",
     "translation": "",
-    "context": "file type shown when nothing more precise is known",
+    "context": "context menu entry unpacking the selected archives",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Extracted",
+    "translation": "",
+    "context": "toast after unpacking an archive",
     "reference": "",
     "comment": ""
   },
@@ -441,6 +749,13 @@
     "comment": ""
   },
   {
+    "term": "Files Settings",
+    "translation": "",
+    "context": "settings window title",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Finished",
     "translation": "",
     "context": "file operation completed",
@@ -448,9 +763,30 @@
     "comment": ""
   },
   {
-    "term": "Folder",
+    "term": "Focus ring",
     "translation": "",
-    "context": "file type shown for a directory",
+    "context": "appearance settings section label | focus ring toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Folders",
+    "translation": "",
+    "context": "search filter chip for directories",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Follow DankMaterialShell colors, falling back to a preset.",
+    "translation": "",
+    "context": "color source description for auto",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Following the system color scheme (currently %1).",
+    "translation": "",
+    "context": "theme mode setting description",
     "reference": "",
     "comment": ""
   },
@@ -462,9 +798,9 @@
     "comment": ""
   },
   {
-    "term": "GB",
+    "term": "General",
     "translation": "",
-    "context": "file size unit",
+    "context": "settings sidebar tab label",
     "reference": "",
     "comment": ""
   },
@@ -472,6 +808,13 @@
     "term": "Getting around",
     "translation": "",
     "context": "keyboard shortcut group",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "GitHub",
+    "translation": "",
+    "context": "about page resource button",
     "reference": "",
     "comment": ""
   },
@@ -504,6 +847,62 @@
     "comment": ""
   },
   {
+    "term": "Host filesystem",
+    "translation": "",
+    "context": "capability row on the about page",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "How new windows start and how folders open.",
+    "translation": "",
+    "context": "general settings section subtitle",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Images",
+    "translation": "",
+    "context": "search filter chip for pictures",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Import",
+    "translation": "",
+    "context": "toast action importing gtk bookmarks",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Import your GTK bookmarks?",
+    "translation": "",
+    "context": "toast offering to copy the gtk file chooser bookmarks once",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Include hidden files",
+    "translation": "",
+    "context": "search hidden files toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Increase",
+    "translation": "",
+    "context": "slider row step up button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Internal partitions udisks marks as part of the system, such as a separate /home.",
+    "translation": "",
+    "context": "devices setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Invert the selection",
     "translation": "",
     "context": "keyboard shortcut",
@@ -532,6 +931,13 @@
     "comment": ""
   },
   {
+    "term": "Keep running",
+    "translation": "",
+    "context": "close behavior button group option keeping the daemon warm",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Keyboard shortcuts",
     "translation": "",
     "context": "overlay listing every keyboard shortcut",
@@ -539,9 +945,30 @@
     "comment": ""
   },
   {
+    "term": "Language",
+    "translation": "",
+    "context": "interface language setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Language of the interface.",
+    "translation": "",
+    "context": "interface language setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Larger icons",
     "translation": "",
     "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Light",
+    "translation": "",
+    "context": "theme mode button group option",
     "reference": "",
     "comment": ""
   },
@@ -567,6 +994,13 @@
     "comment": ""
   },
   {
+    "term": "Load colors from your own theme file.",
+    "translation": "",
+    "context": "color source description for custom",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Location",
     "translation": "",
     "context": "properties row showing the folder an item lives in",
@@ -574,9 +1008,23 @@
     "comment": ""
   },
   {
-    "term": "MB",
+    "term": "Locations opened from other applications get their own tab instead of replacing the current one.",
     "translation": "",
-    "context": "file size unit",
+    "context": "setting description for external open requests",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "MIT License",
+    "translation": "",
+    "context": "about page license footer link",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Menu",
+    "translation": "",
+    "context": "settings header button that shows the section list on narrow windows",
     "reference": "",
     "comment": ""
   },
@@ -590,7 +1038,7 @@
   {
     "term": "Modified",
     "translation": "",
-    "context": "file list column header",
+    "context": "file browser sort criterion option | file list column header",
     "reference": "",
     "comment": ""
   },
@@ -602,9 +1050,30 @@
     "comment": ""
   },
   {
+    "term": "Motion",
+    "translation": "",
+    "context": "appearance settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Mount and open the drive together. Off mounts it and leaves you where you are.",
+    "translation": "",
+    "context": "devices setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Move",
     "translation": "",
     "context": "drag label for moving files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move on the same drive, copy otherwise",
+    "translation": "",
+    "context": "drag default action option",
     "reference": "",
     "comment": ""
   },
@@ -660,14 +1129,14 @@
   {
     "term": "Name",
     "translation": "",
-    "context": "label for a file name input",
+    "context": "file browser sort criterion option | label for a file name input",
     "reference": "",
     "comment": ""
   },
   {
     "term": "Network",
     "translation": "",
-    "context": "sidebar section listing remote locations",
+    "context": "sidebar section listing network locations | sidebar section listing remote locations",
     "reference": "",
     "comment": ""
   },
@@ -693,6 +1162,13 @@
     "comment": ""
   },
   {
+    "term": "New document",
+    "translation": "",
+    "context": "context menu entry creating a file from a template",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "New folder",
     "translation": "",
     "context": "new folder dialog header",
@@ -710,6 +1186,27 @@
     "term": "Next tab",
     "translation": "",
     "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "No limit",
+    "translation": "",
+    "context": "thumbnail size cap slider label at zero",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "No results",
+    "translation": "",
+    "context": "search results header when nothing matched",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "No theme file selected",
+    "translation": "",
+    "context": "custom theme empty state title",
     "reference": "",
     "comment": ""
   },
@@ -756,9 +1253,30 @@
     "comment": ""
   },
   {
+    "term": "Off",
+    "translation": "",
+    "context": "animation duration slider label at zero",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Offline",
+    "translation": "",
+    "context": "about page daemon status value",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open",
     "translation": "",
     "context": "context menu entry opening a file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open folders in a new tab",
+    "translation": "",
+    "context": "setting label for external open requests",
     "reference": "",
     "comment": ""
   },
@@ -791,6 +1309,13 @@
     "comment": ""
   },
   {
+    "term": "Open items with",
+    "translation": "",
+    "context": "setting label choosing single or double click",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open the containing folder",
     "translation": "",
     "context": "keyboard shortcut",
@@ -801,6 +1326,13 @@
     "term": "Open the context menu",
     "translation": "",
     "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open unmounted drives on click",
+    "translation": "",
+    "context": "devices setting label",
     "reference": "",
     "comment": ""
   },
@@ -819,9 +1351,37 @@
     "comment": ""
   },
   {
+    "term": "Outline the control that has keyboard focus.",
+    "translation": "",
+    "context": "focus ring toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Over 100 MB",
+    "translation": "",
+    "context": "search filter chip for large files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Owner",
     "translation": "",
     "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Palette: %1",
+    "translation": "",
+    "context": "selected preset palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Part of the Dank Linux suite.",
+    "translation": "",
+    "context": "app tagline on about page",
     "reference": "",
     "comment": ""
   },
@@ -868,6 +1428,34 @@
     "comment": ""
   },
   {
+    "term": "Pick a color source, palette, or your own theme file.",
+    "translation": "",
+    "context": "appearance settings section subtitle",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Playful",
+    "translation": "",
+    "context": "spring bounce option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Preset",
+    "translation": "",
+    "context": "color source button group option for bundled palettes",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Previews for images, videos and PDFs, cached under the shared thumbnail folder.",
+    "translation": "",
+    "context": "thumbnails toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Previous tab",
     "translation": "",
     "context": "keyboard shortcut",
@@ -896,6 +1484,20 @@
     "comment": ""
   },
   {
+    "term": "Quit",
+    "translation": "",
+    "context": "close behavior button group option to quit the app",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Radius strength",
+    "translation": "",
+    "context": "global component corner rounding",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Read",
     "translation": "",
     "context": "permission bit",
@@ -903,9 +1505,30 @@
     "comment": ""
   },
   {
+    "term": "Reads every file over the connection to draw its preview.",
+    "translation": "",
+    "context": "network thumbnails toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Recent",
     "translation": "",
     "context": "header above previously used servers",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Recursive searches also descend into dot folders.",
+    "translation": "",
+    "context": "search hidden files toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Reduce motion",
+    "translation": "",
+    "context": "reduce motion toggle label",
     "reference": "",
     "comment": ""
   },
@@ -966,9 +1589,30 @@
     "comment": ""
   },
   {
+    "term": "Results for “%1” in %2",
+    "translation": "",
+    "context": "search results header, query then folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Results in %1",
+    "translation": "",
+    "context": "search results header without a query",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Retry as administrator",
     "translation": "",
-    "context": "file operation error dialog button to retry with elevated rights",
+    "context": "file operation error dialog action | file operation error dialog button to retry with elevated rights",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Ripple effects",
+    "translation": "",
+    "context": "ripple effects toggle label",
     "reference": "",
     "comment": ""
   },
@@ -976,6 +1620,13 @@
     "term": "Run",
     "translation": "",
     "context": "executable file dialog action running the file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Run programs",
+    "translation": "",
+    "context": "capability row on the about page",
     "reference": "",
     "comment": ""
   },
@@ -994,9 +1645,23 @@
     "comment": ""
   },
   {
+    "term": "Sandbox",
+    "translation": "",
+    "context": "about page row naming the flatpak id",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Save",
     "translation": "",
     "context": "dialog button to confirm a name",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Scale",
+    "translation": "",
+    "context": "font scale slider label",
     "reference": "",
     "comment": ""
   },
@@ -1011,6 +1676,20 @@
     "term": "Search in Files",
     "translation": "",
     "context": "placeholder in the search field",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search subfolders",
+    "translation": "",
+    "context": "chip that turns the folder filter into a recursive search",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Searching…",
+    "translation": "",
+    "context": "search results header while the daemon walks the tree",
     "reference": "",
     "comment": ""
   },
@@ -1036,9 +1715,44 @@
     "comment": ""
   },
   {
+    "term": "Settings",
+    "translation": "",
+    "context": "settings window header title",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Shape",
+    "translation": "",
+    "context": "appearance settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Show hidden files",
     "translation": "",
     "context": "menu entry listing dot files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show system partitions",
+    "translation": "",
+    "context": "devices setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show thumbnails",
+    "translation": "",
+    "context": "thumbnails toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Showing the first %1 results",
+    "translation": "",
+    "context": "search results header when the cap was hit",
     "reference": "",
     "comment": ""
   },
@@ -1050,9 +1764,16 @@
     "comment": ""
   },
   {
+    "term": "Single click",
+    "translation": "",
+    "context": "click to open option",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Size",
     "translation": "",
-    "context": "file list column header",
+    "context": "file browser sort criterion option | file list column header",
     "reference": "",
     "comment": ""
   },
@@ -1064,6 +1785,13 @@
     "comment": ""
   },
   {
+    "term": "Skip files larger than",
+    "translation": "",
+    "context": "thumbnail size cap slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Smaller icons",
     "translation": "",
     "context": "keyboard shortcut",
@@ -1071,44 +1799,30 @@
     "comment": ""
   },
   {
-    "term": "Sort ascending",
+    "term": "Smooth",
     "translation": "",
-    "context": "tooltip on the sort direction button",
+    "context": "spring bounce option",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "Sort by date modified",
+    "term": "Socket",
     "translation": "",
-    "context": "tooltip on the sort button",
+    "context": "about page daemon socket row label",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "Sort by name",
+    "term": "Sort by",
     "translation": "",
-    "context": "tooltip on the sort button",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Sort by size",
-    "translation": "",
-    "context": "tooltip on the sort button",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Sort by type",
-    "translation": "",
-    "context": "tooltip on the sort button",
+    "context": "setting label for the default sort key",
     "reference": "",
     "comment": ""
   },
   {
     "term": "Sort descending",
     "translation": "",
-    "context": "tooltip on the sort direction button",
+    "context": "sort direction option",
     "reference": "",
     "comment": ""
   },
@@ -1116,6 +1830,27 @@
     "term": "Split view",
     "translation": "",
     "context": "tooltip on the button showing a second pane",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Spring",
+    "translation": "",
+    "context": "spring bounce setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Square",
+    "translation": "",
+    "context": "radius strength slider label at zero",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Status",
+    "translation": "",
+    "context": "about page daemon status column label",
     "reference": "",
     "comment": ""
   },
@@ -1134,9 +1869,44 @@
     "comment": ""
   },
   {
-    "term": "TB",
+    "term": "System default",
     "translation": "",
-    "context": "file size unit",
+    "context": "language dropdown option that follows the system language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "System preference unavailable, using dark.",
+    "translation": "",
+    "context": "theme mode setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Terminal",
+    "translation": "",
+    "context": "setting label for the terminal emulator",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Terminal, drag and drop, thumbnails and search.",
+    "translation": "",
+    "context": "behaviour settings section subtitle",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Terminal, drag and thumbnails",
+    "translation": "",
+    "context": "settings sidebar tab hint",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The sandbox cannot see the host's terminals; name the one to launch.",
+    "translation": "",
+    "context": "terminal setting description inside flatpak",
     "reference": "",
     "comment": ""
   },
@@ -1148,9 +1918,23 @@
     "comment": ""
   },
   {
-    "term": "This folder could not be opened",
+    "term": "Theme",
     "translation": "",
-    "context": "directory listing error",
+    "context": "appearance settings section label | theme mode setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Theme, shape and motion",
+    "translation": "",
+    "context": "settings sidebar tab hint",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Thickness",
+    "translation": "",
+    "context": "focus ring thickness slider label",
     "reference": "",
     "comment": ""
   },
@@ -1162,13 +1946,6 @@
     "comment": ""
   },
   {
-    "term": "This folder no longer exists",
-    "translation": "",
-    "context": "directory listing error",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "This item already exists",
     "translation": "",
     "context": "file conflict dialog header",
@@ -1176,30 +1953,9 @@
     "comment": ""
   },
   {
-    "term": "This item cannot be moved here directly",
+    "term": "This month",
     "translation": "",
-    "context": "file operation error",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "This item could not be handled",
-    "translation": "",
-    "context": "file operation error",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "This item is in use",
-    "translation": "",
-    "context": "file operation error",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "This item no longer exists",
-    "translation": "",
-    "context": "file operation error",
+    "context": "search filter chip for files changed in the last thirty days",
     "reference": "",
     "comment": ""
   },
@@ -1218,9 +1974,44 @@
     "comment": ""
   },
   {
+    "term": "This week",
+    "translation": "",
+    "context": "search filter chip for files changed in the last seven days",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Thumbnails",
+    "translation": "",
+    "context": "capability row on the about page",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Thumbnails on network locations",
+    "translation": "",
+    "context": "network thumbnails toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Today",
+    "translation": "",
+    "context": "search filter chip for files changed today",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Toggle sidebar",
     "translation": "",
     "context": "tooltip on the button showing or hiding the sidebar",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Trash",
+    "translation": "",
+    "context": "capability row on the about page",
     "reference": "",
     "comment": ""
   },
@@ -1241,7 +2032,7 @@
   {
     "term": "Type",
     "translation": "",
-    "context": "file list column header",
+    "context": "file browser sort criterion option | file list column header",
     "reference": "",
     "comment": ""
   },
@@ -1253,9 +2044,30 @@
     "comment": ""
   },
   {
+    "term": "Typography",
+    "translation": "",
+    "context": "appearance settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Under 1 MB",
+    "translation": "",
+    "context": "search filter chip for small files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Undo",
     "translation": "",
     "context": "toast action reversing the last operation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Unknown",
+    "translation": "",
+    "context": "capability status when the daemon did not report it",
     "reference": "",
     "comment": ""
   },
@@ -1267,9 +2079,23 @@
     "comment": ""
   },
   {
+    "term": "Untitled document",
+    "translation": "",
+    "context": "default name for a new empty file",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Untitled folder",
     "translation": "",
     "context": "default name for a new folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Use a bundled color palette.",
+    "translation": "",
+    "context": "color source description for preset",
     "reference": "",
     "comment": ""
   },
@@ -1281,6 +2107,34 @@
     "comment": ""
   },
   {
+    "term": "Using DankMaterialShell dynamic colors.",
+    "translation": "",
+    "context": "auto color source status when DMS is active",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Version",
+    "translation": "",
+    "context": "about page daemon version column label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Version and capabilities",
+    "translation": "",
+    "context": "settings sidebar tab hint",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Video",
+    "translation": "",
+    "context": "search filter chip for video files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "View",
     "translation": "",
     "context": "keyboard shortcut group",
@@ -1288,9 +2142,44 @@
     "comment": ""
   },
   {
+    "term": "Views, sorting and defaults",
+    "translation": "",
+    "context": "settings sidebar tab hint",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Waiting",
     "translation": "",
     "context": "file operation is queued",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Weight",
+    "translation": "",
+    "context": "font weight slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "What the sidebar lists and what a click does.",
+    "translation": "",
+    "context": "devices settings section subtitle",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "What the window's close button does.",
+    "translation": "",
+    "context": "close behavior setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Window",
+    "translation": "",
+    "context": "general settings section label",
     "reference": "",
     "comment": ""
   },
@@ -1309,23 +2198,16 @@
     "comment": ""
   },
   {
-    "term": "You do not have permission to do this",
+    "term": "dark",
     "translation": "",
-    "context": "file operation error",
+    "context": "current scheme name in theme mode description",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "You do not have permission to view this folder",
+    "term": "light",
     "translation": "",
-    "context": "directory listing error",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "kB",
-    "translation": "",
-    "context": "file size unit",
+    "context": "current scheme name in theme mode description",
     "reference": "",
     "comment": ""
   }

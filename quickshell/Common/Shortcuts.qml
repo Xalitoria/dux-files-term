@@ -187,6 +187,13 @@ Singleton {
             "label": I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
         },
         {
+            "id": "settings",
+            "keys": ["Ctrl+,"],
+            "group": "view",
+            "scope": "path",
+            "label": I18n.tr("Settings", "settings window header title")
+        },
+        {
             "id": "selectAll",
             "keys": ["Ctrl+A"],
             "group": "selection",

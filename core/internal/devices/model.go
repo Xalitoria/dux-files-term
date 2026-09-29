@@ -49,6 +49,7 @@ type Device struct {
 	MountPoint  string `json:"mountPoint,omitempty"`
 	IconName    string `json:"iconName"`
 	System      bool   `json:"system"`
+	Hidden      bool   `json:"hidden,omitempty"`
 }
 
 // List folds cleartext devices into the LUKS container they unlock and drops
@@ -75,6 +76,7 @@ func List(objects Objects, uid uint32) []Device {
 		if !visible(device, ifaces, uid) {
 			continue
 		}
+		device.Hidden = systemInternal(device, ifaces)
 		out = append(out, device)
 	}
 
@@ -178,22 +180,25 @@ func iconOf(device Device, drive map[string]dbus.Variant) string {
 	}
 }
 
-// visible mirrors what desktops show: the root filesystem always, loop devices
-// this user set up, and anything udisks does not mark as system-internal.
+// visible drops what no desktop lists: loop devices set up by someone else and
+// empty non-encrypted blocks. System-internal partitions stay, flagged Hidden,
+// so the UI can offer them behind a setting.
 func visible(device Device, ifaces map[string]map[string]dbus.Variant, uid uint32) bool {
-	block := ifaces[BlockIface]
 	switch {
 	case device.System:
 		return true
 	case hasIface(ifaces, LoopIface):
 		return uint32Of(ifaces[LoopIface]["SetupByUID"]) == uid
-	case boolOf(block["HintSystem"]) && !boolOf(block["HintAuto"]):
-		return false
 	case device.Size == 0 && !device.Encrypted:
 		return false
 	default:
 		return true
 	}
+}
+
+func systemInternal(device Device, ifaces map[string]map[string]dbus.Variant) bool {
+	block := ifaces[BlockIface]
+	return !device.System && boolOf(block["HintSystem"]) && !boolOf(block["HintAuto"])
 }
 
 func rank(device Device) int {

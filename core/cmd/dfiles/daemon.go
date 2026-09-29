@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/bookmarks"
 	"github.com/AvengeMedia/dankfiles/core/internal/clipboard"
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
@@ -20,6 +21,8 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
 	"github.com/AvengeMedia/dankfiles/core/internal/paths"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
+	"github.com/AvengeMedia/dankfiles/core/internal/search"
+	"github.com/AvengeMedia/dankfiles/core/internal/settings"
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/log"
 )
@@ -37,6 +40,8 @@ type daemonServices struct {
 	devices   *devices.Service
 	network   *netmount.Service
 	clipboard *clipboard.Service
+	search    *search.Service
+	bookmarks *bookmarks.Store
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -62,6 +67,12 @@ func (s *daemonServices) Close() {
 	if s.clipboard != nil {
 		s.clipboard.Close()
 	}
+	if s.search != nil {
+		s.search.Close()
+	}
+	if s.bookmarks != nil {
+		s.bookmarks.Close()
+	}
 	if s.ipc != nil {
 		s.ipc.Close()
 	}
@@ -86,12 +97,19 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		log.Warnf("udisks2 unavailable: %v", err)
 	}
 
-	networkService := netmount.NewService(bus, configHome())
+	config := configHome()
+	networkService := netmount.NewService(bus, config)
 	if err := networkService.Start(); err != nil {
 		log.Warnf("gvfs unavailable: %v", err)
 	}
 
 	clipboardService := clipboard.NewService()
+	searchService := search.NewService(bus, fileService)
+	bookmarkStore := bookmarks.New(bus, config, filepath.Join(filepath.Dir(config), "gtk-3.0", "bookmarks"))
+	if err := bookmarkStore.Start(); err != nil {
+		log.Warnf("bookmarks unavailable: %v", err)
+		bookmarkStore = nil
+	}
 
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
 	if err := colorSchemeWatcher.Start(); err != nil {
@@ -109,6 +127,9 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		Devices:     deviceService,
 		Network:     networkService,
 		Clipboard:   clipboardService,
+		Search:      searchService,
+		Bookmarks:   bookmarkStore,
+		Settings:    func() settings.UISettings { return settings.Load(config) },
 		Sandbox:     caps,
 	}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
@@ -116,7 +137,7 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		return nil, err
 	}
 
-	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService}, nil
+	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore}, nil
 }
 
 func configHome() string {

@@ -126,6 +126,24 @@ Singleton {
         _start("files.op.emptyTrash", null);
     }
 
+    function compress(paths, dest, name, format, scope) {
+        _start("files.op.compress", {
+            "paths": paths,
+            "dest": dest,
+            "name": name,
+            "format": format || "zip",
+            "scope": scope || ""
+        });
+    }
+
+    function extract(paths, dest, scope) {
+        _start("files.op.extract", {
+            "paths": paths,
+            "dest": dest,
+            "scope": scope || ""
+        });
+    }
+
     function setPermissions(paths, mode, recursive) {
         _start("files.op.setPermissions", {
             "paths": paths,

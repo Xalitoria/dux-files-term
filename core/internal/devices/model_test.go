@@ -79,14 +79,17 @@ func byID(devices []Device, id string) (Device, bool) {
 	return Device{}, false
 }
 
-func TestListHidesIgnoredAndSystemInternalVolumes(t *testing.T) {
+func TestListHidesIgnoredAndFlagsSystemInternalVolumes(t *testing.T) {
 	list := List(table(), testUID)
 
 	ids := make([]string, 0, len(list))
+	hidden := map[string]bool{}
 	for _, device := range list {
 		ids = append(ids, device.ID)
+		hidden[device.ID] = device.Hidden
 	}
-	assert.Equal(t, []string{"/block/root", "/block/stick"}, ids)
+	assert.Equal(t, []string{"/block/root", "/block/home", "/block/stick"}, ids)
+	assert.Equal(t, map[string]bool{"/block/home": true, "/block/root": false, "/block/stick": false}, hidden)
 }
 
 func TestListMarksTheRootFilesystemAsTheSystemDevice(t *testing.T) {

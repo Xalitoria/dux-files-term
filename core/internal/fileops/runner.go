@@ -63,6 +63,10 @@ func execute(j *job) error {
 		return r.setPermissions()
 	case KindSetOwner:
 		return r.setOwner()
+	case KindCompress:
+		return r.compress()
+	case KindExtract:
+		return r.extract()
 	}
 	return errors.New("unknown operation: " + string(j.spec.kind))
 }

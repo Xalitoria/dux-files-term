@@ -14,6 +14,7 @@ DankFlickable {
     signal unlockRequested(var device)
     signal connectRequested
     signal dropRequested(string path, var drop)
+    signal bookmarkMenuRequested(string path, real pointX, real pointY)
 
     contentHeight: sections.height + FilesMetrics.sidebarPadding
     clip: true
@@ -29,10 +30,16 @@ DankFlickable {
         spacing: FilesMetrics.sidebarSectionSpacing
 
         BookmarksSection {
+            id: bookmarksSection
+
             width: sections.width
             currentPath: sidebar.currentPath
             onNavigateRequested: path => sidebar.navigateRequested(path)
             onDropRequested: (path, drop) => sidebar.dropRequested(path, drop)
+            onMenuRequested: (path, pointX, pointY) => {
+                const point = bookmarksSection.mapToItem(sidebar, pointX, pointY);
+                sidebar.bookmarkMenuRequested(path, point.x, point.y);
+            }
         }
 
         DevicesSection {

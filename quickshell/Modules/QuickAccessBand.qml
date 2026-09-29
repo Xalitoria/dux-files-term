@@ -24,7 +24,7 @@ Item {
         if (dirs.length === 0)
             return;
         DirectoryService.count(dirs.map(dir => dir.path), false, result => {
-            if (result.error)
+            if (result.error || !band)
                 return;
             band.counts = result.counts || ({});
         });

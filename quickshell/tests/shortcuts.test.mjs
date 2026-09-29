@@ -11,7 +11,7 @@ const entryPattern = /\{\s*"id":\s*"([^"]+)",\s*"keys":\s*\[([^\]]*)\],\s*"group
 
 const entries = [...table.matchAll(entryPattern)].map(match => ({
     id: match[1],
-    keys: match[2].split(",").map(key => key.trim().replaceAll('"', "")),
+    keys: [...match[2].matchAll(/"([^"]*)"/g)].map(key => key[1]),
     group: match[3],
     scope: match[4],
     label: match[5],

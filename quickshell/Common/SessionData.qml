@@ -22,7 +22,7 @@ Singleton {
     property real splitRatio: 0.5
     property int currentTab: 0
     property var tabs: []
-    property string viewMode: "list"
+    property var recentDirs: []
     property int gridZoom: 1
     property int listZoom: 0
     property var listColumns: ["size", "modified", "type"]
@@ -36,15 +36,23 @@ Singleton {
             "splitRatio": splitRatio,
             "currentTab": currentTab,
             "tabs": tabs,
-            "viewMode": viewMode,
+            "recentDirs": recentDirs,
             "gridZoom": gridZoom,
             "listZoom": listZoom,
             "listColumns": listColumns,
             "columnWidths": columnWidths
         })
 
+    readonly property int recentLimit: 20
+
     property bool _loaded: false
     property bool _selfWrite: false
+
+    function recordRecent(path) {
+        if (path === "" || recentDirs[0] === path)
+            return;
+        recentDirs = [path].concat(recentDirs.filter(entry => entry !== path)).slice(0, recentLimit);
+    }
 
     onPersistedStateChanged: {
         if (!_loaded)

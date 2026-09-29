@@ -75,8 +75,17 @@ FilePlaceSection {
     }
     showEmpty: !DevicesService.available
 
+    function activateOrMount(device) {
+        if (device.mounted || device.encrypted || SettingsData.mountOnClick) {
+            activate(device);
+            return;
+        }
+        busyId = device.id;
+        DevicesService.mount(device.id, () => section.busyId = "");
+    }
+
     Repeater {
-        model: DevicesService.devices
+        model: DevicesService.devices.filter(device => !device.hidden || SettingsData.showSystemPartitions)
 
         FilePlaceRow {
             required property var modelData
@@ -87,7 +96,7 @@ FilePlaceSection {
             actionIcon: section.actionIconFor(modelData)
             busy: section.busyId === modelData.id
             dropPath: modelData.mounted ? modelData.mountPoint : ""
-            onClicked: section.activate(modelData)
+            onClicked: section.activateOrMount(modelData)
             onDropped: drop => section.dropRequested(modelData.mountPoint, drop)
             onActionTriggered: {
                 if (!modelData.mounted || modelData.system) {

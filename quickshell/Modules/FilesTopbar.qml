@@ -17,9 +17,14 @@ Item {
     property string viewMode: "list"
     property string sortKey: "name"
     property bool sortDescending: false
+    property string filterText: ""
+    property string currentPath: ""
+    property var recentDirs: []
+    property bool searchFocused: false
 
     readonly property string bookmarkLabel: bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
     readonly property string viewModeLabel: viewMode === "grid" ? I18n.tr("List view", "view mode showing one row per item") : I18n.tr("Grid view", "view mode showing items as tiles")
+    readonly property var recentSuggestions: searchFocused && search.text === "" ? recentDirs.filter(path => path !== currentPath).slice(0, FileBrowserMetrics.suggestionRows) : []
 
     signal sidebarToggled
     signal backRequested
@@ -33,10 +38,25 @@ Item {
     signal copyPathRequested
     signal reloadRequested
     signal terminalRequested
+    signal settingsRequested
+    signal filterChanged(string text)
+    signal searchRequested(string query)
+    signal searchCleared
+    signal navigateRequested(string path)
 
     function focusSearch() {
         search.forceActiveFocus();
         search.selectAll();
+    }
+
+    function clearSearch() {
+        search.text = "";
+        searchCleared();
+    }
+
+    onFilterTextChanged: {
+        if (search.text !== filterText)
+            search.text = filterText;
     }
 
     implicitHeight: FilesMetrics.topbarControlSize
@@ -200,6 +220,15 @@ Item {
                         topbar.terminalRequested();
                     }
                 }
+
+                FileMenuItem {
+                    text: I18n.tr("Settings", "settings window header title")
+                    iconName: "settings"
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.settingsRequested();
+                    }
+                }
             }
         }
     }
@@ -216,5 +245,53 @@ Item {
         leftIconSize: Theme.iconSizeMedium
         backgroundColor: Theme.surfaceContainerLowest
         placeholderText: I18n.tr("Search in Files", "placeholder in the search field")
+        keyForwardTargets: [topbar]
+        onFocusStateChanged: hasFocus => topbar.searchFocused = hasFocus
+        onTextChanged: {
+            recentPopup.highlightIndex = -1;
+            if (text !== topbar.filterText)
+                topbar.filterChanged(text);
+        }
+        onAccepted: {
+            const picked = recentPopup.highlightedPath();
+            if (picked !== "") {
+                topbar.navigateRequested(picked);
+                return;
+            }
+            if (text.trim() !== "")
+                topbar.searchRequested(text.trim());
+        }
+        Keys.onReturnPressed: event => event.accepted = true
+        Keys.onEnterPressed: event => event.accepted = true
+    }
+
+    Keys.onPressed: event => {
+        switch (event.key) {
+        case Qt.Key_Escape:
+            topbar.clearSearch();
+            break;
+        case Qt.Key_Down:
+            if (recentPopup.paths.length === 0)
+                return;
+            recentPopup.move(1);
+            break;
+        case Qt.Key_Up:
+            if (recentPopup.paths.length === 0)
+                return;
+            recentPopup.move(-1);
+            break;
+        default:
+            return;
+        }
+        event.accepted = true;
+    }
+
+    PathSuggestions {
+        id: recentPopup
+
+        anchorItem: search
+        paths: topbar.recentSuggestions
+        visible: topbar.recentSuggestions.length > 0
+        onChosen: target => topbar.navigateRequested(target)
     }
 }

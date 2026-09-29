@@ -236,6 +236,67 @@ ShellRoot {
         check("unwatched ids", unwatched, ["w1"]);
 
         watchResponse = {
+            "watchId": "w3",
+            "topic": "files:w3",
+            "watching": true,
+            "pollOnFocus": false,
+            "path": "/tmp/filtered",
+            "total": 4,
+            "cursor": "",
+            "entries": [entry("Alpha.txt"), entry("beta.txt"), entry("gamma.txt"), entry("delta.txt")]
+        };
+        model.path = "/tmp/filtered";
+        model.nameFilter = "ta";
+        check("filter keeps case-insensitive substring matches", names(), ["beta.txt", "delta.txt"]);
+        check("filter leaves the daemon total alone", model.total, 4);
+        fakeService.watchEvent({
+            "watchId": "w3",
+            "kind": "batch",
+            "seq": 1,
+            "added": [entry("Tango.txt"), entry("zeta.txt")],
+            "addedAt": [4, 5]
+        });
+        check("inserts land at the filtered index", names(), ["beta.txt", "delta.txt", "Tango.txt", "zeta.txt"]);
+        fakeService.watchEvent({
+            "watchId": "w3",
+            "kind": "batch",
+            "seq": 2,
+            "added": [entry("aa-ta.txt")],
+            "addedAt": [1]
+        });
+        check("an insert before hidden entries counts only visible ones", names(), ["aa-ta.txt", "beta.txt", "delta.txt", "Tango.txt", "zeta.txt"]);
+        fakeService.watchEvent({
+            "watchId": "w3",
+            "kind": "batch",
+            "seq": 3,
+            "removed": ["gamma.txt", "delta.txt"]
+        });
+        check("removals hit hidden and visible entries", [names(), model.total], [["aa-ta.txt", "beta.txt", "Tango.txt", "zeta.txt"], 5]);
+        model.nameFilter = "";
+        check("clearing the filter restores the daemon order", names(), ["Alpha.txt", "aa-ta.txt", "beta.txt", "Tango.txt", "zeta.txt"]);
+
+        model.thumbnailsEnabled = false;
+        fakeService.watchEvent({
+            "watchId": "w3",
+            "kind": "batch",
+            "seq": 4,
+            "added": [entry("shot.png", {
+                    "thumbnailable": true,
+                    "mime": "image/png"
+                })],
+            "addedAt": [0]
+        });
+        model.requestThumbnails(0, 0);
+        check("thumbnails off skips the request", model.entries.get(0).thumbnail, "");
+        model.thumbnailsEnabled = true;
+        model.thumbnailSizeLimit = 0;
+        model.requestThumbnails(0, 0);
+        check("size cap skips large files", model.entries.get(0).thumbnail, "");
+        model.thumbnailSizeLimit = -1;
+        model.requestThumbnails(0, 0);
+        check("thumbnails resume", model.entries.get(0).thumbnail, "/cache/shot.png.png");
+
+        watchResponse = {
             "error": "no such directory",
             "code": "ENOENT"
         };

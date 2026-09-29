@@ -12,6 +12,8 @@ Singleton {
     property var action: null
     property bool active: false
 
+    readonly property int offerDuration: 10000
+
     function show(msg, opts) {
         opts = opts || {};
         message = msg;

@@ -135,6 +135,33 @@ func specOf(req ipc.Request) (spec, error) {
 		}
 	case "files.op.emptyTrash":
 		s.kind = KindEmptyTrash
+	case "files.op.compress":
+		s.kind = KindCompress
+		sources, err := absPaths(req, "paths")
+		if err != nil {
+			return spec{}, err
+		}
+		s.sources = sources
+		s.dest = params.StringOpt(req.Params, "dest", "")
+		s.name = params.StringOpt(req.Params, "name", "")
+		s.format = params.StringOpt(req.Params, "format", FormatZip)
+		if len(s.sources) == 0 || !filepath.IsAbs(s.dest) || !validName(s.name) {
+			return spec{}, invalid("files.op.compress requires paths, an absolute dest and a name")
+		}
+		if s.format != FormatZip && s.format != FormatTarGz {
+			return spec{}, invalid("files.op.compress format must be zip or tar.gz")
+		}
+	case "files.op.extract":
+		s.kind = KindExtract
+		sources, err := absPaths(req, "paths")
+		if err != nil {
+			return spec{}, err
+		}
+		s.sources = sources
+		s.dest = params.StringOpt(req.Params, "dest", "")
+		if len(s.sources) == 0 || !filepath.IsAbs(s.dest) {
+			return spec{}, invalid("files.op.extract requires paths and an absolute dest")
+		}
 	case "files.op.setOwner":
 		s.kind = KindSetOwner
 		sources, err := absPaths(req, "paths")

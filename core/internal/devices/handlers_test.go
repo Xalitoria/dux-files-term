@@ -77,7 +77,7 @@ func TestHandleListReturnsTheSnapshot(t *testing.T) {
 
 	result := out["result"].(map[string]any)
 	assert.Equal(t, true, result["available"])
-	assert.Len(t, result["devices"], 2)
+	assert.Len(t, result["devices"], 3)
 }
 
 func TestHandleMountCallsUdisksAndReturnsTheMountPoint(t *testing.T) {

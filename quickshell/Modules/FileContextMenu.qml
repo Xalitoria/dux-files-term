@@ -14,6 +14,8 @@ FileMenu {
     property bool hasClipboard: false
     property bool shiftHeld: false
     property bool forFolder: false
+    property bool extractable: false
+    property bool inResults: false
 
     signal actionTriggered(string id)
 
@@ -75,6 +77,30 @@ FileMenu {
             "id": "separator"
         },
         {
+            "id": "compress",
+            "icon": "folder_zip",
+            "label": I18n.tr("Compress…", "context menu entry packing the selection into an archive"),
+            "enabled": selectionCount > 0,
+            "visible": !inResults
+        },
+        {
+            "id": "extract",
+            "icon": "unarchive",
+            "label": I18n.tr("Extract here", "context menu entry unpacking the selected archives"),
+            "enabled": selectionCount > 0,
+            "visible": extractable && !inResults
+        },
+        {
+            "id": "openContainingFolder",
+            "icon": "folder_open",
+            "label": I18n.tr("Open the containing folder", "keyboard shortcut"),
+            "enabled": selectionCount === 1,
+            "visible": inResults
+        },
+        {
+            "id": "separator"
+        },
+        {
             "id": "trash",
             "icon": "delete",
             "label": I18n.tr("Move to Trash", "context menu entry trashing the selection"),
@@ -109,6 +135,13 @@ FileMenu {
             "icon": "create_new_folder",
             "label": I18n.tr("New folder", "new folder dialog header"),
             "enabled": true
+        },
+        {
+            "id": "newDocument",
+            "icon": "note_add",
+            "label": I18n.tr("New document", "context menu entry creating a file from a template"),
+            "enabled": true,
+            "submenu": true
         },
         {
             "id": "paste",
@@ -189,6 +222,7 @@ FileMenu {
                 text: slot.separator ? "" : slot.modelData.label
                 iconName: slot.separator ? "" : slot.modelData.icon
                 danger: slot.modelData.danger === true
+                submenu: slot.modelData.submenu === true
                 enabled: !slot.separator && slot.modelData.enabled
                 onClicked: {
                     menu.close();

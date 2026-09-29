@@ -23,7 +23,7 @@ var Methods = []MethodSpec{
 	{Name: "ping", Group: "core", Desc: "Liveness check"},
 	{Name: "version", Group: "core", Desc: "Daemon and API version"},
 	{Name: "describe", Group: "core", Desc: "List all IPC methods and their params"},
-	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network,sizes")}},
+	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network,sizes,bookmarks,search:<id>")}},
 	{Name: "unsubscribe", Group: "core", Desc: "Unsubscribe from event topics", Params: []ParamSpec{opt("topics", "topics to drop")}},
 
 	{Name: "ui.show", Group: "ui", Desc: "Show the file manager window"},
@@ -63,6 +63,8 @@ var Methods = []MethodSpec{
 	{Name: "files.op.jobs", Group: "files.op", Desc: "List running, queued and recently finished jobs"},
 	{Name: "files.op.dropAction", Group: "files.op", Desc: "What a plain drag of paths onto dest would do", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory")}},
 	{Name: "files.op.undo", Group: "files.op", Desc: "Undo the last undoable operation in a scope", Params: []ParamSpec{opt("scope", "undo stack key, one per window")}},
+	{Name: "files.op.compress", Group: "files.op", Desc: "Pack paths into a new archive in a directory", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory"), req("name", "archive name without extension"), opt("format", "zip|tar.gz (default zip)"), opt("scope", "undo stack key, one per window")}},
+	{Name: "files.op.extract", Group: "files.op", Desc: "Unpack zip, tar and tar.gz archives into folders named after them", Params: []ParamSpec{req("paths", "absolute archive paths"), req("dest", "absolute target directory"), opt("scope", "undo stack key, one per window")}},
 
 	{Name: "files.open", Group: "files.apps", Desc: "Open paths with their default application", Params: []ParamSpec{req("paths", "absolute paths"), opt("cwd", "working directory for the launched app"), opt("activationToken", "xdg activation token from the compositor"), opt("terminal", "terminal to use for Terminal=true entries")}},
 	{Name: "files.openWith", Group: "files.apps", Desc: "Open paths with a named application", Params: []ParamSpec{req("paths", "absolute paths"), req("desktopId", "desktop entry id, for example org.gnome.gedit.desktop"), opt("cwd", "working directory for the launched app"), opt("activationToken", "xdg activation token from the compositor")}},
@@ -72,6 +74,16 @@ var Methods = []MethodSpec{
 	{Name: "files.apps.all", Group: "files.apps", Desc: "Every launchable application, for the Other application picker"},
 	{Name: "files.apps.setDefault", Group: "files.apps", Desc: "Set the default application for a mime type", Params: []ParamSpec{req("mime", "mime type"), req("desktopId", "desktop entry id")}},
 	{Name: "files.apps.terminals", Group: "files.apps", Desc: "Terminal emulators installed on this system"},
+
+	{Name: "search.start", Group: "search", Desc: "Search a tree by name, streaming results on search:<searchId>", Params: []ParamSpec{req("root", "absolute directory to search"), opt("query", "case-insensitive name substring; optional when a filter is set"), opt("includeHidden", "descend into and report dot-prefixed entries"), opt("crossDevice", "follow into other filesystems"), opt("types", "documents|images|video|audio|archives|folders"), opt("modifiedAfterMs", "only entries modified after this unix time"), opt("minSize", "bytes"), opt("maxSize", "bytes"), opt("limit", "result cap, at most 10000")}},
+	{Name: "search.cancel", Group: "search", Desc: "Stop a running search", Params: []ParamSpec{req("searchId", "id from search.start")}},
+
+	{Name: "bookmarks.list", Group: "bookmarks", Desc: "Saved folders in sidebar order, plus whether a GTK import is on offer"},
+	{Name: "bookmarks.add", Group: "bookmarks", Desc: "Save a folder", Params: []ParamSpec{req("path", "absolute directory path"), opt("label", "display name, defaults to the folder name"), opt("icon", "icon name")}},
+	{Name: "bookmarks.remove", Group: "bookmarks", Desc: "Forget a saved folder", Params: []ParamSpec{req("path", "absolute directory path")}},
+	{Name: "bookmarks.rename", Group: "bookmarks", Desc: "Relabel a saved folder", Params: []ParamSpec{req("path", "absolute directory path"), req("label", "display name")}},
+	{Name: "bookmarks.reorder", Group: "bookmarks", Desc: "Set the sidebar order; every bookmark must be listed once", Params: []ParamSpec{req("paths", "every bookmark path in the new order")}},
+	{Name: "bookmarks.importGtk", Group: "bookmarks", Desc: "Import the GTK file chooser bookmarks that are not saved yet"},
 
 	{Name: "devices.list", Group: "devices", Desc: "Local drives and volumes udisks2 knows about"},
 	{Name: "devices.usage", Group: "devices", Desc: "Disk usage for mounted devices, cached for 30 seconds", Params: []ParamSpec{opt("paths", "mount points, default every mounted device"), opt("force", "ignore the cache")}},

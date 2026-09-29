@@ -39,6 +39,18 @@ Singleton {
         }
     }
 
+    function extractable(mime) {
+        switch (mime) {
+        case "application/zip":
+        case "application/x-tar":
+        case "application/gzip":
+        case "application/x-gzip":
+        case "application/x-compressed-tar":
+            return true;
+        }
+        return false;
+    }
+
     function isRunnable(mime, executable) {
         if (!executable)
             return false;
