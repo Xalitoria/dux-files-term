@@ -13,10 +13,27 @@ var shellApp = shellapp.New(shellapp.Config{
 	Version:  Version,
 	Embedded: embeddedShell{},
 	Boot:     bootBackend,
+	ExtraEnv: uiEnv,
 })
 
+var (
+	dbusActivated bool
+	keepRunning   bool
+)
+
+func uiEnv(string) []string {
+	var env []string
+	if dbusActivated {
+		env = append(env, "DFILES_DBUS_ACTIVATED=1")
+	}
+	if keepRunning {
+		env = append(env, "DFILES_KEEP_RUNNING=1")
+	}
+	return env
+}
+
 func bootBackend(ctx context.Context) (shellapp.Backend, error) {
-	svc, err := bootDaemonServices(ctx)
+	svc, err := bootDaemonServices(ctx, true)
 	if err != nil {
 		return nil, err
 	}

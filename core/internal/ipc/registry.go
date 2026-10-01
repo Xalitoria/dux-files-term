@@ -29,7 +29,8 @@ var Methods = []MethodSpec{
 	{Name: "ui.show", Group: "ui", Desc: "Show the file manager window"},
 	{Name: "ui.hide", Group: "ui", Desc: "Hide the file manager window"},
 	{Name: "ui.toggle", Group: "ui", Desc: "Toggle the file manager window"},
-	{Name: "ui.open", Group: "ui", Desc: "Open a directory in the file manager", Params: []ParamSpec{req("path", "absolute directory path")}},
+	{Name: "ui.open", Group: "ui", Desc: "Open folders, each in its own tab; a file opens its folder with it selected", Params: []ParamSpec{opt("path", "absolute path or URI"), opt("paths", "absolute paths or URIs, one tab each"), opt("select", "absolute paths or URIs to select, grouped by folder")}},
+	{Name: "ui.properties", Group: "ui", Desc: "Show the properties dialog for paths", Params: []ParamSpec{req("paths", "absolute paths or file:// URIs")}},
 	{Name: "ui.quit", Group: "ui", Desc: "Quit the running daemon"},
 
 	{Name: "files.list", Group: "files", Desc: "List a directory, or page a live watch when watchId is given", Params: []ParamSpec{req("path", "absolute directory path"), opt("watchId", "page from this watch instead of re-reading"), opt("includeHidden", "include dot-prefixed and .hidden entries"), opt("sort", "name|size|mtime|type"), opt("desc", "reverse the sort"), opt("dirsFirst", "directories before files (default true)"), opt("limit", "page size (default 500)"), opt("cursor", "cursor from the previous page"), opt("filters", "file name globs, case-insensitive; directories always pass")}},
@@ -94,13 +95,16 @@ var Methods = []MethodSpec{
 	{Name: "devices.unlock", Group: "devices", Desc: "Unlock a LUKS device", Params: []ParamSpec{req("id", "device id from devices.list"), req("passphrase", "passphrase, never stored"), opt("mount", "mount the cleartext device afterwards")}},
 	{Name: "devices.lock", Group: "devices", Desc: "Lock a LUKS device", Params: []ParamSpec{req("id", "device id from devices.list")}},
 
-	{Name: "network.mounts", Group: "network", Desc: "gvfs mounts and portable devices waiting to be mounted"},
+	{Name: "network.mounts", Group: "network", Desc: "gvfs mounts, connectable schemes and portable devices waiting to be mounted"},
 	{Name: "network.connect", Group: "network", Desc: "Mount a network location, asking on the network topic when gvfs needs credentials", Params: []ParamSpec{req("uri", "for example sftp://host/path")}},
 	{Name: "network.disconnect", Group: "network", Desc: "Unmount a gvfs mount", Params: []ParamSpec{req("id", "mount id, uri or path from network.mounts")}},
 	{Name: "network.answer", Group: "network", Desc: "Answer a question gvfs asked during a connect", Params: []ParamSpec{req("id", "question id from the network topic"), opt("password", ""), opt("user", ""), opt("domain", ""), opt("anonymous", "connect anonymously"), opt("save", "0 never, 1 session, 2 permanently"), opt("choice", "index for a question"), opt("abort", "give up on the mount")}},
 	{Name: "network.recent", Group: "network", Desc: "Servers connected to before"},
 	{Name: "network.forget", Group: "network", Desc: "Drop a server from the recent list", Params: []ParamSpec{req("uri", "server uri")}},
 	{Name: "network.mountPortable", Group: "network", Desc: "Mount a phone or camera gvfs has detected", Params: []ParamSpec{req("monitor", "volume monitor bus name"), req("id", "volume id")}},
+
+	{Name: "trash.list", Group: "trash", Desc: "Trashed items across the home trash and every mounted volume's trash"},
+	{Name: "trash.count", Group: "trash", Desc: "Number of trashed items"},
 
 	{Name: "clipboard.copy", Group: "clipboard", Desc: "Put paths on the system clipboard as a file selection", Params: []ParamSpec{req("paths", "absolute paths"), opt("cut", "mark the selection for a move")}},
 	{Name: "clipboard.paths", Group: "clipboard", Desc: "Read the file selection on the system clipboard"},
@@ -109,6 +113,8 @@ var Methods = []MethodSpec{
 	{Name: "system.capabilities", Group: "system", Desc: "What the environment permits: sandbox state, host access, bus policies, portal versions and the per-feature table with reason codes"},
 	{Name: "system.colorScheme.get", Group: "system", Desc: "Current portal color scheme (0 no-preference, 1 dark, 2 light)"},
 	{Name: "system.elevation", Group: "system", Desc: "Whether failed operations can be retried as administrator, and why not"},
+	{Name: "system.fileManager.get", Group: "system", Desc: "Whether this instance owns org.freedesktop.FileManager1, and who does otherwise"},
+	{Name: "system.fileManager.set", Group: "system", Desc: "Request or release org.freedesktop.FileManager1; another owner is never replaced", Params: []ParamSpec{req("enabled", "true to request the name, false to release it")}},
 	{Name: "system.openUri", Group: "system", Desc: "Open a URI with the default handler", Params: []ParamSpec{req("uri", "")}},
 }
 

@@ -96,6 +96,11 @@
               install -Dm644 ${./assets/com.danklinux.dankfiles.svg} \
                 $out/share/icons/hicolor/scalable/apps/com.danklinux.dankfiles.svg
 
+              install -Dm644 ${./assets/dbus/com.danklinux.dankfiles.FileManager1.service} \
+                $out/share/dbus-1/services/com.danklinux.dankfiles.FileManager1.service
+              substituteInPlace $out/share/dbus-1/services/com.danklinux.dankfiles.FileManager1.service \
+                --replace-fail /usr/bin/dfiles $out/bin/dfiles
+
               install -Dm644 ${./assets/systemd/dfiles.service} \
                 $out/lib/systemd/user/dfiles.service
               substituteInPlace $out/lib/systemd/user/dfiles.service \

@@ -2,23 +2,46 @@ package ipc
 
 import (
 	"context"
+	"errors"
 	"os"
-	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/location"
+	"github.com/AvengeMedia/dankgo/paths"
 )
 
-// publishUI delivers a "ui" payload live when the GUI is listening, else stashes
-// it for the next "ui" subscriber so a cold-started window still honors it.
 func publishUI(deps Deps, payload map[string]any) {
-	if deps.Bus.HasSubscriber("ui") {
+	if deps.Pending == nil {
 		deps.Bus.Publish("ui", payload)
 		return
 	}
-	if deps.Pending != nil {
-		deps.Pending.Set(payload)
+	deps.Pending.Deliver(deps.Bus, payload)
+}
+
+func OpenLocations(deps Deps, open, sel []string) error {
+	if len(open)+len(sel) == 0 {
+		return errors.New("nothing to open")
 	}
+	locations, err := location.Resolve(open, sel, location.HostEnv(paths.XDGDataHome()))
+	if err != nil {
+		return err
+	}
+	publishUI(deps, map[string]any{"action": "open", "locations": locations})
+	return nil
+}
+
+func ShowProperties(deps Deps, targets []string) error {
+	if len(targets) == 0 {
+		return errors.New("nothing to show")
+	}
+	resolved, err := location.LocalPaths(targets, location.HostEnv(paths.XDGDataHome()))
+	if err != nil {
+		return err
+	}
+	publishUI(deps, map[string]any{"action": "properties", "paths": resolved})
+	return nil
 }
 
 func HandleUI(_ context.Context, w *ConnWriter, req Request, deps Deps) {
@@ -28,16 +51,20 @@ func HandleUI(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 		deps.Bus.Publish("ui", map[string]any{"action": action})
 		Respond(w, req.ID, map[string]any{"ok": true})
 	case "ui.open":
-		path := strings.TrimSpace(ParamString(req.Params, "path"))
-		if path == "" {
-			RespondError(w, req.ID, "ui.open requires a path")
+		open := stringList(req.Params, "paths")
+		if path := ParamString(req.Params, "path"); path != "" {
+			open = append([]string{path}, open...)
+		}
+		if err := OpenLocations(deps, open, stringList(req.Params, "select")); err != nil {
+			RespondError(w, req.ID, "ui.open: "+err.Error())
 			return
 		}
-		if !filepath.IsAbs(path) {
-			RespondError(w, req.ID, "ui.open requires an absolute path")
+		Respond(w, req.ID, map[string]any{"ok": true})
+	case "ui.properties":
+		if err := ShowProperties(deps, stringList(req.Params, "paths")); err != nil {
+			RespondError(w, req.ID, "ui.properties: "+err.Error())
 			return
 		}
-		publishUI(deps, map[string]any{"action": "open", "path": path})
 		Respond(w, req.ID, map[string]any{"ok": true})
 	case "ui.quit":
 		Respond(w, req.ID, map[string]any{"ok": true})
@@ -48,4 +75,11 @@ func HandleUI(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 	default:
 		RespondError(w, req.ID, "unknown ui method: "+req.Method)
 	}
+}
+
+func stringList(p map[string]any, key string) []string {
+	if value := ParamString(p, key); value != "" {
+		return []string{value}
+	}
+	return ParamStringSlice(p, key)
 }

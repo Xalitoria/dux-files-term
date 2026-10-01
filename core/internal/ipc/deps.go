@@ -5,6 +5,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/clipboard"
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
+	"github.com/AvengeMedia/dankfiles/core/internal/filemanager1"
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
@@ -29,4 +30,10 @@ type Deps struct {
 	Bookmarks   *bookmarks.Store
 	Settings    func() settings.UISettings
 	Sandbox     sandbox.Capabilities
+	FileManager FileManager
+}
+
+type FileManager interface {
+	Status() filemanager1.Status
+	SetEnabled(enabled bool) filemanager1.Status
 }

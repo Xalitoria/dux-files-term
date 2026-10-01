@@ -29,6 +29,7 @@ func fixture(t *testing.T) (*Service, string) {
 	t.Setenv("LC_ALL", "C")
 	t.Setenv("LC_MESSAGES", "")
 	t.Setenv("LANG", "")
+	t.Setenv("INVOCATION_ID", "")
 
 	return NewServiceForDirs([]string{filepath.Join(root, "mime")}), root
 }

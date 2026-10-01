@@ -2,6 +2,7 @@ package netmount
 
 import (
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -22,6 +23,18 @@ type Spec struct {
 }
 
 func (s Spec) Type() string { return s.Items["type"] }
+
+var connectSchemes = []string{"sftp", "smb", "ftp", "dav", "davs", "nfs"}
+
+func availableSchemes(mountables []Mountable) []string {
+	schemes := []string{}
+	for _, scheme := range connectSchemes {
+		if _, ok := FindMountable(scheme, mountables); ok {
+			schemes = append(schemes, scheme)
+		}
+	}
+	return schemes
+}
 
 func FindMountable(scheme string, mountables []Mountable) (Mountable, bool) {
 	scheme = strings.ToLower(scheme)
@@ -131,4 +144,15 @@ func SchemeOf(spec Spec, mountables []Mountable) string {
 		return mountable.Scheme
 	}
 	return spec.Type()
+}
+
+func LocationIn(mount Mount, uri string) string {
+	rest, ok := strings.CutPrefix(uri, mount.URI)
+	switch {
+	case mount.Path == "", !ok:
+		return mount.Path
+	case rest != "" && !strings.HasSuffix(mount.URI, "/") && !strings.HasPrefix(rest, "/"):
+		return mount.Path
+	}
+	return filepath.Join(mount.Path, filepath.Clean("/"+rest))
 }

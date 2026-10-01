@@ -41,6 +41,8 @@ Singleton {
             _subscribed.unsubscribeTopic("devices", _handler);
         _subscribed = transport;
         transport.subscribeTopic("devices", _handler);
+        if (transport.connected)
+            refresh();
     }
 
     function refresh() {

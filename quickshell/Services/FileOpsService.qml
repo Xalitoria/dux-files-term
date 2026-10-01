@@ -50,6 +50,10 @@ Singleton {
             _subscribed.unsubscribeTopic("jobs", _handler);
         _subscribed = transport;
         transport.subscribeTopic("jobs", _handler);
+        if (!transport.connected)
+            return;
+        refresh();
+        refreshElevation();
     }
 
     function copy(paths, dest, scope) {

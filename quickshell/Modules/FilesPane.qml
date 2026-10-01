@@ -48,9 +48,9 @@ FocusScope {
         browser.navigate(target);
     }
 
-    function reveal(target) {
+    function reveal(targets) {
         closeSearch();
-        browser.reveal(target);
+        browser.reveal(targets);
     }
 
     function back() {

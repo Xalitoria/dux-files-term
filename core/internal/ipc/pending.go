@@ -2,24 +2,36 @@ package ipc
 
 import "sync"
 
-// PendingOpen holds a "ui" action captured before the GUI subscribed to the
-// "ui" topic (e.g. a webcal:// link or an event open that cold-started the
-// app). It is flushed onto the bus the moment a "ui" subscriber appears.
+// PendingOpen holds "ui" actions captured before the GUI subscribed to the
+// "ui" topic, so a cold start still honors every request that caused it.
 type PendingOpen struct {
-	mu      sync.Mutex
-	payload map[string]any
+	mu       sync.Mutex
+	payloads []map[string]any
 }
 
-func (p *PendingOpen) Set(payload map[string]any) {
-	p.mu.Lock()
-	p.payload = payload
-	p.mu.Unlock()
-}
-
-func (p *PendingOpen) Take() map[string]any {
+func (p *PendingOpen) Deliver(bus *EventBus, payload map[string]any) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	payload := p.payload
-	p.payload = nil
-	return payload
+	if len(p.payloads) == 0 && bus.HasSubscriber("ui") {
+		bus.Publish("ui", payload)
+		return
+	}
+	p.payloads = append(p.payloads, payload)
+}
+
+func (p *PendingOpen) Take() []map[string]any {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	payloads := p.payloads
+	p.payloads = nil
+	return payloads
+}
+
+func (p *PendingOpen) Flush(bus *EventBus) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for _, payload := range p.payloads {
+		bus.Publish("ui", payload)
+	}
+	p.payloads = nil
 }

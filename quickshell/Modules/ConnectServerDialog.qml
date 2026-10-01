@@ -9,14 +9,13 @@ import qs.DankCommon.FileBrowser
 OverlayDialog {
     id: root
 
-    readonly property var schemes: ["sftp", "smb", "ftp", "dav", "davs", "nfs"]
     property string errorText: ""
 
     signal connected(string path)
 
     function ask() {
         errorText = "";
-        addressField.text = schemeDropdown.currentValue + "://";
+        addressField.text = schemeDropdown.currentValue === "" ? "" : schemeDropdown.currentValue + "://";
         open();
         addressField.forceActiveFocus();
     }
@@ -27,13 +26,28 @@ OverlayDialog {
             return;
         errorText = "";
         NetworkService.connectTo(target, result => {
-            if (result.error) {
-                root.errorText = result.error;
+            const path = root.localPath(result);
+            if (path === "") {
+                root.showFailure(target, result);
                 return;
             }
-            root.connected(result.mount.path || "");
+            root.connected(path);
             root.close();
         });
+    }
+
+    function localPath(result) {
+        if (result.error)
+            return "";
+        return result.location || result.mount?.path || "";
+    }
+
+    function showFailure(target, result) {
+        errorText = result.error || I18n.tr("Connected, but the share has no local folder. The gvfs FUSE service may not be running.", "connect dialog error when a mounted share has no fuse path");
+        if (visible)
+            return;
+        addressField.text = target;
+        open();
     }
 
     title: I18n.tr("Connect to Server", "connect to server dialog header")
@@ -47,9 +61,10 @@ OverlayDialog {
             id: schemeDropdown
 
             width: parent.width
+            visible: NetworkService.schemes.length > 0
             text: I18n.tr("Protocol", "label for the network protocol picker")
-            options: root.schemes
-            currentValue: root.schemes[0]
+            options: NetworkService.schemes
+            currentValue: NetworkService.schemes[0] ?? ""
             onValueChanged: value => addressField.text = value + "://"
         }
 

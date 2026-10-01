@@ -119,6 +119,8 @@ ShellRoot {
         DevicesService.transport = fakeTransport;
         NetworkService.transport = fakeTransport;
         check("one subscription per service", subscriptions, 2);
+        check("a transport already connected loads at once", sent.map(request => request.method), ["devices.list", "devices.usage", "network.mounts", "network.recent"]);
+        sent = [];
 
         responses["devices.list"] = {
             "available": true,
@@ -190,6 +192,7 @@ ShellRoot {
 
         responses["network.mounts"] = {
             "available": true,
+            "schemes": ["sftp", "smb"],
             "mounts": [mount("share", "network"), mount("phone", "device")],
             "portables": [
                 {
@@ -213,6 +216,7 @@ ShellRoot {
         NetworkService.refresh();
         check("mounts split by kind", [NetworkService.networkMounts.length, NetworkService.deviceMounts.length], [1, 1]);
         check("portables stored", NetworkService.portables.length, 1);
+        check("installed schemes stored", NetworkService.schemes, ["sftp", "smb"]);
         check("recent servers stored", NetworkService.servers.length, 1);
 
         emit("network", {

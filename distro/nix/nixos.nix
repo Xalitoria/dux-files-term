@@ -16,6 +16,8 @@ in
       cfg.quickshell.package
     ];
 
+    services.dbus.packages = [ cfg.package ];
+
     systemd.packages = lib.mkIf cfg.systemd.enable [ cfg.package ];
 
     systemd.user.services.dfiles = lib.mkIf cfg.systemd.enable {

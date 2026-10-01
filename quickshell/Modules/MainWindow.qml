@@ -26,8 +26,8 @@ FloatingWindow {
     property string viewMode: SettingsData.defaultView
     property bool sidebarOverlayOpen: false
     property string pendingTrust: ""
-    property string openRequest: ""
     property bool applyingTab: false
+    property int propertiesRequest: 0
 
     readonly property string opScope: "main"
     readonly property var cutSet: {
@@ -68,13 +68,6 @@ FloatingWindow {
             SessionData.windowHeight = height;
     }
 
-    onOpenRequestChanged: {
-        if (openRequest === "")
-            return;
-        openPath(openRequest, SettingsData.openLocationIn === "tab");
-        openRequest = "";
-    }
-
     onCompactChanged: {
         if (!compact)
             sidebarOverlayOpen = false;
@@ -103,7 +96,7 @@ FloatingWindow {
     }
 
     function requestClose() {
-        if (SettingsData.closeBehavior === "quit") {
+        if (SettingsData.closeBehavior === "quit" && Quickshell.env("DFILES_KEEP_RUNNING") !== "1") {
             DankFilesService.quit();
             return;
         }
@@ -246,6 +239,28 @@ FloatingWindow {
             return;
         }
         activePane.navigate(path);
+    }
+
+    function openLocations(locations) {
+        locations.forEach((location, index) => openLocation(location, index > 0 || SettingsData.openLocationIn === "tab"));
+    }
+
+    function openLocation(location, inNewTab) {
+        switch (location.kind) {
+        case "servers":
+            connectDialog.ask();
+            return;
+        case "remote":
+            connectRemote(location.uri);
+            return;
+        }
+        if (location.select.length === 0) {
+            openPath(location.path, inNewTab);
+            return;
+        }
+        if (inNewTab)
+            newTab(location.path);
+        activePane.reveal(location.select);
     }
 
     function focusPane(index) {
@@ -619,18 +634,39 @@ FloatingWindow {
             propertiesDialog.show(entries);
             return;
         }
-        DirectoryService.list(currentPath, {
-            "limit": 1
-        }, () => {});
-        DankFilesService.sendRequest("files.stat", {
-            "path": currentPath
-        }, response => {
-            if (response.error) {
-                ToastService.info(FileFormat.operationError(response.code, response.error));
+        showPropertiesFor([currentPath]);
+    }
+
+    function connectRemote(uri) {
+        NetworkService.connectTo(uri, result => {
+            const path = connectDialog.localPath(result);
+            if (path === "") {
+                connectDialog.showFailure(uri, result);
                 return;
             }
-            propertiesDialog.show([(response.result || {}).entry]);
+            window.openPath(path, true);
         });
+    }
+
+    function showPropertiesFor(paths) {
+        const request = ++propertiesRequest;
+        const entries = [];
+        let pending = paths.length;
+        paths.forEach((path, index) => DankFilesService.sendRequest("files.stat", {
+                "path": path
+            }, response => {
+                if (request !== window.propertiesRequest)
+                    return;
+                pending--;
+                if (response.error)
+                    ToastService.info(FileFormat.operationError(response.code, response.error));
+                entries[index] = (response.result || {}).entry ?? null;
+                if (pending > 0)
+                    return;
+                const found = entries.filter(entry => entry);
+                if (found.length > 0)
+                    propertiesDialog.show(found);
+            }));
     }
 
     function applyDrop(paths, dest, action) {
@@ -1459,10 +1495,7 @@ FloatingWindow {
     ConnectServerDialog {
         id: connectDialog
 
-        onConnected: path => {
-            if (path !== "")
-                window.openPath(path, false);
-        }
+        onConnected: path => window.openPath(path, false)
     }
 
     CredentialDialog {

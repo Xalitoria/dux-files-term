@@ -15,6 +15,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
 	"github.com/AvengeMedia/dankfiles/core/internal/elevate"
+	"github.com/AvengeMedia/dankfiles/core/internal/filemanager1"
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
@@ -25,6 +26,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/settings"
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/log"
+	"github.com/godbus/dbus/v5"
 )
 
 var daemonCmd = &cobra.Command{
@@ -42,6 +44,7 @@ type daemonServices struct {
 	clipboard *clipboard.Service
 	search    *search.Service
 	bookmarks *bookmarks.Store
+	fm1       *filemanager1.Service
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -54,6 +57,9 @@ func (s *daemonServices) SocketPath() string {
 func (s *daemonServices) Close() {
 	if s == nil {
 		return
+	}
+	if s.fm1 != nil {
+		s.fm1.Close()
 	}
 	if s.files != nil {
 		s.files.Close()
@@ -78,7 +84,7 @@ func (s *daemonServices) Close() {
 	}
 }
 
-func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
+func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, error) {
 	caps := sandbox.Current()
 	if caps.Sandboxed {
 		log.Infof("sandboxed as %s (host filesystem: %v)", caps.AppID, caps.HostFilesystem)
@@ -132,12 +138,54 @@ func bootDaemonServices(ctx context.Context) (*daemonServices, error) {
 		Settings:    func() settings.UISettings { return settings.Load(config) },
 		Sandbox:     caps,
 	}
+
+	var fm1 *filemanager1.Service
+	if ownsWindow {
+		fm1 = startFileManager1(deps, dbusActivated || settings.Load(config).RegisterFileManager)
+	}
+	if fm1 != nil {
+		deps.FileManager = fm1
+	}
+
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {
+		if fm1 != nil {
+			fm1.Close()
+		}
 		return nil, err
 	}
 
-	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore}, nil
+	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore, fm1: fm1}, nil
+}
+
+type fileManagerRequests struct{ deps ipc.Deps }
+
+func (r fileManagerRequests) ShowFolders(uris []string) error {
+	return ipc.OpenLocations(r.deps, uris, nil)
+}
+
+func (r fileManagerRequests) ShowItems(uris []string) error {
+	return ipc.OpenLocations(r.deps, nil, uris)
+}
+
+func (r fileManagerRequests) ShowItemProperties(uris []string) error {
+	return ipc.ShowProperties(r.deps, uris)
+}
+
+func startFileManager1(deps ipc.Deps, enabled bool) *filemanager1.Service {
+	conn, err := dbus.ConnectSessionBus()
+	if err != nil {
+		log.Warnf("filemanager1 unavailable: %v", err)
+		return nil
+	}
+	svc, err := filemanager1.New(conn, fileManagerRequests{deps: deps})
+	if err != nil {
+		conn.Close()
+		log.Warnf("filemanager1 unavailable: %v", err)
+		return nil
+	}
+	svc.SetEnabled(enabled)
+	return svc
 }
 
 func configHome() string {
@@ -162,7 +210,7 @@ func runDaemon(_ *cobra.Command, _ []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	svc, err := bootDaemonServices(ctx)
+	svc, err := bootDaemonServices(ctx, false)
 	if err != nil {
 		return err
 	}

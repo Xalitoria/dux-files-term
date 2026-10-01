@@ -81,6 +81,7 @@ Singleton {
     property alias closeBehavior: adapter.closeBehavior
     // "current" replaces the active pane, "tab" opens a new tab
     property alias openLocationIn: adapter.openLocationIn
+    property alias registerFileManager: adapter.registerFileManager
     property alias sidebarCollapsed: adapter.sidebarCollapsed
     // "list" | "grid", the view a new window starts in
     property alias defaultView: adapter.defaultView
@@ -152,8 +153,9 @@ Singleton {
             property string focusRingColor: "primary"
             property string language: ""
             property string terminal: ""
-            property string closeBehavior: "hide"
+            property string closeBehavior: "quit"
             property string openLocationIn: "current"
+            property bool registerFileManager: true
             property bool sidebarCollapsed: false
             property string defaultView: "list"
             property string defaultSort: "name"

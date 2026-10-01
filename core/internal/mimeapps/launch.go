@@ -200,6 +200,7 @@ func spawn(argv []string, dir, activationToken string, startupNotify bool) error
 		return errors.New("nothing to run")
 	}
 
+	argv = inOwnScope(argv, os.Getenv, exec.LookPath)
 	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Dir = dir
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
@@ -209,6 +210,21 @@ func spawn(argv []string, dir, activationToken string, startupNotify bool) error
 	}
 	go func() { _ = cmd.Wait() }()
 	return nil
+}
+
+// Under a systemd unit, launched apps would otherwise stay in the unit's cgroup.
+func inOwnScope(argv []string, getenv func(string) string, lookPath func(string) (string, error)) []string {
+	if getenv("INVOCATION_ID") == "" {
+		return argv
+	}
+	runner, err := lookPath("systemd-run")
+	if err != nil {
+		return argv
+	}
+	if _, err := lookPath(argv[0]); err != nil {
+		return argv
+	}
+	return append([]string{runner, "--user", "--scope", "--quiet", "--collect", "--slice=app.slice", "--"}, argv...)
 }
 
 func childEnv(activationToken string, startupNotify bool) []string {

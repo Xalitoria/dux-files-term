@@ -27,6 +27,7 @@ func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {
 		ipc.Respond(w, req.ID, map[string]any{
 			"available": snapshot.Available,
 			"reason":    snapshot.Reason,
+			"schemes":   snapshot.Schemes,
 			"mounts":    snapshot.Mounts,
 			"portables": s.Portables(),
 		})
@@ -60,7 +61,11 @@ func (s *Service) handleConnect(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"mount": mount})
+	location := mount.Path
+	if spec, err := ParseURI(uri, s.mountableList()); err == nil {
+		location = LocationIn(mount, URIOf(spec, s.mountableList()))
+	}
+	ipc.Respond(w, req.ID, map[string]any{"mount": mount, "location": location})
 }
 
 func (s *Service) handleDisconnect(w *ipc.ConnWriter, req ipc.Request) {

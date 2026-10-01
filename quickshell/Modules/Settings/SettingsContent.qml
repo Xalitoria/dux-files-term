@@ -10,6 +10,7 @@ Item {
     property int currentIndex: 0
     property var hostWindow: null
     property var terminals: []
+    property var fileManagerStatus: ({})
 
     readonly property var colorSourceOptions: [
         {
@@ -133,7 +134,54 @@ Item {
         });
     }
 
-    Component.onCompleted: loadTerminals()
+    function loadFileManagerStatus() {
+        DankFilesService.sendRequest("system.fileManager.get", null, response => {
+            if (response.error)
+                return;
+            root.fileManagerStatus = response.result || {};
+        });
+    }
+
+    function setFileManager(enabled) {
+        SettingsData.registerFileManager = enabled;
+        DankFilesService.sendRequest("system.fileManager.set", {
+            "enabled": enabled
+        }, response => {
+            if (response.error) {
+                root.loadFileManagerStatus();
+                return;
+            }
+            root.fileManagerStatus = response.result || {};
+        });
+    }
+
+    function fileManagerDescription() {
+        const status = fileManagerStatus;
+        if (status.available === false)
+            return I18n.tr("This instance cannot reach the session bus.", "file manager registration setting description when the daemon has no session bus connection");
+        if (status.owned === true)
+            return I18n.tr("Other apps open folders and reveal files here.", "file manager registration setting description while registered");
+        if (status.queued === true && (status.owner ?? "") !== "")
+            return I18n.tr("%1 has the role now; Files takes it when %1 quits.", "file manager registration setting description while another file manager holds the name").arg(status.owner);
+        if (status.queued === true)
+            return I18n.tr("Another file manager has the role now; Files takes it when that one quits.", "file manager registration setting description while an unknown file manager holds the name");
+        if ((status.reason ?? "") !== "")
+            return I18n.tr("The session bus refused the registration.", "file manager registration setting description when requesting the name failed");
+        return I18n.tr("Other apps open folders with whichever file manager they find.", "file manager registration setting description while not registered");
+    }
+
+    Component.onCompleted: {
+        loadTerminals();
+        loadFileManagerStatus();
+    }
+
+    Connections {
+        target: root.hostWindow
+        function onVisibleChanged() {
+            if (root.hostWindow.visible)
+                root.loadFileManagerStatus();
+        }
+    }
 
     Loader {
         anchors.fill: parent
@@ -232,6 +280,14 @@ Item {
                             return;
                         SettingsData.closeBehavior = index === 1 ? "quit" : "hide";
                     }
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Register as the session file manager", "setting label for owning org.freedesktop.FileManager1")
+                    description: root.fileManagerDescription()
+                    enabled: root.fileManagerStatus.available !== false
+                    checked: SettingsData.registerFileManager
+                    onToggled: checked => root.setFileManager(checked)
                 }
 
                 SettingsToggleRow {

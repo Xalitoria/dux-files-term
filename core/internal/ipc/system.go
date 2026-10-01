@@ -3,6 +3,7 @@ package ipc
 import (
 	"context"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/filemanager1"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 )
 
@@ -22,6 +23,18 @@ func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			return
 		}
 		Respond(w, req.ID, deps.FileOps.Elevation())
+	case "system.fileManager.get":
+		if deps.FileManager == nil {
+			Respond(w, req.ID, filemanager1.Status{Reason: "only the window process registers"})
+			return
+		}
+		Respond(w, req.ID, deps.FileManager.Status())
+	case "system.fileManager.set":
+		if deps.FileManager == nil {
+			RespondError(w, req.ID, "only the window process registers as the file manager")
+			return
+		}
+		Respond(w, req.ID, deps.FileManager.SetEnabled(ParamBool(req.Params, "enabled")))
 	case "system.openUri":
 		if deps.Apps == nil {
 			RespondError(w, req.ID, "uri opener unavailable")

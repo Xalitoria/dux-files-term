@@ -13,6 +13,7 @@ Singleton {
     property var mounts: []
     property var portables: []
     property var servers: []
+    property var schemes: []
     property bool available: false
     property string reason: ""
     property bool connecting: false
@@ -45,6 +46,8 @@ Singleton {
             _subscribed.unsubscribeTopic("network", _handler);
         _subscribed = transport;
         transport.subscribeTopic("network", _handler);
+        if (transport.connected)
+            refresh();
     }
 
     function refresh() {
@@ -131,6 +134,7 @@ Singleton {
     function _applyMounts(data) {
         available = data.available === true;
         reason = data.reason || "";
+        schemes = data.schemes || [];
         mounts = data.mounts || [];
         if (data.portables !== undefined)
             portables = data.portables || [];

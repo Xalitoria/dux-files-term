@@ -20,7 +20,9 @@ ShellRoot {
     readonly property var log: Log.scoped("Shell")
     readonly property bool enableHotReload: Quickshell.env("DFILES_ENABLE_HOTRELOAD") === "1" || Quickshell.env("DFILES_ENABLE_HOTRELOAD") === "true"
 
-    property string pendingPath: ""
+    readonly property bool dbusActivated: Quickshell.env("DFILES_DBUS_ACTIVATED") === "1"
+    property var pendingRequests: []
+    property bool windowShown: false
 
     Component.onCompleted: {
         Quickshell.watchFiles = enableHotReload;
@@ -84,19 +86,28 @@ ShellRoot {
         }
     }
 
-    function handleOpenPath(path) {
-        if (path === "")
-            return;
-        pendingPath = path;
+    function queueRequest(request) {
+        pendingRequests = pendingRequests.concat([request]);
         showAndFocus();
-        applyPendingPath();
+        applyPendingRequests();
     }
 
-    function applyPendingPath() {
-        if (!windowLoader.item || pendingPath === "")
+    function applyPendingRequests() {
+        const mainWindow = windowLoader.item as MainWindow;
+        if (!mainWindow || pendingRequests.length === 0)
             return;
-        windowLoader.item.openRequest = pendingPath;
-        pendingPath = "";
+        const requests = pendingRequests;
+        pendingRequests = [];
+        for (const request of requests) {
+            switch (request.kind) {
+            case "open":
+                mainWindow.openLocations(request.locations);
+                break;
+            case "properties":
+                mainWindow.showPropertiesFor(request.paths);
+                break;
+            }
+        }
     }
 
     Connections {
@@ -104,16 +115,37 @@ ShellRoot {
         function onWindowActionRequested(action) {
             root.handleWindowAction(action);
         }
-        function onOpenPathRequested(path) {
-            root.handleOpenPath(path);
+        function onOpenRequested(locations) {
+            if (locations.length === 0)
+                return;
+            root.queueRequest({
+                "kind": "open",
+                "locations": locations
+            });
+        }
+        function onPropertiesRequested(paths) {
+            if (paths.length === 0)
+                return;
+            root.queueRequest({
+                "kind": "properties",
+                "paths": paths
+            });
         }
     }
 
     Connections {
         target: windowLoader
         function onItemChanged() {
-            root.applyPendingPath();
+            if (windowLoader.item)
+                root.windowShown = true;
+            root.applyPendingRequests();
         }
+    }
+
+    Timer {
+        interval: 30000
+        running: root.dbusActivated && !root.windowShown
+        onTriggered: DankFilesService.quit()
     }
 
     Timer {

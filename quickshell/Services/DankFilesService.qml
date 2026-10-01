@@ -29,7 +29,8 @@ Singleton {
 
     signal connectionStateChanged
     signal windowActionRequested(string action)
-    signal openPathRequested(string path)
+    signal openRequested(var locations)
+    signal propertiesRequested(var paths)
     signal colorSchemeUpdate(var data)
 
     Component.onCompleted: {
@@ -198,8 +199,12 @@ Singleton {
     }
 
     function _onUiEvent(data) {
-        if (data.action === "open") {
-            openPathRequested(data.path || "");
+        switch (data.action) {
+        case "open":
+            openRequested(data.locations || []);
+            return;
+        case "properties":
+            propertiesRequested(data.paths || []);
             return;
         }
         windowActionRequested(data.action || "");

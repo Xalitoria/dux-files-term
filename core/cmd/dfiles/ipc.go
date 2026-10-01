@@ -20,6 +20,9 @@ var ipcCmd = &cobra.Command{
   dfiles ipc <method> [key=value...]   invoke a method
   dfiles ipc list                      list every method and its params
 
+A key given twice, or a value written as a JSON array, is sent as a list:
+  dfiles ipc files.open paths=/a/one paths=/a/two
+
 Method names and param keys complete with the shell (see 'dfiles completion').`,
 	Args:                  cobra.MinimumNArgs(1),
 	ValidArgsFunction:     completeIPC,
@@ -152,7 +155,26 @@ func parseParams(args []string) (map[string]any, error) {
 		if !ok {
 			return nil, fmt.Errorf("expected key=value, got %q", arg)
 		}
-		params[key] = value
+		var list []any
+		isList := strings.HasPrefix(value, "[") && json.Unmarshal([]byte(value), &list) == nil
+		prev, seen := params[key]
+		switch {
+		case !seen && isList:
+			params[key] = list
+		case !seen:
+			params[key] = value
+		case isList:
+			params[key] = append(asList(prev), list...)
+		default:
+			params[key] = append(asList(prev), value)
+		}
 	}
 	return params, nil
+}
+
+func asList(value any) []any {
+	if list, ok := value.([]any); ok {
+		return list
+	}
+	return []any{value}
 }

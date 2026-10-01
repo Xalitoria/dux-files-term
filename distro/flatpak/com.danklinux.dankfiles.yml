@@ -21,6 +21,7 @@ finish-args:
   - --filesystem=xdg-run/gvfsd
   - --talk-name=org.gtk.vfs.*
   - --talk-name=org.freedesktop.Flatpak
+  - --own-name=org.freedesktop.FileManager1
   - --system-talk-name=org.freedesktop.UDisks2
 
 cleanup:

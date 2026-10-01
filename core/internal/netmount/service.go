@@ -36,10 +36,11 @@ type Service struct {
 }
 
 type Snapshot struct {
-	Kind      string  `json:"kind"`
-	Available bool    `json:"available"`
-	Reason    string  `json:"reason,omitempty"`
-	Mounts    []Mount `json:"mounts"`
+	Kind      string   `json:"kind"`
+	Available bool     `json:"available"`
+	Reason    string   `json:"reason,omitempty"`
+	Schemes   []string `json:"schemes"`
+	Mounts    []Mount  `json:"mounts"`
 }
 
 func NewService(bus Publisher, configDir string) *Service {
@@ -148,7 +149,7 @@ func (s *Service) reload(conn *dbus.Conn) {
 func (s *Service) Snapshot() Snapshot {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return Snapshot{Kind: "mounts", Available: s.available, Reason: s.reason, Mounts: s.mounts}
+	return Snapshot{Kind: "mounts", Available: s.available, Reason: s.reason, Schemes: availableSchemes(s.mountables), Mounts: s.mounts}
 }
 
 // Connect blocks until gvfs finishes, including credential round trips the UI

@@ -3,7 +3,7 @@ module github.com/AvengeMedia/dankfiles/core
 go 1.26.4
 
 require (
-	github.com/AvengeMedia/dankgo v1.6.3-0.20260923232838-611ba62fa30d
+	github.com/AvengeMedia/dankgo v1.6.3-0.20260930202437-c5a872ad72bd
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/spf13/cobra v1.10.2

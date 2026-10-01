@@ -16,7 +16,7 @@ func NewServer(deps Deps) *Server {
 	cfg := dankipc.Config{
 		AppName:                "dfiles",
 		APIVersion:             APIVersion,
-		Capabilities:           []string{"subscribe", "ui", "system", "files", "files.op", "devices", "network", "clipboard", "search", "bookmarks"},
+		Capabilities:           []string{"subscribe", "ui", "system", "files", "files.op", "devices", "network", "clipboard", "search", "bookmarks", "trash"},
 		DefaultSubscribeTopics: []string{"ui"},
 		Bus:                    deps.Bus,
 		OnSubscribe: func(topics []string, _ *Subscriber) {
@@ -43,9 +43,7 @@ func publishPending(deps Deps, topics []string) {
 		if t != "ui" {
 			continue
 		}
-		if payload := deps.Pending.Take(); payload != nil {
-			deps.Bus.Publish("ui", payload)
-		}
+		deps.Pending.Flush(deps.Bus)
 		return
 	}
 }

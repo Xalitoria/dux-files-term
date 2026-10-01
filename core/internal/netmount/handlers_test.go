@@ -43,6 +43,7 @@ func TestHandleMountsListsWhatGvfsHolds(t *testing.T) {
 
 	result := out["result"].(map[string]any)
 	assert.Equal(t, true, result["available"])
+	assert.Equal(t, []any{"sftp", "smb", "ftp", "dav"}, result["schemes"])
 	mounts := result["mounts"].([]any)
 	require.Len(t, mounts, 1)
 	assert.Equal(t, "ftp://example/", mounts[0].(map[string]any)["uri"])
@@ -55,6 +56,7 @@ func TestHandleMountsExplainsAMissingGvfs(t *testing.T) {
 	result := out["result"].(map[string]any)
 	assert.Equal(t, false, result["available"])
 	assert.Equal(t, "gvfs is not running", result["reason"])
+	assert.Equal(t, []any{}, result["schemes"])
 }
 
 func TestHandleConnectNeedsAUri(t *testing.T) {

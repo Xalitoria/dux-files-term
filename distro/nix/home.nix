@@ -31,6 +31,8 @@ in
       cfg.quickshell.package
     ];
 
+    dbus.packages = [ cfg.package ];
+
     systemd.user.services.dfiles = lib.mkIf cfg.systemd.enable {
       Unit = {
         Description = "DankFiles";
@@ -39,7 +41,7 @@ in
       };
 
       Service = {
-        ExecStart = lib.getExe cfg.package + " run --session --hidden";
+        ExecStart = lib.getExe cfg.package + " run --session --hidden --keep-running";
         Restart = "on-failure";
         RestartSec = "2";
         Slice = "app.slice";

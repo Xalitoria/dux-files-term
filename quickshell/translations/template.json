@@ -35,6 +35,13 @@
     "comment": ""
   },
   {
+    "term": "%1 has the role now; Files takes it when %1 quits.",
+    "translation": "",
+    "context": "file manager registration setting description while another file manager holds the name",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 is encrypted. Enter its passphrase to unlock it.",
     "translation": "",
     "context": "unlock dialog explanation",
@@ -178,6 +185,13 @@
     "term": "Always use this application",
     "translation": "",
     "context": "open with dialog option that sets the default",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Another file manager has the role now; Files takes it when that one quits.",
+    "translation": "",
+    "context": "file manager registration setting description while an unknown file manager holds the name",
     "reference": "",
     "comment": ""
   },
@@ -451,6 +465,13 @@
     "term": "Connected",
     "translation": "",
     "context": "about page daemon status value",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Connected, but the share has no local folder. The gvfs FUSE service may not be running.",
+    "translation": "",
+    "context": "connect dialog error when a mounted share has no fuse path",
     "reference": "",
     "comment": ""
   },
@@ -1351,6 +1372,20 @@
     "comment": ""
   },
   {
+    "term": "Other apps open folders and reveal files here.",
+    "translation": "",
+    "context": "file manager registration setting description while registered",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Other apps open folders with whichever file manager they find.",
+    "translation": "",
+    "context": "file manager registration setting description while not registered",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Outline the control that has keyboard focus.",
     "translation": "",
     "context": "focus ring toggle description",
@@ -1529,6 +1564,13 @@
     "term": "Reduce motion",
     "translation": "",
     "context": "reduce motion toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Register as the session file manager",
+    "translation": "",
+    "context": "setting label for owning org.freedesktop.FileManager1",
     "reference": "",
     "comment": ""
   },
@@ -1911,6 +1953,13 @@
     "comment": ""
   },
   {
+    "term": "The session bus refused the registration.",
+    "translation": "",
+    "context": "file manager registration setting description when requesting the name failed",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "The system application chooser opens instead",
     "translation": "",
     "context": "explanation when open with is handed to the desktop portal",
@@ -1942,6 +1991,13 @@
     "term": "This folder is empty",
     "translation": "",
     "context": "empty directory placeholder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This instance cannot reach the session bus.",
+    "translation": "",
+    "context": "file manager registration setting description when the daemon has no session bus connection",
     "reference": "",
     "comment": ""
   },

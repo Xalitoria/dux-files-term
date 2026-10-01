@@ -69,6 +69,8 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 		HandleUI(ctx, w, req, deps)
 	case strings.HasPrefix(req.Method, "system."):
 		HandleSystem(ctx, w, req, deps)
+	case strings.HasPrefix(req.Method, "trash."):
+		HandleTrash(ctx, w, req)
 	case strings.HasPrefix(req.Method, "files."):
 		if deps.Files == nil {
 			RespondError(w, req.ID, "file service unavailable")

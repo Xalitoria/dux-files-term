@@ -18,6 +18,11 @@ var mountables = []Mountable{
 	{Type: "mtp", Scheme: "mtp"},
 }
 
+func TestAvailableSchemesKeepsOnlyInstalledBackends(t *testing.T) {
+	assert.Equal(t, []string{"sftp", "smb", "ftp", "dav"}, availableSchemes(mountables))
+	assert.Equal(t, []string{}, availableSchemes(nil))
+}
+
 func TestParseURIBuildsTheBackendSpec(t *testing.T) {
 	spec, err := ParseURI("sftp://ana@files.example/srv/media", mountables)
 	require.NoError(t, err)
@@ -136,4 +141,37 @@ func TestKindSortsBackendsIntoSections(t *testing.T) {
 func TestThemedIconFallsBackWhenTheIconIsNotThemed(t *testing.T) {
 	assert.Equal(t, "folder-remote", themedIcon(""))
 	assert.Equal(t, "drive-removable-media", themedIcon(". GThemedIcon drive-removable-media drive"))
+}
+
+func TestLocationInAMountFollowsTheRequestedPath(t *testing.T) {
+	sftp := Mount{URI: "sftp://host/", Path: "/run/user/1000/gvfs/sftp:host=host"}
+	share := Mount{URI: "smb://nas/public", Path: "/run/user/1000/gvfs/smb-share:server=nas,share=public"}
+
+	tests := []struct {
+		name  string
+		mount Mount
+		uri   string
+		want  string
+	}{
+		{"host root", sftp, "sftp://host/", sftp.Path},
+		{"deep path", sftp, "sftp://host/srv/my media", sftp.Path + "/srv/my media"},
+		{"share root", share, "smb://nas/public", share.Path},
+		{"inside a share", share, "smb://nas/public/reports/2026", share.Path + "/reports/2026"},
+		{"sibling share with a shared prefix", share, "smb://nas/publicity", share.Path},
+		{"unrelated uri", share, "ftp://elsewhere/", share.Path},
+		{"dot segments stay inside the mount", sftp, "sftp://host/../../../../etc", sftp.Path + "/etc"},
+		{"no local path", Mount{URI: "sftp://host/"}, "sftp://host/srv", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, LocationIn(tt.mount, tt.uri))
+		})
+	}
+}
+
+func TestLocationInFromParsedURIs(t *testing.T) {
+	spec, err := ParseURI("smb://WORK;ana@server/public/reports", mountables)
+	require.NoError(t, err)
+	mount := Mount{URI: "smb://ana@server/public", Path: "/gvfs/smb-share:server=server,share=public,user=ana"}
+	assert.Equal(t, mount.Path+"/reports", LocationIn(mount, URIOf(spec, mountables)))
 }

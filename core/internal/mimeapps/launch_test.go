@@ -205,3 +205,21 @@ func TestFileURIRoundTrip(t *testing.T) {
 	assert.Equal(t, "/tmp/a", fileURIPath("file://localhost/tmp/a"))
 	assert.Empty(t, fileURIPath("https://example.invalid"))
 }
+
+func TestLaunchesLeaveASystemdUnitsCgroup(t *testing.T) {
+	argv := []string{"gedit", "/tmp/a b"}
+	found := func(name string) (string, error) {
+		if name == "missing-app" {
+			return "", os.ErrNotExist
+		}
+		return "/usr/bin/" + name, nil
+	}
+	missing := func(string) (string, error) { return "", os.ErrNotExist }
+	unit := func(key string) string { return map[string]string{"INVOCATION_ID": "0123"}[key] }
+	terminal := func(string) string { return "" }
+
+	assert.Equal(t, []string{"/usr/bin/systemd-run", "--user", "--scope", "--quiet", "--collect", "--slice=app.slice", "--", "gedit", "/tmp/a b"}, inOwnScope(argv, unit, found))
+	assert.Equal(t, argv, inOwnScope(argv, terminal, found), "a daemon started from a terminal already lives in that scope")
+	assert.Equal(t, argv, inOwnScope(argv, unit, missing), "without systemd-run the launch goes ahead unwrapped")
+	assert.Equal(t, []string{"missing-app"}, inOwnScope([]string{"missing-app"}, unit, found), "a missing binary still fails at exec instead of inside systemd-run")
+}
