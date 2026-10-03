@@ -30,7 +30,6 @@ FocusScope {
     readonly property var body: resultsActive ? results.body : browser.body
     readonly property var currentEntry: resultsActive ? results.body.cursorEntry() : browser.currentEntry
     readonly property var selectedEntries: resultsActive ? results.body.selectedEntries() : browser.selectedEntries
-    readonly property bool isHome: path === Paths.strip(Paths.home)
     readonly property bool filtering: nameFilter !== "" && !resultsActive
 
     signal activateRequested(var entry)
@@ -110,6 +109,18 @@ FocusScope {
         return browser.marker();
     }
 
+    function openSelection() {
+        const entry = selectedEntries[0] ?? currentEntry;
+        if (entry)
+            activateRequested(entry);
+    }
+
+    function cursorRect() {
+        const rect = body.cursorRect();
+        const point = body.mapToItem(pane, rect.x, rect.y);
+        return Qt.rect(point.x, point.y, rect.width, rect.height);
+    }
+
     function startSearch(query, filterState) {
         if (path === "")
             return;
@@ -147,6 +158,35 @@ FocusScope {
         const widths = Object.assign({}, SessionData.columnWidths);
         widths[id] = width;
         SessionData.columnWidths = widths;
+    }
+
+    Keys.onPressed: event => handleKey(event)
+
+    function handleKey(event) {
+        switch (event.key) {
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+            if (event.modifiers !== Qt.NoModifier && event.modifiers !== Qt.KeypadModifier)
+                return;
+            openSelection();
+            break;
+        case Qt.Key_Up:
+            if ((event.modifiers & Qt.AltModifier) === 0)
+                return;
+            up();
+            break;
+        default:
+            return;
+        }
+        event.accepted = true;
+    }
+
+    function handleStrayKey(event) {
+        handleKey(event);
+        if (!event.accepted)
+            body.handleKey(event);
+        if (event.accepted)
+            focusBody();
     }
 
     Connections {
@@ -188,12 +228,15 @@ FocusScope {
         cutSet: pane.cutSet
         nameFilter: pane.nameFilter
         singleClickActivates: SettingsData.clickToOpen === "single"
+        typeAheadEnabled: !SettingsData.vimKeys
+        countFolders: SettingsData.folderCounts
+        dirsFirst: SettingsData.foldersFirst
         thumbnailsEnabled: SettingsData.thumbnails
         thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
         networkThumbnails: SettingsData.networkThumbnails
         pathSuggestions: SessionData.recentDirs
-        header: pane.filtering ? filterHeader : (pane.isHome ? quickAccess : null)
-        emptyText: pane.filtering ? I18n.tr("No results", "search results header when nothing matched") : (pane.isHome ? "" : I18n.tr("This folder is empty", "empty directory placeholder"))
+        header: pane.filtering ? filterHeader : null
+        emptyText: pane.filtering ? I18n.tr("No results", "search results header when nothing matched") : I18n.tr("This folder is empty", "empty directory placeholder")
         paneColor: Theme.foregroundColor(Theme.cardSurface, true)
         paneRadius: FilesMetrics.paneRadius
         paneMargin: FilesMetrics.paneBodyMargin
@@ -225,6 +268,8 @@ FocusScope {
         columnWidths: SessionData.columnWidths
         cutSet: pane.cutSet
         singleClickActivates: SettingsData.clickToOpen === "single"
+        typeAheadEnabled: !SettingsData.vimKeys
+        countFolders: SettingsData.folderCounts
         border.width: pane.showActiveOutline && pane.active ? Theme.outlineWidthFocused : 0
         border.color: Theme.primary
         onActivateRequested: entry => pane.activateRequested(entry)
@@ -239,18 +284,6 @@ FocusScope {
             pane.focusBody();
         }
         onFiltersChanged: pane.startSearch(searchModel.query, results.chips.filterState)
-    }
-
-    Component {
-        id: quickAccess
-
-        QuickAccessBand {
-            width: browser.body.width
-            onOpened: target => {
-                pane.focusRequested();
-                pane.navigate(target);
-            }
-        }
     }
 
     Component {

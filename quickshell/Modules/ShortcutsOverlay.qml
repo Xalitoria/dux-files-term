@@ -7,12 +7,20 @@ import qs.DankCommon.Widgets
 OverlayDialog {
     id: overlay
 
+    readonly property bool vimKeys: SettingsData.vimKeys
+
     title: I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
     maximumWidth: Theme.dialogMaxWidth
 
+    Shortcut {
+        enabled: overlay.visible
+        sequences: ["F1", "?"]
+        onActivated: overlay.close()
+    }
+
     DankFlickable {
         width: parent.width
-        height: Math.min(contentHeight, Theme.listItemHeight * 8)
+        height: Math.min(contentHeight, overlay.height / 2)
         contentHeight: groups.implicitHeight
         clip: true
 
@@ -41,7 +49,7 @@ OverlayDialog {
                     }
 
                     Repeater {
-                        model: Shortcuts.inGroup(group.modelData.id)
+                        model: Shortcuts.inGroup(group.modelData.id, overlay.vimKeys)
 
                         Item {
                             id: entry
@@ -72,7 +80,7 @@ OverlayDialog {
                                 spacing: Theme.spacingXXS
 
                                 Repeater {
-                                    model: entry.modelData.keys
+                                    model: Shortcuts.keysFor(entry.modelData, overlay.vimKeys)
 
                                     DankKeycap {
                                         required property string modelData
@@ -86,6 +94,14 @@ OverlayDialog {
                 }
             }
         }
+    }
+
+    DankToggle {
+        width: parent.width
+        text: I18n.tr("Vim keys", "toggle label for vim style navigation")
+        description: I18n.tr("h j k l move, / searches and letters run commands instead of jumping to a name.", "vim keys toggle description")
+        checked: SettingsData.vimKeys
+        onToggled: checked => SettingsData.vimKeys = checked
     }
 
     actions: [

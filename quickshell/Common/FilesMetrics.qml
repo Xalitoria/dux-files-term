@@ -19,25 +19,30 @@ Singleton {
     readonly property real topbarSpacing: FileBrowserMetrics.controlSpacing
     readonly property real topbarGroupSpacing: Theme.spacingXS
 
-    readonly property real contentMargin: FileBrowserMetrics.contentMargin
+    readonly property real contentMarginH: Theme.spacingXL
+    readonly property real contentMarginV: FileBrowserMetrics.contentMargin
     readonly property real contentSpacing: FileBrowserMetrics.contentSpacing
     readonly property real paneRadius: FileBrowserMetrics.paneRadius
     readonly property real paneBodyMargin: FileBrowserMetrics.paneMargin
+    readonly property real paneBodyMarginH: FileBrowserMetrics.paneMarginHorizontal
     readonly property real splitterWidth: Theme.spacingM
     readonly property real splitterHandleHeight: Theme.iconSizeLarge
     readonly property real minimumPaneFraction: 0.2
 
     readonly property real tabHeight: Theme.buttonHeightS
+    readonly property int tabShortcutCount: 9
+    readonly property int closedTabHistory: 10
+    readonly property int defaultGridZoom: FileBrowserMetrics.defaultGridZoom
+    readonly property int defaultListZoom: FileBrowserMetrics.defaultListZoom
+
+    function defaultZoom(viewMode) {
+        return FileBrowserMetrics.defaultZoom(viewMode);
+    }
     readonly property real tabMinWidth: Theme.tabMinWidth
     readonly property real tabMaxWidth: Theme.sidebarWidth
     readonly property real tabSpacing: Theme.spacingXXS
     readonly property int tabHoverDelay: 700
 
-    readonly property real gridTilePadding: FileBrowserMetrics.gridTilePadding
-    readonly property real gridTileRadius: FileBrowserMetrics.gridTileRadius
-    readonly property real gridGap: FileBrowserMetrics.gridGap
-    readonly property real quickAccessTileSize: FileBrowserMetrics.quickTileSize
-    readonly property real quickAccessIconSize: FileBrowserMetrics.quickTileIconSize
     readonly property real dragGhostSize: FileBrowserMetrics.gridIconSizes[0]
 
     readonly property real popoverWidth: Theme.smallBreakpoint * 0.75

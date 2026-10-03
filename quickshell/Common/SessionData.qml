@@ -23,8 +23,8 @@ Singleton {
     property int currentTab: 0
     property var tabs: []
     property var recentDirs: []
-    property int gridZoom: 1
-    property int listZoom: 0
+    property int gridZoom: FilesMetrics.defaultGridZoom
+    property int listZoom: FilesMetrics.defaultListZoom
     property var listColumns: ["size", "modified", "type"]
     property var columnWidths: ({})
 

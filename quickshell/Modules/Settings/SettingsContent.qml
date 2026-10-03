@@ -35,8 +35,22 @@ Item {
         {
             label: I18n.tr("Grid view", "view mode showing items as tiles"),
             value: "grid"
+        },
+        {
+            label: I18n.tr("Column view", "view mode showing folders side by side"),
+            value: "columns"
         }
     ]
+
+    readonly property var gridSizeOptions: FileBrowserMetrics.gridIconSizes.map((size, index) => ({
+                label: I18n.tr("%1 px", "icon size option").arg(size),
+                value: index
+            }))
+
+    readonly property var listSizeOptions: FileBrowserMetrics.listIconSizes.map((size, index) => ({
+                label: I18n.tr("%1 px", "icon size option").arg(size),
+                value: index
+            }))
 
     readonly property var sortOptions: [
         {
@@ -337,6 +351,34 @@ Item {
                     checked: SettingsData.showHidden
                     onToggled: checked => SettingsData.showHidden = checked
                 }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Folders before files", "folders first toggle label")
+                    checked: SettingsData.foldersFirst
+                    onToggled: checked => SettingsData.foldersFirst = checked
+                }
+
+                OptionDropdownRow {
+                    text: I18n.tr("Grid icon size", "setting label for the grid view icon size")
+                    description: I18n.tr("Ctrl+Wheel or Ctrl and plus or minus resize the current window.", "icon size setting description")
+                    optionList: root.gridSizeOptions
+                    current: SessionData.gridZoom
+                    onPicked: value => SessionData.gridZoom = value
+                }
+
+                OptionDropdownRow {
+                    text: I18n.tr("List icon size", "setting label for the list view icon size")
+                    optionList: root.listSizeOptions
+                    current: SessionData.listZoom
+                    onPicked: value => SessionData.listZoom = value
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Count items in folders", "folder counts toggle label")
+                    description: I18n.tr("The size column shows how many entries a folder holds, one request per folder in view.", "folder counts toggle description")
+                    checked: SettingsData.folderCounts
+                    onToggled: checked => SettingsData.folderCounts = checked
+                }
             }
 
             SettingsSectionLabel {
@@ -359,6 +401,25 @@ Item {
                     text: I18n.tr("Confirm before moving to the trash", "setting label")
                     checked: SettingsData.confirmTrash
                     onToggled: checked => SettingsData.confirmTrash = checked
+                }
+            }
+
+            SettingsSectionLabel {
+                text: I18n.tr("Keyboard", "general settings section label")
+            }
+
+            SettingsGroup {
+                SettingsToggleRow {
+                    text: I18n.tr("Vim keys", "toggle label for vim style navigation")
+                    description: I18n.tr("h j k l move, / searches and letters run commands instead of jumping to a name.", "vim keys toggle description")
+                    checked: SettingsData.vimKeys
+                    onToggled: checked => SettingsData.vimKeys = checked
+                }
+
+                SettingsRow {
+                    title: I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
+                    subtitle: I18n.tr("Press ? or F1 in the main window for the full list.", "keyboard shortcuts settings row description")
+                    iconName: "keyboard"
                 }
             }
         }

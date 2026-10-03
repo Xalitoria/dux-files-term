@@ -18,6 +18,8 @@ Rectangle {
     property var columnWidths: ({})
     property var cutSet: ({})
     property bool singleClickActivates: false
+    property bool typeAheadEnabled: true
+    property bool countFolders: true
 
     readonly property alias selection: selectionModel
     readonly property alias body: viewBody
@@ -62,7 +64,9 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: FilesMetrics.paneBodyMargin
+        anchors.topMargin: FilesMetrics.paneBodyMargin
+        anchors.leftMargin: FilesMetrics.paneBodyMarginH
+        anchors.rightMargin: FilesMetrics.paneBodyMarginH
         height: Math.max(FileBrowserMetrics.pathPillHeight, titleColumn.implicitHeight)
 
         Column {
@@ -113,8 +117,8 @@ Rectangle {
         anchors.topMargin: Theme.spacingS
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: FilesMetrics.paneBodyMargin
-        anchors.rightMargin: FilesMetrics.paneBodyMargin
+        anchors.leftMargin: FilesMetrics.paneBodyMarginH
+        anchors.rightMargin: FilesMetrics.paneBodyMarginH
         onChanged: results.filtersChanged()
     }
 
@@ -126,11 +130,13 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: FilesMetrics.paneBodyMargin
+        anchors.bottomMargin: FilesMetrics.paneBodyMargin
+        anchors.leftMargin: FilesMetrics.paneBodyMarginH
+        anchors.rightMargin: FilesMetrics.paneBodyMarginH
         focus: true
         directory: results.model
         selection: selectionModel
-        viewMode: results.viewMode
+        viewMode: results.viewMode === "columns" ? "list" : results.viewMode
         gridZoom: results.gridZoom
         listZoom: results.listZoom
         listColumns: ["location", "size", "modified"]
@@ -144,6 +150,8 @@ Rectangle {
         surfaceColor: results.color
         cutSet: results.cutSet
         singleClickActivates: results.singleClickActivates
+        typeAheadEnabled: results.typeAheadEnabled
+        countFolders: results.countFolders
         nameHighlight: results.model.query
         onActivateRequested: entry => results.activateRequested(entry)
         onItemMenuRequested: (index, pointX, pointY, modifiers) => {

@@ -7,16 +7,30 @@ import Quickshell
 Singleton {
     id: root
 
-    // scope decides who binds the keys: "window", "path" and "selection" become
-    // Shortcut objects on the window, "view" keys are handled by the focused
-    // file view so they never fire while a text field has focus.
+    // "window", "path", "selection" and "tabs" scopes become Shortcut objects; "view" and
+    // "sidebar" keys are handled by the focused item so they never fire inside a text field.
     readonly property var entries: [
         {
             "id": "open",
             "keys": ["Return", "Enter"],
             "group": "navigation",
+            "scope": "view",
+            "label": I18n.tr("Open", "context menu entry opening a file"),
+            "vim": ["l"]
+        },
+        {
+            "id": "openInNewTab",
+            "keys": ["Shift+Return"],
+            "group": "navigation",
             "scope": "selection",
-            "label": I18n.tr("Open", "context menu entry opening a file")
+            "label": I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
+        },
+        {
+            "id": "openInPane",
+            "keys": ["Ctrl+Shift+Return"],
+            "group": "navigation",
+            "scope": "selection",
+            "label": I18n.tr("Open in the other pane", "context menu entry opening a folder beside the current one")
         },
         {
             "id": "openContainingFolder",
@@ -44,42 +58,63 @@ Singleton {
             "keys": ["Up", "Down", "Left", "Right"],
             "group": "navigation",
             "scope": "view",
-            "label": I18n.tr("Move through the folder", "keyboard shortcut")
+            "label": I18n.tr("Move through the folder", "keyboard shortcut"),
+            "vim": ["j", "k"]
         },
         {
             "id": "cursorEdge",
             "keys": ["Home", "End", "PgUp", "PgDown"],
             "group": "navigation",
             "scope": "view",
-            "label": I18n.tr("Jump to the start, the end or the next screen", "keyboard shortcut")
+            "label": I18n.tr("Jump to the start, the end or the next screen", "keyboard shortcut"),
+            "vim": ["gg", "G"]
         },
         {
             "id": "typeAhead",
             "keys": ["A-Z"],
             "group": "navigation",
             "scope": "view",
-            "label": I18n.tr("Jump to the first name starting with what you type", "keyboard shortcut")
+            "label": I18n.tr("Jump to the first name starting with what you type", "keyboard shortcut"),
+            "plainOnly": true
         },
         {
             "id": "up",
             "keys": ["Alt+Up", "Backspace"],
             "group": "navigation",
             "scope": "view",
-            "label": I18n.tr("Go to the parent folder", "keyboard shortcut")
+            "label": I18n.tr("Go to the parent folder", "keyboard shortcut"),
+            "vim": ["h"]
+        },
+        {
+            "id": "home",
+            "keys": ["Alt+Home"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Go to the home folder", "keyboard shortcut"),
+            "vim": ["gh"]
         },
         {
             "id": "back",
             "keys": ["Alt+Left"],
             "group": "navigation",
             "scope": "window",
-            "label": I18n.tr("Back", "tooltip on the button going to the previous location")
+            "label": I18n.tr("Back", "tooltip on the button going to the previous location"),
+            "vim": ["H"]
         },
         {
             "id": "forward",
             "keys": ["Alt+Right"],
             "group": "navigation",
             "scope": "window",
-            "label": I18n.tr("Forward", "tooltip on the button going to the next location")
+            "label": I18n.tr("Forward", "tooltip on the button going to the next location"),
+            "vim": ["L"]
+        },
+        {
+            "id": "bookmark",
+            "keys": ["Ctrl+D"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
         },
         {
             "id": "editPath",
@@ -90,7 +125,7 @@ Singleton {
         },
         {
             "id": "search",
-            "keys": ["Ctrl+F"],
+            "keys": ["Ctrl+F", "/"],
             "group": "navigation",
             "scope": "path",
             "label": I18n.tr("Search in Files", "placeholder in the search field")
@@ -100,7 +135,8 @@ Singleton {
             "keys": ["Ctrl+T"],
             "group": "navigation",
             "scope": "window",
-            "label": I18n.tr("New tab", "context menu entry opening a folder in a new tab")
+            "label": I18n.tr("New tab", "context menu entry opening a folder in a new tab"),
+            "vim": ["t"]
         },
         {
             "id": "closeTab",
@@ -110,18 +146,41 @@ Singleton {
             "label": I18n.tr("Close tab", "tooltip on the button closing a tab")
         },
         {
-            "id": "nextTab",
-            "keys": ["Ctrl+Tab"],
+            "id": "reopenTab",
+            "keys": ["Ctrl+Shift+T"],
             "group": "navigation",
             "scope": "window",
-            "label": I18n.tr("Next tab", "keyboard shortcut")
+            "label": I18n.tr("Reopen the closed tab", "keyboard shortcut")
+        },
+        {
+            "id": "nextTab",
+            "keys": ["Ctrl+Tab", "Ctrl+PgDown"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Next tab", "keyboard shortcut"),
+            "vim": ["gt"]
         },
         {
             "id": "previousTab",
-            "keys": ["Ctrl+Shift+Tab"],
+            "keys": ["Ctrl+Shift+Tab", "Ctrl+PgUp"],
             "group": "navigation",
             "scope": "window",
-            "label": I18n.tr("Previous tab", "keyboard shortcut")
+            "label": I18n.tr("Previous tab", "keyboard shortcut"),
+            "vim": ["gT"]
+        },
+        {
+            "id": "tabAt",
+            "keys": ["Alt+1-9"],
+            "group": "navigation",
+            "scope": "tabs",
+            "label": I18n.tr("Go to that tab", "keyboard shortcut")
+        },
+        {
+            "id": "splitView",
+            "keys": ["F3"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Split view", "tooltip on the button showing a second pane")
         },
         {
             "id": "swapPane",
@@ -129,6 +188,21 @@ Singleton {
             "group": "navigation",
             "scope": "window",
             "label": I18n.tr("Switch pane", "keyboard shortcut")
+        },
+        {
+            "id": "toggleSidebar",
+            "keys": ["F9"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Toggle sidebar", "tooltip on the button showing or hiding the sidebar")
+        },
+        {
+            "id": "focusSidebar",
+            "keys": ["Ctrl+B"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Focus the sidebar", "keyboard shortcut"),
+            "vim": ["s"]
         },
         {
             "id": "listView",
@@ -145,6 +219,13 @@ Singleton {
             "label": I18n.tr("Grid view", "view mode showing items as tiles")
         },
         {
+            "id": "columnsView",
+            "keys": ["Ctrl+3"],
+            "group": "view",
+            "scope": "window",
+            "label": I18n.tr("Column view", "view mode showing folders side by side")
+        },
+        {
             "id": "zoomIn",
             "keys": ["Ctrl++", "Ctrl+="],
             "group": "view",
@@ -159,6 +240,13 @@ Singleton {
             "label": I18n.tr("Smaller icons", "keyboard shortcut")
         },
         {
+            "id": "zoomReset",
+            "keys": ["Ctrl+0"],
+            "group": "view",
+            "scope": "window",
+            "label": I18n.tr("Default icon size", "keyboard shortcut")
+        },
+        {
             "id": "zoomWheel",
             "keys": ["Ctrl+Wheel"],
             "group": "view",
@@ -170,18 +258,19 @@ Singleton {
             "keys": ["Ctrl+H"],
             "group": "view",
             "scope": "window",
-            "label": I18n.tr("Show hidden files", "menu entry listing dot files")
+            "label": I18n.tr("Show hidden files", "menu entry listing dot files"),
+            "vim": ["."]
         },
         {
             "id": "reload",
-            "keys": ["F5"],
+            "keys": ["F5", "Ctrl+R"],
             "group": "view",
             "scope": "window",
             "label": I18n.tr("Reload", "menu entry re-reading the current folder")
         },
         {
             "id": "shortcuts",
-            "keys": ["F1"],
+            "keys": ["F1", "?"],
             "group": "view",
             "scope": "path",
             "label": I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
@@ -212,14 +301,16 @@ Singleton {
             "keys": ["Space"],
             "group": "selection",
             "scope": "view",
-            "label": I18n.tr("Add or remove the item under the cursor", "keyboard shortcut")
+            "label": I18n.tr("Add or remove the item under the cursor", "keyboard shortcut"),
+            "vim": ["v"]
         },
         {
             "id": "extendSelection",
             "keys": ["Shift+Click", "Shift+Arrows"],
             "group": "selection",
             "scope": "view",
-            "label": I18n.tr("Select a range", "keyboard shortcut")
+            "label": I18n.tr("Select a range", "keyboard shortcut"),
+            "vim": ["J", "K"]
         },
         {
             "id": "toggleWithPointer",
@@ -240,21 +331,24 @@ Singleton {
             "keys": ["Ctrl+C"],
             "group": "operations",
             "scope": "selection",
-            "label": I18n.tr("Copy", "context menu entry copying the selection")
+            "label": I18n.tr("Copy", "context menu entry copying the selection"),
+            "vim": ["y"]
         },
         {
             "id": "cut",
             "keys": ["Ctrl+X"],
             "group": "operations",
             "scope": "selection",
-            "label": I18n.tr("Cut", "context menu entry marking the selection for a move")
+            "label": I18n.tr("Cut", "context menu entry marking the selection for a move"),
+            "vim": ["x"]
         },
         {
             "id": "paste",
             "keys": ["Ctrl+V"],
             "group": "operations",
             "scope": "window",
-            "label": I18n.tr("Paste", "context menu entry pasting the clipboard here")
+            "label": I18n.tr("Paste", "context menu entry pasting the clipboard here"),
+            "vim": ["p"]
         },
         {
             "id": "pasteLink",
@@ -268,28 +362,32 @@ Singleton {
             "keys": ["F2"],
             "group": "operations",
             "scope": "selection",
-            "label": I18n.tr("Rename", "rename dialog header")
+            "label": I18n.tr("Rename", "rename dialog header"),
+            "vim": ["r"]
         },
         {
             "id": "trash",
             "keys": ["Del"],
             "group": "operations",
             "scope": "selection",
-            "label": I18n.tr("Move to Trash", "context menu entry trashing the selection")
+            "label": I18n.tr("Move to Trash", "context menu entry trashing the selection"),
+            "vim": ["d"]
         },
         {
             "id": "deletePermanently",
             "keys": ["Shift+Del"],
             "group": "operations",
             "scope": "selection",
-            "label": I18n.tr("Delete permanently", "context menu entry deleting the selection for good")
+            "label": I18n.tr("Delete permanently", "context menu entry deleting the selection for good"),
+            "vim": ["D"]
         },
         {
             "id": "undo",
             "keys": ["Ctrl+Z"],
             "group": "operations",
             "scope": "window",
-            "label": I18n.tr("Undo", "toast action reversing the last operation")
+            "label": I18n.tr("Undo", "toast action reversing the last operation"),
+            "vim": ["u"]
         },
         {
             "id": "newFolder",
@@ -297,6 +395,13 @@ Singleton {
             "group": "operations",
             "scope": "window",
             "label": I18n.tr("New folder", "new folder dialog header")
+        },
+        {
+            "id": "copyPath",
+            "keys": ["Ctrl+Shift+C"],
+            "group": "operations",
+            "scope": "window",
+            "label": I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
         },
         {
             "id": "properties",
@@ -311,6 +416,49 @@ Singleton {
             "group": "operations",
             "scope": "window",
             "label": I18n.tr("Open the context menu", "keyboard shortcut")
+        },
+        {
+            "id": "sidebarMove",
+            "keys": ["Up", "Down"],
+            "group": "sidebar",
+            "scope": "sidebar",
+            "label": I18n.tr("Move through the sidebar", "keyboard shortcut"),
+            "vim": ["j", "k"]
+        },
+        {
+            "id": "sidebarOpen",
+            "keys": ["Return", "Space"],
+            "group": "sidebar",
+            "scope": "sidebar",
+            "label": I18n.tr("Open the place", "keyboard shortcut")
+        },
+        {
+            "id": "sidebarAction",
+            "keys": ["Del"],
+            "group": "sidebar",
+            "scope": "sidebar",
+            "label": I18n.tr("Remove the bookmark or eject the drive", "keyboard shortcut")
+        },
+        {
+            "id": "sidebarRename",
+            "keys": ["F2"],
+            "group": "sidebar",
+            "scope": "sidebar",
+            "label": I18n.tr("Rename the bookmark", "keyboard shortcut")
+        },
+        {
+            "id": "sidebarMenu",
+            "keys": ["Menu", "Shift+F10"],
+            "group": "sidebar",
+            "scope": "sidebar",
+            "label": I18n.tr("Open the bookmark menu", "keyboard shortcut")
+        },
+        {
+            "id": "sidebarLeave",
+            "keys": ["Esc"],
+            "group": "sidebar",
+            "scope": "sidebar",
+            "label": I18n.tr("Back to the files", "keyboard shortcut")
         }
     ]
 
@@ -330,6 +478,10 @@ Singleton {
         {
             "id": "operations",
             "label": I18n.tr("Files", "keyboard shortcut group")
+        },
+        {
+            "id": "sidebar",
+            "label": I18n.tr("Sidebar", "keyboard shortcut group")
         }
     ]
 
@@ -337,7 +489,11 @@ Singleton {
         return entries.filter(entry => entry.scope === scope);
     }
 
-    function inGroup(group) {
-        return entries.filter(entry => entry.group === group);
+    function inGroup(group, vimKeys) {
+        return entries.filter(entry => entry.group === group && !(vimKeys && entry.plainOnly === true));
+    }
+
+    function keysFor(entry, vimKeys) {
+        return vimKeys && entry.vim ? entry.keys.concat(entry.vim) : entry.keys;
     }
 }

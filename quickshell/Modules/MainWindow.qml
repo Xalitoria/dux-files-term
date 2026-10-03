@@ -28,6 +28,9 @@ FloatingWindow {
     property string pendingTrust: ""
     property bool applyingTab: false
     property int propertiesRequest: 0
+    property var closedTabs: []
+    property string vimPrefix: ""
+    property bool sidebarFocusPending: false
 
     readonly property string opScope: "main"
     readonly property var cutSet: {
@@ -46,7 +49,9 @@ FloatingWindow {
     readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
     readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
     readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || newDocumentDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible
-    readonly property bool shortcutsEnabled: !dialogOpen && !primaryPane.editingPath && !(secondPane?.editingPath ?? false) && !primaryPane.renaming && !(secondPane?.renaming ?? false)
+    readonly property bool textEditing: surface.focusItem instanceof TextInput || surface.focusItem instanceof TextEdit
+    readonly property bool sidebarFocused: isInside(surface.focusItem, dockedSidebar) || isInside(surface.focusItem, overlaySidebar)
+    readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
 
     title: I18n.tr("Files", "main window title")
     implicitWidth: SessionData.windowWidth
@@ -77,6 +82,7 @@ FloatingWindow {
         restoreSession();
         maximized = SessionData.maximized;
         offerGtkImport();
+        primaryPane.focusBody();
     }
 
     function openSettings() {
@@ -109,6 +115,45 @@ FloatingWindow {
             return;
         }
         SettingsData.sidebarCollapsed = !SettingsData.sidebarCollapsed;
+    }
+
+    function isInside(item, ancestor) {
+        for (let current = item; current; current = current.parent) {
+            if (current === ancestor)
+                return true;
+        }
+        return false;
+    }
+
+    function focusSidebar() {
+        if (compact)
+            sidebarOverlayOpen = true;
+        else
+            SettingsData.sidebarCollapsed = false;
+        const sidebar = compact ? overlaySidebar : dockedSidebar;
+        const shown = compact ? sidebarOverlay.visible : dockedSidebar.visible;
+        if (!shown) {
+            sidebarFocusPending = true;
+            return;
+        }
+        sidebar.focusCurrent();
+    }
+
+    function sidebarShown(sidebar) {
+        if (!sidebarFocusPending)
+            return;
+        sidebarFocusPending = false;
+        sidebar.focusCurrent();
+    }
+
+    function leaveSidebar() {
+        sidebarOverlayOpen = false;
+        activePane.focusBody();
+    }
+
+    function renameBookmark(path) {
+        renameBookmarkDialog.path = path;
+        renameBookmarkDialog.ask(BookmarksService.labelFor(path));
     }
 
     function setSplitRatio(value) {
@@ -188,6 +233,13 @@ FloatingWindow {
     function closeTab(index) {
         if (tabs.length <= 1)
             return;
+        captureTabs();
+        closedTabs = closedTabs.concat([
+            {
+                "index": index,
+                "state": tabs[index]
+            }
+        ]).slice(-FilesMetrics.closedTabHistory);
         const next = tabs.slice();
         next.splice(index, 1);
         const target = index < currentTab ? currentTab - 1 : Math.min(currentTab, next.length - 1);
@@ -202,6 +254,23 @@ FloatingWindow {
         if (tabs.length < 2)
             return;
         selectTab((currentTab + step + tabs.length) % tabs.length);
+    }
+
+    function reopenTab() {
+        if (closedTabs.length === 0)
+            return;
+        const stack = closedTabs.slice();
+        const closed = stack.pop();
+        closedTabs = stack;
+        captureTabs();
+        const next = tabs.slice();
+        const index = Math.min(closed.index, next.length);
+        next.splice(index, 0, closed.state);
+        tabs = next;
+        currentTab = index;
+        applyTab(index);
+        SessionData.tabs = tabs;
+        SessionData.currentTab = currentTab;
     }
 
     function tabLabel(state) {
@@ -280,6 +349,7 @@ FloatingWindow {
         SessionData.splitView = splitView;
         if (!splitView) {
             activePaneIndex = 0;
+            primaryPane.focusBody();
             return;
         }
         Qt.callLater(() => {
@@ -287,7 +357,7 @@ FloatingWindow {
                 return;
             const stored = window.tabState(window.currentTab)?.panes?.[1];
             window.secondPane.restoreState(stored ?? {
-                "path": window.primaryPane.path
+                "path": primaryPane.path
             });
         });
     }
@@ -323,7 +393,31 @@ FloatingWindow {
             openTerminalHere();
             return;
         case "newTab":
-            newTab(firstSelected()?.path ?? "");
+            newTab("");
+            return;
+        case "openInNewTab":
+            openSelectionInNewTab();
+            return;
+        case "reopenTab":
+            reopenTab();
+            return;
+        case "home":
+            openPath(Paths.strip(Paths.home), false);
+            return;
+        case "splitView":
+            toggleSplit();
+            return;
+        case "toggleSidebar":
+            toggleSidebar();
+            return;
+        case "focusSidebar":
+            focusSidebar();
+            return;
+        case "bookmark":
+            BookmarksService.toggle(currentPath);
+            return;
+        case "zoomReset":
+            activePane.setZoom(viewMode, FilesMetrics.defaultZoom(viewMode));
             return;
         case "openInPane":
             openInOtherPane(firstSelected()?.path ?? "");
@@ -370,6 +464,9 @@ FloatingWindow {
         case "gridView":
             viewMode = "grid";
             return;
+        case "columnsView":
+            viewMode = "columns";
+            return;
         case "zoomIn":
             activePane.body.zoomBy(1);
             return;
@@ -383,6 +480,10 @@ FloatingWindow {
             activePane.refresh();
             return;
         case "shortcuts":
+            if (shortcutsOverlay.visible) {
+                shortcutsOverlay.close();
+                return;
+            }
             shortcutsOverlay.open();
             return;
         case "selectAll":
@@ -425,12 +526,134 @@ FloatingWindow {
             showProperties();
             return;
         case "copyPath":
-            Paths.copyPathToClipboard(selectedPaths().join("\n"));
+            Paths.copyPathToClipboard((selectedPaths().length > 0 ? selectedPaths() : [currentPath]).join("\n"));
             return;
         case "contextMenu":
-            showItemMenu(Theme.spacingL, Theme.spacingL, Qt.NoModifier);
+            showContextMenuAtCursor();
             return;
         }
+    }
+
+    function openSelectionInNewTab() {
+        const entry = firstSelected();
+        if (entry?.isDir)
+            newTab(entry.path);
+    }
+
+    function showContextMenuAtCursor() {
+        if (selectedPaths().length === 0) {
+            showBackgroundMenu(activePane.width / 2, activePane.height / 2);
+            return;
+        }
+        const rect = activePane.cursorRect();
+        if (rect.width === 0) {
+            showItemMenu(activePane.width / 2, activePane.height / 2, Qt.NoModifier);
+            return;
+        }
+        showItemMenu(rect.x + Math.min(rect.width, rect.height), rect.y + rect.height, Qt.NoModifier);
+    }
+
+    function escapeBack() {
+        if (sidebarOverlayOpen) {
+            leaveSidebar();
+            return true;
+        }
+        if (!activePane.resultsActive && activePane.nameFilter === "")
+            return false;
+        topbar.clearSearch();
+        return true;
+    }
+
+    function handleVimKey(event) {
+        if (!SettingsData.vimKeys || (event.modifiers & ~(Qt.ShiftModifier | Qt.KeypadModifier)) !== 0)
+            return false;
+        const shift = (event.modifiers & Qt.ShiftModifier) !== 0;
+        const prefix = vimPrefix;
+        vimPrefix = "";
+        if (prefix === "g")
+            return runPrefixedVimKey(event.key, shift);
+        const body = activePane.body;
+        const columns = body.view?.columnsPerRow ?? 1;
+        switch (event.key) {
+        case Qt.Key_J:
+            body.moveCursor(columns, event.modifiers);
+            return true;
+        case Qt.Key_K:
+            body.moveCursor(-columns, event.modifiers);
+            return true;
+        case Qt.Key_H:
+            if (shift)
+                activePane.back();
+            else
+                activePane.up();
+            return true;
+        case Qt.Key_L:
+            if (shift)
+                activePane.forward();
+            else
+                activePane.openSelection();
+            return true;
+        case Qt.Key_G:
+            if (shift) {
+                body.jumpTo(body.directory.count - 1, Qt.NoModifier);
+                return true;
+            }
+            vimPrefix = "g";
+            vimPrefixTimer.restart();
+            return true;
+        case Qt.Key_V:
+            body.toggleAtCursor();
+            return true;
+        case Qt.Key_Y:
+            return runOnSelection("copy");
+        case Qt.Key_X:
+            return runOnSelection("cut");
+        case Qt.Key_P:
+            runAction("paste");
+            return true;
+        case Qt.Key_D:
+            return runOnSelection(shift ? "deletePermanently" : "trash");
+        case Qt.Key_R:
+            return runOnSelection("rename");
+        case Qt.Key_U:
+            runAction("undo");
+            return true;
+        case Qt.Key_Period:
+            runAction("showHidden");
+            return true;
+        case Qt.Key_T:
+            runAction("newTab");
+            return true;
+        case Qt.Key_S:
+            runAction("focusSidebar");
+            return true;
+        }
+        return false;
+    }
+
+    function runPrefixedVimKey(key, shift) {
+        switch (key) {
+        case Qt.Key_G:
+            if (shift)
+                return false;
+            activePane.body.jumpTo(0, Qt.NoModifier);
+            return true;
+        case Qt.Key_T:
+            cycleTab(shift ? -1 : 1);
+            return true;
+        case Qt.Key_H:
+            if (shift)
+                return false;
+            runAction("home");
+            return true;
+        }
+        return false;
+    }
+
+    function runOnSelection(id) {
+        if (selectedPaths().length > 0)
+            runAction(id);
+        return true;
     }
 
     function openInOtherPane(path) {
@@ -439,7 +662,7 @@ FloatingWindow {
         if (!splitView)
             toggleSplit();
         Qt.callLater(() => {
-            const target = window.activePaneIndex === 0 ? window.secondPane : window.primaryPane;
+            const target = window.activePaneIndex === 0 ? window.secondPane : primaryPane;
             target?.navigate(path);
         });
     }
@@ -795,6 +1018,13 @@ FloatingWindow {
         }
     }
 
+    Timer {
+        id: vimPrefixTimer
+
+        interval: FileBrowserMetrics.typeAheadInterval
+        onTriggered: window.vimPrefix = ""
+    }
+
     FloatingWindowControls {
         id: windowControls
 
@@ -834,6 +1064,7 @@ FloatingWindow {
         anchors.fill: parent
         readonly property bool isFloatingWindowSurface: true
         readonly property bool windowActive: Window.active
+        readonly property Item focusItem: Window.activeFocusItem
 
         LayoutMirroring.enabled: I18n.isRtl
         LayoutMirroring.childrenInherit: true
@@ -843,6 +1074,32 @@ FloatingWindow {
                 return;
             primaryPane.refresh();
             window.secondPane?.refresh();
+        }
+
+        Keys.onPressed: event => {
+            if (window.textEditing)
+                return;
+            if (!window.sidebarFocused && !window.isInside(surface.focusItem, window.activePane)) {
+                window.activePane.handleStrayKey(event);
+                if (event.accepted)
+                    return;
+            }
+            switch (event.key) {
+            case Qt.Key_Question:
+                window.runAction("shortcuts");
+                break;
+            case Qt.Key_Slash:
+                window.runAction("search");
+                break;
+            case Qt.Key_Escape:
+                if (!window.escapeBack())
+                    return;
+                break;
+            default:
+                if (!window.handleVimKey(event))
+                    return;
+            }
+            event.accepted = true;
         }
 
         DankWindowHeader {
@@ -901,10 +1158,16 @@ FloatingWindow {
                 anchors.margins: FilesMetrics.sidebarPadding
                 visible: parent.width > 0
                 currentPath: window.currentPath
+                onVisibleChanged: {
+                    if (visible)
+                        window.sidebarShown(dockedSidebar);
+                }
                 onNavigateRequested: path => window.openPath(path, false)
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
                 onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, dockedSidebar, pointX, pointY)
+                onBookmarkRenameRequested: path => window.renameBookmark(path)
+                onLeaveRequested: window.leaveSidebar()
                 onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.actionFor(drop.modifiers ?? Qt.NoModifier))
             }
         }
@@ -925,7 +1188,10 @@ FloatingWindow {
             anchors.bottom: parent.bottom
             anchors.left: sidebarSlot.right
             anchors.right: parent.right
-            anchors.margins: FilesMetrics.contentMargin
+            anchors.topMargin: FilesMetrics.contentMarginV
+            anchors.bottomMargin: FilesMetrics.contentMarginV
+            anchors.leftMargin: FilesMetrics.contentMarginH
+            anchors.rightMargin: FilesMetrics.contentMarginH
 
             TabRow {
                 id: tabRow
@@ -973,6 +1239,7 @@ FloatingWindow {
                     window.activePane.focusBody();
                 }
                 onSettingsRequested: window.openSettings()
+                onShortcutsRequested: window.runAction("shortcuts")
                 onSidebarToggled: window.toggleSidebar()
                 onBackRequested: window.activePane.back()
                 onForwardRequested: window.activePane.forward()
@@ -1083,6 +1350,10 @@ FloatingWindow {
             visible: x > -width
             x: window.sidebarOverlayOpen ? 0 : -width
             color: Theme.surfaceContainerLow
+            onVisibleChanged: {
+                if (visible)
+                    window.sidebarShown(overlaySidebar);
+            }
             topRightRadius: Theme.windowRadius
             bottomRightRadius: Theme.windowRadius
 
@@ -1117,6 +1388,8 @@ FloatingWindow {
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
                 onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, overlaySidebar, pointX, pointY)
+                onBookmarkRenameRequested: path => window.renameBookmark(path)
+                onLeaveRequested: window.leaveSidebar()
                 onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.actionFor(drop.modifiers ?? Qt.NoModifier))
             }
         }
@@ -1140,9 +1413,21 @@ FloatingWindow {
         Shortcut {
             required property var modelData
 
-            enabled: window.shortcutsEnabled && window.selectedPaths().length > 0
+            enabled: window.shortcutsEnabled && !window.sidebarFocused && window.selectedPaths().length > 0
             sequences: modelData.keys
             onActivated: window.runAction(modelData.id)
+        }
+    }
+
+    Instantiator {
+        model: FilesMetrics.tabShortcutCount
+
+        Shortcut {
+            required property int index
+
+            enabled: window.shortcutsEnabled
+            sequence: "Alt+" + (index + 1)
+            onActivated: window.selectTab(index)
         }
     }
 
@@ -1225,8 +1510,7 @@ FloatingWindow {
             iconName: "edit"
             onClicked: {
                 bookmarkMenu.close();
-                renameBookmarkDialog.path = bookmarkMenu.path;
-                renameBookmarkDialog.ask(BookmarksService.labelFor(bookmarkMenu.path));
+                window.renameBookmark(bookmarkMenu.path);
             }
         }
 

@@ -89,6 +89,8 @@ Singleton {
     property alias defaultSort: adapter.defaultSort
     property alias defaultSortDescending: adapter.defaultSortDescending
     property alias showHidden: adapter.showHidden
+    property alias foldersFirst: adapter.foldersFirst
+    property alias folderCounts: adapter.folderCounts
     property alias confirmTrash: adapter.confirmTrash
     // "double" | "single"
     property alias clickToOpen: adapter.clickToOpen
@@ -101,6 +103,7 @@ Singleton {
     property alias showSystemPartitions: adapter.showSystemPartitions
     property alias mountOnClick: adapter.mountOnClick
     property alias searchHidden: adapter.searchHidden
+    property alias vimKeys: adapter.vimKeys
     property alias gtkBookmarksOffered: adapter.gtkBookmarksOffered
 
     readonly property var locale: language !== "" ? Qt.locale(language) : Qt.locale()
@@ -161,6 +164,8 @@ Singleton {
             property string defaultSort: "name"
             property bool defaultSortDescending: false
             property bool showHidden: false
+            property bool foldersFirst: true
+            property bool folderCounts: true
             property bool confirmTrash: false
             property string clickToOpen: "double"
             property string dragAction: "auto"
@@ -170,6 +175,7 @@ Singleton {
             property bool showSystemPartitions: false
             property bool mountOnClick: true
             property bool searchHidden: false
+            property bool vimKeys: false
             property bool gtkBookmarksOffered: false
         }
     }

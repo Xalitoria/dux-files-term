@@ -82,6 +82,13 @@ Singleton {
         }, callback);
     }
 
+    function preview(path, maxBytes, callback) {
+        _send("files.preview", {
+            "path": path,
+            "maxBytes": maxBytes
+        }, callback);
+    }
+
     function count(paths, includeHidden, callback) {
         _send("files.count", {
             "paths": paths,

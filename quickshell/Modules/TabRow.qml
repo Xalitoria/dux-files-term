@@ -70,6 +70,7 @@ Item {
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
+        focusPolicy: Qt.TabFocus
         buttonSize: Theme.buttonHeightXS
         iconName: "add"
         iconSize: Theme.iconSizeMedium

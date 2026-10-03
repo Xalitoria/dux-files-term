@@ -35,7 +35,7 @@ FileMenu {
             "enabled": hasFile
         },
         {
-            "id": "newTab",
+            "id": "openInNewTab",
             "icon": "tab",
             "label": I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab"),
             "enabled": hasDirectory && selectionCount === 1

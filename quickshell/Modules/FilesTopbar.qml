@@ -23,7 +23,24 @@ Item {
     property bool searchFocused: false
 
     readonly property string bookmarkLabel: bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
-    readonly property string viewModeLabel: viewMode === "grid" ? I18n.tr("List view", "view mode showing one row per item") : I18n.tr("Grid view", "view mode showing items as tiles")
+    readonly property var viewModes: [
+        {
+            "value": "list",
+            "icon": "view_list",
+            "label": I18n.tr("List view", "view mode showing one row per item")
+        },
+        {
+            "value": "grid",
+            "icon": "grid_view",
+            "label": I18n.tr("Grid view", "view mode showing items as tiles")
+        },
+        {
+            "value": "columns",
+            "icon": "view_column",
+            "label": I18n.tr("Column view", "view mode showing folders side by side")
+        }
+    ]
+    readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
     readonly property var recentSuggestions: searchFocused && search.text === "" ? recentDirs.filter(path => path !== currentPath).slice(0, FileBrowserMetrics.suggestionRows) : []
 
     signal sidebarToggled
@@ -39,6 +56,7 @@ Item {
     signal reloadRequested
     signal terminalRequested
     signal settingsRequested
+    signal shortcutsRequested
     signal filterChanged(string text)
     signal searchRequested(string query)
     signal searchCleared
@@ -64,6 +82,7 @@ Item {
     LayoutMirroring.childrenInherit: true
 
     component FlatButton: DankActionButton {
+        focusPolicy: Qt.TabFocus
         buttonSize: FilesMetrics.topbarControlSize
         iconSize: Theme.iconSizeMedium
         iconColor: Theme.surfaceText
@@ -111,12 +130,37 @@ Item {
         }
 
         FlatButton {
+            id: viewButton
+
             anchors.verticalCenter: parent.verticalCenter
             visible: !topbar.compact
-            iconName: topbar.viewMode === "grid" ? "grid_view" : "view_list"
+            iconName: topbar.currentViewMode.icon
             backgroundColor: Theme.chipSurface
-            tooltipText: topbar.viewModeLabel
-            onClicked: topbar.viewModeSelected(topbar.viewMode === "grid" ? "list" : "grid")
+            tooltipText: I18n.tr("View", "keyboard shortcut group")
+            onClicked: viewMenu.visible ? viewMenu.close() : viewMenu.open()
+
+            FileMenu {
+                id: viewMenu
+
+                y: viewButton.height + Theme.spacingXS
+                x: viewButton.width - width
+
+                Repeater {
+                    model: topbar.viewModes
+
+                    FileMenuItem {
+                        required property var modelData
+
+                        text: modelData.label
+                        iconName: modelData.icon
+                        checked: topbar.viewMode === modelData.value
+                        onClicked: {
+                            viewMenu.close();
+                            topbar.viewModeSelected(modelData.value);
+                        }
+                    }
+                }
+            }
         }
 
         FlatButton {
@@ -163,13 +207,20 @@ Item {
                     }
                 }
 
-                FileMenuItem {
-                    visible: topbar.compact
-                    text: topbar.viewModeLabel
-                    iconName: topbar.viewMode === "grid" ? "view_list" : "grid_view"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.viewModeSelected(topbar.viewMode === "grid" ? "list" : "grid");
+                Repeater {
+                    model: topbar.viewModes
+
+                    FileMenuItem {
+                        required property var modelData
+
+                        visible: topbar.compact
+                        text: modelData.label
+                        iconName: modelData.icon
+                        checked: topbar.viewMode === modelData.value
+                        onClicked: {
+                            overflowMenu.close();
+                            topbar.viewModeSelected(modelData.value);
+                        }
                     }
                 }
 
@@ -218,6 +269,15 @@ Item {
                     onClicked: {
                         overflowMenu.close();
                         topbar.terminalRequested();
+                    }
+                }
+
+                FileMenuItem {
+                    text: I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
+                    iconName: "keyboard"
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.shortcutsRequested();
                     }
                 }
 

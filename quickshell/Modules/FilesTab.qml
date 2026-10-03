@@ -7,6 +7,8 @@ import qs.DankCommon.Widgets
 StyledButton {
     id: tab
 
+    focusPolicy: Qt.TabFocus
+
     property string label: ""
     property bool current: false
     property bool closable: true
