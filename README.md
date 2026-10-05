@@ -30,6 +30,22 @@ xdg-mime default com.danklinux.dankfiles.desktop inode/directory
 
 The installer does not run this.
 
+## Runtime dependencies
+
+Required: `quickshell` for the UI.
+
+Optional, picked up from PATH when the daemon starts:
+
+| package | binary | enables |
+| --- | --- | --- |
+| `bubblewrap` | `bwrap` | runs every external thumbnailer in a sandbox, as gnome-desktop does |
+| `ffmpegthumbnailer` | `ffmpegthumbnailer` | video thumbnails |
+| `poppler` (`poppler-utils` on debian) | `pdftoppm` | pdf thumbnails |
+| `gvfs` | | network shares and `trash://` on removable media |
+| `udisks2` | | the devices sidebar |
+
+Images in png, jpeg, gif, bmp, tiff and webp are decoded in-process. Every other format goes through the freedesktop `thumbnailers/*.thumbnailer` entries under the XDG data dirs, so packages that ship one (glycin for heif, avif, jxl and ico, gsf for office documents, evince or totem on gnome) work without configuration. `dfiles ipc system.capabilities` lists what was found under `thumbnailers`.
+
 ## CLI
 
 These commands talk to the running dfiles when there is one and run the same code in-process otherwise; `dfiles ipc` needs the running daemon. `--json` prints machine-readable output.

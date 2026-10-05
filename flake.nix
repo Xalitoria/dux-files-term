@@ -52,6 +52,11 @@
         (
           let
             version = "0.1.0";
+            thumbnailTools = with pkgs; [
+              bubblewrap
+              ffmpegthumbnailer
+              poppler-utils
+            ];
           in
           (pkgs.buildGoModule.override { go = goForPkgs pkgs; }) {
             inherit version;
@@ -88,6 +93,7 @@
 
             nativeBuildInputs = with pkgs; [
               installShellFiles
+              makeWrapper
             ];
 
             postInstall = ''
@@ -110,6 +116,9 @@
                 --bash <($out/bin/dfiles completion bash) \
                 --fish <($out/bin/dfiles completion fish) \
                 --zsh <($out/bin/dfiles completion zsh)
+
+              wrapProgram $out/bin/dfiles \
+                --prefix PATH : ${pkgs.lib.makeBinPath thumbnailTools}
             '';
 
             meta = {

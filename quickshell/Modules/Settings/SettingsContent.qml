@@ -729,7 +729,7 @@ Item {
                 }
 
                 SettingsSliderRow {
-                    text: I18n.tr("Skip files larger than", "thumbnail size cap slider label")
+                    text: I18n.tr("Skip images larger than", "thumbnail size cap slider label")
                     minimumLabel: I18n.tr("No limit", "thumbnail size cap slider label at zero")
                     enabled: SettingsData.thumbnails
                     minimum: 0

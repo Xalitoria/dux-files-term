@@ -30,7 +30,7 @@ Portals need no finish-args. Versions seen through `system.capabilities` on 2026
 
 ## Capabilities
 
-`dfiles ipc system.capabilities` is what the UI consults. Facts: `sandboxed`, `appId`, `hostFilesystem`, `userFilesystem` (`host` or `home` grant), `hostOsRoot`, `filesystems` (the resolved grants from `/.flatpak-info`, overrides applied), `udisks`, `gvfs`, `hostSpawn` (bus policy plus `flatpak-spawn` on PATH), `portals` (interface version by name, only probed inside a sandbox), `dirs` (the XDG dirs in use), `thumbnailers` (`thumbnail.image` always, `thumbnail.video` and `thumbnail.pdf` when `ffmpegthumbnailer` and `pdftoppm` are on PATH; the KDE runtime ships neither).
+`dfiles ipc system.capabilities` is what the UI consults. Facts: `sandboxed`, `appId`, `hostFilesystem`, `userFilesystem` (`host` or `home` grant), `hostOsRoot`, `filesystems` (the resolved grants from `/.flatpak-info`, overrides applied), `udisks`, `gvfs`, `hostSpawn` (bus policy plus `flatpak-spawn` on PATH), `portals` (interface version by name, only probed inside a sandbox), `dirs` (the XDG dirs in use), `thumbnailers` (`thumbnail.image` always, then one entry per media kind the `.thumbnailer` files on the XDG data dirs cover, plus `thumbnail.sandboxed` when bwrap runs them; inside the sandbox bwrap is skipped and host thumbnailers are not on PATH, so the KDE runtime yields images only).
 
 `features` is the per-feature table, one of `available`, `available` + `degraded` with a reason, or unavailable with a reason:
 

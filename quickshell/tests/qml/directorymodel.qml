@@ -291,7 +291,20 @@ ShellRoot {
         model.thumbnailsEnabled = true;
         model.thumbnailSizeLimit = 0;
         model.requestThumbnails(0, 0);
-        check("size cap skips large files", model.entries.get(0).thumbnail, "");
+        check("size cap skips large images", model.entries.get(0).thumbnail, "");
+        fakeService.watchEvent({
+            "watchId": "w3",
+            "kind": "batch",
+            "seq": 5,
+            "added": [entry("clip.mp4", {
+                    "thumbnailable": true,
+                    "mime": "video/mp4",
+                    "size": 900000000
+                })],
+            "addedAt": [1]
+        });
+        model.requestThumbnails(0, 1);
+        check("size cap leaves videos alone", [model.entries.get(0).thumbnail, model.entries.get(1).thumbnail], ["", "/cache/clip.mp4.png"]);
         model.thumbnailSizeLimit = -1;
         model.requestThumbnails(0, 0);
         check("thumbnails resume", model.entries.get(0).thumbnail, "/cache/shot.png.png");
