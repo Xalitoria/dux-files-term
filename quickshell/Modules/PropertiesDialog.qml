@@ -3,8 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -129,7 +129,7 @@ OverlayDialog {
     Component.onCompleted: DankFilesService.subscribeTopic("sizes", _sizeHandler)
     Component.onDestruction: DankFilesService.unsubscribeTopic("sizes", _sizeHandler)
 
-    DankTabBar {
+    DTabBar {
         width: parent.width
         currentIndex: root.tab
         showIcons: false
@@ -174,7 +174,7 @@ OverlayDialog {
                     symlinkBroken: root.primary?.symlinkBroken ?? false
                 }
 
-                DankTextField {
+                DTextField {
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - FilesMetrics.propertiesIconSize - Theme.spacingM - (stopButton.visible ? stopButton.width + Theme.spacingM : 0)
                     visible: !root.multiple
@@ -189,7 +189,7 @@ OverlayDialog {
                     }
                 }
 
-                DankActionButton {
+                DActionButton {
                     id: stopButton
 
                     anchors.verticalCenter: parent.verticalCenter

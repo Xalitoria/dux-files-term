@@ -4,7 +4,7 @@ DankFiles is an open-source, MIT-licensed standalone file manager for linux. It 
 
 ## Repo Structure
 
-Two apps that operate together, plus a `dank-qml-common` submodule holding the shared QML widget library used across the Dank Desktop suite (symlinked in as `quickshell/DankCommon`).
+Two apps that operate together, plus a `dank-qml-common` submodule holding the shared QML widget library used across the Dank Desktop suite (symlinked in as `quickshell/DCommon`).
 
 ### 1- core
 
@@ -26,7 +26,7 @@ The entire UI, a quickshell app. Talks to core over two unix sockets: one for re
 - Modules/ - MainWindow
 - translations/ - POEditor-synced catalogs
 
-`shell.qml` injects the app singletons into DankCommon at startup (`DC.Style.theme`, `DC.Style.settings`, `DC.I18n.backend`, `DC.Paths.backend`, `DC.Log.backend`, `DC.Host.session`, `DC.Host.cache`). The full list of properties the library reads is in `dank-qml-common/README.md` under "The contract"; the stubs in `dank-qml-common/Common/` and `dank-qml-common/Services/` are the executable version of it. When bumping the submodule, diff the stub singletons against ours and add anything new.
+`shell.qml` injects the app singletons into DCommon at startup (`DC.Style.theme`, `DC.Style.settings`, `DC.I18n.backend`, `DC.Paths.backend`, `DC.Log.backend`, `DC.Host.session`, `DC.Host.cache`). The full list of properties the library reads is in `dank-qml-common/README.md` under "The contract"; the stubs in `dank-qml-common/Common/` and `dank-qml-common/Services/` are the executable version of it. When bumping the submodule, diff the stub singletons against ours and add anything new.
 
 ### Other directories
 
@@ -39,8 +39,8 @@ The entire UI, a quickshell app. Talks to core over two unix sockets: one for re
 - Follow each apps' own conventions. QML uses Theme tokens instead of hardcoded colors, spacing, or other constants.
 - Resource usage matters. The daemon runs 24/7 - audit any change for idle CPU cost, extra processes, timers, and retained memory.
 - `core` and `quickshell` are tightly coupled through the unix socket protocol. When you are changing one, be mindful of the consequences for the other.
-- Use the Dank* wrappers in DankCommon/ (DankListView, DankFlickable, and so on) instead of raw ListView/Flickable/ScrollView.
-- All user-facing text goes through `I18n.tr()` with translator context as the second argument. Prefer reusing existing terms in `quickshell/translations/en.json` over adding new ones. Never edit the translation catalogs by hand, they are synced with POEditor. Strings under `DankCommon/` belong to dank-qml-common, not this repo.
+- Use the Dank* wrappers in DCommon/ (DListView, DFlickable, and so on) instead of raw ListView/Flickable/ScrollView.
+- All user-facing text goes through `I18n.tr()` with translator context as the second argument. Prefer reusing existing terms in `quickshell/translations/en.json` over adding new ones. Never edit the translation catalogs by hand, they are synced with POEditor. Strings under `DCommon/` belong to dank-qml-common, not this repo.
 - Go must build and test with `CGO_ENABLED=0`. No cgo dependencies.
 - Do not start editing code in response to a question. We'll tell you when to edit code.
 - Do not leave paragraphs of comments on top of the code. You should try to avoid them as much as possible with understandable function names and code. If they are necessary even then, make them concise. Remove such comments when you come by them in the codebase. Comments should always move with code, not be left behind.

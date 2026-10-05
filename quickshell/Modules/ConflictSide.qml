@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Common
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 Rectangle {
     id: side

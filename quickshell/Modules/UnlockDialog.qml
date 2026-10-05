@@ -1,8 +1,8 @@
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -40,7 +40,7 @@ OverlayDialog {
     supportingText: device ? I18n.tr("%1 is encrypted. Enter its passphrase to unlock it.", "unlock dialog explanation").arg(device.name) : ""
     onAccepted: submit()
 
-    DankTextField {
+    DTextField {
         id: passphraseField
 
         width: parent.width
@@ -60,7 +60,7 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.close()
         },
-        DankButton {
+        DButton {
             text: I18n.tr("Unlock", "unlock dialog header for an encrypted device")
             backgroundColor: Theme.primary
             textColor: Theme.primaryText

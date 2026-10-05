@@ -1,8 +1,8 @@
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
-DankButton {
+DButton {
     backgroundColor: "transparent"
     textColor: Theme.primary
 }

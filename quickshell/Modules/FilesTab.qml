@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 StyledButton {
     id: tab
@@ -74,7 +74,7 @@ StyledButton {
         elide: Text.ElideMiddle
     }
 
-    DankActionButton {
+    DActionButton {
         id: closeButton
 
         anchors.right: parent.right

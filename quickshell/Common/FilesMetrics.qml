@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import qs.DankCommon.FileBrowser
+import qs.DCommon.FileBrowser
 
 Singleton {
     id: root

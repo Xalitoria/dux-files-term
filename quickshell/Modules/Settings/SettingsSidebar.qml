@@ -1,6 +1,6 @@
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 Item {
     id: root
@@ -87,7 +87,7 @@ Item {
         color: Theme.outlineVariant
     }
 
-    DankFlickable {
+    DFlickable {
         anchors.fill: parent
         anchors.rightMargin: Theme.dividerWidth
         clip: true

@@ -1,7 +1,7 @@
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 Item {
     id: root
@@ -52,7 +52,7 @@ Item {
                 elide: Text.ElideRight
             }
 
-            DankButton {
+            DButton {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: ToastService.actionLabel !== ""
                 text: ToastService.actionLabel

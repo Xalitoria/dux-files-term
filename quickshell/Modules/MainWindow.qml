@@ -5,9 +5,9 @@ import QtQuick.Window
 import Quickshell
 import qs.Common
 import qs.Services
-import qs.DankCommon.Common as DC
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Common as DC
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 import qs.Modules.Settings
 
 FloatingWindow {
@@ -1102,7 +1102,7 @@ FloatingWindow {
             event.accepted = true;
         }
 
-        DankWindowHeader {
+        DWindowHeader {
             id: header
 
             anchors.top: parent.top
@@ -1112,7 +1112,7 @@ FloatingWindow {
             title: window.title
             onCloseRequested: window.requestClose()
 
-            DankActionButton {
+            DActionButton {
                 id: jobsButton
 
                 anchors.verticalCenter: parent.verticalCenter

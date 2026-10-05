@@ -3,10 +3,10 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import qs.Common
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
-DankListItem {
+DListItem {
     id: row
 
     required property int index
@@ -51,7 +51,7 @@ DankListItem {
             }
         }
 
-        DankIcon {
+        DIcon {
             visible: row.modelData.isDefault === true
             name: "check"
             size: Theme.iconSizeMedium

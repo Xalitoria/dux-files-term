@@ -25,10 +25,10 @@ BUILD_LDFLAGS=-ldflags='-s -w -X main.Version=$(VERSION) -X main.BuildTime=$(BUI
 
 all: build completions
 
-# tar -h dereferences the DankCommon submodule symlink (go:embed rejects
+# tar -h dereferences the DCommon submodule symlink (go:embed rejects
 # symlinks); .qmlls.ini is a symlink into the quickshell runtime VFS.
 sync-shell:
-	@test -f $(SHELL_SRC)/DankCommon/Widgets/DankIcon.qml || { echo "DankCommon missing: run git submodule update --init"; exit 1; }
+	@test -f $(SHELL_SRC)/DCommon/Widgets/DIcon.qml || { echo "DCommon missing: run git submodule update --init"; exit 1; }
 	@rm -rf $(EMBED_DIR)
 	@mkdir -p $(EMBED_DIR)
 	@tar -C $(SHELL_SRC) --exclude=.qmlls.ini -chf - . | tar -C $(EMBED_DIR) -xf -

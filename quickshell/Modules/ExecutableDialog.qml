@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 OverlayDialog {
     id: root
@@ -31,7 +31,7 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.close()
         },
-        DankButton {
+        DButton {
             text: I18n.tr("Open in editor", "executable file dialog action opening the file as text")
             backgroundColor: Theme.secondaryContainer
             textColor: Theme.onSecondaryContainer
@@ -40,7 +40,7 @@ OverlayDialog {
                 root.close();
             }
         },
-        DankButton {
+        DButton {
             text: I18n.tr("Run", "executable file dialog action running the file")
             backgroundColor: Theme.primary
             textColor: Theme.primaryText

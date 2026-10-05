@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import qs.Common
 import qs.Services
-import qs.DankCommon.FileBrowser
+import qs.DCommon.FileBrowser
 
 ShellRoot {
     id: fixture

@@ -1,6 +1,6 @@
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 OverlayDialog {
     id: root
@@ -25,7 +25,7 @@ OverlayDialog {
 
     onAccepted: submit()
 
-    DankTextField {
+    DTextField {
         id: nameField
 
         width: parent.width
@@ -41,7 +41,7 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.close()
         },
-        DankButton {
+        DButton {
             text: root.acceptText
             backgroundColor: Theme.primary
             textColor: Theme.primaryText

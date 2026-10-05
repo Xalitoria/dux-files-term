@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 Column {
     id: permissions
@@ -128,7 +128,7 @@ Column {
                     width: permissions.cellWidth
                     height: Theme.switchTrackHeight
 
-                    DankToggle {
+                    DToggle {
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         hideText: true
@@ -160,7 +160,7 @@ Column {
             font.pixelSize: Theme.fontSizeMedium
         }
 
-        DankButton {
+        DButton {
             anchors.verticalCenter: parent.verticalCenter
             text: I18n.tr("Apply", "button applying the edited permissions")
             backgroundColor: Theme.primary
@@ -169,7 +169,7 @@ Column {
         }
     }
 
-    DankToggle {
+    DToggle {
         width: parent.width
         visible: permissions.recursiveAllowed
         text: I18n.tr("Apply to everything inside", "permissions option recursing into a folder")
@@ -182,7 +182,7 @@ Column {
         visible: permissions.canChangeOwner
         spacing: Theme.spacingM
 
-        DankTextField {
+        DTextField {
             id: ownerField
 
             width: (parent.width - Theme.spacingM * 2 - applyOwnerButton.width) / 2
@@ -191,7 +191,7 @@ Column {
             onTextEdited: permissions.owner = text
         }
 
-        DankTextField {
+        DTextField {
             id: groupField
 
             width: ownerField.width
@@ -200,7 +200,7 @@ Column {
             onTextEdited: permissions.group = text
         }
 
-        DankButton {
+        DButton {
             id: applyOwnerButton
 
             anchors.verticalCenter: parent.verticalCenter

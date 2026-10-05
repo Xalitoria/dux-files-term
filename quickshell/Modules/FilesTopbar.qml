@@ -3,8 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 Item {
     id: topbar
@@ -81,7 +81,7 @@ Item {
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
 
-    component FlatButton: DankActionButton {
+    component FlatButton: DActionButton {
         focusPolicy: Qt.TabFocus
         buttonSize: FilesMetrics.topbarControlSize
         iconSize: Theme.iconSizeMedium
@@ -293,7 +293,7 @@ Item {
         }
     }
 
-    DankSearchField {
+    DSearchField {
         id: search
 
         anchors.left: leftActions.right

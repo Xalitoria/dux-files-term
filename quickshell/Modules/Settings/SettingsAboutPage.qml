@@ -1,7 +1,7 @@
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 Item {
     id: aboutPage
@@ -111,7 +111,7 @@ Item {
                 width: parent.width
                 spacing: Theme.spacingM
 
-                DankIcon {
+                DIcon {
                     name: card.icon
                     size: Theme.iconSize
                     color: Theme.primary
@@ -149,7 +149,7 @@ Item {
         }
     }
 
-    DankFlickable {
+    DFlickable {
         anchors.fill: parent
         clip: true
         contentHeight: mainColumn.height + Theme.spacingXL
@@ -183,7 +183,7 @@ Item {
                         radius: Theme.fullRadius(width, height)
                         color: Theme.withAlpha(Theme.primary, Theme.tonalTintAlpha)
 
-                        DankIcon {
+                        DIcon {
                             anchors.centerIn: parent
                             name: "folder"
                             size: Theme.iconSizeLarge
@@ -222,7 +222,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         spacing: Theme.spacingS
 
-                        DankButton {
+                        DButton {
                             text: I18n.tr("Docs", "about page resource button")
                             iconName: "menu_book"
                             iconSize: Theme.chipIconSize
@@ -231,7 +231,7 @@ Item {
                             onClicked: DankFilesService.openUri(aboutPage.docsUrl)
                         }
 
-                        DankButton {
+                        DButton {
                             text: I18n.tr("GitHub", "about page resource button")
                             iconName: "code"
                             iconSize: Theme.chipIconSize

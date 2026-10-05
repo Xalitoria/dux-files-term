@@ -1,8 +1,8 @@
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 Item {
     id: root

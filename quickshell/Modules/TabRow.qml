@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 Item {
     id: row
@@ -19,7 +19,7 @@ Item {
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
 
-    DankFlickable {
+    DFlickable {
         id: strip
 
         anchors.left: parent.left
@@ -65,7 +65,7 @@ Item {
         }
     }
 
-    DankActionButton {
+    DActionButton {
         id: addButton
 
         anchors.right: parent.right

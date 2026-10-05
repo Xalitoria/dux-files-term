@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 OverlayDialog {
     id: root
@@ -49,7 +49,7 @@ OverlayDialog {
             entry: root.conflict ? root.conflict.source : null
         }
 
-        DankToggle {
+        DToggle {
             Layout.fillWidth: true
             text: I18n.tr("Do this for the rest", "file conflict dialog option to reuse the answer")
             checked: root.applyToAll
@@ -62,28 +62,28 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.answer("cancel")
         },
-        DankButton {
+        DButton {
             visible: root.offers("merge")
             text: I18n.tr("Merge", "file conflict dialog button to merge folders")
             backgroundColor: Theme.secondaryContainer
             textColor: Theme.onSecondaryContainer
             onClicked: root.answer("merge")
         },
-        DankButton {
+        DButton {
             visible: root.offers("skip")
             text: I18n.tr("Skip", "file conflict dialog button to leave the item alone")
             backgroundColor: Theme.secondaryContainer
             textColor: Theme.onSecondaryContainer
             onClicked: root.answer("skip")
         },
-        DankButton {
+        DButton {
             visible: root.offers("replace")
             text: I18n.tr("Replace", "file conflict dialog button to overwrite the existing item")
             backgroundColor: Theme.errorContainer
             textColor: Theme.onErrorContainer
             onClicked: root.answer("replace")
         },
-        DankButton {
+        DButton {
             visible: root.offers("keepBoth")
             text: I18n.tr("Keep both", "file conflict dialog button to keep both items")
             backgroundColor: Theme.primary

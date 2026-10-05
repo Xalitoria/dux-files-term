@@ -3,8 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -57,7 +57,7 @@ OverlayDialog {
     acceptEnabled: selectedId !== ""
     onAccepted: submit()
 
-    DankSearchField {
+    DSearchField {
         id: searchField
 
         width: parent.width
@@ -66,7 +66,7 @@ OverlayDialog {
         Keys.onDownPressed: appList.forceActiveFocus()
     }
 
-    DankListView {
+    DListView {
         id: appList
 
         width: parent.width
@@ -83,7 +83,7 @@ OverlayDialog {
         }
     }
 
-    DankToggle {
+    DToggle {
         width: parent.width
         visible: root.mime !== "" && SandboxService.available("setDefault")
         text: I18n.tr("Always use this application", "open with dialog option that sets the default")
@@ -96,7 +96,7 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.close()
         },
-        DankButton {
+        DButton {
             text: I18n.tr("Open", "context menu entry opening a file")
             enabled: root.selectedId !== ""
             backgroundColor: Theme.primary

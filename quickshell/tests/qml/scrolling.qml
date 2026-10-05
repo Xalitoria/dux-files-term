@@ -4,10 +4,10 @@ import QtQuick
 import QtQuick.Window
 import Quickshell
 import qs.Services
-import qs.DankCommon.FileBrowser
+import qs.DCommon.FileBrowser
 
 // Delegates are audited through a real window because the views only lay out
-// and the DankListView frame sweep only runs with a render loop behind them.
+// and the DListView frame sweep only runs with a render loop behind them.
 ShellRoot {
     id: fixture
 

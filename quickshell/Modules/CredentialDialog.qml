@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 OverlayDialog {
     id: root
@@ -64,7 +64,7 @@ OverlayDialog {
         spacing: Theme.spacingM
         visible: !root.isQuestion
 
-        DankTextField {
+        DTextField {
             id: userField
 
             width: parent.width
@@ -75,7 +75,7 @@ OverlayDialog {
             labelText: I18n.tr("Username", "label for a user name input")
         }
 
-        DankTextField {
+        DTextField {
             id: domainField
 
             width: parent.width
@@ -85,7 +85,7 @@ OverlayDialog {
             labelText: I18n.tr("Domain", "label for a network domain input")
         }
 
-        DankTextField {
+        DTextField {
             id: passwordField
 
             width: parent.width
@@ -101,7 +101,7 @@ OverlayDialog {
             Keys.onEnterPressed: event => event.accepted = true
         }
 
-        DankToggle {
+        DToggle {
             id: anonymousToggle
 
             width: parent.width
@@ -109,7 +109,7 @@ OverlayDialog {
             text: I18n.tr("Connect anonymously", "credential dialog option that skips the login")
         }
 
-        DankDropdown {
+        DDropdown {
             id: saveDropdown
 
             width: parent.width
@@ -128,7 +128,7 @@ OverlayDialog {
         Repeater {
             model: root.ask !== null ? root.ask.choices ?? [] : []
 
-            DankButton {
+            DButton {
                 required property int index
                 required property var modelData
 
@@ -145,7 +145,7 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.abort()
         },
-        DankButton {
+        DButton {
             visible: !root.isQuestion
             text: I18n.tr("Sign in", "credential dialog header")
             backgroundColor: Theme.primary

@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 OverlayDialog {
     id: overlay
@@ -18,7 +18,7 @@ OverlayDialog {
         onActivated: overlay.close()
     }
 
-    DankFlickable {
+    DFlickable {
         width: parent.width
         height: Math.min(contentHeight, overlay.height / 2)
         contentHeight: groups.implicitHeight
@@ -82,7 +82,7 @@ OverlayDialog {
                                 Repeater {
                                     model: Shortcuts.keysFor(entry.modelData, overlay.vimKeys)
 
-                                    DankKeycap {
+                                    DKeycap {
                                         required property string modelData
 
                                         text: modelData
@@ -96,7 +96,7 @@ OverlayDialog {
         }
     }
 
-    DankToggle {
+    DToggle {
         width: parent.width
         text: I18n.tr("Vim keys", "toggle label for vim style navigation")
         description: I18n.tr("h j k l move, / searches and letters run commands instead of jumping to a name.", "vim keys toggle description")

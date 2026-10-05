@@ -1,7 +1,7 @@
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -44,7 +44,7 @@ OverlayDialog {
     supportingText: paths.length === 1 ? paths[0].substring(paths[0].lastIndexOf("/") + 1) : FileFormat.count(paths.length)
     onAccepted: submit()
 
-    DankTextField {
+    DTextField {
         id: nameField
 
         width: parent.width
@@ -55,7 +55,7 @@ OverlayDialog {
         Keys.onEnterPressed: event => event.accepted = true
     }
 
-    DankFilterChips {
+    DFilterChips {
         width: parent.width
         model: root.formats
         currentIndex: Math.max(0, root.formats.findIndex(entry => entry.value === root.format))
@@ -68,7 +68,7 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.close()
         },
-        DankButton {
+        DButton {
             text: I18n.tr("Create", "dialog button creating an item")
             backgroundColor: Theme.primary
             textColor: Theme.primaryText

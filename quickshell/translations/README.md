@@ -56,5 +56,5 @@ entries as they come online.
 `poexports/<locale>.json` files are nested `context -> term -> translation`
 objects. `Common/I18n.qml` picks the file matching the system locale (full tag
 first, then language code) and falls back to the built-in English strings.
-DankCommon ships its own exports under `DankCommon/translations/poexports/`;
+DCommon ships its own exports under `DCommon/translations/poexports/`;
 app terms win on collision.

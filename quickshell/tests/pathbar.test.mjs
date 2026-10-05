@@ -3,7 +3,7 @@ import test from "node:test";
 import vm from "node:vm";
 import { lift, source } from "./qml-script.mjs";
 
-const pathBar = source("../DankCommon/FileBrowser/PathBar.qml");
+const pathBar = source("../DCommon/FileBrowser/PathBar.qml");
 
 function segments(path, home) {
     const ctx = vm.createContext({});

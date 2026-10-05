@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 Item {
     id: row
@@ -81,7 +81,7 @@ Item {
                 font.pixelSize: Theme.fontSizeSmall
             }
 
-            DankActionButton {
+            DActionButton {
                 visible: !row.finished
                 iconName: "close"
                 buttonSize: Theme.buttonHeightXS

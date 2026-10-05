@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 // The filter row above search results: type chips toggle, the date and size
 // chips pick one each, hidden is a toggle. Every change restarts the search.
@@ -48,7 +48,7 @@ Flow {
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
 
-    DankFilterChips {
+    DFilterChips {
         id: typeChips
 
         width: chips.rowWidth(typeChips)
@@ -69,7 +69,7 @@ Flow {
         color: Theme.outlineVariant
     }
 
-    DankFilterChips {
+    DFilterChips {
         id: modifiedChips
 
         width: chips.rowWidth(modifiedChips)
@@ -88,7 +88,7 @@ Flow {
         color: Theme.outlineVariant
     }
 
-    DankFilterChips {
+    DFilterChips {
         id: sizeChips
 
         width: chips.rowWidth(sizeChips)
@@ -107,7 +107,7 @@ Flow {
         color: Theme.outlineVariant
     }
 
-    DankFilterChips {
+    DFilterChips {
         id: hiddenChips
 
         width: chips.rowWidth(hiddenChips)

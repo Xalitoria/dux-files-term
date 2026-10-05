@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 Column {
     id: openWith
@@ -47,7 +47,7 @@ Column {
         wrapMode: Text.Wrap
     }
 
-    DankListView {
+    DListView {
         width: parent.width
         height: Theme.listItemHeight * 4
         clip: true

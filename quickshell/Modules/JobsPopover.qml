@@ -4,8 +4,8 @@ import QtQuick
 import QtQuick.Controls
 import qs.Common
 import qs.Services
-import qs.DankCommon.Common as DC
-import qs.DankCommon.Widgets
+import qs.DCommon.Common as DC
+import qs.DCommon.Widgets
 
 Popup {
     id: root

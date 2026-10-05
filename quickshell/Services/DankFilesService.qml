@@ -4,7 +4,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import qs.DankCommon.Common
+import qs.DCommon.Common
 import qs.Services
 
 Singleton {
@@ -58,7 +58,7 @@ Singleton {
         requestSocket.connected = true;
     }
 
-    DankSocket {
+    DSocket {
         id: requestSocket
         path: root.socketPath
         connected: false
@@ -91,7 +91,7 @@ Singleton {
         }
     }
 
-    DankSocket {
+    DSocket {
         id: subscribeSocket
         path: root.socketPath
         connected: false

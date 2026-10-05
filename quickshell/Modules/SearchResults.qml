@@ -3,8 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 // The pane body while a recursive search is showing: a header naming the
 // query and its root, the filter chips, then the shared list over SearchModel.
@@ -96,7 +96,7 @@ Rectangle {
             }
         }
 
-        DankActionButton {
+        DActionButton {
             id: closeButton
 
             anchors.right: parent.right

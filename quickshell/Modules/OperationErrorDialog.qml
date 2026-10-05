@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import qs.Common
 import qs.Services
-import qs.DankCommon.Widgets
-import qs.DankCommon.FileBrowser
+import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 OverlayDialog {
     id: root
@@ -53,7 +53,7 @@ OverlayDialog {
             wrapMode: Text.WordWrap
         }
 
-        DankToggle {
+        DToggle {
             Layout.fillWidth: true
             text: I18n.tr("Do this for the rest", "file conflict dialog option to reuse the answer")
             checked: root.applyToAll
@@ -66,21 +66,21 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.answer("cancel")
         },
-        DankButton {
+        DButton {
             visible: root.offers("skip")
             text: I18n.tr("Skip", "file conflict dialog button to leave the item alone")
             backgroundColor: Theme.secondaryContainer
             textColor: Theme.onSecondaryContainer
             onClicked: root.answer("skip")
         },
-        DankButton {
+        DButton {
             visible: root.offers("retry")
             text: I18n.tr("Try again", "file operation error dialog button to retry")
             backgroundColor: root.elevationOffered ? Theme.secondaryContainer : Theme.primary
             textColor: root.elevationOffered ? Theme.onSecondaryContainer : Theme.primaryText
             onClicked: root.answer("retry")
         },
-        DankButton {
+        DButton {
             visible: root.elevationOffered
             text: I18n.tr("Retry as administrator", "file operation error dialog button to retry with elevated rights")
             backgroundColor: Theme.primary

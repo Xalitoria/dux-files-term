@@ -3,7 +3,7 @@ import test from "node:test";
 import vm from "node:vm";
 import { lift, source } from "./qml-script.mjs";
 
-const fileFormat = source("../DankCommon/FileBrowser/FileFormat.qml");
+const fileFormat = source("../DCommon/FileBrowser/FileFormat.qml");
 const filesFormat = source("../Common/FilesFormat.qml");
 
 function context() {

@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import qs.Common
 import qs.Services
-import qs.DankCommon.FileBrowser
+import qs.DCommon.FileBrowser
 
 FileMenu {
     id: menu

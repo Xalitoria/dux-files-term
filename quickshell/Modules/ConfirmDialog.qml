@@ -1,6 +1,6 @@
 import QtQuick
 import qs.Common
-import qs.DankCommon.Widgets
+import qs.DCommon.Widgets
 
 OverlayDialog {
     id: root
@@ -25,7 +25,7 @@ OverlayDialog {
             text: I18n.tr("Cancel", "dialog button to cancel")
             onClicked: root.close()
         },
-        DankButton {
+        DButton {
             text: root.confirmText
             backgroundColor: root.danger ? Theme.errorContainer : Theme.primary
             textColor: root.danger ? Theme.onErrorContainer : Theme.primaryText
