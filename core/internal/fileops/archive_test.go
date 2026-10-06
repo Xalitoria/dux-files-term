@@ -24,7 +24,7 @@ func sampleTree(t *testing.T) (root, project string) {
 }
 
 func TestCompressAndExtractRoundTrip(t *testing.T) {
-	for _, format := range []string{FormatZip, FormatTarGz} {
+	for _, format := range compressFormats {
 		t.Run(format, func(t *testing.T) {
 			root, project := sampleTree(t)
 			manager, bus := newHarness(t)
@@ -132,8 +132,121 @@ func TestArchiveStem(t *testing.T) {
 	assert.Equal(t, "a.b", archiveStem("a.b.tgz"))
 	assert.Equal(t, "A", archiveStem("A.ZIP"))
 	assert.Equal(t, "a", archiveStem("a.tar"))
+	assert.Equal(t, "a", archiveStem("a.tar.xz"))
+	assert.Equal(t, "a", archiveStem("a.tar.zst"))
+	assert.Equal(t, "a", archiveStem("a.tbz2"))
+	assert.Equal(t, "a", archiveStem("a.7z"))
+	assert.Equal(t, "a", archiveStem("a.rar"))
+	assert.Equal(t, "a", archiveStem("a.cpio"))
+	assert.Equal(t, "notes.txt", archiveStem("notes.txt.gz"))
+	assert.Equal(t, "notes.txt", archiveStem("notes.txt.xz"))
 	assert.Equal(t, "plain", archiveStem("plain"))
 	assert.Equal(t, ".zip", archiveStem(".zip"))
+}
+
+func fixture(t *testing.T, name string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join("testdata", name))
+	require.NoError(t, err)
+	path := filepath.Join(t.TempDir(), name)
+	require.NoError(t, os.WriteFile(path, data, 0o644))
+	return path
+}
+
+func extractFixture(t *testing.T, archive string) (string, View) {
+	t.Helper()
+	manager, bus := newHarness(t)
+	out := filepath.Join(t.TempDir(), "out")
+	require.NoError(t, os.Mkdir(out, 0o755))
+	view := run(t, manager, bus, spec{kind: KindExtract, sources: []string{archive}, dest: out})
+	return out, view
+}
+
+func assertSampleTree(t *testing.T, base string) {
+	t.Helper()
+	assert.Equal(t, "hello", read(t, filepath.Join(base, "README.md")))
+	assert.Equal(t, "package main", read(t, filepath.Join(base, "src", "main.go")))
+	info, err := os.Stat(filepath.Join(base, "src", "main.go"))
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0o755), info.Mode().Perm())
+	assert.DirExists(t, filepath.Join(base, "empty"))
+	target, err := os.Readlink(filepath.Join(base, "link"))
+	require.NoError(t, err)
+	assert.Equal(t, "README.md", target)
+}
+
+// The fixtures were packed from the sampleTree layout with the system tools
+// (tar+bzip2/xz/zstd/lzma, 7z -snl, cpio -H newc).
+func TestExtractForeignFormats(t *testing.T) {
+	for _, name := range []string{"sample.tar.bz2", "sample.tar.xz", "sample.tar.zst", "sample.tar.lzma", "sample.7z", "sample.cpio"} {
+		t.Run(name, func(t *testing.T) {
+			out, view := extractFixture(t, fixture(t, name))
+			require.Equal(t, StateDone, view.State, view.Error)
+			assert.Equal(t, []Created{{Path: filepath.Join(out, "sample"), Dir: true}}, view.Created)
+			assertSampleTree(t, filepath.Join(out, "sample", "sample"))
+			assert.True(t, view.Undoable)
+			assert.Equal(t, 0, view.Progress.FilesTotal-view.Progress.FilesDone)
+		})
+	}
+}
+
+// libarchive.rar is test_read_format_rar.rar from libarchive's test suite (BSD-2-Clause).
+func TestExtractRar(t *testing.T) {
+	out, view := extractFixture(t, fixture(t, "libarchive.rar"))
+	require.Equal(t, StateDone, view.State, view.Error)
+	base := filepath.Join(out, "libarchive")
+	assert.Equal(t, "test text document\r\n", read(t, filepath.Join(base, "test.txt")))
+	assert.Equal(t, "test text document\r\n", read(t, filepath.Join(base, "testdir", "test.txt")))
+	assert.DirExists(t, filepath.Join(base, "testemptydir"))
+	target, err := os.Readlink(filepath.Join(base, "testlink"))
+	require.NoError(t, err)
+	assert.Equal(t, "test.txt", target)
+}
+
+func TestExtractLoneCompressedFileBesideItself(t *testing.T) {
+	for _, name := range []string{"hello.txt.gz", "hello.txt.xz", "hello.txt.bz2"} {
+		t.Run(name, func(t *testing.T) {
+			out, view := extractFixture(t, fixture(t, name))
+			require.Equal(t, StateDone, view.State, view.Error)
+			assert.Equal(t, "hello", read(t, filepath.Join(out, "hello.txt")))
+			assert.NoDirExists(t, filepath.Join(out, "hello.txt"))
+			assert.Equal(t, []Created{{Path: filepath.Join(out, "hello.txt"), Dir: false}}, view.Created)
+			assert.True(t, view.Undoable)
+		})
+	}
+}
+
+func TestDetectFormatByMagic(t *testing.T) {
+	cases := map[string]archiveFormat{
+		"sample.tar.bz2": {compressBzip2, containerNone},
+		"sample.tar.xz":  {compressXz, containerNone},
+		"sample.tar.zst": {compressZstd, containerNone},
+		"sample.7z":      {compressNone, container7z},
+		"libarchive.rar": {compressNone, containerRar},
+		"sample.cpio":    {compressNone, containerCpio},
+	}
+	for name, want := range cases {
+		t.Run(name, func(t *testing.T) {
+			bare := filepath.Join(t.TempDir(), "bare")
+			require.NoError(t, os.Rename(fixture(t, name), bare))
+			got, err := detectFormat(bare)
+			require.NoError(t, err)
+			assert.Equal(t, want, got)
+			assert.True(t, IsArchive(bare))
+		})
+	}
+	plain := filepath.Join(t.TempDir(), "plain")
+	write(t, plain, "not an archive")
+	assert.False(t, IsArchive(plain))
+	assert.False(t, IsArchive(filepath.Join(t.TempDir(), "missing")))
+}
+
+func TestExtractCompressedTarWithoutAnExtensionStillUnpacksTheTree(t *testing.T) {
+	bare := filepath.Join(t.TempDir(), "bare")
+	require.NoError(t, os.Rename(fixture(t, "sample.tar.zst"), bare))
+	out, view := extractFixture(t, bare)
+	require.Equal(t, StateDone, view.State, view.Error)
+	assertSampleTree(t, filepath.Join(out, "bare", "sample"))
 }
 
 func TestCompressHandlerValidation(t *testing.T) {

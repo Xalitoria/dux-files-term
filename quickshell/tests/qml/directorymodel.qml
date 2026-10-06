@@ -16,6 +16,15 @@ ShellRoot {
     property bool holdPages: false
     property var heldPage: null
 
+    property int addedSeen: 0
+
+    Connections {
+        target: model
+        function onEntriesAdded() {
+            fixture.addedSeen++;
+        }
+    }
+
     function check(label, actual, expected) {
         const ok = JSON.stringify(actual) === JSON.stringify(expected);
         if (!ok) {
@@ -122,6 +131,7 @@ ShellRoot {
             "addedAt": [1]
         });
         check("insert at index", names(), ["a.txt", "b.txt", "c.txt", "d.txt"]);
+        check("a watcher insert announces itself", fixture.addedSeen, 1);
         check("total after insert", model.total, 4);
 
         fakeService.watchEvent({

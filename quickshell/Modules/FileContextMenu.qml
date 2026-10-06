@@ -97,6 +97,13 @@ FileMenu {
             "visible": extractable && !inResults
         },
         {
+            "id": "extractTo",
+            "icon": "drive_file_move",
+            "label": I18n.tr("Extract to…", "context menu entry unpacking the selected archives into a chosen folder"),
+            "enabled": selectionCount > 0,
+            "visible": extractable
+        },
+        {
             "id": "openContainingFolder",
             "icon": "folder_open",
             "label": I18n.tr("Open the containing folder", "keyboard shortcut"),

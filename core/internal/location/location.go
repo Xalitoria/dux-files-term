@@ -16,6 +16,7 @@ type Kind string
 
 const (
 	KindFolder  Kind = "folder"
+	KindArchive Kind = "archive"
 	KindRemote  Kind = "remote"
 	KindServers Kind = "servers"
 )
@@ -31,6 +32,7 @@ type Env struct {
 	TrashFiles string
 	Stat       func(path string) (fs.FileInfo, error)
 	Lstat      func(path string) (fs.FileInfo, error)
+	IsArchive  func(path string) bool
 }
 
 var remoteSchemes = []string{"sftp", "ssh", "smb", "ftp", "ftps", "dav", "davs", "nfs", "afp"}
@@ -85,6 +87,10 @@ func Resolve(open, sel []string, env Env) ([]Location, error) {
 		}
 		if _, err := env.Lstat(loc.Path); err != nil {
 			return nil, describe(loc.Path, err)
+		}
+		if env.IsArchive != nil && env.IsArchive(loc.Path) {
+			out = append(out, Location{Kind: KindArchive, Path: loc.Path, Select: []string{}})
+			continue
 		}
 		addSelection(loc.Path)
 	}
@@ -186,6 +192,6 @@ func describe(path string, err error) error {
 	return fmt.Errorf("%s: %w", path, err)
 }
 
-func HostEnv(dataHome string) Env {
-	return Env{TrashFiles: filepath.Join(dataHome, "Trash", "files"), Stat: os.Stat, Lstat: os.Lstat}
+func HostEnv(dataHome string, isArchive func(string) bool) Env {
+	return Env{TrashFiles: filepath.Join(dataHome, "Trash", "files"), Stat: os.Stat, Lstat: os.Lstat, IsArchive: isArchive}
 }

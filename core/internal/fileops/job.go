@@ -99,6 +99,7 @@ type View struct {
 	Warnings  int       `json:"warnings"`
 	Cancelled bool      `json:"cancelled"`
 	Undoable  bool      `json:"undoable"`
+	Created   []Created `json:"created,omitempty"`
 	Error     string    `json:"error,omitempty"`
 	Code      string    `json:"code,omitempty"`
 	StartedMs int64     `json:"startedMs"`
@@ -106,6 +107,11 @@ type View struct {
 }
 
 type pair struct{ src, dst string }
+
+type Created struct {
+	Path string `json:"path"`
+	Dir  bool   `json:"dir"`
+}
 
 type spec struct {
 	kind      Kind
@@ -147,6 +153,7 @@ type job struct {
 	startedMs int64
 	endedMs   int64
 	record    *undoRecord
+	created   []Created
 	nextEvent int
 	pendingID string
 	terminal  bool
@@ -175,6 +182,7 @@ func (j *job) viewLocked() View {
 		Warnings:  j.warnings,
 		Cancelled: j.cancelled,
 		Undoable:  j.record != nil && len(j.record.pairs) > 0,
+		Created:   j.created,
 		Error:     j.errMsg,
 		Code:      j.errCode,
 		StartedMs: j.startedMs,

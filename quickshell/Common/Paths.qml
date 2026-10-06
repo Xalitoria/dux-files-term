@@ -39,10 +39,17 @@ Singleton {
         Quickshell.execDetached(["mkdir", "-p", strip(path)]);
     }
 
+    property var _iconPaths: ({})
+
     function resolveIconPath(iconName: string): string {
         if (!iconName)
             return "";
-        return Quickshell.iconPath(iconName, true) || bundledIconPath(iconName);
+        const cached = _iconPaths[iconName];
+        if (cached !== undefined)
+            return cached;
+        const resolved = Quickshell.iconPath(iconName, true) || bundledIconPath(iconName);
+        _iconPaths[iconName] = resolved;
+        return resolved;
     }
 
     function bundledIconPath(iconName: string): string {

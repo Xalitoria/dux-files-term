@@ -10,7 +10,7 @@ function context() {
     const ctx = vm.createContext({ I18n: { tr: term => term } });
     for (const name of ["size", "operationError"])
         lift(fileFormat, name, ctx);
-    for (const name of ["elevationUnavailable", "featureUnavailable", "isRunnable"])
+    for (const name of ["elevationUnavailable", "featureUnavailable", "isRunnable", "extractable"])
         lift(filesFormat, name, ctx);
     return ctx;
 }
@@ -52,4 +52,12 @@ test("isRunnable needs the execute bit and a program-like type", () => {
     assert.equal(ctx.isRunnable("text/x-python", true), true);
     assert.equal(ctx.isRunnable("", true), true);
     assert.equal(ctx.isRunnable("image/png", true), false);
+});
+
+test("extractable mirrors the formats the daemon unpacks", () => {
+    const ctx = context();
+    for (const mime of ["application/zip", "application/x-compressed-tar", "application/x-xz-compressed-tar", "application/x-zstd-compressed-tar", "application/x-7z-compressed", "application/vnd.rar", "application/x-cpio", "application/gzip"])
+        assert.equal(ctx.extractable(mime), true, mime);
+    for (const mime of ["application/x-iso9660-image", "application/x-lzip", "application/pdf", ""])
+        assert.equal(ctx.extractable(mime), false, mime);
 });

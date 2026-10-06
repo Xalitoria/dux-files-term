@@ -29,7 +29,7 @@ var Methods = []MethodSpec{
 	{Name: "ui.show", Group: "ui", Desc: "Show the last used file manager window, opening one if none is open"},
 	{Name: "ui.hide", Group: "ui", Desc: "Hide every file manager window"},
 	{Name: "ui.toggle", Group: "ui", Desc: "Toggle the file manager windows"},
-	{Name: "ui.open", Group: "ui", Desc: "Open folders, each in its own tab; a file opens its folder with it selected", Params: []ParamSpec{opt("path", "absolute path or URI"), opt("paths", "absolute paths or URIs, one tab each"), opt("select", "absolute paths or URIs to select, grouped by folder"), opt("newWindow", "open in a new window instead of the last used one")}},
+	{Name: "ui.open", Group: "ui", Desc: "Open folders, each in its own tab; a file opens its folder with it selected", Params: []ParamSpec{opt("path", "absolute path or URI"), opt("paths", "absolute paths or URIs, one tab each; an archive is extracted beside itself"), opt("select", "absolute paths or URIs to select, grouped by folder"), opt("newWindow", "open in a new window instead of the last used one")}},
 	{Name: "ui.properties", Group: "ui", Desc: "Show the properties dialog for paths", Params: []ParamSpec{req("paths", "absolute paths or file:// URIs")}},
 	{Name: "ui.quit", Group: "ui", Desc: "Quit the running daemon"},
 
@@ -65,8 +65,8 @@ var Methods = []MethodSpec{
 	{Name: "files.op.jobs", Group: "files.op", Desc: "List running, queued and recently finished jobs"},
 	{Name: "files.op.dropAction", Group: "files.op", Desc: "What a plain drag of paths onto dest would do", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory")}},
 	{Name: "files.op.undo", Group: "files.op", Desc: "Undo the last undoable operation in a scope", Params: []ParamSpec{opt("scope", "undo stack key, one per window")}},
-	{Name: "files.op.compress", Group: "files.op", Desc: "Pack paths into a new archive in a directory", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory"), req("name", "archive name without extension"), opt("format", "zip|tar.gz (default zip)"), opt("scope", "undo stack key, one per window")}},
-	{Name: "files.op.extract", Group: "files.op", Desc: "Unpack zip, tar and tar.gz archives into folders named after them", Params: []ParamSpec{req("paths", "absolute archive paths"), req("dest", "absolute target directory"), opt("scope", "undo stack key, one per window")}},
+	{Name: "files.op.compress", Group: "files.op", Desc: "Pack paths into a new archive in a directory", Params: []ParamSpec{req("paths", "absolute source paths"), req("dest", "absolute target directory"), req("name", "archive name without extension"), opt("format", "zip|tar.gz|tar.xz|tar.zst (default zip)"), opt("scope", "undo stack key, one per window")}},
+	{Name: "files.op.extract", Group: "files.op", Desc: "Unpack zip, tar (gz, bz2, xz, zst, lzma), 7z, rar and cpio archives into folders named after them; a lone compressed file unpacks beside it", Params: []ParamSpec{req("paths", "absolute archive paths"), req("dest", "absolute target directory"), opt("scope", "undo stack key, one per window")}},
 
 	{Name: "files.open", Group: "files.apps", Desc: "Open paths with their default application", Params: []ParamSpec{req("paths", "absolute paths"), opt("cwd", "working directory for the launched app"), opt("activationToken", "xdg activation token from the compositor"), opt("terminal", "terminal to use for Terminal=true entries")}},
 	{Name: "files.openWith", Group: "files.apps", Desc: "Open paths with a named application", Params: []ParamSpec{req("paths", "absolute paths"), req("desktopId", "desktop entry id, for example org.gnome.gedit.desktop"), opt("cwd", "working directory for the launched app"), opt("activationToken", "xdg activation token from the compositor")}},

@@ -8,9 +8,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/location"
 	"github.com/AvengeMedia/dankgo/paths"
 )
+
+func hostEnv() location.Env {
+	return location.HostEnv(paths.XDGDataHome(), fileops.IsArchive)
+}
 
 func publishUI(deps Deps, payload map[string]any) {
 	if deps.Pending == nil {
@@ -24,7 +29,7 @@ func OpenLocations(deps Deps, open, sel []string, newWindow bool) error {
 	if len(open)+len(sel) == 0 && !newWindow {
 		return errors.New("nothing to open")
 	}
-	locations, err := location.Resolve(open, sel, location.HostEnv(paths.XDGDataHome()))
+	locations, err := location.Resolve(open, sel, hostEnv())
 	if err != nil {
 		return err
 	}
@@ -43,7 +48,7 @@ func ShowProperties(deps Deps, targets []string) error {
 	if len(targets) == 0 {
 		return errors.New("nothing to show")
 	}
-	resolved, err := location.LocalPaths(targets, location.HostEnv(paths.XDGDataHome()))
+	resolved, err := location.LocalPaths(targets, hostEnv())
 	if err != nil {
 		return err
 	}

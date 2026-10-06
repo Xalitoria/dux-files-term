@@ -17,6 +17,14 @@ OverlayDialog {
         {
             "value": "tar.gz",
             "label": ".tar.gz"
+        },
+        {
+            "value": "tar.xz",
+            "label": ".tar.xz"
+        },
+        {
+            "value": "tar.zst",
+            "label": ".tar.zst"
         }
     ]
 

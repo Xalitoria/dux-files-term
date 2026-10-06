@@ -311,6 +311,13 @@ Item {
                     onToggled: checked => SettingsData.openLocationIn = checked ? "tab" : "current"
                 }
 
+                SettingsToggleRow {
+                    text: I18n.tr("Extract archives on open", "setting label for opening archives")
+                    description: I18n.tr("Opening an archive unpacks it into a folder beside it instead of launching another application.", "setting description for opening archives")
+                    checked: SettingsData.extractOnOpen
+                    onToggled: checked => SettingsData.extractOnOpen = checked
+                }
+
                 OptionDropdownRow {
                     text: I18n.tr("Language", "interface language setting label")
                     description: I18n.tr("Language of the interface.", "interface language setting description")

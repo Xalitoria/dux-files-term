@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os/user"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -148,8 +149,8 @@ func specOf(req ipc.Request) (spec, error) {
 		if len(s.sources) == 0 || !filepath.IsAbs(s.dest) || !validName(s.name) {
 			return spec{}, invalid("files.op.compress requires paths, an absolute dest and a name")
 		}
-		if s.format != FormatZip && s.format != FormatTarGz {
-			return spec{}, invalid("files.op.compress format must be zip or tar.gz")
+		if !slices.Contains(compressFormats, s.format) {
+			return spec{}, invalid("files.op.compress format must be one of " + strings.Join(compressFormats, ", "))
 		}
 	case "files.op.extract":
 		s.kind = KindExtract

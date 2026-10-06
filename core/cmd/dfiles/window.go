@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/location"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 	"github.com/AvengeMedia/dankgo/paths"
@@ -124,7 +125,7 @@ func callWindow(method string, params map[string]any, validate func(location.Env
 		return s.call(method, params, nil)
 	}
 	sandbox.ExportHostDirs(sandbox.Current())
-	if err := validate(location.HostEnv(paths.XDGDataHome())); err != nil {
+	if err := validate(location.HostEnv(paths.XDGDataHome(), fileops.IsArchive)); err != nil {
 		return err
 	}
 	delete(params, "newWindow")

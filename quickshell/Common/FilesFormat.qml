@@ -46,6 +46,21 @@ Singleton {
         case "application/gzip":
         case "application/x-gzip":
         case "application/x-compressed-tar":
+        case "application/x-bzip":
+        case "application/x-bzip2":
+        case "application/bzip2":
+        case "application/x-bzip-compressed-tar":
+        case "application/x-bzip2-compressed-tar":
+        case "application/x-xz":
+        case "application/x-xz-compressed-tar":
+        case "application/zstd":
+        case "application/x-zstd-compressed-tar":
+        case "application/x-lzma":
+        case "application/x-lzma-compressed-tar":
+        case "application/x-7z-compressed":
+        case "application/vnd.rar":
+        case "application/x-rar":
+        case "application/x-cpio":
             return true;
         }
         return false;

@@ -18,7 +18,7 @@ func fixture(t *testing.T) (string, Env) {
 	for _, file := range []string{"docs/a.txt", "docs/b.txt", "with space/c.txt"} {
 		require.NoError(t, os.WriteFile(filepath.Join(root, file), nil, 0o644))
 	}
-	return root, HostEnv(filepath.Join(root, "data"))
+	return root, HostEnv(filepath.Join(root, "data"), nil)
 }
 
 func TestParse(t *testing.T) {
@@ -164,4 +164,24 @@ func TestLocalPaths(t *testing.T) {
 	assert.ErrorContains(t, err, "not a local path")
 	_, err = LocalPaths([]string{filepath.Join(root, "nope")}, env)
 	assert.ErrorContains(t, err, "does not exist")
+}
+
+func TestResolveMarksArchivesOnlyWhenOpened(t *testing.T) {
+	root, env := fixture(t)
+	archive := filepath.Join(root, "bundle.zip")
+	require.NoError(t, os.WriteFile(archive, nil, 0o644))
+	env.IsArchive = func(path string) bool { return path == archive }
+
+	locations, err := Resolve([]string{archive}, nil, env)
+	require.NoError(t, err)
+	assert.Equal(t, []Location{{Kind: KindArchive, Path: archive, Select: []string{}}}, locations)
+
+	locations, err = Resolve(nil, []string{archive}, env)
+	require.NoError(t, err)
+	assert.Equal(t, []Location{{Kind: KindFolder, Path: root, Select: []string{archive}}}, locations)
+
+	env.IsArchive = nil
+	locations, err = Resolve([]string{archive}, nil, env)
+	require.NoError(t, err)
+	assert.Equal(t, []Location{{Kind: KindFolder, Path: root, Select: []string{archive}}}, locations)
 }

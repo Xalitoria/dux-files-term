@@ -5,6 +5,8 @@ File Manager
 
 `dfiles open` takes paths and URIs, one tab each in the last used window. A file opens its folder with the file selected. `dfiles open --new-window` opens them in a new window, and `dfiles open` with no argument always opens a new window, so launching the app again gives you another window.
 
+An archive given to `dfiles open`, or double clicked in a window, is extracted into a folder beside it, the way Nautilus does it. The setting "Extract archives on open" turns that off. Supported for extraction: zip, tar and tar compressed with gzip, bzip2, xz, zstd or lzma, 7z, rar and cpio, plus lone gz, bz2, xz, zst and lzma files. Compression writes zip, tar.gz, tar.xz and tar.zst. All of it is pure Go, no external tools.
+
 | location | opens |
 | --- | --- |
 | `/path`, `relative/path`, `file:///path` | that path |

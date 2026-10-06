@@ -37,6 +37,7 @@ FloatingWindow {
     property var closedTabs: []
     property string vimPrefix: ""
     property bool sidebarFocusPending: false
+    property var pendingExtracts: ({})
 
     readonly property string opScope: "window" + windowId
     readonly property var cutSet: {
@@ -362,6 +363,9 @@ FloatingWindow {
         case "remote":
             connectRemote(location.uri);
             return;
+        case "archive":
+            openArchive(location.path, inNewTab);
+            return;
         }
         if (location.select.length === 0) {
             openPath(location.path, inNewTab);
@@ -370,6 +374,15 @@ FloatingWindow {
         if (inNewTab)
             newTab(location.path);
         activePane.reveal(location.select);
+    }
+
+    function openArchive(path, inNewTab) {
+        openPath(FilePaths.parentOf(path), inNewTab);
+        if (!SettingsData.extractOnOpen) {
+            activePane.reveal([path]);
+            return;
+        }
+        extractBeside(path, "enter");
     }
 
     function focusPane(index) {
@@ -497,7 +510,10 @@ FloatingWindow {
             compressDialog.ask(selectedPaths());
             return;
         case "extract":
-            FileOpsService.extract(selectedPaths(), currentPath, opScope);
+            extractTo(selectedPaths(), currentPath, "reveal");
+            return;
+        case "extractTo":
+            askExtractTo(selectedPaths());
             return;
         case "newDocument":
             showNewDocumentMenu();
@@ -765,7 +781,74 @@ FloatingWindow {
             executableDialog.ask(entry.path, entry.name);
             return;
         }
+        if (SettingsData.extractOnOpen && FilesFormat.extractable(entry.mime)) {
+            extractBeside(entry.path, "enter");
+            return;
+        }
         AppsService.open([entry.path], response => window.reportError(response));
+    }
+
+    function extractBeside(path, follow) {
+        extractTo([path], FilePaths.parentOf(path), follow);
+    }
+
+    function extractTo(paths, dest, follow) {
+        const pending = pendingExtracts;
+        for (const path of paths)
+            pending[path] = follow;
+        pendingExtracts = pending;
+        FileOpsService.extract(paths, dest, opScope);
+    }
+
+    function askExtractTo(paths) {
+        if (paths.length === 0)
+            return;
+        extractPickerLoader.active = true;
+        extractPickerLoader.item.archives = paths;
+        extractPickerLoader.item.open();
+    }
+
+    function takeExtractFollow(sources) {
+        const pending = pendingExtracts;
+        let follow = "reveal";
+        for (const source of sources) {
+            if (pending[source])
+                follow = pending[source];
+            delete pending[source];
+        }
+        pendingExtracts = pending;
+        return follow;
+    }
+
+    function handleExtracted(job) {
+        const follow = takeExtractFollow(job.sources);
+        const created = job.created ?? [];
+        if (job.cancelled || created.length === 0)
+            return;
+        const paths = created.map(entry => entry.path);
+        const dest = FilePaths.parentOf(paths[0]);
+        const stillHere = dest === activePane.path && !activePane.resultsActive;
+        if (stillHere && follow === "enter" && created.length === 1 && created[0].dir) {
+            activePane.navigate(paths[0]);
+            undoToast(I18n.tr("Extracted", "toast after unpacking an archive"));
+            return;
+        }
+        if (stillHere) {
+            activePane.reveal(paths);
+            undoToast(I18n.tr("Extracted", "toast after unpacking an archive"));
+            return;
+        }
+        ToastService.show(I18n.tr("Extracted to %1", "toast after unpacking into another folder, %1 is the folder name").arg(FilePaths.baseName(dest)), {
+            "actionLabel": I18n.tr("Show", "toast action revealing the extracted files"),
+            "action": () => activePane.reveal(paths)
+        });
+    }
+
+    function undoToast(message) {
+        ToastService.show(message, {
+            "actionLabel": I18n.tr("Undo", "toast action reversing the last operation"),
+            "action": () => FileOpsService.undo(opScope)
+        });
     }
 
     function openWithCurrent() {
@@ -1001,8 +1084,6 @@ FloatingWindow {
             return I18n.tr("Renamed", "toast after renaming a file");
         case "compress":
             return I18n.tr("Archive created", "toast after compressing files");
-        case "extract":
-            return I18n.tr("Extracted", "toast after unpacking an archive");
         default:
             return "";
         }
@@ -1055,19 +1136,24 @@ FloatingWindow {
                     AppsService.run(target, response => window.reportError(response));
             }
             if (job.state === "failed") {
+                if (job.kind === "extract")
+                    window.takeExtractFollow(job.sources);
                 ToastService.info(FileFormat.operationError(job.code, job.error));
                 return;
             }
             DevicesService.refreshUsage(true);
-            if (job.cancelled || job.scope !== window.opScope || !job.undoable)
+            if (job.scope !== window.opScope)
+                return;
+            if (job.kind === "extract") {
+                window.handleExtracted(job);
+                return;
+            }
+            if (job.cancelled || !job.undoable)
                 return;
             const message = window.toastFor(job);
             if (message === "")
                 return;
-            ToastService.show(message, {
-                "actionLabel": I18n.tr("Undo", "toast action reversing the last operation"),
-                "action": () => FileOpsService.undo(window.opScope)
-            });
+            window.undoToast(message);
         }
     }
 
@@ -1807,6 +1893,23 @@ FloatingWindow {
         onConfirmed: {
             FileOpsService.trash(pending, window.opScope);
             pending = [];
+        }
+    }
+
+    LazyLoader {
+        id: extractPickerLoader
+
+        active: false
+
+        FileBrowserModal {
+            property var archives: []
+
+            parentModal: window
+            browserTitle: I18n.tr("Extract to", "folder picker title for unpacking archives")
+            bucket: "extract"
+            mode: "openFolder"
+            revealPath: window.currentPath
+            onAccepted: paths => window.extractTo(archives, paths[0], "reveal")
         }
     }
 

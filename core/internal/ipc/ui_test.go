@@ -58,6 +58,19 @@ func TestUIOpenNewWindowPassesThroughAndAllowsNoLocation(t *testing.T) {
 	}, deps.Pending.Take())
 }
 
+func TestUIOpenMarksArchives(t *testing.T) {
+	dir := t.TempDir()
+	archive := filepath.Join(dir, "bundle.zip")
+	require.NoError(t, os.WriteFile(archive, []byte("PK\x03\x04"), 0o644))
+	deps := Deps{Bus: NewEventBus(), Pending: &PendingOpen{}}
+
+	out := routeAndRead(t, Request{ID: 9, Method: "ui.open", Params: map[string]any{"path": archive}}, deps)
+	assert.Equal(t, map[string]any{"ok": true}, out["result"])
+	assert.Equal(t, []map[string]any{
+		{"action": "open", "locations": []location.Location{{Kind: location.KindArchive, Path: archive, Select: []string{}}}},
+	}, deps.Pending.Take())
+}
+
 func TestUIPropertiesResolvesURIs(t *testing.T) {
 	dir := t.TempDir()
 	deps := Deps{Bus: NewEventBus(), Pending: &PendingOpen{}}
