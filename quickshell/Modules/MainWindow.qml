@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Window
 import Quickshell
+import Quickshell.Wayland
 import qs.Common
 import qs.Services
 import qs.DCommon.Common as DC
@@ -13,7 +14,12 @@ import qs.Modules.Settings
 FloatingWindow {
     id: window
 
-    signal hideRequested
+    signal closeRequested
+    signal newWindowRequested(var locations)
+
+    required property int windowId
+    readonly property bool primary: WindowService.primaryId === windowId
+    property var toplevel: null
 
     property var tabs: []
     property int currentTab: 0
@@ -32,7 +38,7 @@ FloatingWindow {
     property string vimPrefix: ""
     property bool sidebarFocusPending: false
 
-    readonly property string opScope: "main"
+    readonly property string opScope: "window" + windowId
     readonly property var cutSet: {
         const set = ({});
         if (!ClipboardService.cut)
@@ -79,10 +85,25 @@ FloatingWindow {
     }
 
     Component.onCompleted: {
-        restoreSession();
+        const initial = WindowService.takePendingLocations(windowId);
+        if (primary)
+            restoreSession();
+        else
+            startFresh();
         maximized = SessionData.maximized;
-        offerGtkImport();
+        if (primary)
+            offerGtkImport();
         primaryPane.focusBody();
+        if (initial.length > 0)
+            openLocations(initial, true);
+    }
+
+    function claimToplevel() {
+        if (!surface.windowActive)
+            return;
+        const active = ToplevelManager.activeToplevel;
+        if (active && active.appId === "com.danklinux.dankfiles")
+            toplevel = active;
     }
 
     function openSettings() {
@@ -102,11 +123,7 @@ FloatingWindow {
     }
 
     function requestClose() {
-        if (SettingsData.closeBehavior === "quit" && Quickshell.env("DFILES_KEEP_RUNNING") !== "1") {
-            DankFilesService.quit();
-            return;
-        }
-        hideRequested();
+        closeRequested();
     }
 
     function toggleSidebar() {
@@ -158,7 +175,8 @@ FloatingWindow {
 
     function setSplitRatio(value) {
         splitRatio = Math.max(FilesMetrics.minimumPaneFraction, Math.min(1 - FilesMetrics.minimumPaneFraction, value));
-        SessionData.splitRatio = splitRatio;
+        if (primary)
+            SessionData.splitRatio = splitRatio;
     }
 
     function resizeSplit(fraction) {
@@ -183,8 +201,7 @@ FloatingWindow {
             "active": activePaneIndex
         };
         tabs = next;
-        SessionData.tabs = tabs;
-        SessionData.currentTab = currentTab;
+        persistTabs();
     }
 
     function applyTab(index) {
@@ -209,7 +226,7 @@ FloatingWindow {
         captureTabs();
         currentTab = index;
         applyTab(index);
-        SessionData.currentTab = currentTab;
+        persistTabs();
     }
 
     function newTab(path) {
@@ -226,8 +243,7 @@ FloatingWindow {
         tabs = next;
         currentTab = next.length - 1;
         applyTab(currentTab);
-        SessionData.tabs = tabs;
-        SessionData.currentTab = currentTab;
+        persistTabs();
     }
 
     function closeTab(index) {
@@ -246,8 +262,7 @@ FloatingWindow {
         tabs = next;
         currentTab = target;
         applyTab(target);
-        SessionData.tabs = tabs;
-        SessionData.currentTab = currentTab;
+        persistTabs();
     }
 
     function cycleTab(step) {
@@ -269,8 +284,7 @@ FloatingWindow {
         tabs = next;
         currentTab = index;
         applyTab(index);
-        SessionData.tabs = tabs;
-        SessionData.currentTab = currentTab;
+        persistTabs();
     }
 
     function tabLabel(state) {
@@ -282,11 +296,15 @@ FloatingWindow {
         return path.substring(path.lastIndexOf("/") + 1);
     }
 
-    function restoreSession() {
-        splitView = SessionData.splitView;
-        splitRatio = SessionData.splitRatio;
-        const stored = SessionData.tabs;
-        tabs = Array.isArray(stored) && stored.length > 0 ? stored : [
+    function persistTabs() {
+        if (!primary)
+            return;
+        SessionData.tabs = tabs;
+        SessionData.currentTab = currentTab;
+    }
+
+    function homeTabs() {
+        return [
             {
                 "panes": [
                     {
@@ -296,8 +314,30 @@ FloatingWindow {
                 "active": 0
             }
         ];
+    }
+
+    function restoreSession() {
+        splitView = SessionData.splitView;
+        splitRatio = SessionData.splitRatio;
+        const stored = SessionData.tabs;
+        tabs = Array.isArray(stored) && stored.length > 0 ? stored : homeTabs();
         currentTab = Math.max(0, Math.min(SessionData.currentTab, tabs.length - 1));
         applyTab(currentTab);
+    }
+
+    function startFresh() {
+        splitRatio = SessionData.splitRatio;
+        tabs = homeTabs();
+        currentTab = 0;
+        applyTab(0);
+    }
+
+    function folderLocation(path) {
+        return {
+            "kind": "folder",
+            "path": path,
+            "select": []
+        };
     }
 
     function openPath(path, inNewTab) {
@@ -310,8 +350,8 @@ FloatingWindow {
         activePane.navigate(path);
     }
 
-    function openLocations(locations) {
-        locations.forEach((location, index) => openLocation(location, index > 0 || SettingsData.openLocationIn === "tab"));
+    function openLocations(locations, fresh) {
+        locations.forEach((location, index) => openLocation(location, index > 0 || (!fresh && SettingsData.openLocationIn === "tab")));
     }
 
     function openLocation(location, inNewTab) {
@@ -346,7 +386,8 @@ FloatingWindow {
     function toggleSplit() {
         captureTabs();
         splitView = !splitView;
-        SessionData.splitView = splitView;
+        if (primary)
+            SessionData.splitView = splitView;
         if (!splitView) {
             activePaneIndex = 0;
             primaryPane.focusBody();
@@ -394,6 +435,12 @@ FloatingWindow {
             return;
         case "newTab":
             newTab("");
+            return;
+        case "newWindow":
+            newWindowRequested([folderLocation(currentPath)]);
+            return;
+        case "openInNewWindow":
+            openSelectionInNewWindow();
             return;
         case "openInNewTab":
             openSelectionInNewTab();
@@ -538,6 +585,12 @@ FloatingWindow {
         const entry = firstSelected();
         if (entry?.isDir)
             newTab(entry.path);
+    }
+
+    function openSelectionInNewWindow() {
+        const entry = firstSelected();
+        if (entry?.isDir)
+            newWindowRequested([folderLocation(entry.path)]);
     }
 
     function showContextMenuAtCursor() {
@@ -1072,6 +1125,8 @@ FloatingWindow {
         onWindowActiveChanged: {
             if (!windowActive)
                 return;
+            WindowService.activate(window.windowId);
+            window.claimToplevel();
             primaryPane.refresh();
             window.secondPane?.refresh();
         }
@@ -1252,6 +1307,7 @@ FloatingWindow {
                 onReloadRequested: window.runAction("reload")
                 onTerminalRequested: window.openTerminalHere()
                 onPropertiesRequested: window.runAction("properties")
+                onNewWindowRequested: window.runAction("newWindow")
             }
 
             Item {
@@ -1502,6 +1558,15 @@ FloatingWindow {
             onClicked: {
                 bookmarkMenu.close();
                 window.newTab(bookmarkMenu.path);
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Open in new window", "context menu entry opening a folder in another window")
+            iconName: "open_in_new"
+            onClicked: {
+                bookmarkMenu.close();
+                window.newWindowRequested([window.folderLocation(bookmarkMenu.path)]);
             }
         }
 
@@ -1786,7 +1851,15 @@ FloatingWindow {
         id: credentialDialog
     }
 
+    Connections {
+        target: ToplevelManager
+        function onActiveToplevelChanged() {
+            window.claimToplevel();
+        }
+    }
+
     Toast {
         anchors.fill: surface
+        shown: WindowService.lastActiveId === window.windowId
     }
 }

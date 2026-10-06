@@ -21,7 +21,7 @@ ShellRoot {
     readonly property bool enableHotReload: Quickshell.env("DFILES_ENABLE_HOTRELOAD") === "1" || Quickshell.env("DFILES_ENABLE_HOTRELOAD") === "true"
 
     readonly property bool dbusActivated: Quickshell.env("DFILES_DBUS_ACTIVATED") === "1"
-    property var pendingRequests: []
+    readonly property bool quitOnLastClose: SettingsData.closeBehavior === "quit" && Quickshell.env("DFILES_KEEP_RUNNING") !== "1"
     property bool windowShown: false
 
     Component.onCompleted: {
@@ -34,21 +34,39 @@ ShellRoot {
         DC.Host.session = SessionService;
         DC.Host.cache = CacheData;
         DC.Host.files = DirectoryService;
+        if (Quickshell.env("DFILES_START_HIDDEN") !== "1")
+            WindowService.create([]);
     }
 
-    function ownToplevel() {
-        const toplevels = ToplevelManager.toplevels;
-        if (!toplevels || !toplevels.values)
-            return null;
-        for (const t of toplevels.values) {
-            if (t.appId === "com.danklinux.dankfiles")
-                return t;
+    function windowObject(windowId) {
+        for (let i = 0; i < windowInstances.count; i++) {
+            const instance = windowInstances.objectAt(i) as MainWindow;
+            if (instance && instance.windowId === windowId)
+                return instance;
         }
         return null;
     }
 
-    function focusToplevel() {
-        const t = ownToplevel();
+    function ownToplevels() {
+        const toplevels = ToplevelManager.toplevels;
+        if (!toplevels || !toplevels.values)
+            return [];
+        return toplevels.values.filter(t => t.appId === "com.danklinux.dankfiles");
+    }
+
+    function unclaimedToplevel() {
+        const claimed = [];
+        for (let i = 0; i < windowInstances.count; i++) {
+            const instance = windowInstances.objectAt(i) as MainWindow;
+            if (instance?.toplevel)
+                claimed.push(instance.toplevel);
+        }
+        return ownToplevels().find(t => !claimed.includes(t)) ?? null;
+    }
+
+    function focusWindow(windowId) {
+        const instance = windowObject(windowId);
+        const t = instance?.toplevel ?? unclaimedToplevel();
         if (!t)
             return;
         if (t.minimized)
@@ -57,12 +75,20 @@ ShellRoot {
     }
 
     function showAndFocus() {
-        if (windowLoader.active) {
-            focusToplevel();
+        const target = WindowService.target();
+        if (target === 0) {
+            WindowService.create([]);
             return;
         }
-        windowLoader.active = true;
-        focusRetry.restart();
+        focusWindow(target);
+    }
+
+    function anyWindowVisible() {
+        const target = windowObject(WindowService.target());
+        if (!target)
+            return false;
+        const t = target.toplevel ?? unclaimedToplevel();
+        return !t || !t.minimized;
     }
 
     function handleWindowAction(action) {
@@ -71,43 +97,24 @@ ShellRoot {
             showAndFocus();
             break;
         case "hide":
-            windowLoader.active = false;
+            WindowService.closeAll();
             break;
         case "toggle":
-            {
-                const t = windowLoader.active ? ownToplevel() : null;
-                if (t && !t.minimized) {
-                    windowLoader.active = false;
-                    return;
-                }
-                showAndFocus();
-                break;
+            if (anyWindowVisible()) {
+                WindowService.closeAll();
+                return;
             }
+            showAndFocus();
+            break;
         }
     }
 
-    function queueRequest(request) {
-        pendingRequests = pendingRequests.concat([request]);
-        showAndFocus();
-        applyPendingRequests();
-    }
-
-    function applyPendingRequests() {
-        const mainWindow = windowLoader.item as MainWindow;
-        if (!mainWindow || pendingRequests.length === 0)
+    function closeWindow(windowId) {
+        if (WindowService.count <= 1 && quitOnLastClose) {
+            DankFilesService.quit();
             return;
-        const requests = pendingRequests;
-        pendingRequests = [];
-        for (const request of requests) {
-            switch (request.kind) {
-            case "open":
-                mainWindow.openLocations(request.locations);
-                break;
-            case "properties":
-                mainWindow.showPropertiesFor(request.paths);
-                break;
-            }
         }
+        WindowService.close(windowId);
     }
 
     Connections {
@@ -115,30 +122,29 @@ ShellRoot {
         function onWindowActionRequested(action) {
             root.handleWindowAction(action);
         }
-        function onOpenRequested(locations) {
-            if (locations.length === 0)
+        function onOpenRequested(locations, newWindow) {
+            if (locations.length === 0 && !newWindow)
                 return;
-            root.queueRequest({
-                "kind": "open",
-                "locations": locations
-            });
+            const windowId = WindowService.open(locations, newWindow);
+            root.focusWindow(windowId);
         }
         function onPropertiesRequested(paths) {
             if (paths.length === 0)
                 return;
-            root.queueRequest({
-                "kind": "properties",
-                "paths": paths
-            });
+            const windowId = WindowService.target() === 0 ? WindowService.create([]) : WindowService.target();
+            root.focusWindow(windowId);
+            root.windowObject(windowId)?.showPropertiesFor(paths);
         }
     }
 
     Connections {
-        target: windowLoader
-        function onItemChanged() {
-            if (windowLoader.item)
-                root.windowShown = true;
-            root.applyPendingRequests();
+        target: WindowService
+        function onOpenInWindow(windowId, locations) {
+            root.windowObject(windowId)?.openLocations(locations, false);
+        }
+        function onWindowAdded() {
+            root.windowShown = true;
+            focusRetry.restart();
         }
     }
 
@@ -152,15 +158,17 @@ ShellRoot {
         id: focusRetry
         interval: 150
         repeat: false
-        onTriggered: root.focusToplevel()
+        onTriggered: root.focusWindow(WindowService.lastActiveId)
     }
 
-    LazyLoader {
-        id: windowLoader
-        active: Quickshell.env("DFILES_START_HIDDEN") !== "1"
+    Instantiator {
+        id: windowInstances
+
+        model: WindowService.windows
 
         MainWindow {
-            onHideRequested: windowLoader.active = false
+            onNewWindowRequested: locations => WindowService.create(locations)
+            onCloseRequested: root.closeWindow(windowId)
         }
     }
 }

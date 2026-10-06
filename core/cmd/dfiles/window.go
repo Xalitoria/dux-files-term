@@ -28,11 +28,14 @@ var toggleCmd = &cobra.Command{
 	},
 }
 
+var openNewWindow bool
+
 var openCmd = &cobra.Command{
 	Use:   "open [path|uri...]",
 	Short: "Open folders, one tab each; a file opens its folder with the file selected",
 	Long: `Open folders, one tab each; a file opens its folder with the file selected.
-With no argument the window is shown.
+With no argument a new window opens at the home folder, like launching the app.
+--new-window opens the given locations in a new window instead of the last used one.
 
 Accepted locations:
   /path, relative/path     a local path
@@ -46,17 +49,25 @@ Accepted locations:
 	PreRunE: shellApp.ResolveConfig,
 	RunE: func(_ *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return shellApp.CallOrLaunch("ui.show", nil)
+			return callWindow("ui.open", map[string]any{"newWindow": true}, func(location.Env) error { return nil })
 		}
 		targets, err := locationArgs(args)
 		if err != nil {
 			return err
 		}
-		return callWindow("ui.open", map[string]any{"paths": targets}, func(env location.Env) error {
+		params := map[string]any{"paths": targets}
+		if openNewWindow {
+			params["newWindow"] = true
+		}
+		return callWindow("ui.open", params, func(env location.Env) error {
 			_, err := location.Resolve(targets, nil, env)
 			return err
 		})
 	},
+}
+
+func init() {
+	openCmd.Flags().BoolVarP(&openNewWindow, "new-window", "n", false, "Open a new window instead of using the last used one")
 }
 
 var selectCmd = &cobra.Command{
@@ -106,6 +117,7 @@ func locationArgs(args []string) ([]string, error) {
 }
 
 // CallOrLaunch retries a refused request until its timeout, so a cold start is validated first.
+// The window a cold start opens is the new window, so the flag is dropped before launching.
 func callWindow(method string, params map[string]any, validate func(location.Env) error) error {
 	if s, err := dialDaemon(); err == nil {
 		defer s.Close()
@@ -115,5 +127,6 @@ func callWindow(method string, params map[string]any, validate func(location.Env
 	if err := validate(location.HostEnv(paths.XDGDataHome())); err != nil {
 		return err
 	}
+	delete(params, "newWindow")
 	return shellApp.CallOrLaunch(method, params)
 }

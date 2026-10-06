@@ -41,6 +41,12 @@ FileMenu {
             "enabled": hasDirectory && selectionCount === 1
         },
         {
+            "id": "openInNewWindow",
+            "icon": "open_in_new",
+            "label": I18n.tr("Open in new window", "context menu entry opening a folder in another window"),
+            "enabled": hasDirectory && selectionCount === 1
+        },
+        {
             "id": "openInPane",
             "icon": "splitscreen_vertical_add",
             "label": I18n.tr("Open in the other pane", "context menu entry opening a folder beside the current one"),
@@ -204,7 +210,7 @@ FileMenu {
 
             readonly property bool separator: modelData.id === "separator"
 
-            width: parent.width
+            width: parent?.width ?? 0
             visible: modelData.visible !== false
             height: visible ? (separator ? Theme.spacingS * 2 : Theme.menuItemHeight) : 0
 

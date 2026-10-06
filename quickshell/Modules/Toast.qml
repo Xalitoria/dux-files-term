@@ -6,13 +6,15 @@ import qs.DCommon.Widgets
 Item {
     id: root
 
+    property bool shown: true
+
     z: 1000
     visible: bar.opacity > 0
 
     Rectangle {
         id: bar
 
-        readonly property bool showing: ToastService.active
+        readonly property bool showing: ToastService.active && root.shown
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom

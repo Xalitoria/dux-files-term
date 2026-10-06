@@ -131,6 +131,13 @@ Singleton {
             "label": I18n.tr("Search in Files", "placeholder in the search field")
         },
         {
+            "id": "newWindow",
+            "keys": ["Ctrl+N"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("New window", "menu entry opening another file manager window")
+        },
+        {
             "id": "newTab",
             "keys": ["Ctrl+T"],
             "group": "navigation",

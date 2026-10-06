@@ -26,10 +26,10 @@ var Methods = []MethodSpec{
 	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network,sizes,bookmarks,search:<id>")}},
 	{Name: "unsubscribe", Group: "core", Desc: "Unsubscribe from event topics", Params: []ParamSpec{opt("topics", "topics to drop")}},
 
-	{Name: "ui.show", Group: "ui", Desc: "Show the file manager window"},
-	{Name: "ui.hide", Group: "ui", Desc: "Hide the file manager window"},
-	{Name: "ui.toggle", Group: "ui", Desc: "Toggle the file manager window"},
-	{Name: "ui.open", Group: "ui", Desc: "Open folders, each in its own tab; a file opens its folder with it selected", Params: []ParamSpec{opt("path", "absolute path or URI"), opt("paths", "absolute paths or URIs, one tab each"), opt("select", "absolute paths or URIs to select, grouped by folder")}},
+	{Name: "ui.show", Group: "ui", Desc: "Show the last used file manager window, opening one if none is open"},
+	{Name: "ui.hide", Group: "ui", Desc: "Hide every file manager window"},
+	{Name: "ui.toggle", Group: "ui", Desc: "Toggle the file manager windows"},
+	{Name: "ui.open", Group: "ui", Desc: "Open folders, each in its own tab; a file opens its folder with it selected", Params: []ParamSpec{opt("path", "absolute path or URI"), opt("paths", "absolute paths or URIs, one tab each"), opt("select", "absolute paths or URIs to select, grouped by folder"), opt("newWindow", "open in a new window instead of the last used one")}},
 	{Name: "ui.properties", Group: "ui", Desc: "Show the properties dialog for paths", Params: []ParamSpec{req("paths", "absolute paths or file:// URIs")}},
 	{Name: "ui.quit", Group: "ui", Desc: "Quit the running daemon"},
 

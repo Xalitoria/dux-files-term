@@ -3,7 +3,7 @@ File Manager
 
 ## Desktop integration
 
-`dfiles open` takes paths and URIs, one tab each. A file opens its folder with the file selected.
+`dfiles open` takes paths and URIs, one tab each in the last used window. A file opens its folder with the file selected. `dfiles open --new-window` opens them in a new window, and `dfiles open` with no argument always opens a new window, so launching the app again gives you another window.
 
 | location | opens |
 | --- | --- |

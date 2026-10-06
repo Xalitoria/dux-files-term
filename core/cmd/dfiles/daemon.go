@@ -161,11 +161,11 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 type fileManagerRequests struct{ deps ipc.Deps }
 
 func (r fileManagerRequests) ShowFolders(uris []string) error {
-	return ipc.OpenLocations(r.deps, uris, nil)
+	return ipc.OpenLocations(r.deps, uris, nil, false)
 }
 
 func (r fileManagerRequests) ShowItems(uris []string) error {
-	return ipc.OpenLocations(r.deps, nil, uris)
+	return ipc.OpenLocations(r.deps, nil, uris, false)
 }
 
 func (r fileManagerRequests) ShowItemProperties(uris []string) error {

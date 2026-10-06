@@ -20,15 +20,22 @@ func publishUI(deps Deps, payload map[string]any) {
 	deps.Pending.Deliver(deps.Bus, payload)
 }
 
-func OpenLocations(deps Deps, open, sel []string) error {
-	if len(open)+len(sel) == 0 {
+func OpenLocations(deps Deps, open, sel []string, newWindow bool) error {
+	if len(open)+len(sel) == 0 && !newWindow {
 		return errors.New("nothing to open")
 	}
 	locations, err := location.Resolve(open, sel, location.HostEnv(paths.XDGDataHome()))
 	if err != nil {
 		return err
 	}
-	publishUI(deps, map[string]any{"action": "open", "locations": locations})
+	if locations == nil {
+		locations = []location.Location{}
+	}
+	payload := map[string]any{"action": "open", "locations": locations}
+	if newWindow {
+		payload["newWindow"] = true
+	}
+	publishUI(deps, payload)
 	return nil
 }
 
@@ -55,7 +62,7 @@ func HandleUI(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 		if path := ParamString(req.Params, "path"); path != "" {
 			open = append([]string{path}, open...)
 		}
-		if err := OpenLocations(deps, open, stringList(req.Params, "select")); err != nil {
+		if err := OpenLocations(deps, open, stringList(req.Params, "select"), ParamBool(req.Params, "newWindow")); err != nil {
 			RespondError(w, req.ID, "ui.open: "+err.Error())
 			return
 		}

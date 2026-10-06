@@ -41,6 +41,23 @@ func TestUIOpenQueuesEveryRequestUntilSubscribed(t *testing.T) {
 	assert.Empty(t, deps.Pending.Take())
 }
 
+func TestUIOpenNewWindowPassesThroughAndAllowsNoLocation(t *testing.T) {
+	dir := t.TempDir()
+	deps := Deps{Bus: NewEventBus(), Pending: &PendingOpen{}}
+
+	out := routeAndRead(t, Request{ID: 6, Method: "ui.open", Params: map[string]any{"path": dir, "newWindow": true}}, deps)
+	assert.Equal(t, map[string]any{"ok": true}, out["result"])
+	out = routeAndRead(t, Request{ID: 7, Method: "ui.open", Params: map[string]any{"newWindow": true}}, deps)
+	assert.Equal(t, map[string]any{"ok": true}, out["result"])
+	out = routeAndRead(t, Request{ID: 8, Method: "ui.open", Params: map[string]any{}}, deps)
+	assert.Contains(t, out["error"], "nothing to open")
+
+	assert.Equal(t, []map[string]any{
+		{"action": "open", "locations": []location.Location{{Kind: location.KindFolder, Path: dir, Select: []string{}}}, "newWindow": true},
+		{"action": "open", "locations": []location.Location{}, "newWindow": true},
+	}, deps.Pending.Take())
+}
+
 func TestUIPropertiesResolvesURIs(t *testing.T) {
 	dir := t.TempDir()
 	deps := Deps{Bus: NewEventBus(), Pending: &PendingOpen{}}

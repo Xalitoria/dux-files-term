@@ -52,6 +52,7 @@ Item {
     signal sortKeySelected(string key)
     signal sortDirectionToggled
     signal propertiesRequested
+    signal newWindowRequested
     signal copyPathRequested
     signal reloadRequested
     signal terminalRequested
@@ -232,6 +233,15 @@ Item {
                     onClicked: {
                         overflowMenu.close();
                         topbar.splitToggled();
+                    }
+                }
+
+                FileMenuItem {
+                    text: I18n.tr("New window", "menu entry opening another file manager window")
+                    iconName: "open_in_new"
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.newWindowRequested();
                     }
                 }
 

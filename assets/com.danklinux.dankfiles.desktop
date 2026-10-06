@@ -11,4 +11,8 @@ Keywords=files;folders;browse;explorer;
 MimeType=inode/directory;x-scheme-handler/trash;x-scheme-handler/sftp;x-scheme-handler/smb;
 StartupNotify=true
 StartupWMClass=com.danklinux.dankfiles
-SingleMainWindow=true
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=dfiles open --new-window %U

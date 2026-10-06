@@ -29,7 +29,7 @@ Singleton {
 
     signal connectionStateChanged
     signal windowActionRequested(string action)
-    signal openRequested(var locations)
+    signal openRequested(var locations, bool newWindow)
     signal propertiesRequested(var paths)
     signal colorSchemeUpdate(var data)
 
@@ -201,7 +201,7 @@ Singleton {
     function _onUiEvent(data) {
         switch (data.action) {
         case "open":
-            openRequested(data.locations || []);
+            openRequested(data.locations || [], data.newWindow === true);
             return;
         case "properties":
             propertiesRequested(data.paths || []);
