@@ -73,6 +73,7 @@ Singleton {
     property alias focusRingWidth: adapter.focusRingWidth
     // "primary" | "secondary" | "outline" | "surfaceText"
     property alias focusRingColor: adapter.focusRingColor
+    property alias windowTitleBars: adapter.windowTitleBars
     // "" follows the system language, otherwise a bundled translation code such as "de"
     property alias language: adapter.language
     // "" autodetects from $TERMINAL and the known emulators
@@ -155,6 +156,7 @@ Singleton {
             property bool focusRingEnabled: true
             property real focusRingWidth: 1.5
             property string focusRingColor: "primary"
+            property bool windowTitleBars: true
             property string language: ""
             property string terminal: ""
             property string closeBehavior: "quit"
