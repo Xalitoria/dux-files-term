@@ -8,8 +8,9 @@ shell  every tests/qml/*.qml as the shell.qml of a scratch root built from
        throwaway HOME and XDG tree, no socket and no session bus
 
 Each fixture logs `FIXTURE PASS` when every check passed. A missing marker, a
-non-zero exit, a QML error line or a timeout fails the run and prints that
-fixture's full log.
+non-zero exit, a QML error line before the marker or a timeout fails the run
+and prints that fixture's full log. Warnings after the marker are engine
+teardown and ignored.
 """
 
 import argparse
@@ -27,7 +28,7 @@ import time
 repo = Path(__file__).resolve().parents[2]
 shell_dir = repo / "quickshell"
 tests_dir = shell_dir / "tests"
-fixture_timeout = 60
+fixture_timeout = 10
 ansi = re.compile(r"\x1b\[[0-9;]*m")
 qml_error = re.compile(r"ReferenceError|TypeError|is not a type|Unable to assign|Cannot assign|is not defined|Could not load|Component is not ready|Binding loop|is not installed|Cannot read property")
 host_env_prefixes = ("DFILES_", "QS_", "QT_", "XDG_", "LC_", "LANG", "TZ")
@@ -110,7 +111,8 @@ def run_fixture(fixture, qs):
             return fixture.stem, False, time.monotonic() - started, error
         output, timed_out = communicate(process, fixture_timeout)
     output = ansi.sub("", output)
-    passed = not timed_out and process.returncode == 0 and "FIXTURE PASS" in output and not qml_error.search(output)
+    checks, marker, _ = output.partition("FIXTURE PASS")
+    passed = not timed_out and process.returncode == 0 and marker != "" and not qml_error.search(checks)
     return fixture.stem, passed, time.monotonic() - started, output
 
 
