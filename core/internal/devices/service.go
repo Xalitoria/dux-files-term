@@ -194,7 +194,9 @@ func (s *Service) propertiesChanged(sig *dbus.Signal) bool {
 	for key, value := range changed {
 		props[key] = value
 		if key == "MountPoints" {
-			s.usage.forget(firstMountPoint(props))
+			for _, point := range allMountPoints(props) {
+				s.usage.forget(point)
+			}
 		}
 	}
 	return true

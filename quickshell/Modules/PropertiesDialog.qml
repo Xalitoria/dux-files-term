@@ -149,7 +149,16 @@ OverlayDialog {
 
     Item {
         width: parent.width
-        height: Math.max(basics.implicitHeight, permissions.implicitHeight, openWith.implicitHeight)
+        height: {
+            switch (root.tab) {
+            case 1:
+                return permissions.implicitHeight;
+            case 2:
+                return openWith.implicitHeight;
+            default:
+                return basics.implicitHeight;
+            }
+        }
 
         Column {
             id: basics

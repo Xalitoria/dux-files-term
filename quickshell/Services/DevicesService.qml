@@ -50,14 +50,22 @@ Singleton {
             if (response.error)
                 return;
             root._onEvent(response.result || {});
-            root.refreshUsage(false);
         });
     }
 
-    // The daemon caches usage for 30 seconds, so calling this whenever the
-    // sidebar appears costs one statfs per device at most that often.
     function refreshUsage(force) {
+        const paths = [];
+        for (const device of devices) {
+            const mounts = device.mountPoints?.length ? device.mountPoints : device.mounted ? [device.mountPoint] : [];
+            for (const path of mounts) {
+                if (!paths.includes(path))
+                    paths.push(path);
+            }
+        }
+        if (!paths.includes("/"))
+            paths.unshift("/");
         transport.sendRequest("devices.usage", {
+            "paths": paths,
             "force": force === true
         }, response => {
             if (response.error)
@@ -119,6 +127,7 @@ Singleton {
         available = data.available === true;
         reason = data.reason || "";
         devices = data.devices || [];
+        refreshUsage(false);
     }
 
     function _send(method, params, callback) {

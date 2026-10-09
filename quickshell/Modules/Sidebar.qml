@@ -154,6 +154,7 @@ DFlickable {
 
         DevicesSection {
             width: sections.width
+            currentPath: sidebar.currentPath
             onNavigateRequested: path => sidebar.navigateRequested(path)
             onUnlockRequested: device => sidebar.unlockRequested(device)
             onDropRequested: (path, drop) => sidebar.dropRequested(path, drop)

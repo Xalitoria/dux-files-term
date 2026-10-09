@@ -199,3 +199,44 @@ func TestHandleUnlockReportsAMountFailureWithoutLosingTheUnlock(t *testing.T) {
 	assert.Equal(t, "NOTSUPPORTED", result["mountCode"])
 	assert.NotContains(t, result, "mountPoint")
 }
+
+func TestHandleRefusesToDetachProtectedMounts(t *testing.T) {
+	for _, method := range []string{"devices.unmount", "devices.eject", "devices.powerOff", "devices.lock"} {
+		for _, point := range []string{"/", "/home", "/boot"} {
+			t.Run(method+point, func(t *testing.T) {
+				bus := &fakeBus{}
+				svc := testService(t, bus)
+				svc.objects["/block/stick"][FsIface]["MountPoints"] = mountPoints(point)
+				out := call(t, svc, ipc.Request{ID: 17, Method: method, Params: map[string]any{"id": "/block/stick", "force": true}})
+				assert.Equal(t, "EPERM", out["code"])
+				assert.Empty(t, bus.calls)
+			})
+		}
+	}
+}
+
+func TestHandleRefusesToEjectDrivesWithProtectedIgnoredPartitions(t *testing.T) {
+	for _, method := range []string{"devices.eject", "devices.powerOff"} {
+		t.Run(method, func(t *testing.T) {
+			bus := &fakeBus{}
+			svc := testService(t, bus)
+			svc.objects["/block/efi"][BlockIface]["Drive"] = dbus.MakeVariant(dbus.ObjectPath("/drives/stick"))
+			out := call(t, svc, ipc.Request{ID: 18, Method: method, Params: map[string]any{"id": "/block/stick"}})
+			assert.Equal(t, "EPERM", out["code"])
+			assert.Empty(t, bus.calls)
+		})
+	}
+}
+
+func TestHandleRefusesToLockEncryptedHome(t *testing.T) {
+	bus := &fakeBus{}
+	svc := testService(t, bus)
+	svc.objects["/block/stick"][CryptoIface] = props(map[string]any{})
+	svc.objects["/block/clear"] = map[string]map[string]dbus.Variant{
+		BlockIface: props(map[string]any{"CryptoBackingDevice": dbus.ObjectPath("/block/stick")}),
+		FsIface:    {"MountPoints": mountPoints("/home")},
+	}
+	out := call(t, svc, ipc.Request{ID: 19, Method: "devices.lock", Params: map[string]any{"id": "/block/stick"}})
+	assert.Equal(t, "EPERM", out["code"])
+	assert.Empty(t, bus.calls)
+}

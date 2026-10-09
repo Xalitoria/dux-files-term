@@ -149,6 +149,13 @@ ShellRoot {
         check("system device found", DevicesService.systemDevice.id, "/block/root");
         check("usage ratio", DevicesService.usageRatio("/"), 0.25);
         check("usage ratio for an unknown mount", DevicesService.usageRatio("/nope"), -1);
+        DevicesService.devices = [device("/block/root", {
+                "mounted": true,
+                "mountPoint": "/",
+                "mountPoints": ["/", "/home"]
+            })];
+        DevicesService.refreshUsage(false);
+        check("usage includes all mounts", lastRequest().params.paths, ["/", "/home"]);
 
         emit("devices", {
             "available": false,
@@ -187,6 +194,7 @@ ShellRoot {
 
         DevicesService.refreshUsage(true);
         check("forced usage refresh", lastRequest().params, {
+            "paths": ["/"],
             "force": true
         });
 

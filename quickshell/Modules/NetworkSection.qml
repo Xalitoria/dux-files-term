@@ -36,6 +36,7 @@ FilePlaceSection {
             label: modelData.name
             iconName: modelData.iconName
             actionIcon: "eject"
+            actionTooltip: I18n.tr("Disconnect", "network mount action")
             busy: section.busyId === modelData.id
             dropPath: modelData.path
             onClicked: section.navigateRequested(modelData.path)

@@ -49,7 +49,7 @@ Column {
 
     DListView {
         width: parent.width
-        height: Theme.listItemHeight * 4
+        height: Math.min(count, 4) * Theme.listItemHeight + Math.max(0, Math.min(count, 4) - 1) * spacing
         clip: true
         spacing: Theme.groupedListGap
         model: openWith.apps

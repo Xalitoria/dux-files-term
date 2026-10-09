@@ -11,6 +11,7 @@ Singleton {
     readonly property real windowMinWidth: Theme.smallBreakpoint
     readonly property real windowMinHeight: Theme.smallBreakpoint * 2 / 3
     readonly property real sidebarWidth: FileBrowserMetrics.sidebarWidth
+    readonly property real sidebarMinWidth: sidebarWidth * 0.75
     readonly property real sidebarPadding: FileBrowserMetrics.sidebarPadding
     readonly property real sidebarSectionSpacing: Theme.spacingL
     readonly property int sidebarOverlayBreakpoint: FileBrowserMetrics.sidebarBreakpoint

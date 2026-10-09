@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,26 +31,28 @@ const (
 type Objects map[dbus.ObjectPath]map[string]map[string]dbus.Variant
 
 type Device struct {
-	ID          string `json:"id"`
-	Kind        string `json:"kind"`
-	Name        string `json:"name"`
-	Device      string `json:"device"`
-	Drive       string `json:"drive,omitempty"`
-	Label       string `json:"label,omitempty"`
-	Fstype      string `json:"fstype,omitempty"`
-	UUID        string `json:"uuid,omitempty"`
-	Size        uint64 `json:"size"`
-	Removable   bool   `json:"removable"`
-	Ejectable   bool   `json:"ejectable"`
-	CanPowerOff bool   `json:"canPowerOff"`
-	Encrypted   bool   `json:"encrypted"`
-	Unlocked    bool   `json:"unlocked"`
-	Cleartext   string `json:"cleartext,omitempty"`
-	Mounted     bool   `json:"mounted"`
-	MountPoint  string `json:"mountPoint,omitempty"`
-	IconName    string `json:"iconName"`
-	System      bool   `json:"system"`
-	Hidden      bool   `json:"hidden,omitempty"`
+	ID          string   `json:"id"`
+	Kind        string   `json:"kind"`
+	Name        string   `json:"name"`
+	Device      string   `json:"device"`
+	Drive       string   `json:"drive,omitempty"`
+	Label       string   `json:"label,omitempty"`
+	Fstype      string   `json:"fstype,omitempty"`
+	UUID        string   `json:"uuid,omitempty"`
+	Size        uint64   `json:"size"`
+	Removable   bool     `json:"removable"`
+	Ejectable   bool     `json:"ejectable"`
+	CanPowerOff bool     `json:"canPowerOff"`
+	Encrypted   bool     `json:"encrypted"`
+	Unlocked    bool     `json:"unlocked"`
+	Cleartext   string   `json:"cleartext,omitempty"`
+	Mounted     bool     `json:"mounted"`
+	MountPoint  string   `json:"mountPoint,omitempty"`
+	MountPoints []string `json:"mountPoints,omitempty"`
+	IconName    string   `json:"iconName"`
+	System      bool     `json:"system"`
+	Protected   bool     `json:"protected"`
+	Hidden      bool     `json:"hidden,omitempty"`
 }
 
 // List folds cleartext devices into the LUKS container they unlock and drops
@@ -117,14 +120,37 @@ func build(objects Objects, path dbus.ObjectPath, ifaces map[string]map[string]d
 			device.Fstype = stringOf(inner["IdType"])
 		}
 	}
+	device.MountPoints = allMountPoints(mountSource[FsIface])
 	device.MountPoint = firstMountPoint(mountSource[FsIface])
+	for _, point := range device.MountPoints {
+		if point == "/" {
+			device.MountPoint = point
+			break
+		}
+	}
 	device.Mounted = device.MountPoint != ""
 	device.System = device.MountPoint == "/"
+	device.Protected = protectedMounts(device.MountPoints)
 
 	device.Kind = kindOf(device, ifaces, drive)
 	device.Name = nameOf(device, block, drive)
 	device.IconName = iconOf(device, drive)
 	return device
+}
+
+func protectedMounts(points []string) bool {
+	for _, point := range points {
+		point = filepath.Clean(point)
+		if point == "/" {
+			return true
+		}
+		base, _, _ := strings.Cut(strings.TrimPrefix(point, "/"), "/")
+		switch base {
+		case "home", "root", "boot", "efi", "usr", "var", "etc", "bin", "sbin", "lib", "lib32", "lib64", "opt":
+			return true
+		}
+	}
+	return false
 }
 
 func kindOf(device Device, ifaces map[string]map[string]dbus.Variant, drive map[string]dbus.Variant) string {
@@ -144,8 +170,6 @@ func kindOf(device Device, ifaces map[string]map[string]dbus.Variant, drive map[
 
 func nameOf(device Device, block, drive map[string]dbus.Variant) string {
 	switch {
-	case device.System:
-		return ""
 	case device.Label != "":
 		return device.Label
 	case stringOf(block["HintName"]) != "":
@@ -229,11 +253,25 @@ func cleartextByBacking(objects Objects) map[dbus.ObjectPath]dbus.ObjectPath {
 }
 
 func firstMountPoint(fs map[string]dbus.Variant) string {
-	points, ok := fs["MountPoints"].Value().([][]byte)
-	if !ok || len(points) == 0 {
+	points := allMountPoints(fs)
+	if len(points) == 0 {
 		return ""
 	}
-	return byteString(points[0])
+	return points[0]
+}
+
+func allMountPoints(fs map[string]dbus.Variant) []string {
+	points, ok := fs["MountPoints"].Value().([][]byte)
+	if !ok {
+		return nil
+	}
+	out := make([]string, 0, len(points))
+	for _, point := range points {
+		if path := byteString(point); path != "" {
+			out = append(out, path)
+		}
+	}
+	return out
 }
 
 func hasIface(ifaces map[string]map[string]dbus.Variant, name string) bool {

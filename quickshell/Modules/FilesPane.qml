@@ -26,6 +26,7 @@ FocusScope {
     readonly property alias renaming: browser.renaming
     readonly property alias searchModel: searchModel
     readonly property bool resultsActive: searchModel.active
+    readonly property var scroller: body.view?.activeList ?? body.view
     readonly property var selection: resultsActive ? results.selection : browser.selection
     readonly property var body: resultsActive ? results.body : browser.body
     readonly property var currentEntry: resultsActive ? results.body.cursorEntry() : browser.currentEntry
@@ -102,7 +103,12 @@ FocusScope {
 
     function restoreState(state) {
         closeSearch();
-        browser.restoreState(state);
+        const folder = path => path === "computer:" ? "/" : path;
+        browser.restoreState(Object.assign({}, state, {
+            "path": folder(state?.path),
+            "back": state?.back?.map(folder),
+            "forward": state?.forward?.map(folder)
+        }));
     }
 
     function marker() {
@@ -158,6 +164,28 @@ FocusScope {
         const widths = Object.assign({}, SessionData.columnWidths);
         widths[id] = width;
         SessionData.columnWidths = widths;
+    }
+
+    function forwardWheel(event) {
+        if (!scroller?.forwardWheel) {
+            event.accepted = false;
+            return;
+        }
+        scroller.forwardWheel(event);
+    }
+
+    function forwardWheelEnd() {
+        scroller?.forwardWheelEnd();
+    }
+
+    WheelHandler {
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        acceptedModifiers: Qt.NoModifier
+        onWheel: event => pane.forwardWheel(event)
+        onActiveChanged: {
+            if (!active)
+                pane.forwardWheelEnd();
+        }
     }
 
     Keys.onPressed: event => handleKey(event)

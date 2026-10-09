@@ -100,8 +100,19 @@ func TestListMarksTheRootFilesystemAsTheSystemDevice(t *testing.T) {
 	assert.True(t, root.System)
 	assert.True(t, root.Mounted)
 	assert.Equal(t, "/", root.MountPoint)
-	assert.Empty(t, root.Name, "the UI names the system device itself")
+	assert.Equal(t, "ACME SSD", root.Name)
 	assert.Equal(t, "drive-harddisk-system", root.IconName)
+}
+
+func TestListKeepsEveryMountPointAndFindsRoot(t *testing.T) {
+	objects := table()
+	objects["/block/root"][FsIface]["MountPoints"] = mountPoints("/home", "/", "/var")
+
+	root, ok := byID(List(objects, testUID), "/block/root")
+	require.True(t, ok)
+	assert.Equal(t, []string{"/home", "/", "/var"}, root.MountPoints)
+	assert.Equal(t, "/", root.MountPoint)
+	assert.True(t, root.System)
 }
 
 func TestListDescribesRemovableMedia(t *testing.T) {
@@ -193,4 +204,25 @@ func TestListDropsBlocksWithoutAFilesystem(t *testing.T) {
 		},
 	}
 	assert.Empty(t, List(objects, testUID))
+}
+
+func TestListProtectsSystemMounts(t *testing.T) {
+	for _, point := range []string{"/", "/home", "/home/brandon", "/boot", "/boot/efi", "/efi", "/usr", "/var/log", "/etc", "/root", "/opt"} {
+		t.Run(point, func(t *testing.T) {
+			objects := table()
+			objects["/block/stick"][FsIface]["MountPoints"] = mountPoints("/mnt/alias", point)
+			device, ok := byID(List(objects, testUID), "/block/stick")
+			require.True(t, ok)
+			assert.True(t, device.Protected)
+		})
+	}
+	for _, point := range []string{"", "/mnt/projects", "/media/backup", "/run/media/brandon/USB", "/home-backup"} {
+		t.Run(point, func(t *testing.T) {
+			objects := table()
+			objects["/block/stick"][FsIface]["MountPoints"] = mountPoints(point)
+			device, ok := byID(List(objects, testUID), "/block/stick")
+			require.True(t, ok)
+			assert.False(t, device.Protected)
+		})
+	}
 }

@@ -1208,6 +1208,30 @@ FloatingWindow {
         LayoutMirroring.enabled: I18n.isRtl
         LayoutMirroring.childrenInherit: true
 
+        WheelHandler {
+            property var forwardedScroller: null
+
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            acceptedModifiers: Qt.NoModifier
+            enabled: !window.dialogOpen
+            onWheel: event => {
+                const point = sidebarSlot.mapFromItem(surface, event.x, event.y);
+                const overSidebar = window.sidebarDocked && point.x >= 0 && point.x <= sidebarSlot.width && point.y >= 0;
+                forwardedScroller = overSidebar ? dockedSidebar : window.activePane.scroller;
+                if (!forwardedScroller?.forwardWheel) {
+                    event.accepted = false;
+                    return;
+                }
+                forwardedScroller.forwardWheel(event);
+            }
+            onActiveChanged: {
+                if (active)
+                    return;
+                forwardedScroller?.forwardWheelEnd();
+                forwardedScroller = null;
+            }
+        }
+
         onWindowActiveChanged: {
             if (!windowActive)
                 return;
@@ -1277,14 +1301,26 @@ FloatingWindow {
         Item {
             id: sidebarSlot
 
+            readonly property real maximumWidth: Math.max(FilesMetrics.sidebarMinWidth, surface.width - FilesMetrics.windowMinWidth)
+            property real preferredWidth: CacheData.sidebarWidth
+
             anchors.top: header.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            width: window.sidebarDocked ? FilesMetrics.sidebarWidth : 0
+            width: window.sidebarDocked ? Math.max(FilesMetrics.sidebarMinWidth, Math.min(maximumWidth, preferredWidth)) : 0
             clip: true
 
+            Connections {
+                target: CacheData
+
+                function onSidebarWidthChanged() {
+                    if (!sidebarResizeArea.pressed)
+                        sidebarSlot.preferredWidth = CacheData.sidebarWidth;
+                }
+            }
+
             Behavior on width {
-                enabled: Theme.animationsEnabled
+                enabled: Theme.animationsEnabled && !sidebarResizeArea.pressed
                 NumberAnimation {
                     duration: Theme.expressiveDurations.expressiveDefaultSpatial
                     easing.type: Easing.BezierSpline
@@ -1313,13 +1349,54 @@ FloatingWindow {
             }
         }
 
-        Rectangle {
+        Item {
+            id: sidebarResizer
+
             anchors.left: sidebarSlot.right
+            anchors.leftMargin: -width / 2
             anchors.top: header.bottom
             anchors.bottom: parent.bottom
-            width: Theme.dividerWidth
-            visible: sidebarSlot.width > 0
-            color: Theme.outlineVariant
+            width: FilesMetrics.splitterWidth
+            visible: window.sidebarDocked
+            z: 1
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: Theme.outlineWidthFocused
+                height: FilesMetrics.splitterHandleHeight
+                radius: Theme.cornerRadiusFull
+                color: Theme.primary
+                visible: sidebarResizeArea.containsMouse || sidebarResizeArea.pressed
+            }
+
+            MouseArea {
+                id: sidebarResizeArea
+
+                property real pressX: 0
+                property real startWidth: 0
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.SplitHCursor
+                acceptedButtons: Qt.LeftButton
+                onPressed: mouse => {
+                    pressX = mapToItem(surface, mouse.x, 0).x;
+                    startWidth = sidebarSlot.width;
+                }
+                onPositionChanged: mouse => {
+                    if (!pressed)
+                        return;
+                    const delta = mapToItem(surface, mouse.x, 0).x - pressX;
+                    const width = startWidth + (I18n.isRtl ? -delta : delta);
+                    sidebarSlot.preferredWidth = Math.max(FilesMetrics.sidebarMinWidth, Math.min(sidebarSlot.maximumWidth, width));
+                }
+                onReleased: CacheData.sidebarWidth = Math.round(sidebarSlot.preferredWidth)
+                onCanceled: sidebarSlot.preferredWidth = CacheData.sidebarWidth
+                onDoubleClicked: {
+                    sidebarSlot.preferredWidth = FilesMetrics.sidebarWidth;
+                    CacheData.sidebarWidth = Math.round(FilesMetrics.sidebarWidth);
+                }
+            }
         }
 
         Item {
@@ -1488,7 +1565,7 @@ FloatingWindow {
 
             anchors.top: header.bottom
             anchors.bottom: parent.bottom
-            width: FilesMetrics.sidebarWidth
+            width: Math.max(FilesMetrics.sidebarMinWidth, Math.min(window.width - FilesMetrics.contentMarginH * 2, CacheData.sidebarWidth))
             visible: x > -width
             x: window.sidebarOverlayOpen ? 0 : -width
             color: Theme.surfaceContainerLow

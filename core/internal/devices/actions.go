@@ -6,8 +6,6 @@ import (
 
 var noOptions = map[string]dbus.Variant{}
 
-// udisks runs the polkit check itself, so any prompt belongs to the system
-// agent and never to us.
 func (s *Service) Mount(id string) (string, error) {
 	device, err := s.mountable(id)
 	if err != nil {
@@ -35,6 +33,10 @@ func (s *Service) Unmount(id string, force bool) error {
 		return nil
 	}
 
+	if err := s.checkDetach(device, false); err != nil {
+		return err
+	}
+
 	options := noOptions
 	if force {
 		options = map[string]dbus.Variant{"force": dbus.MakeVariant(true)}
@@ -50,6 +52,9 @@ func (s *Service) Eject(id string) error {
 	device, found := s.find(id)
 	if !found {
 		return fail("ENOENT", "unknown device: %s", id)
+	}
+	if err := s.checkDetach(device, true); err != nil {
+		return err
 	}
 	if device.Drive == "" {
 		return fail("NOTSUPPORTED", "%s has no drive to eject", device.Name)
@@ -73,6 +78,9 @@ func (s *Service) PowerOff(id string) error {
 	device, found := s.find(id)
 	if !found {
 		return fail("ENOENT", "unknown device: %s", id)
+	}
+	if err := s.checkDetach(device, true); err != nil {
+		return err
 	}
 	if device.Drive == "" || !device.CanPowerOff {
 		return fail("NOTSUPPORTED", "%s cannot be powered off", device.Name)
@@ -105,6 +113,9 @@ func (s *Service) Lock(id string) error {
 	if !found {
 		return fail("ENOENT", "unknown device: %s", id)
 	}
+	if err := s.checkDetach(device, false); err != nil {
+		return err
+	}
 	if !device.Encrypted {
 		return fail("EINVAL", "%s is not encrypted", device.Name)
 	}
@@ -118,7 +129,7 @@ func (s *Service) Usage(mountPoints []string, force bool) []Usage {
 	if len(mountPoints) == 0 {
 		for _, device := range s.Snapshot().Devices {
 			if device.Mounted {
-				mountPoints = append(mountPoints, device.MountPoint)
+				mountPoints = append(mountPoints, device.MountPoints...)
 			}
 		}
 	}
@@ -139,6 +150,28 @@ func (s *Service) mountable(id string) (Device, error) {
 		return Device{}, fail("EINVAL", "%s is locked", device.Name)
 	}
 	return device, nil
+}
+
+func (s *Service) checkDetach(device Device, wholeDrive bool) error {
+	if device.Protected {
+		return fail("EPERM", "%s contains a protected system mount", device.Device)
+	}
+	if !wholeDrive || device.Drive == "" {
+		return nil
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	cleartext := cleartextByBacking(s.objects)
+	for path, ifaces := range s.objects {
+		if objectOf(ifaces[BlockIface]["Drive"]) != device.Drive {
+			continue
+		}
+		if build(s.objects, path, ifaces, cleartext[path]).Protected {
+			return fail("EPERM", "%s contains a protected system mount", device.Drive)
+		}
+	}
+	return nil
 }
 
 func mountTarget(device Device) dbus.ObjectPath {

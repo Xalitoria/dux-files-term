@@ -21,6 +21,22 @@ func TestUsageReportsMissingMountPoints(t *testing.T) {
 	assert.Equal(t, "ENOENT", statfs("/definitely/not/here").Code)
 }
 
+func TestUsageIncludesEveryMountPoint(t *testing.T) {
+	first, second := t.TempDir(), t.TempDir()
+	service := NewService(nil, testUID)
+	service.objects = table()
+	delete(service.objects, "/block/home")
+	service.objects["/block/root"][FsIface]["MountPoints"] = mountPoints(first, second)
+
+	usage := service.Usage(nil, false)
+	require.Len(t, usage, 2)
+	assert.ElementsMatch(t, []string{first, second}, []string{usage[0].MountPoint, usage[1].MountPoint})
+	for _, entry := range usage {
+		assert.Empty(t, entry.Code)
+		assert.Greater(t, entry.Total, uint64(0))
+	}
+}
+
 func TestUsageCacheHoldsForThirtySeconds(t *testing.T) {
 	cache := newUsageCache()
 	now := time.Now()
