@@ -15,7 +15,8 @@ Item {
     readonly property string docsUrl: "https://danklinux.com/docs"
     readonly property string kofiUrl: "https://ko-fi.com/danklinux"
     readonly property string licenseUrl: githubUrl + "/blob/master/LICENSE"
-    readonly property string version: DankFilesService.daemonVersion.replace(/^v/, "")
+    // Only a release number belongs in the headline; dev builds keep their full string in the Backend rows
+    readonly property string version: DankFilesService.daemonVersion.match(/^v?(\d+\.\d+(\.\d+)?)$/)?.[1] ?? ""
 
     readonly property var featureRows: [
         {
