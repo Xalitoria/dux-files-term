@@ -55,7 +55,7 @@ FloatingWindow {
     readonly property string currentPath: activePane.path
     readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
     readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || confirmDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || newDocumentDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible
+    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || newDocumentDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible
     readonly property bool textEditing: surface.focusItem instanceof TextInput || surface.focusItem instanceof TextEdit
     readonly property bool sidebarFocused: isInside(surface.focusItem, dockedSidebar) || isInside(surface.focusItem, overlaySidebar)
     readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
@@ -1847,6 +1847,10 @@ FloatingWindow {
         id: errorDialog
     }
 
+    ArchivePasswordDialog {
+        id: archivePasswordDialog
+    }
+
     NameDialog {
         id: newFolderDialog
 
@@ -1878,7 +1882,7 @@ FloatingWindow {
     CompressDialog {
         id: compressDialog
 
-        onSubmitted: (paths, name, format) => FileOpsService.compress(paths, window.currentPath, name, format, window.opScope)
+        onSubmitted: (paths, name, format, password) => FileOpsService.compress(paths, window.currentPath, name, format, password, window.opScope)
     }
 
     ConfirmDialog {

@@ -57,6 +57,8 @@ Singleton {
         case "application/x-zstd-compressed-tar":
         case "application/x-lzma":
         case "application/x-lzma-compressed-tar":
+        case "application/x-lzip":
+        case "application/x-lzip-compressed-tar":
         case "application/x-7z-compressed":
         case "application/vnd.rar":
         case "application/x-rar":

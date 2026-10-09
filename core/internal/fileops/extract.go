@@ -8,6 +8,8 @@ import (
 	"compress/gzip"
 	"context"
 	"errors"
+	"hash"
+	"hash/crc32"
 	"io"
 	"io/fs"
 	"os"
@@ -18,6 +20,7 @@ import (
 	"github.com/cavaliergopher/cpio"
 	"github.com/klauspost/compress/zstd"
 	"github.com/nwaples/rardecode/v2"
+	"github.com/sorairolake/lzip-go"
 	"github.com/ulikunitz/xz"
 	"github.com/ulikunitz/xz/lzma"
 )
@@ -46,11 +49,19 @@ func (r *runner) extract() error {
 	return nil
 }
 
-func (r *runner) unpack(archive string) (string, bool, error) {
+func (r *runner) unpack(archive string) (created string, dir bool, err error) {
 	format, err := detectFormat(archive)
 	if err != nil {
 		return "", false, err
 	}
+	err = r.unlock(archive, func(password string) error {
+		created, dir, err = r.unpackWith(archive, format, password)
+		return err
+	})
+	return created, dir, err
+}
+
+func (r *runner) unpackWith(archive string, format archiveFormat, password string) (string, bool, error) {
 	var in *os.File
 	if err := r.retryLocal(archive, func() error {
 		opened, err := os.Open(archive)
@@ -85,13 +96,30 @@ func (r *runner) unpack(archive string) (string, bool, error) {
 		_ = os.RemoveAll(target)
 		return "", false, err
 	}
-	err = r.unpackInto(kind, in, stream, root)
+	before := r.progress()
+	err = r.unpackInto(kind, in, stream, root, password)
 	_ = root.Close()
 	if err != nil {
 		_ = os.RemoveAll(target)
+		r.restoreProgress(before)
 		return "", false, err
 	}
 	return target, true, nil
+}
+
+func (r *runner) progress() Progress {
+	r.job.mu.Lock()
+	defer r.job.mu.Unlock()
+	return r.job.progress
+}
+
+// restoreProgress forgets a failed attempt, so asking for the password and
+// unpacking again does not count the entries twice.
+func (r *runner) restoreProgress(p Progress) {
+	r.job.mu.Lock()
+	r.job.progress.FilesDone, r.job.progress.FilesTotal = p.FilesDone, p.FilesTotal
+	r.job.progress.BytesDone, r.job.progress.BytesTotal = p.BytesDone, p.BytesTotal
+	r.job.mu.Unlock()
 }
 
 func (r *runner) targetPath(archive string) string {
@@ -102,14 +130,14 @@ func (r *runner) targetPath(archive string) string {
 	return target
 }
 
-func (r *runner) unpackInto(kind container, in *os.File, stream *bufio.Reader, root *os.Root) error {
+func (r *runner) unpackInto(kind container, in *os.File, stream *bufio.Reader, root *os.Root, password string) error {
 	switch kind {
 	case containerZip:
-		return r.unzip(in, root)
+		return r.unzip(in, root, password)
 	case container7z:
-		return r.un7z(in, root)
+		return r.un7z(in, root, password)
 	case containerRar:
-		return r.unrar(stream, root)
+		return r.unrar(stream, root, password)
 	case containerCpio:
 		return r.uncpio(stream, root)
 	default:
@@ -135,6 +163,12 @@ func openStream(in *os.File, kind compression) (*bufio.Reader, func(), error) {
 		return bufio.NewReader(reader), func() {}, nil
 	case compressLzma:
 		reader, err := lzma.NewReader(in)
+		if err != nil {
+			return nil, nil, err
+		}
+		return bufio.NewReader(reader), func() {}, nil
+	case compressLzip:
+		reader, err := lzip.NewReader(in)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -184,7 +218,7 @@ func (r *runner) unpackFile(archive string, stream io.Reader) (string, error) {
 
 // Extraction goes through os.Root so an entry can never land outside the
 // target, not even through a symlink an earlier entry planted.
-func (r *runner) unzip(in *os.File, root *os.Root) error {
+func (r *runner) unzip(in *os.File, root *os.Root, password string) error {
 	info, err := in.Stat()
 	if err != nil {
 		return err
@@ -196,6 +230,9 @@ func (r *runner) unzip(in *os.File, root *os.Root) error {
 	var bytes int64
 	for _, f := range reader.File {
 		bytes += int64(f.UncompressedSize64)
+		if f.Flags&zipFlagEncrypted != 0 && password == "" {
+			return errPasswordNeeded
+		}
 	}
 	r.addTotals(len(reader.File), bytes)
 
@@ -203,45 +240,56 @@ func (r *runner) unzip(in *os.File, root *os.Root) error {
 		if r.job.closed() {
 			return context.Canceled
 		}
-		name, err := entryName(f.Name)
-		if err != nil {
+		open := f.Open
+		if f.Flags&zipFlagEncrypted != 0 {
+			open = func() (io.ReadCloser, error) { return openEncryptedZipEntry(f, password) }
+		}
+		if err := r.unzipEntry(root, f, open); err != nil {
 			return err
 		}
-		mode := f.Mode()
-		switch {
-		case strings.HasSuffix(f.Name, "/") || mode.IsDir():
-			if err := root.MkdirAll(name, dirPerm(mode)); err != nil {
-				return err
-			}
-		case mode&fs.ModeSymlink != 0:
-			if err := linkFromBody(root, name, f.Open); err != nil {
-				return err
-			}
-		default:
-			body, err := f.Open()
-			if err != nil {
-				return err
-			}
-			err = r.writeEntry(root, name, body, filePerm(mode))
-			_ = body.Close()
-			if err != nil {
-				return err
-			}
-			_ = root.Chtimes(name, f.Modified, f.Modified)
-		}
-		r.advance(filepath.Join(root.Name(), name), 1, 0)
 	}
 	return nil
 }
 
-func (r *runner) un7z(in *os.File, root *os.Root) error {
+func (r *runner) unzipEntry(root *os.Root, f *zip.File, open func() (io.ReadCloser, error)) error {
+	name, err := entryName(f.Name)
+	if err != nil {
+		return err
+	}
+	mode := f.Mode()
+	switch {
+	case strings.HasSuffix(f.Name, "/") || mode.IsDir():
+		if err := root.MkdirAll(name, dirPerm(mode)); err != nil {
+			return err
+		}
+	case mode&fs.ModeSymlink != 0:
+		if err := linkFromBody(root, name, open); err != nil {
+			return err
+		}
+	default:
+		body, err := open()
+		if err != nil {
+			return err
+		}
+		err = r.writeEntry(root, name, body, filePerm(mode))
+		_ = body.Close()
+		if err != nil {
+			return err
+		}
+		_ = root.Chtimes(name, f.Modified, f.Modified)
+	}
+	r.advance(filepath.Join(root.Name(), name), 1, 0)
+	return nil
+}
+
+func (r *runner) un7z(in *os.File, root *os.Root, password string) error {
 	info, err := in.Stat()
 	if err != nil {
 		return err
 	}
-	reader, err := sevenzip.NewReader(in, info.Size())
+	reader, err := sevenzip.NewReaderWithPassword(in, info.Size(), password)
 	if err != nil {
-		return err
+		return sevenZipPasswordError(err, password)
 	}
 	var bytes int64
 	for _, f := range reader.File {
@@ -257,6 +305,13 @@ func (r *runner) un7z(in *os.File, root *os.Root) error {
 		if err != nil {
 			return err
 		}
+		open := func() (io.ReadCloser, error) {
+			body, err := f.Open()
+			if err != nil {
+				return nil, sevenZipPasswordError(err, password)
+			}
+			return &sevenZipEntry{inner: body, password: password, crc: crc32.NewIEEE(), want: f.CRC32}, nil
+		}
 		mode := sevenZipMode(f)
 		switch {
 		case mode.IsDir():
@@ -264,11 +319,11 @@ func (r *runner) un7z(in *os.File, root *os.Root) error {
 				return err
 			}
 		case mode&fs.ModeSymlink != 0:
-			if err := linkFromBody(root, name, f.Open); err != nil {
+			if err := linkFromBody(root, name, open); err != nil {
 				return err
 			}
 		default:
-			body, err := f.Open()
+			body, err := open()
 			if err != nil {
 				return err
 			}
@@ -284,6 +339,52 @@ func (r *runner) un7z(in *os.File, root *os.Root) error {
 	return nil
 }
 
+// sevenZipPasswordError maps the library's "encryption involved" hint onto
+// the prompt: no password yet means ask, a password means it was wrong. The
+// library derives a key even from an empty password, so a protected entry
+// may also decode to silent garbage, which only the CRC catches.
+func sevenZipPasswordError(err error, password string) error {
+	var readErr *sevenzip.ReadError
+	encrypted := errors.As(err, &readErr) && readErr.Encrypted
+	if !encrypted && !errors.Is(err, errDamagedEntry) {
+		return err
+	}
+	if password == "" {
+		return errPasswordNeeded
+	}
+	return &badPasswordError{err}
+}
+
+// sevenZipEntry checks the entry CRC itself; the library does not.
+type sevenZipEntry struct {
+	inner    io.ReadCloser
+	password string
+	crc      hash.Hash32
+	want     uint32
+}
+
+func (e *sevenZipEntry) Read(p []byte) (int, error) {
+	n, err := e.inner.Read(p)
+	e.crc.Write(p[:n])
+	switch {
+	case err == nil:
+		return n, nil
+	case errors.Is(err, io.EOF):
+		if e.want != 0 && e.crc.Sum32() != e.want {
+			return n, e.fail(errDamagedEntry)
+		}
+		return n, io.EOF
+	default:
+		return n, e.fail(err)
+	}
+}
+
+func (e *sevenZipEntry) fail(err error) error {
+	return sevenZipPasswordError(err, e.password)
+}
+
+func (e *sevenZipEntry) Close() error { return e.inner.Close() }
+
 // 7-Zip keeps the unix mode in the high attribute bits; the library maps
 // permissions and directories but not links.
 func sevenZipMode(f *sevenzip.File) fs.FileMode {
@@ -294,10 +395,10 @@ func sevenZipMode(f *sevenzip.File) fs.FileMode {
 	return mode
 }
 
-func (r *runner) unrar(stream io.Reader, root *os.Root) error {
-	reader, err := rardecode.NewReader(stream)
+func (r *runner) unrar(stream io.Reader, root *os.Root, password string) error {
+	reader, err := rardecode.NewReader(stream, rardecode.Password(password))
 	if err != nil {
-		return err
+		return rarPasswordError(err, password)
 	}
 	for {
 		if r.job.closed() {
@@ -308,14 +409,18 @@ func (r *runner) unrar(stream io.Reader, root *os.Root) error {
 			return nil
 		}
 		if err != nil {
-			return err
+			return rarPasswordError(err, password)
 		}
-		if header.Encrypted || header.HeaderEncrypted {
-			return errors.New("encrypted archives are not supported")
+		if (header.Encrypted || header.HeaderEncrypted) && password == "" {
+			return errPasswordNeeded
 		}
 		name, err := entryName(header.Name)
 		if err != nil {
 			return err
+		}
+		body := io.Reader(reader)
+		if header.Encrypted {
+			body = &rarEntry{inner: reader}
 		}
 		mode := header.Mode()
 		switch {
@@ -328,7 +433,7 @@ func (r *runner) unrar(stream io.Reader, root *os.Root) error {
 				return err
 			}
 		case mode&fs.ModeSymlink != 0:
-			target, err := io.ReadAll(reader)
+			target, err := io.ReadAll(body)
 			if err != nil {
 				return err
 			}
@@ -337,13 +442,39 @@ func (r *runner) unrar(stream io.Reader, root *os.Root) error {
 			}
 		default:
 			r.growTotals(1)
-			if err := r.writeEntry(root, name, reader, filePerm(mode)); err != nil {
+			if err := r.writeEntry(root, name, body, filePerm(mode)); err != nil {
 				return err
 			}
 			_ = root.Chtimes(name, header.ModificationTime, header.ModificationTime)
 		}
 		r.advance(filepath.Join(root.Name(), name), 1, 0)
 	}
+}
+
+func rarPasswordError(err error, password string) error {
+	switch {
+	case errors.Is(err, rardecode.ErrArchiveEncrypted), errors.Is(err, rardecode.ErrArchivedFileEncrypted):
+		if password == "" {
+			return errPasswordNeeded
+		}
+		return &badPasswordError{err}
+	case errors.Is(err, rardecode.ErrBadPassword):
+		return &badPasswordError{err}
+	}
+	return err
+}
+
+// rarEntry marks decode failures inside an encrypted entry as a wrong
+// password; RAR3 has no password check value, so a bad key only shows up
+// as corrupt data.
+type rarEntry struct{ inner io.Reader }
+
+func (e *rarEntry) Read(p []byte) (int, error) {
+	n, err := e.inner.Read(p)
+	if err == nil || errors.Is(err, io.EOF) {
+		return n, err
+	}
+	return n, &badPasswordError{err}
 }
 
 func (r *runner) uncpio(stream io.Reader, root *os.Root) error {

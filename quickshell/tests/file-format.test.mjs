@@ -56,8 +56,8 @@ test("isRunnable needs the execute bit and a program-like type", () => {
 
 test("extractable mirrors the formats the daemon unpacks", () => {
     const ctx = context();
-    for (const mime of ["application/zip", "application/x-compressed-tar", "application/x-xz-compressed-tar", "application/x-zstd-compressed-tar", "application/x-7z-compressed", "application/vnd.rar", "application/x-cpio", "application/gzip"])
+    for (const mime of ["application/zip", "application/x-compressed-tar", "application/x-xz-compressed-tar", "application/x-zstd-compressed-tar", "application/x-7z-compressed", "application/vnd.rar", "application/x-cpio", "application/gzip", "application/x-lzip", "application/x-lzip-compressed-tar"])
         assert.equal(ctx.extractable(mime), true, mime);
-    for (const mime of ["application/x-iso9660-image", "application/x-lzip", "application/pdf", ""])
+    for (const mime of ["application/x-iso9660-image", "application/x-lzip-compressed-zip", "application/pdf", ""])
         assert.equal(ctx.extractable(mime), false, mime);
 });

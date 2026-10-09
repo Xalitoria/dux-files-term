@@ -11,47 +11,47 @@ func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	switch req.Method {
 	case "system.colorScheme.get":
 		if deps.ColorScheme == nil {
-			Respond(w, req.ID, map[string]any{"available": false, "colorScheme": uint32(0)})
+			w.Respond(req.ID, map[string]any{"available": false, "colorScheme": uint32(0)})
 			return
 		}
-		Respond(w, req.ID, deps.ColorScheme.State())
+		w.Respond(req.ID, deps.ColorScheme.State())
 	case "system.capabilities":
-		Respond(w, req.ID, capabilities(deps))
+		w.Respond(req.ID, capabilities(deps))
 	case "system.elevation":
 		if deps.FileOps == nil {
-			Respond(w, req.ID, map[string]any{"available": false, "reason": "NOROUTE"})
+			w.Respond(req.ID, map[string]any{"available": false, "reason": "NOROUTE"})
 			return
 		}
-		Respond(w, req.ID, deps.FileOps.Elevation())
+		w.Respond(req.ID, deps.FileOps.Elevation())
 	case "system.fileManager.get":
 		if deps.FileManager == nil {
-			Respond(w, req.ID, filemanager1.Status{Reason: "only the window process registers"})
+			w.Respond(req.ID, filemanager1.Status{Reason: "only the window process registers"})
 			return
 		}
-		Respond(w, req.ID, deps.FileManager.Status())
+		w.Respond(req.ID, deps.FileManager.Status())
 	case "system.fileManager.set":
 		if deps.FileManager == nil {
-			RespondError(w, req.ID, "only the window process registers as the file manager")
+			w.RespondError(req.ID, "only the window process registers as the file manager")
 			return
 		}
-		Respond(w, req.ID, deps.FileManager.SetEnabled(ParamBool(req.Params, "enabled")))
+		w.Respond(req.ID, deps.FileManager.SetEnabled(ParamBool(req.Params, "enabled")))
 	case "system.openUri":
 		if deps.Apps == nil {
-			RespondError(w, req.ID, "uri opener unavailable")
+			w.RespondError(req.ID, "uri opener unavailable")
 			return
 		}
 		uri := ParamString(req.Params, "uri")
 		if uri == "" {
-			RespondError(w, req.ID, "uri is required")
+			w.RespondError(req.ID, "uri is required")
 			return
 		}
 		if err := deps.Apps.OpenURI(ctx, uri); err != nil {
-			RespondError(w, req.ID, err.Error())
+			w.RespondError(req.ID, err.Error())
 			return
 		}
-		Respond(w, req.ID, map[string]any{"opened": true})
+		w.Respond(req.ID, map[string]any{"opened": true})
 	default:
-		RespondError(w, req.ID, "unknown system method: "+req.Method)
+		w.RespondError(req.ID, "unknown system method: "+req.Method)
 	}
 }
 

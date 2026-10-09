@@ -61,31 +61,31 @@ func HandleUI(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 	case "ui.show", "ui.hide", "ui.toggle":
 		action := strings.TrimPrefix(req.Method, "ui.")
 		deps.Bus.Publish("ui", map[string]any{"action": action})
-		Respond(w, req.ID, map[string]any{"ok": true})
+		w.Respond(req.ID, map[string]any{"ok": true})
 	case "ui.open":
 		open := stringList(req.Params, "paths")
 		if path := ParamString(req.Params, "path"); path != "" {
 			open = append([]string{path}, open...)
 		}
 		if err := OpenLocations(deps, open, stringList(req.Params, "select"), ParamBool(req.Params, "newWindow")); err != nil {
-			RespondError(w, req.ID, "ui.open: "+err.Error())
+			w.RespondError(req.ID, "ui.open: "+err.Error())
 			return
 		}
-		Respond(w, req.ID, map[string]any{"ok": true})
+		w.Respond(req.ID, map[string]any{"ok": true})
 	case "ui.properties":
 		if err := ShowProperties(deps, stringList(req.Params, "paths")); err != nil {
-			RespondError(w, req.ID, "ui.properties: "+err.Error())
+			w.RespondError(req.ID, "ui.properties: "+err.Error())
 			return
 		}
-		Respond(w, req.ID, map[string]any{"ok": true})
+		w.Respond(req.ID, map[string]any{"ok": true})
 	case "ui.quit":
-		Respond(w, req.ID, map[string]any{"ok": true})
+		w.Respond(req.ID, map[string]any{"ok": true})
 		go func() {
 			time.Sleep(100 * time.Millisecond)
 			_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
 		}()
 	default:
-		RespondError(w, req.ID, "unknown ui method: "+req.Method)
+		w.RespondError(req.ID, "unknown ui method: "+req.Method)
 	}
 }
 

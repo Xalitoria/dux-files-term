@@ -8,6 +8,9 @@ OverlayDialog {
 
     property var paths: []
     property string format: "zip"
+    property bool protect: false
+
+    readonly property bool canProtect: format === "zip"
 
     readonly property var formats: [
         {
@@ -28,10 +31,12 @@ OverlayDialog {
         }
     ]
 
-    signal submitted(var paths, string name, string format)
+    signal submitted(var paths, string name, string format, string password)
 
     function ask(targets) {
         paths = targets;
+        protect = false;
+        passwordField.text = "";
         const first = targets[0] ?? "";
         const base = first.substring(first.lastIndexOf("/") + 1);
         nameField.text = targets.length === 1 ? base.replace(/(\.tar)?\.[^.]+$/, "") || base : I18n.tr("Archive", "default name for a new archive");
@@ -44,7 +49,10 @@ OverlayDialog {
         const trimmed = nameField.text.trim();
         if (trimmed === "" || paths.length === 0)
             return;
-        submitted(paths, trimmed, format);
+        const password = canProtect && protect ? passwordField.text : "";
+        if (canProtect && protect && password === "")
+            return;
+        submitted(paths, trimmed, format, password);
         close();
     }
 
@@ -69,6 +77,32 @@ OverlayDialog {
         currentIndex: Math.max(0, root.formats.findIndex(entry => entry.value === root.format))
         showCounts: false
         onSelectionChanged: index => root.format = root.formats[index].value
+    }
+
+    DToggle {
+        width: parent.width
+        visible: root.canProtect
+        text: I18n.tr("Protect with a password", "compress dialog option encrypting the archive")
+        checked: root.protect
+        onToggled: checked => {
+            root.protect = checked;
+            if (checked)
+                passwordField.forceActiveFocus();
+        }
+    }
+
+    DTextField {
+        id: passwordField
+
+        width: parent.width
+        visible: root.canProtect && root.protect
+        outlined: true
+        echoMode: TextInput.Password
+        showPasswordToggle: true
+        labelText: I18n.tr("Password", "label for a password input")
+        onAccepted: root.submit()
+        Keys.onReturnPressed: event => event.accepted = true
+        Keys.onEnterPressed: event => event.accepted = true
     }
 
     actions: [

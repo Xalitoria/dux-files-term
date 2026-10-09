@@ -130,12 +130,13 @@ Singleton {
         _start("files.op.emptyTrash", null);
     }
 
-    function compress(paths, dest, name, format, scope) {
+    function compress(paths, dest, name, format, password, scope) {
         _start("files.op.compress", {
             "paths": paths,
             "dest": dest,
             "name": name,
             "format": format || "zip",
+            "password": password || "",
             "scope": scope || ""
         });
     }
@@ -171,6 +172,15 @@ Singleton {
             "id": answerId,
             "action": action,
             "applyToAll": applyToAll === true
+        });
+    }
+
+    function unlock(jobId, answerId, password) {
+        _start("files.op.respond", {
+            "jobId": jobId,
+            "id": answerId,
+            "action": "unlock",
+            "password": password
         });
     }
 

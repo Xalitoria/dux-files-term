@@ -30,6 +30,7 @@ type runner struct {
 	conflictAll Action
 	errorAll    Action
 	elevateRest bool
+	password    string
 	scanned     map[string]scanResult
 	estimating  bool
 }

@@ -26,7 +26,7 @@ type previewResult struct {
 func HandlePreview(_ context.Context, w *ConnWriter, req Request) {
 	path := ParamString(req.Params, "path")
 	if !filepath.IsAbs(path) {
-		RespondError(w, req.ID, "path is not an absolute path")
+		w.RespondError(req.ID, "path is not an absolute path")
 		return
 	}
 	limit := ParamInt(req.Params, "maxBytes")
@@ -38,10 +38,10 @@ func HandlePreview(_ context.Context, w *ConnWriter, req Request) {
 	}
 	result, err := readPreview(path, limit)
 	if err != nil {
-		RespondError(w, req.ID, err.Error())
+		w.RespondError(req.ID, err.Error())
 		return
 	}
-	Respond(w, req.ID, result)
+	w.Respond(req.ID, result)
 }
 
 func readPreview(path string, limit int) (previewResult, error) {

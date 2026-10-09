@@ -24,7 +24,7 @@ func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {
 	switch req.Method {
 	case "network.mounts":
 		snapshot := s.Snapshot()
-		ipc.Respond(w, req.ID, map[string]any{
+		w.Respond(req.ID, map[string]any{
 			"available": snapshot.Available,
 			"reason":    snapshot.Reason,
 			"schemes":   snapshot.Schemes,
@@ -38,10 +38,10 @@ func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {
 	case "network.answer":
 		s.handleAnswer(w, req)
 	case "network.recent":
-		ipc.Respond(w, req.ID, map[string]any{"servers": s.Servers()})
+		w.Respond(req.ID, map[string]any{"servers": s.Servers()})
 	case "network.forget":
 		s.Forget(params.StringOpt(req.Params, "uri", ""))
-		ipc.Respond(w, req.ID, map[string]any{"servers": s.Servers()})
+		w.Respond(req.ID, map[string]any{"servers": s.Servers()})
 	case "network.mountPortable":
 		s.handleMountPortable(w, req)
 	default:
@@ -65,7 +65,7 @@ func (s *Service) handleConnect(w *ipc.ConnWriter, req ipc.Request) {
 	if spec, err := ParseURI(uri, s.mountableList()); err == nil {
 		location = LocationIn(mount, URIOf(spec, s.mountableList()))
 	}
-	ipc.Respond(w, req.ID, map[string]any{"mount": mount, "location": location})
+	w.Respond(req.ID, map[string]any{"mount": mount, "location": location})
 }
 
 func (s *Service) handleDisconnect(w *ipc.ConnWriter, req ipc.Request) {
@@ -78,7 +78,7 @@ func (s *Service) handleDisconnect(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "mounted": false})
+	w.Respond(req.ID, map[string]any{"id": id, "mounted": false})
 }
 
 func (s *Service) handleAnswer(w *ipc.ConnWriter, req ipc.Request) {
@@ -101,7 +101,7 @@ func (s *Service) handleAnswer(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "answered": true})
+	w.Respond(req.ID, map[string]any{"id": id, "answered": true})
 }
 
 func (s *Service) handleMountPortable(w *ipc.ConnWriter, req ipc.Request) {
@@ -115,7 +115,7 @@ func (s *Service) handleMountPortable(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "mounted": true})
+	w.Respond(req.ID, map[string]any{"id": id, "mounted": true})
 }
 
 func respondErr(w *ipc.ConnWriter, id int, err error) {

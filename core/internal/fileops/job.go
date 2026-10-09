@@ -16,6 +16,7 @@ const (
 	StateRunning        State = "running"
 	StatePausedConflict State = "paused-conflict"
 	StatePausedError    State = "paused-error"
+	StatePausedPassword State = "paused-password"
 	StateCancelling     State = "cancelling"
 	StateDone           State = "done"
 	StateFailed         State = "failed"
@@ -49,6 +50,7 @@ const (
 	ActionMerge    Action = "merge"
 	ActionRetry    Action = "retry"
 	ActionCancel   Action = "cancel"
+	ActionUnlock   Action = "unlock"
 
 	ActionRetryElevated Action = "retryElevated"
 )
@@ -79,31 +81,40 @@ type Failure struct {
 	Actions     []Action `json:"actions"`
 }
 
+type PasswordPrompt struct {
+	ID      string   `json:"id"`
+	Path    string   `json:"path"`
+	Wrong   bool     `json:"wrong"`
+	Actions []Action `json:"actions"`
+}
+
 type Answer struct {
 	ID         string
 	Action     Action
 	ApplyToAll bool
+	Password   string
 }
 
 type View struct {
-	ID        string    `json:"id"`
-	Kind      Kind      `json:"kind"`
-	State     State     `json:"state"`
-	Scope     string    `json:"scope"`
-	Sources   []string  `json:"sources"`
-	Dest      string    `json:"dest,omitempty"`
-	Progress  Progress  `json:"progress"`
-	Conflict  *Conflict `json:"conflict,omitempty"`
-	Failure   *Failure  `json:"failure,omitempty"`
-	Skipped   int       `json:"skipped"`
-	Warnings  int       `json:"warnings"`
-	Cancelled bool      `json:"cancelled"`
-	Undoable  bool      `json:"undoable"`
-	Created   []Created `json:"created,omitempty"`
-	Error     string    `json:"error,omitempty"`
-	Code      string    `json:"code,omitempty"`
-	StartedMs int64     `json:"startedMs"`
-	EndedMs   int64     `json:"endedMs,omitempty"`
+	ID             string          `json:"id"`
+	Kind           Kind            `json:"kind"`
+	State          State           `json:"state"`
+	Scope          string          `json:"scope"`
+	Sources        []string        `json:"sources"`
+	Dest           string          `json:"dest,omitempty"`
+	Progress       Progress        `json:"progress"`
+	Conflict       *Conflict       `json:"conflict,omitempty"`
+	Failure        *Failure        `json:"failure,omitempty"`
+	PasswordPrompt *PasswordPrompt `json:"passwordPrompt,omitempty"`
+	Skipped        int             `json:"skipped"`
+	Warnings       int             `json:"warnings"`
+	Cancelled      bool            `json:"cancelled"`
+	Undoable       bool            `json:"undoable"`
+	Created        []Created       `json:"created,omitempty"`
+	Error          string          `json:"error,omitempty"`
+	Code           string          `json:"code,omitempty"`
+	StartedMs      int64           `json:"startedMs"`
+	EndedMs        int64           `json:"endedMs,omitempty"`
 }
 
 type pair struct{ src, dst string }
@@ -121,6 +132,7 @@ type spec struct {
 	name      string
 	template  string
 	format    string
+	password  string
 	mode      uint32
 	uid       int
 	gid       int
@@ -145,6 +157,7 @@ type job struct {
 	progress  Progress
 	conflict  *Conflict
 	failure   *Failure
+	password  *PasswordPrompt
 	skipped   int
 	warnings  int
 	cancelled bool
@@ -169,24 +182,25 @@ func (j *job) view() View {
 
 func (j *job) viewLocked() View {
 	return View{
-		ID:        j.id,
-		Kind:      j.spec.kind,
-		State:     j.state,
-		Scope:     j.spec.scope,
-		Sources:   j.spec.sources,
-		Dest:      j.spec.dest,
-		Progress:  j.progress,
-		Conflict:  j.conflict,
-		Failure:   j.failure,
-		Skipped:   j.skipped,
-		Warnings:  j.warnings,
-		Cancelled: j.cancelled,
-		Undoable:  j.record != nil && len(j.record.pairs) > 0,
-		Created:   j.created,
-		Error:     j.errMsg,
-		Code:      j.errCode,
-		StartedMs: j.startedMs,
-		EndedMs:   j.endedMs,
+		ID:             j.id,
+		Kind:           j.spec.kind,
+		State:          j.state,
+		Scope:          j.spec.scope,
+		Sources:        j.spec.sources,
+		Dest:           j.spec.dest,
+		Progress:       j.progress,
+		Conflict:       j.conflict,
+		Failure:        j.failure,
+		PasswordPrompt: j.password,
+		Skipped:        j.skipped,
+		Warnings:       j.warnings,
+		Cancelled:      j.cancelled,
+		Undoable:       j.record != nil && len(j.record.pairs) > 0,
+		Created:        j.created,
+		Error:          j.errMsg,
+		Code:           j.errCode,
+		StartedMs:      j.startedMs,
+		EndedMs:        j.endedMs,
 	}
 }
 

@@ -17,6 +17,7 @@ type testBus struct {
 	waiters    map[string]chan View
 	onConflict func(Conflict) Answer
 	onFailure  func(Failure) Answer
+	onPassword func(PasswordPrompt) Answer
 	manager    *Manager
 }
 
@@ -38,6 +39,7 @@ func (b *testBus) Publish(_ string, data any) {
 	b.events = append(b.events, payload)
 	conflict := b.onConflict
 	failure := b.onFailure
+	password := b.onPassword
 	b.mu.Unlock()
 
 	switch {
@@ -45,6 +47,8 @@ func (b *testBus) Publish(_ string, data any) {
 		_ = b.manager.Respond(payload.JobID, conflict(*payload.Conflict))
 	case payload.Kind == "error" && failure != nil:
 		_ = b.manager.Respond(payload.JobID, failure(*payload.Failure))
+	case payload.Kind == "password" && password != nil:
+		_ = b.manager.Respond(payload.JobID, password(*payload.PasswordPrompt))
 	case payload.Kind == "job" && (payload.Job.State == StateDone || payload.Job.State == StateFailed):
 		b.complete(*payload.Job)
 	}

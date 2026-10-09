@@ -23,6 +23,7 @@ type jobView struct {
 	Code      string    `json:"code,omitempty"`
 	Conflict  *jobPause `json:"conflict,omitempty"`
 	Failure   *jobPause `json:"failure,omitempty"`
+	Password  *jobPause `json:"passwordPrompt,omitempty"`
 }
 
 type jobPause struct {
@@ -87,6 +88,14 @@ func runJobUnattended(s *session, method string, params map[string]any, onConfli
 			fmt.Fprintf(os.Stderr, "dfiles: %s: %s\n", job.Failure.Path, job.Failure.Message)
 			result.Failed = append(result.Failed, job.Failure.Path)
 			s.answer(job.ID, job.Failure.ID, pick(job.Failure.Actions, "skip"))
+		case "paused-password":
+			if job.Password == nil || job.Password.ID == answered {
+				continue
+			}
+			answered = job.Password.ID
+			fmt.Fprintf(os.Stderr, "dfiles: %s: needs a password\n", job.Password.Path)
+			result.Failed = append(result.Failed, job.Password.Path)
+			s.answer(job.ID, job.Password.ID, pick(job.Password.Actions, "skip"))
 		}
 	}
 	return result, errors.New("lost the connection while the job ran")

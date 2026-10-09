@@ -1,15 +1,16 @@
 module github.com/AvengeMedia/dankfiles/core
 
-go 1.26.4
+go 1.27
 
 require (
-	github.com/AvengeMedia/dankgo v1.6.3-0.20261006191057-faf663b081b2
+	github.com/AvengeMedia/dankgo v1.6.3-0.20261009141806-0a6056424f6d
 	github.com/bodgit/sevenzip v1.6.5
 	github.com/cavaliergopher/cpio v1.0.1
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/klauspost/compress v1.20.1
 	github.com/nwaples/rardecode/v2 v2.4.1
+	github.com/sorairolake/lzip-go v0.3.8
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/ulikunitz/xz v0.5.17

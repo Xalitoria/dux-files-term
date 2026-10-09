@@ -24,9 +24,9 @@ func Handles(method string) bool {
 func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {
 	switch req.Method {
 	case "devices.list":
-		ipc.Respond(w, req.ID, s.Snapshot())
+		w.Respond(req.ID, s.Snapshot())
 	case "devices.usage":
-		ipc.Respond(w, req.ID, map[string]any{"usage": s.Usage(params.StringSlice(req.Params, "paths"), params.BoolLoose(req.Params, "force"))})
+		w.Respond(req.ID, map[string]any{"usage": s.Usage(params.StringSlice(req.Params, "paths"), params.BoolLoose(req.Params, "force"))})
 	case "devices.mount":
 		s.handleMount(w, req)
 	case "devices.unmount":
@@ -54,7 +54,7 @@ func (s *Service) handleMount(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "mountPoint": mountPoint})
+	w.Respond(req.ID, map[string]any{"id": id, "mountPoint": mountPoint})
 }
 
 func (s *Service) handleUnmount(w *ipc.ConnWriter, req ipc.Request) {
@@ -66,7 +66,7 @@ func (s *Service) handleUnmount(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "mounted": false})
+	w.Respond(req.ID, map[string]any{"id": id, "mounted": false})
 }
 
 func (s *Service) handleEject(w *ipc.ConnWriter, req ipc.Request) {
@@ -78,7 +78,7 @@ func (s *Service) handleEject(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "ejected": true})
+	w.Respond(req.ID, map[string]any{"id": id, "ejected": true})
 }
 
 func (s *Service) handlePowerOff(w *ipc.ConnWriter, req ipc.Request) {
@@ -90,7 +90,7 @@ func (s *Service) handlePowerOff(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "poweredOff": true})
+	w.Respond(req.ID, map[string]any{"id": id, "poweredOff": true})
 }
 
 func (s *Service) handleUnlock(w *ipc.ConnWriter, req ipc.Request) {
@@ -121,7 +121,7 @@ func (s *Service) handleUnlock(w *ipc.ConnWriter, req ipc.Request) {
 			result["mountCode"] = CodeOf(err)
 		}
 	}
-	ipc.Respond(w, req.ID, result)
+	w.Respond(req.ID, result)
 }
 
 func (s *Service) handleLock(w *ipc.ConnWriter, req ipc.Request) {
@@ -133,7 +133,7 @@ func (s *Service) handleLock(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"id": id, "unlocked": false})
+	w.Respond(req.ID, map[string]any{"id": id, "unlocked": false})
 }
 
 // The object table has not seen the cleartext device yet right after an unlock.

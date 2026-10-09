@@ -115,7 +115,7 @@ func serveLocal(ctx context.Context, conn net.Conn, deps ipc.Deps) {
 		if req.Method == "subscribe" {
 			topics := params.StringSlice(req.Params, "topics")
 			sub.Subscribe(topics...)
-			ipc.Respond(writer, req.ID, map[string]any{"topics": sub.Topics()})
+			writer.Respond(req.ID, map[string]any{"topics": sub.Topics()})
 			if deps.Files != nil {
 				deps.Files.Attach(topics)
 			}

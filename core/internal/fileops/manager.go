@@ -22,12 +22,13 @@ type Publisher interface {
 const Topic = "jobs"
 
 type event struct {
-	Kind     string    `json:"kind"`
-	JobID    string    `json:"jobId,omitempty"`
-	Job      *View     `json:"job,omitempty"`
-	Progress *Progress `json:"progress,omitempty"`
-	Conflict *Conflict `json:"conflict,omitempty"`
-	Failure  *Failure  `json:"failure,omitempty"`
+	Kind           string          `json:"kind"`
+	JobID          string          `json:"jobId,omitempty"`
+	Job            *View           `json:"job,omitempty"`
+	Progress       *Progress       `json:"progress,omitempty"`
+	Conflict       *Conflict       `json:"conflict,omitempty"`
+	Failure        *Failure        `json:"failure,omitempty"`
+	PasswordPrompt *PasswordPrompt `json:"passwordPrompt,omitempty"`
 }
 
 type undoRecord struct {
@@ -142,6 +143,7 @@ func (j *job) finish(err error) {
 	j.endedMs = time.Now().UnixMilli()
 	j.conflict = nil
 	j.failure = nil
+	j.password = nil
 	j.pendingID = ""
 	switch {
 	case err != nil:
@@ -301,6 +303,7 @@ func (j *job) ask(payload event, state State) Answer {
 	j.mu.Lock()
 	j.conflict = payload.Conflict
 	j.failure = payload.Failure
+	j.password = payload.PasswordPrompt
 	j.pendingID = payload.answerID()
 	j.state = state
 	view := j.viewLocked()
@@ -318,6 +321,7 @@ func (j *job) ask(payload event, state State) Answer {
 			j.mu.Lock()
 			j.conflict = nil
 			j.failure = nil
+			j.password = nil
 			j.pendingID = ""
 			j.mu.Unlock()
 			j.setState(StateRunning)
@@ -340,6 +344,8 @@ func (e event) answerID() string {
 		return e.Conflict.ID
 	case e.Failure != nil:
 		return e.Failure.ID
+	case e.PasswordPrompt != nil:
+		return e.PasswordPrompt.ID
 	}
 	return ""
 }

@@ -23,7 +23,7 @@ type errorResponse struct {
 func (m *Manager) Handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request) {
 	switch req.Method {
 	case "files.op.jobs":
-		ipc.Respond(w, req.ID, map[string]any{"jobs": m.Jobs()})
+		w.Respond(req.ID, map[string]any{"jobs": m.Jobs()})
 		return
 	case "files.op.cancel":
 		m.handleCancel(w, req)
@@ -44,7 +44,7 @@ func (m *Manager) Handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request) 
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"job": m.enqueue(s).view()})
+	w.Respond(req.ID, map[string]any{"job": m.enqueue(s).view()})
 }
 
 // handleDropAction answers what a plain drag onto dest would do, so the drag
@@ -72,7 +72,7 @@ func handleDropAction(w *ipc.ConnWriter, req ipc.Request) {
 	if same {
 		action = "move"
 	}
-	ipc.Respond(w, req.ID, map[string]any{"action": action, "sameDevice": same})
+	w.Respond(req.ID, map[string]any{"action": action, "sameDevice": same})
 }
 
 func specOf(req ipc.Request) (spec, error) {
@@ -152,6 +152,10 @@ func specOf(req ipc.Request) (spec, error) {
 		if !slices.Contains(compressFormats, s.format) {
 			return spec{}, invalid("files.op.compress format must be one of " + strings.Join(compressFormats, ", "))
 		}
+		s.password = params.StringOpt(req.Params, "password", "")
+		if s.password != "" && s.format != FormatZip {
+			return spec{}, invalid("files.op.compress only protects zip archives with a password")
+		}
 	case "files.op.extract":
 		s.kind = KindExtract
 		sources, err := absPaths(req, "paths")
@@ -207,7 +211,7 @@ func (m *Manager) handleCancel(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, invalid(err.Error()))
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"jobId": id, "cancelling": true})
+	w.Respond(req.ID, map[string]any{"jobId": id, "cancelling": true})
 }
 
 func (m *Manager) handleRespond(w *ipc.ConnWriter, req ipc.Request) {
@@ -216,6 +220,7 @@ func (m *Manager) handleRespond(w *ipc.ConnWriter, req ipc.Request) {
 		ID:         params.StringOpt(req.Params, "id", ""),
 		Action:     Action(params.StringOpt(req.Params, "action", "")),
 		ApplyToAll: params.BoolLoose(req.Params, "applyToAll"),
+		Password:   params.StringOpt(req.Params, "password", ""),
 	}
 	if !knownAction(answer.Action) {
 		respondErr(w, req.ID, invalid("unknown action: "+string(answer.Action)))
@@ -225,7 +230,7 @@ func (m *Manager) handleRespond(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, invalid(err.Error()))
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"jobId": jobID, "accepted": true})
+	w.Respond(req.ID, map[string]any{"jobId": jobID, "accepted": true})
 }
 
 func (m *Manager) handleUndo(w *ipc.ConnWriter, req ipc.Request) {
@@ -234,7 +239,7 @@ func (m *Manager) handleUndo(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, invalid(err.Error()))
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"job": view})
+	w.Respond(req.ID, map[string]any{"job": view})
 }
 
 // maxID excludes (uid_t)-1, which the kernel reads as "leave unchanged".
@@ -278,7 +283,7 @@ func textParam(p map[string]any, key string) string {
 
 func knownAction(action Action) bool {
 	switch action {
-	case ActionSkip, ActionReplace, ActionKeepBoth, ActionMerge, ActionRetry, ActionRetryElevated, ActionCancel:
+	case ActionSkip, ActionReplace, ActionKeepBoth, ActionMerge, ActionRetry, ActionRetryElevated, ActionCancel, ActionUnlock:
 		return true
 	}
 	return false

@@ -52,11 +52,11 @@ func (s *Service) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 	case "files.apps.forMime":
 		s.handleForMime(w, req)
 	case "files.apps.all":
-		ipc.Respond(w, req.ID, appsResult{Apps: viewsOf(s.Apps(), "")})
+		w.Respond(req.ID, appsResult{Apps: viewsOf(s.Apps(), "")})
 	case "files.apps.setDefault":
 		s.handleSetDefault(w, req)
 	case "files.apps.terminals":
-		ipc.Respond(w, req.ID, map[string]any{"terminals": Terminals()})
+		w.Respond(req.ID, map[string]any{"terminals": Terminals()})
 	default:
 		respondCode(w, req.ID, "NOTSUPPORTED", "unknown method: "+req.Method)
 	}
@@ -72,7 +72,7 @@ func (s *Service) handleOpen(ctx context.Context, w *ipc.ConnWriter, req ipc.Req
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"opened": true})
+	w.Respond(req.ID, map[string]any{"opened": true})
 }
 
 func (s *Service) handleOpenWith(ctx context.Context, w *ipc.ConnWriter, req ipc.Request) {
@@ -86,7 +86,7 @@ func (s *Service) handleOpenWith(ctx context.Context, w *ipc.ConnWriter, req ipc
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"opened": true})
+	w.Respond(req.ID, map[string]any{"opened": true})
 }
 
 func (s *Service) handleRun(w *ipc.ConnWriter, req ipc.Request) {
@@ -99,7 +99,7 @@ func (s *Service) handleRun(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"started": true})
+	w.Respond(req.ID, map[string]any{"started": true})
 }
 
 func (s *Service) handleOpenTerminal(w *ipc.ConnWriter, req ipc.Request) {
@@ -112,7 +112,7 @@ func (s *Service) handleOpenTerminal(w *ipc.ConnWriter, req ipc.Request) {
 		respondErr(w, req.ID, err)
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"opened": true})
+	w.Respond(req.ID, map[string]any{"opened": true})
 }
 
 func (s *Service) handleForMime(w *ipc.ConnWriter, req ipc.Request) {
@@ -131,7 +131,7 @@ func (s *Service) handleForMime(w *ipc.ConnWriter, req ipc.Request) {
 	}
 
 	defaultID := s.Default(mimeType)
-	ipc.Respond(w, req.ID, appsResult{
+	w.Respond(req.ID, appsResult{
 		MimeType:  mimeType,
 		DefaultID: defaultID,
 		Apps:      viewsOf(s.Associations(mimeType), defaultID),
@@ -153,7 +153,7 @@ func (s *Service) handleSetDefault(w *ipc.ConnWriter, req ipc.Request) {
 		respondCode(w, req.ID, "EACCES", err.Error())
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"mimeType": mimeType, "desktopId": desktopID})
+	w.Respond(req.ID, map[string]any{"mimeType": mimeType, "desktopId": desktopID})
 }
 
 func launchOptions(req ipc.Request) LaunchOptions {

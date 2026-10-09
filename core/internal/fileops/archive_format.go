@@ -28,6 +28,7 @@ const (
 	compressXz    compression = "xz"
 	compressZstd  compression = "zstd"
 	compressLzma  compression = "lzma"
+	compressLzip  compression = "lzip"
 )
 
 type container string
@@ -64,6 +65,7 @@ var archiveSuffixes = []namedFormat{
 	{".tzst", archiveFormat{compressZstd, containerTar}},
 	{".tar.lzma", archiveFormat{compressLzma, containerTar}},
 	{".tlz", archiveFormat{compressLzma, containerTar}},
+	{".tar.lz", archiveFormat{compressLzip, containerTar}},
 	{".tar", archiveFormat{compressNone, containerTar}},
 	{".zip", archiveFormat{compressNone, containerZip}},
 	{".7z", archiveFormat{compressNone, container7z}},
@@ -74,6 +76,7 @@ var archiveSuffixes = []namedFormat{
 	{".xz", archiveFormat{compressXz, containerNone}},
 	{".zst", archiveFormat{compressZstd, containerNone}},
 	{".lzma", archiveFormat{compressLzma, containerNone}},
+	{".lz", archiveFormat{compressLzip, containerNone}},
 }
 
 type magicFormat struct {
@@ -87,6 +90,7 @@ var archiveMagics = []magicFormat{
 	{[]byte("BZh"), archiveFormat{compressBzip2, containerNone}},
 	{[]byte{0xfd, '7', 'z', 'X', 'Z', 0x00}, archiveFormat{compressXz, containerNone}},
 	{[]byte{0x28, 0xb5, 0x2f, 0xfd}, archiveFormat{compressZstd, containerNone}},
+	{[]byte("LZIP"), archiveFormat{compressLzip, containerNone}},
 	{[]byte("7z\xbc\xaf\x27\x1c"), archiveFormat{compressNone, container7z}},
 	{[]byte("Rar!\x1a\x07"), archiveFormat{compressNone, containerRar}},
 	{[]byte("070701"), archiveFormat{compressNone, containerCpio}},

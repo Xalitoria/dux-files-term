@@ -114,6 +114,7 @@ var archiveMimes = map[string]bool{
 	"application/x-rar":           true,
 	"application/vnd.rar":         true,
 	"application/x-cpio":          true,
+	"application/x-lzip":          true,
 	"application/x-archive":       true,
 	"application/x-iso9660-image": true,
 }

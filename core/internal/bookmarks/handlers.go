@@ -14,7 +14,7 @@ func Handles(method string) bool {
 func (s *Store) Handle(w *ipc.ConnWriter, req ipc.Request) {
 	switch req.Method {
 	case "bookmarks.list":
-		ipc.Respond(w, req.ID, map[string]any{"bookmarks": s.List(), "gtkImportAvailable": s.GTKImportAvailable()})
+		w.Respond(req.ID, map[string]any{"bookmarks": s.List(), "gtkImportAvailable": s.GTKImportAvailable()})
 	case "bookmarks.add":
 		items, err := s.Add(Bookmark{
 			Path:  params.StringOpt(req.Params, "path", ""),
@@ -34,19 +34,19 @@ func (s *Store) Handle(w *ipc.ConnWriter, req ipc.Request) {
 	case "bookmarks.importGtk":
 		items, added, err := s.ImportGTK()
 		if err != nil {
-			ipc.RespondError(w, req.ID, err.Error())
+			w.RespondError(req.ID, err.Error())
 			return
 		}
-		ipc.Respond(w, req.ID, map[string]any{"bookmarks": items, "added": added})
+		w.Respond(req.ID, map[string]any{"bookmarks": items, "added": added})
 	default:
-		ipc.RespondError(w, req.ID, "unknown bookmarks method: "+req.Method)
+		w.RespondError(req.ID, "unknown bookmarks method: "+req.Method)
 	}
 }
 
 func respond(w *ipc.ConnWriter, id int, items []Bookmark, err error) {
 	if err != nil {
-		ipc.RespondError(w, id, err.Error())
+		w.RespondError(id, err.Error())
 		return
 	}
-	ipc.Respond(w, id, map[string]any{"bookmarks": items})
+	w.Respond(id, map[string]any{"bookmarks": items})
 }

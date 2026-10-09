@@ -26,7 +26,7 @@ func (s *Service) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 		s.handleStart(ctx, w, req)
 	case "search.cancel":
 		id := params.StringOpt(req.Params, "searchId", "")
-		ipc.Respond(w, req.ID, map[string]any{"searchId": id, "cancelled": s.Cancel(id)})
+		w.Respond(req.ID, map[string]any{"searchId": id, "cancelled": s.Cancel(id)})
 	default:
 		respondCode(w, req.ID, files.CodeNotSupported, "unknown search method: "+req.Method)
 	}
@@ -48,7 +48,7 @@ func (s *Service) handleStart(ctx context.Context, w *ipc.ConnWriter, req ipc.Re
 		respondCode(w, req.ID, files.CodeOf(err), err.Error())
 		return
 	}
-	ipc.Respond(w, req.ID, map[string]any{"searchId": id, "topic": topic, "limit": opts.limit()})
+	w.Respond(req.ID, map[string]any{"searchId": id, "topic": topic, "limit": opts.limit()})
 }
 
 func stringsParam(p map[string]any, key string) []string {

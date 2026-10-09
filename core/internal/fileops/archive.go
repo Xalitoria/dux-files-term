@@ -46,7 +46,7 @@ func (r *runner) compress() error {
 		_ = os.Remove(tmp)
 	}
 
-	writer, err := newArchiveWriter(out, r.job.spec.format)
+	writer, err := newArchiveWriter(out, r.job.spec.format, r.job.spec.password)
 	if err != nil {
 		discard()
 		return err
@@ -73,10 +73,10 @@ func (r *runner) compress() error {
 	return nil
 }
 
-func newArchiveWriter(out io.Writer, format string) (archiveWriter, error) {
+func newArchiveWriter(out io.Writer, format, password string) (archiveWriter, error) {
 	switch format {
 	case FormatZip:
-		return &zipWriter{inner: zip.NewWriter(out)}, nil
+		return newZipWriter(out, password), nil
 	case FormatTarGz:
 		return newTarWriter(gzip.NewWriter(out)), nil
 	case FormatTarXz:
@@ -194,11 +194,31 @@ func (r *runner) stream(path string, in io.Reader, out io.Writer) error {
 	}
 }
 
-type zipWriter struct{ inner *zip.Writer }
+type zipWriter struct {
+	inner    *zip.Writer
+	password string
+}
+
+func newZipWriter(out io.Writer, password string) *zipWriter {
+	inner := zip.NewWriter(out)
+	if password != "" {
+		inner.RegisterCompressor(zipMethodAES, aesCompressor(password))
+	}
+	return &zipWriter{inner: inner, password: password}
+}
 
 func (z *zipWriter) header(name string, info fs.FileInfo) *zip.FileHeader {
 	header := &zip.FileHeader{Name: name, Method: zip.Deflate, Modified: info.ModTime()}
 	header.SetMode(info.Mode())
+	return header
+}
+
+// protected swaps the method for WinZip AES; the listing stays readable,
+// as in every zip, only the bodies are encrypted.
+func (z *zipWriter) protected(header *zip.FileHeader) *zip.FileHeader {
+	if z.password != "" {
+		encryptedZipHeader(header)
+	}
 	return header
 }
 
@@ -212,7 +232,7 @@ func (z *zipWriter) dir(name string, info fs.FileInfo) error {
 func (z *zipWriter) symlink(name, target string, info fs.FileInfo) error {
 	header := z.header(name, info)
 	header.Method = zip.Store
-	w, err := z.inner.CreateHeader(header)
+	w, err := z.inner.CreateHeader(z.protected(header))
 	if err != nil {
 		return err
 	}
@@ -221,7 +241,7 @@ func (z *zipWriter) symlink(name, target string, info fs.FileInfo) error {
 }
 
 func (z *zipWriter) file(name string, info fs.FileInfo) (io.Writer, error) {
-	return z.inner.CreateHeader(z.header(name, info))
+	return z.inner.CreateHeader(z.protected(z.header(name, info)))
 }
 
 func (z *zipWriter) Close() error { return z.inner.Close() }

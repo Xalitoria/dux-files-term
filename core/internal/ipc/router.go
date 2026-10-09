@@ -15,53 +15,53 @@ import (
 func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	switch req.Method {
 	case "version":
-		Respond(w, req.ID, map[string]any{"version": deps.Version, "apiVersion": APIVersion})
+		w.Respond(req.ID, map[string]any{"version": deps.Version, "apiVersion": APIVersion})
 		return
 	case "describe":
-		Respond(w, req.ID, map[string]any{"apiVersion": APIVersion, "methods": Methods})
+		w.Respond(req.ID, map[string]any{"apiVersion": APIVersion, "methods": Methods})
 		return
 	}
 
 	switch {
 	case devices.Handles(req.Method):
 		if deps.Devices == nil {
-			RespondError(w, req.ID, "device service unavailable")
+			w.RespondError(req.ID, "device service unavailable")
 			return
 		}
 		deps.Devices.Handle(w, req)
 	case netmount.Handles(req.Method):
 		if deps.Network == nil {
-			RespondError(w, req.ID, "network service unavailable")
+			w.RespondError(req.ID, "network service unavailable")
 			return
 		}
 		deps.Network.Handle(w, req)
 	case clipboard.Handles(req.Method):
 		if deps.Clipboard == nil {
-			RespondError(w, req.ID, "clipboard unavailable")
+			w.RespondError(req.ID, "clipboard unavailable")
 			return
 		}
 		deps.Clipboard.Handle(w, req)
 	case mimeapps.Handles(req.Method):
 		if deps.Apps == nil {
-			RespondError(w, req.ID, "application service unavailable")
+			w.RespondError(req.ID, "application service unavailable")
 			return
 		}
 		deps.Apps.Handle(ctx, w, withTerminalDefault(req, deps))
 	case search.Handles(req.Method):
 		if deps.Search == nil {
-			RespondError(w, req.ID, "search unavailable")
+			w.RespondError(req.ID, "search unavailable")
 			return
 		}
 		deps.Search.Handle(ctx, w, req)
 	case bookmarks.Handles(req.Method):
 		if deps.Bookmarks == nil {
-			RespondError(w, req.ID, "bookmarks unavailable")
+			w.RespondError(req.ID, "bookmarks unavailable")
 			return
 		}
 		deps.Bookmarks.Handle(w, req)
 	case strings.HasPrefix(req.Method, "files.op."):
 		if deps.FileOps == nil {
-			RespondError(w, req.ID, "file operations unavailable")
+			w.RespondError(req.ID, "file operations unavailable")
 			return
 		}
 		deps.FileOps.Handle(ctx, w, req)
@@ -75,12 +75,12 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 		HandlePreview(ctx, w, req)
 	case strings.HasPrefix(req.Method, "files."):
 		if deps.Files == nil {
-			RespondError(w, req.ID, "file service unavailable")
+			w.RespondError(req.ID, "file service unavailable")
 			return
 		}
 		deps.Files.Handle(ctx, w, req)
 	default:
-		RespondError(w, req.ID, "unknown method: "+req.Method)
+		w.RespondError(req.ID, "unknown method: "+req.Method)
 	}
 }
 
