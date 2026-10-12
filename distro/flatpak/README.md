@@ -67,7 +67,7 @@ flatpak run com.danklinux.dankfiles
 flatpak run com.danklinux.dankfiles open ~/Downloads
 ```
 
-`make flatpak-modules` regenerates `go.mod.yml` and `modules.txt` from `core/go.mod` with `flatpak-go-mod`; `.github/workflows/flatpak-sync.yml` does this on every `v*` tag (or by hand through workflow dispatch), adds the metainfo release entry, pins the manifest's commit and version, and opens the Flathub PR once `flathub/com.danklinux.dankfiles` exists. `go.mod.yml`, `modules.txt` and the manifest's source pin are never edited by hand.
+`make flatpak-modules` regenerates `go.mod.yml` and `modules.txt` from `core/go.mod` with `flatpak-go-mod`.
 
 ## Uninstall
 

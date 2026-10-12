@@ -183,6 +183,9 @@ ShellRoot {
         check("and selects the item there", browser.selection.paths, ["/home/me/notes.txt"]);
         check("the chain shrinks", columns().ancestors, []);
 
+        browser.reveal("/home/me/gone.txt");
+        check("a reveal that misses drops the old selection", browser.selection.paths, []);
+
         preview.entry = fixture.tree["/home/me/docs"][1];
         preview.load();
         check("text preview comes from the backend", preview.text, "hello from /home/me/docs/readme.txt");

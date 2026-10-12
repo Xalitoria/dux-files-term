@@ -1449,7 +1449,6 @@ FloatingWindow {
                 onSearchRequested: query => window.activePane.startSearch(query, null)
                 onSearchCleared: {
                     window.activePane.closeSearch();
-                    window.activePane.nameFilter = "";
                     window.activePane.focusBody();
                 }
                 onNavigateRequested: path => {

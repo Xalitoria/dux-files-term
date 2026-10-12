@@ -139,9 +139,8 @@ FocusScope {
     }
 
     function closeSearch() {
-        if (!resultsActive)
-            return;
-        searchModel.clear();
+        if (resultsActive)
+            searchModel.clear();
         nameFilter = "";
     }
 

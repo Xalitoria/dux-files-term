@@ -271,6 +271,8 @@ ShellRoot {
             check(pane.selection.paths.length > 1, true);
             mouseRelease(view, view.width - 80, view.rowPitch * 4);
             check(dragSpy.count, 0);
+            mouseClick(row, blankX, row.height / 2);
+            check(pane.selection.paths, ["/tmp/document0"]);
             pane.body.directory.entries.setProperty(0, "isDir", true);
             view.chevrons = true;
             wait(50);

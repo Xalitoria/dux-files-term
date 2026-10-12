@@ -63,7 +63,7 @@
             pname = "dankfiles";
             src = ./.;
             modRoot = "core";
-            vendorHash = pkgs.lib.fakeHash;
+            vendorHash = "sha256-qNEkpWmQaI0n/6llB1DblzA4bjyWtAudHyB/ygokCLM=";
 
             subPackages = [ "cmd/dfiles" ];
 
@@ -180,6 +180,14 @@
               if [ ! -f .git/hooks/pre-commit ]; then prek install; fi
             '';
           };
+        }
+      );
+
+      nixosTests = nixpkgs.lib.genAttrs [ "aarch64-linux" "x86_64-linux" ] (
+        system:
+        import ./distro/nix/tests {
+          inherit self;
+          pkgs = nixpkgs.legacyPackages.${system};
         }
       );
     };

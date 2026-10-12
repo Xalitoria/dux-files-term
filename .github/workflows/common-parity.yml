@@ -6,7 +6,8 @@ on:
     paths:
       - "dank-qml-common"
     branches:
-      - main
+      - master
+      - "stable-*"
 
 permissions:
   contents: write
