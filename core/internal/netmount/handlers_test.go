@@ -106,3 +106,20 @@ func TestHandleRejectsUnknownMethods(t *testing.T) {
 	out := call(t, mountedService(t), ipc.Request{ID: 11, Method: "network.nope"})
 	assert.Equal(t, "NOTSUPPORTED", out["code"])
 }
+
+func TestConnectReusesAMountThatCoversTheAddress(t *testing.T) {
+	svc := mountedService(t)
+
+	for _, uri := range []string{"ftp://example/", "ftp://example/pub/music"} {
+		spec, err := ParseURI(uri, svc.mountableList())
+		require.NoError(t, err)
+		mount, found := svc.mountedAt(spec)
+		require.True(t, found, uri)
+		assert.Equal(t, "ftp:host=example", mount.ID)
+	}
+
+	spec, err := ParseURI("ftp://example.org/", svc.mountableList())
+	require.NoError(t, err)
+	_, found := svc.mountedAt(spec)
+	assert.False(t, found)
+}

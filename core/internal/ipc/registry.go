@@ -33,6 +33,9 @@ var Methods = []MethodSpec{
 	{Name: "ui.properties", Group: "ui", Desc: "Show the properties dialog for paths", Params: []ParamSpec{req("paths", "absolute paths or file:// URIs")}},
 	{Name: "ui.quit", Group: "ui", Desc: "Quit the running daemon"},
 
+	{Name: "location.resolve", Group: "location", Desc: "Resolve what was typed in a location bar: paths, ~, relative paths and URIs; a file resolves to its folder with it selected", Params: []ParamSpec{req("text", "typed location"), opt("cwd", "folder relative paths resolve against")}},
+	{Name: "location.missing", Group: "location", Desc: "Absolute paths that are no longer folders", Params: []ParamSpec{req("paths", "absolute paths, at most 500")}},
+
 	{Name: "files.list", Group: "files", Desc: "List a directory, or page a live watch when watchId is given", Params: []ParamSpec{req("path", "absolute directory path"), opt("watchId", "page from this watch instead of re-reading"), opt("includeHidden", "include dot-prefixed and .hidden entries"), opt("sort", "name|size|mtime|type"), opt("desc", "reverse the sort"), opt("dirsFirst", "directories before files (default true)"), opt("limit", "page size (default 500)"), opt("cursor", "cursor from the previous page"), opt("filters", "file name globs, case-insensitive; directories always pass")}},
 	{Name: "files.watch", Group: "files", Desc: "List a directory and stream changes on files:<watchId>", Params: []ParamSpec{req("path", "absolute directory path"), opt("includeHidden", "include dot-prefixed and .hidden entries"), opt("sort", "name|size|mtime|type"), opt("desc", "reverse the sort"), opt("dirsFirst", "directories before files (default true)"), opt("limit", "page size (default 500)"), opt("filters", "file name globs, case-insensitive; directories always pass")}},
 	{Name: "files.unwatch", Group: "files", Desc: "Close a watch and its event topic", Params: []ParamSpec{req("watchId", "id from files.watch")}},
@@ -97,7 +100,7 @@ var Methods = []MethodSpec{
 	{Name: "devices.lock", Group: "devices", Desc: "Lock a LUKS device", Params: []ParamSpec{req("id", "device id from devices.list")}},
 
 	{Name: "network.mounts", Group: "network", Desc: "gvfs mounts, connectable schemes and portable devices waiting to be mounted"},
-	{Name: "network.connect", Group: "network", Desc: "Mount a network location, asking on the network topic when gvfs needs credentials", Params: []ParamSpec{req("uri", "for example sftp://host/path")}},
+	{Name: "network.connect", Group: "network", Desc: "Mount a network location, asking on the network topic when gvfs needs credentials", Params: []ParamSpec{req("uri", "for example sftp://host/path; a password in it is moved out before the uri is used"), opt("password", "answers the first password question")}},
 	{Name: "network.disconnect", Group: "network", Desc: "Unmount a gvfs mount", Params: []ParamSpec{req("id", "mount id, uri or path from network.mounts")}},
 	{Name: "network.answer", Group: "network", Desc: "Answer a question gvfs asked during a connect", Params: []ParamSpec{req("id", "question id from the network topic"), opt("password", ""), opt("user", ""), opt("domain", ""), opt("anonymous", "connect anonymously"), opt("save", "0 never, 1 session, 2 permanently"), opt("choice", "index for a question"), opt("abort", "give up on the mount")}},
 	{Name: "network.recent", Group: "network", Desc: "Servers connected to before"},

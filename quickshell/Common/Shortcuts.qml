@@ -124,6 +124,13 @@ Singleton {
             "label": I18n.tr("Type a location", "keyboard shortcut")
         },
         {
+            "id": "jump",
+            "keys": ["Ctrl+Shift+K"],
+            "group": "navigation",
+            "scope": "path",
+            "label": I18n.tr("Jump to a folder you visited", "keyboard shortcut")
+        },
+        {
             "id": "search",
             "keys": ["Ctrl+F", "/"],
             "group": "navigation",

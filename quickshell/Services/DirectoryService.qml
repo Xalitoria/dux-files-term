@@ -70,6 +70,19 @@ Singleton {
         }, _options(options)), callback);
     }
 
+    function resolveLocation(text, cwd, callback) {
+        _send("location.resolve", {
+            "text": text,
+            "cwd": cwd
+        }, callback);
+    }
+
+    function missingPaths(paths, callback) {
+        _send("location.missing", {
+            "paths": paths
+        }, result => callback(result.missing ?? []));
+    }
+
     function page(watchId, options, callback) {
         _send("files.list", Object.assign({
             "watchId": watchId

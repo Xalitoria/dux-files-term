@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/location"
 	"github.com/AvengeMedia/dankgo/log"
 	"github.com/godbus/dbus/v5"
 )
@@ -154,18 +155,28 @@ func (s *Service) Snapshot() Snapshot {
 
 // Connect blocks until gvfs finishes, including credential round trips the UI
 // answers through network.answer.
-func (s *Service) Connect(uri string) (Mount, error) {
+func (s *Service) Connect(uri, password string) (Mount, error) {
 	conn := s.connection()
 	if conn == nil {
 		return Mount{}, fail("NOTSUPPORTED", "gvfs is not running")
+	}
+
+	remote := location.SplitPassword(strings.TrimSpace(uri))
+	uri = remote.URI
+	if password == "" {
+		password = remote.Password
 	}
 
 	spec, err := ParseURI(uri, s.mountableList())
 	if err != nil {
 		return Mount{}, err
 	}
+	if mount, found := s.mountedAt(spec); found {
+		return mount, nil
+	}
 
 	op := s.newOp(uri)
+	op.password = password
 	if err := op.export(conn); err != nil {
 		return Mount{}, fail("EIO", "%s", err)
 	}
@@ -239,6 +250,20 @@ func (s *Service) find(id string) (Mount, bool) {
 	defer s.mu.RUnlock()
 	for _, mount := range s.mounts {
 		if mount.ID == id || mount.URI == id || mount.Path == id {
+			return mount, true
+		}
+	}
+	return Mount{}, false
+}
+
+func (s *Service) mountedAt(spec Spec) (Mount, bool) {
+	uri := URIOf(spec, s.mountableList())
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, mount := range s.mounts {
+		rest, ok := strings.CutPrefix(uri, strings.TrimSuffix(mount.URI, "/"))
+		if ok && (rest == "" || strings.HasPrefix(rest, "/")) {
 			return mount, true
 		}
 	}

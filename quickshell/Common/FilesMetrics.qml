@@ -50,4 +50,7 @@ Singleton {
     readonly property real popoverWidth: Theme.smallBreakpoint * 0.75
     readonly property real propertiesIconSize: FileBrowserMetrics.listIconSizes[3]
     readonly property real propertiesLabelWidth: Theme.spacingXL * 5
+
+    readonly property int folderHistoryWriteDelay: 10000
+    readonly property int folderVerifyInterval: 60000
 }

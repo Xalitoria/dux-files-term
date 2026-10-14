@@ -250,6 +250,8 @@ FloatingWindow {
         currentTab = next.length - 1;
         applyTab(currentTab);
         persistTabs();
+        if (path !== "")
+            FolderHistory.visit(primaryPane.path);
     }
 
     function closeTab(index) {
@@ -371,7 +373,7 @@ FloatingWindow {
             connectDialog.ask();
             return;
         case "remote":
-            connectRemote(location.uri);
+            connectRemote(location.uri, location.password);
             return;
         case "archive":
             openArchive(location.path, inNewTab);
@@ -534,6 +536,9 @@ FloatingWindow {
             return;
         case "editPath":
             activePane.editPath();
+            return;
+        case "jump":
+            activePane.startJump();
             return;
         case "search":
             topbar.focusSearch();
@@ -1092,7 +1097,7 @@ FloatingWindow {
         showPropertiesFor([currentPath]);
     }
 
-    function connectRemote(uri) {
+    function connectRemote(uri, password) {
         NetworkService.connectTo(uri, result => {
             const path = connectDialog.localPath(result);
             if (path === "") {
@@ -1100,6 +1105,49 @@ FloatingWindow {
                 return;
             }
             window.openPath(path, true);
+        }, password);
+    }
+
+    function openTypedLocation(pane, location) {
+        if (location.kind !== "remote") {
+            connectDialog.ask();
+            return;
+        }
+        const request = ++pane.connectRequest;
+        NetworkService.connectTo(location.uri, result => {
+            if (!pane || request !== pane.connectRequest)
+                return;
+            const path = connectDialog.localPath(result);
+            pane.settleLocation(path);
+            if (path === "" && !result.error)
+                connectDialog.showFailure(location.uri, result);
+        }, location.password);
+    }
+
+    function dismissEditors(position) {
+        for (const pane of [primaryPane, secondPane]) {
+            if (!pane)
+                continue;
+            const local = pane.mapFromItem(surface, position.x, position.y);
+            pane.dismissPathEditor(local.x, local.y);
+        }
+        if (!topbar.searchFocused)
+            return;
+        const local = topbar.mapFromItem(surface, position.x, position.y);
+        if (!topbar.searchContains(local.x, local.y))
+            activePane.focusBody();
+    }
+
+    function openRecentFolder(path) {
+        DirectoryService.resolveLocation(path, currentPath, result => {
+            if (result.error) {
+                if (result.code === "ENOENT")
+                    FolderHistory.forget(path);
+                ToastService.info(FileFormat.operationError(result.code, result.error));
+                return;
+            }
+            window.openLocation(result.location, false);
+            window.activePane.focusBody();
         });
     }
 
@@ -1312,9 +1360,11 @@ FloatingWindow {
             onSortRequested: key => window.setSort(key)
             onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
             onFocusRequested: window.activePaneIndex = 1
+            onLocationRequested: location => window.openTypedLocation(splitPane, location)
             onPathChanged: {
                 window.captureTabs();
-                SessionData.recordRecent(path);
+                if (!window.applyingTab)
+                    FolderHistory.visit(path);
             }
         }
     }
@@ -1568,17 +1618,13 @@ FloatingWindow {
                 viewMode: window.viewMode
                 filterText: window.activePane.nameFilter
                 currentPath: window.currentPath
-                recentDirs: SessionData.recentDirs
                 onFilterChanged: text => window.activePane.nameFilter = text
                 onSearchRequested: query => window.activePane.startSearch(query, null)
                 onSearchCleared: {
                     window.activePane.closeSearch();
                     window.activePane.focusBody();
                 }
-                onNavigateRequested: path => {
-                    window.openPath(path, false);
-                    window.activePane.focusBody();
-                }
+                onNavigateRequested: path => window.openRecentFolder(path)
                 onSettingsRequested: window.openSettings()
                 onShortcutsRequested: window.runAction("shortcuts")
                 onSidebarToggled: window.toggleSidebar()
@@ -1633,9 +1679,11 @@ FloatingWindow {
                     onSortRequested: key => window.setSort(key)
                     onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
                     onFocusRequested: window.activePaneIndex = 0
+                    onLocationRequested: location => window.openTypedLocation(primaryPane, location)
                     onPathChanged: {
                         window.captureTabs();
-                        SessionData.recordRecent(path);
+                        if (!window.applyingTab)
+                            FolderHistory.visit(path);
                     }
                 }
 
@@ -1747,6 +1795,20 @@ FloatingWindow {
             y: Math.max(0, Math.min(surface.height - height, pointer.y + (dragGhost.height - height) / 2))
             visible: DragService.action !== "" && window.isInside(FileDragHover.area, surface)
             action: DragService.action
+        }
+
+        Item {
+            anchors.fill: parent
+            z: 1
+
+            TapHandler {
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                enabled: primaryPane.editingPath || (window.secondPane?.editingPath ?? false) || topbar.searchFocused
+                onPressedChanged: {
+                    if (pressed)
+                        window.dismissEditors(point.position);
+                }
+            }
         }
     }
 

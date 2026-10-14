@@ -5,6 +5,7 @@ import qs.Common
 import qs.Services
 import qs.DCommon.Widgets
 import qs.DCommon.FileBrowser
+import "../DCommon/FileBrowser/PathCompletion.js" as PathCompletion
 
 Item {
     id: topbar
@@ -19,7 +20,6 @@ Item {
     property bool sortDescending: false
     property string filterText: ""
     property string currentPath: ""
-    property var recentDirs: []
     property bool searchFocused: false
 
     readonly property string bookmarkLabel: bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
@@ -41,7 +41,7 @@ Item {
         }
     ]
     readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
-    readonly property var recentSuggestions: searchFocused && search.text === "" ? recentDirs.filter(path => path !== currentPath).slice(0, FileBrowserMetrics.suggestionRows) : []
+    readonly property var recentSuggestions: searchFocused && search.text === "" ? FolderHistory.top(FileBrowserMetrics.suggestionRows, currentPath).map(match => PathCompletion.row(match, "visited")) : []
 
     signal sidebarToggled
     signal backRequested
@@ -68,9 +68,18 @@ Item {
         search.selectAll();
     }
 
+    function searchContains(x, y) {
+        return search.contains(search.mapFromItem(topbar, x, y));
+    }
+
     function clearSearch() {
         search.text = "";
         searchCleared();
+    }
+
+    onRecentSuggestionsChanged: {
+        if (recentSuggestions.length > 0)
+            FolderHistory.verify(recentSuggestions.map(row => row.path));
     }
 
     onFilterTextChanged: {
@@ -323,9 +332,9 @@ Item {
                 topbar.filterChanged(text);
         }
         onAccepted: {
-            const picked = recentPopup.highlightedPath();
-            if (picked !== "") {
-                topbar.navigateRequested(picked);
+            const picked = recentPopup.highlightedRow();
+            if (picked) {
+                topbar.navigateRequested(picked.path);
                 return;
             }
             if (text.trim() !== "")
@@ -341,12 +350,12 @@ Item {
             topbar.clearSearch();
             break;
         case Qt.Key_Down:
-            if (recentPopup.paths.length === 0)
+            if (recentPopup.rows.length === 0)
                 return;
             recentPopup.move(1);
             break;
         case Qt.Key_Up:
-            if (recentPopup.paths.length === 0)
+            if (recentPopup.rows.length === 0)
                 return;
             recentPopup.move(-1);
             break;
@@ -360,8 +369,8 @@ Item {
         id: recentPopup
 
         anchorItem: search
-        paths: topbar.recentSuggestions
+        rows: topbar.recentSuggestions
         visible: topbar.recentSuggestions.length > 0
-        onChosen: target => topbar.navigateRequested(target)
+        onChosen: row => topbar.navigateRequested(row.path)
     }
 }

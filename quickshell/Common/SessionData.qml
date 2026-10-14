@@ -22,7 +22,6 @@ Singleton {
     property real splitRatio: 0.5
     property int currentTab: 0
     property var tabs: []
-    property var recentDirs: []
     property int gridZoom: FilesMetrics.defaultGridZoom
     property int listZoom: FilesMetrics.defaultListZoom
     property var listColumns: ["size", "modified", "type"]
@@ -37,7 +36,6 @@ Singleton {
             "splitRatio": splitRatio,
             "currentTab": currentTab,
             "tabs": tabs,
-            "recentDirs": recentDirs,
             "gridZoom": gridZoom,
             "listZoom": listZoom,
             "listColumns": listColumns,
@@ -45,7 +43,7 @@ Singleton {
             "browsing": browsing
         })
 
-    readonly property int recentLimit: 20
+    property var legacyRecentDirs: []
 
     property bool _loaded: false
     property bool _selfWrite: false
@@ -59,12 +57,6 @@ Singleton {
         if (JSON.stringify(next) === JSON.stringify(browsing))
             return;
         browsing = next;
-    }
-
-    function recordRecent(path) {
-        if (path === "" || recentDirs[0] === path)
-            return;
-        recentDirs = [path].concat(recentDirs.filter(entry => entry !== path)).slice(0, recentLimit);
     }
 
     onPersistedStateChanged: {
@@ -86,6 +78,8 @@ Singleton {
             log.warn(`ignoring unreadable session state: ${e}`);
         }
 
+        if (Array.isArray(data?.recentDirs))
+            legacyRecentDirs = data.recentDirs;
         for (const key in persistedState) {
             if (!data || data[key] === undefined)
                 continue;

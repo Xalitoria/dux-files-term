@@ -69,13 +69,18 @@ Singleton {
 
     // connectTo blocks in the daemon until gvfs is done, which includes every
     // credential round trip the ask dialog answers.
-    function connectTo(uri, callback) {
+    function connectTo(uri, callback, password) {
         connecting = true;
-        _send("network.connect", {
+        const params = {
             "uri": uri
-        }, result => {
+        };
+        if (password)
+            params.password = password;
+        _send("network.connect", params, result => {
             root.connecting = false;
             if (!result.error && result.mount) {
+                if (!root.mounts.some(mount => mount.id === result.mount.id))
+                    root.mounts = root.mounts.concat([result.mount]);
                 root.connected(result.mount);
                 root.refreshRecent();
             }

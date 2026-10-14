@@ -185,3 +185,120 @@ func TestResolveMarksArchivesOnlyWhenOpened(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []Location{{Kind: KindFolder, Path: root, Select: []string{archive}}}, locations)
 }
+
+func TestTyped(t *testing.T) {
+	root, env := fixture(t)
+	docs := filepath.Join(root, "docs")
+	home := filepath.Join(root, "with space")
+	trash := filepath.Join(root, "data", "Trash", "files")
+
+	tests := []struct {
+		text string
+		want Location
+	}{
+		{docs, Location{Kind: KindFolder, Path: docs, Select: []string{}}},
+		{"  " + docs + "/  ", Location{Kind: KindFolder, Path: docs, Select: []string{}}},
+		{"sub", Location{Kind: KindFolder, Path: filepath.Join(docs, "sub"), Select: []string{}}},
+		{"./sub/", Location{Kind: KindFolder, Path: filepath.Join(docs, "sub"), Select: []string{}}},
+		{"..", Location{Kind: KindFolder, Path: root, Select: []string{}}},
+		{"../with space/c.txt", Location{Kind: KindFolder, Path: home, Select: []string{filepath.Join(home, "c.txt")}}},
+		{"a.txt", Location{Kind: KindFolder, Path: docs, Select: []string{filepath.Join(docs, "a.txt")}}},
+		{"~", Location{Kind: KindFolder, Path: home, Select: []string{}}},
+		{"~/c.txt", Location{Kind: KindFolder, Path: home, Select: []string{filepath.Join(home, "c.txt")}}},
+		{"file://" + filepath.Join(root, "with%20space"), Location{Kind: KindFolder, Path: home, Select: []string{}}},
+		{"file://" + filepath.Join(docs, "b.txt"), Location{Kind: KindFolder, Path: docs, Select: []string{filepath.Join(docs, "b.txt")}}},
+		{"trash:///old", Location{Kind: KindFolder, Path: filepath.Join(trash, "old"), Select: []string{}}},
+		{"computer:///", Location{Kind: KindFolder, Path: "/", Select: []string{}}},
+		{"network:///", Location{Kind: KindServers, Select: []string{}}},
+		{"admin://" + docs, Location{Kind: KindFolder, Path: docs, Select: []string{}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.text, func(t *testing.T) {
+			got, err := Typed(tt.text, docs, home, env)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestTypedRemoteSchemes(t *testing.T) {
+	_, env := fixture(t)
+	for _, scheme := range remoteSchemes {
+		t.Run(scheme, func(t *testing.T) {
+			uri := scheme + "://me@host/srv"
+			got, err := Typed(uri, "/", "/home/me", env)
+			require.NoError(t, err)
+			assert.Equal(t, Location{Kind: KindRemote, URI: uri, Select: []string{}}, got)
+		})
+	}
+}
+
+func TestTypedRefuses(t *testing.T) {
+	root, env := fixture(t)
+	docs := filepath.Join(root, "docs")
+
+	tests := []struct {
+		text, cwd, code string
+	}{
+		{"", docs, CodeInvalid},
+		{"   ", docs, CodeInvalid},
+		{"~bob", docs, CodeOtherHome},
+		{"~bob/projects", docs, CodeOtherHome},
+		{"nope", docs, CodeNotFound},
+		{"../nope/deeper", docs, CodeNotFound},
+		{"docs", "", CodeInvalid},
+		{"mtp://phone/", docs, CodeNotSupported},
+		{"http://example.com/", docs, CodeNotSupported},
+		{"file://otherhost/srv", docs, CodeNotSupported},
+		{"sftp:///nohost", docs, CodeInvalid},
+	}
+	for _, tt := range tests {
+		t.Run(tt.text, func(t *testing.T) {
+			_, err := Typed(tt.text, tt.cwd, filepath.Join(root, "with space"), env)
+			require.Error(t, err)
+			assert.Equal(t, tt.code, CodeOf(err))
+		})
+	}
+}
+
+func TestTypedOtherHomeNamesTheUser(t *testing.T) {
+	_, env := fixture(t)
+	_, err := Typed("~bob/projects", "/", "/home/me", env)
+	assert.ErrorContains(t, err, "~bob ")
+	assert.NotContains(t, err.Error(), "projects")
+}
+
+func TestPasswordsLeaveTheURI(t *testing.T) {
+	_, env := fixture(t)
+
+	tests := []struct {
+		raw, uri, password string
+	}{
+		{"sftp://me:s3cret@host:2222/srv/www", "sftp://me@host:2222/srv/www", "s3cret"},
+		{"smb://DOM;me:p%40ss@nas/share/dir", "smb://DOM;me@nas/share/dir", "p@ss"},
+		{"ftp://:only@host/", "ftp://host/", "only"},
+		{"dav://me:@host/", "dav://me@host/", ""},
+		{"davs://me@host/a b", "davs://me@host/a b", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.raw, func(t *testing.T) {
+			got, err := Parse(tt.raw, env)
+			require.NoError(t, err)
+			assert.Equal(t, Location{Kind: KindRemote, URI: tt.uri, Password: tt.password, Select: []string{}}, got)
+
+			typed, err := Typed(tt.raw, "/", "/home/me", env)
+			require.NoError(t, err)
+			assert.Equal(t, got, typed)
+		})
+	}
+
+	for _, raw := range []string{"sftp://me:s3cret@/path", "sftp://me:s3%zzcret@host/", "file://me:s3cret@otherhost/srv"} {
+		_, err := Parse(raw, env)
+		require.Error(t, err)
+		assert.NotContains(t, err.Error(), "s3")
+		assert.Contains(t, err.Error(), "me@")
+	}
+	_, err := Resolve(nil, []string{"sftp://me:s3cret@host/x"}, env)
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "s3cret")
+}

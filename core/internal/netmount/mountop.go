@@ -48,10 +48,11 @@ type Answer struct {
 // mountOp is the object gvfs calls back on while a mount is in flight. One is
 // exported per connect so a callback always maps to the request that caused it.
 type mountOp struct {
-	service *Service
-	uri     string
-	path    dbus.ObjectPath
-	counter atomic.Uint32
+	service  *Service
+	uri      string
+	password string
+	path     dbus.ObjectPath
+	counter  atomic.Uint32
 
 	mu      sync.Mutex
 	pending map[string]chan Answer
@@ -129,11 +130,26 @@ func (o *mountOp) forget(id string) {
 	o.mu.Unlock()
 }
 
+func (o *mountOp) takePassword(defaultUser string, flags uint32) (string, bool) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	switch {
+	case o.password == "", flags&needPassword == 0, flags&needUsername != 0 && defaultUser == "":
+		return "", false
+	}
+	password := o.password
+	o.password = ""
+	return password, true
+}
+
 func (o *mountOp) nextID() string {
 	return string(o.path) + "/" + strconv.FormatUint(uint64(o.counter.Add(1)), 10)
 }
 
 func (o *mountOp) AskPassword(message, defaultUser, defaultDomain string, flags uint32) (bool, bool, string, string, string, bool, uint32, *dbus.Error) {
+	if password, ok := o.takePassword(defaultUser, flags); ok {
+		return true, false, password, defaultUser, defaultDomain, false, 0, nil
+	}
 	answer := o.ask(Ask{
 		Kind:          "ask",
 		ID:            o.nextID(),

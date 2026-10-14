@@ -1,6 +1,9 @@
 package netmount
 
 import (
+	"strings"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/location"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
 )
@@ -56,7 +59,10 @@ func (s *Service) handleConnect(w *ipc.ConnWriter, req ipc.Request) {
 		return
 	}
 
-	mount, err := s.Connect(uri)
+	remote := location.SplitPassword(strings.TrimSpace(uri))
+	uri = remote.URI
+	password := params.StringOpt(req.Params, "password", remote.Password)
+	mount, err := s.Connect(uri, password)
 	if err != nil {
 		respondErr(w, req.ID, err)
 		return

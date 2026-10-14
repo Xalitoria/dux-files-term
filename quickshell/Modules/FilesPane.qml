@@ -17,6 +17,7 @@ FocusScope {
     property string viewMode: "list"
     property var cutSet: ({})
     property string nameFilter: ""
+    property int connectRequest: 0
 
     readonly property alias path: browser.path
     readonly property alias canGoBack: browser.canGoBack
@@ -45,6 +46,7 @@ FocusScope {
     signal sortRequested(string key)
     signal columnsMenuRequested(real pointX, real pointY)
     signal focusRequested
+    signal locationRequested(var location)
 
     function navigate(target) {
         closeSearch();
@@ -87,6 +89,19 @@ FocusScope {
     function editPath() {
         closeSearch();
         browser.editPath();
+    }
+
+    function startJump() {
+        closeSearch();
+        browser.startJump();
+    }
+
+    function settleLocation(target) {
+        browser.settleLocation(target);
+    }
+
+    function dismissPathEditor(x, y) {
+        browser.dismissPathEditor(x, y);
     }
 
     function focusBody() {
@@ -269,7 +284,7 @@ FocusScope {
         thumbnailsEnabled: SettingsData.thumbnails
         thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
         networkThumbnails: SettingsData.networkThumbnails
-        pathSuggestions: SessionData.recentDirs
+        folderJump: FolderHistory
         header: pane.filtering ? filterHeader : null
         pathBarTrailing: paneStatus
         emptyText: pane.filtering ? I18n.tr("No results", "search results header when nothing matched") : I18n.tr("This folder is empty", "empty directory placeholder")
@@ -291,6 +306,8 @@ FocusScope {
         onFocusRequested: pane.focusRequested()
         onTabRequested: target => pane.tabRequested(target)
         onPathMenuRequested: (target, pointX, pointY) => pane.pathMenuRequested(target, pointX, pointY)
+        onLocationRequested: location => pane.locationRequested(location)
+        onLocationCancelled: pane.connectRequest++
     }
 
     SearchResults {

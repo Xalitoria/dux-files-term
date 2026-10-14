@@ -111,6 +111,7 @@ ShellRoot {
 
     function closeWindow(windowId) {
         if (WindowService.count <= 1 && quitOnLastClose) {
+            FolderHistory.unload();
             DankFilesService.quit();
             return;
         }

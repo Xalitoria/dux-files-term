@@ -150,3 +150,38 @@ func TestReleaseAbortsEverythingStillWaiting(t *testing.T) {
 	_, aborted, _, _, _, _, _, _ := op.AskPassword("Enter password", "", "", needPassword)
 	assert.True(t, aborted, "a released operation answers without asking again")
 }
+
+func TestAskPasswordUsesAPasswordFromTheURIOnce(t *testing.T) {
+	svc, bus := opService(t)
+	op := svc.newOp("sftp://ana@host/")
+	op.password = "s3cret"
+	svc.trackOp(op)
+
+	handled, aborted, password, user, domain, anonymous, save, _ := op.AskPassword("Enter password", "ana", "WORK", needPassword|savingAllowed)
+	assert.True(t, handled)
+	assert.False(t, aborted)
+	assert.Equal(t, "s3cret", password)
+	assert.Equal(t, "ana", user)
+	assert.Equal(t, "WORK", domain)
+	assert.False(t, anonymous)
+	assert.Zero(t, save)
+	assert.Empty(t, bus.notify)
+
+	go func() { _, _, _, _, _, _, _, _ = op.AskPassword("Wrong password", "ana", "", needPassword) }()
+	ask := <-bus.notify
+	assert.Equal(t, "Wrong password", ask.Message)
+	assert.Equal(t, "sftp://ana@host/", ask.URI)
+	require.NoError(t, svc.Answer(ask.ID, Answer{Abort: true}))
+}
+
+func TestAskPasswordAsksWhenTheURIHadNoUser(t *testing.T) {
+	svc, bus := opService(t)
+	op := svc.newOp("sftp://host/")
+	op.password = "s3cret"
+	svc.trackOp(op)
+
+	go func() { _, _, _, _, _, _, _, _ = op.AskPassword("Enter password", "", "", needPassword|needUsername) }()
+	ask := <-bus.notify
+	assert.True(t, ask.NeedUsername)
+	require.NoError(t, svc.Answer(ask.ID, Answer{Abort: true}))
+}
