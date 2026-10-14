@@ -18,6 +18,8 @@ Rectangle {
             return "add_link";
         case "ask":
             return "more_horiz";
+        case "trash":
+            return "delete";
         default:
             return "drive_file_move";
         }
@@ -30,6 +32,8 @@ Rectangle {
             return I18n.tr("Link", "drag label for creating a symlink");
         case "ask":
             return I18n.tr("Ask", "drag label when the drop opens a copy, move or link menu");
+        case "trash":
+            return I18n.tr("Move to Trash", "context menu entry trashing the selection");
         default:
             return I18n.tr("Move", "drag label for moving files");
         }

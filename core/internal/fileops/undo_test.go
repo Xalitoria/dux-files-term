@@ -106,7 +106,8 @@ func TestUndoOfAnUndoIsNotStacked(t *testing.T) {
 
 	manager, bus := newHarness(t)
 	run(t, manager, bus, spec{kind: KindMove, scope: "w1", sources: []string{src}, dest: dest})
-	undo(t, manager, bus, "w1")
+	undone := undo(t, manager, bus, "w1")
+	require.False(t, undone.Undoable)
 
 	_, err := manager.Undo("w1")
 	require.Error(t, err)

@@ -110,7 +110,7 @@ func Resolve(open, sel []string, env Env) ([]Location, error) {
 			out = append(out, loc)
 			continue
 		}
-		if info, err := env.Stat(loc.Path); err == nil && info.IsDir() {
+		if isFolder(loc.Path, env) {
 			addFolder(loc.Path)
 			continue
 		}
@@ -182,7 +182,7 @@ func Typed(text, cwd, home string, env Env) (Location, error) {
 	if err != nil || loc.Kind != KindFolder {
 		return loc, err
 	}
-	if info, err := env.Stat(loc.Path); err == nil && info.IsDir() {
+	if isFolder(loc.Path, env) {
 		return loc, nil
 	}
 	if _, err := env.Lstat(loc.Path); err != nil {
@@ -278,6 +278,14 @@ func absolute(raw, path string) (Location, error) {
 		return Location{}, fail(CodeInvalid, "%s does not name an absolute path", redact(raw))
 	}
 	return folder(filepath.Clean(path)), nil
+}
+
+func isFolder(path string, env Env) bool {
+	if env.TrashFiles != "" && path == env.TrashFiles {
+		return true
+	}
+	info, err := env.Stat(path)
+	return err == nil && info.IsDir()
 }
 
 func folder(path string) Location {

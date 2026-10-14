@@ -70,7 +70,7 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	case strings.HasPrefix(req.Method, "system."):
 		HandleSystem(ctx, w, req, deps)
 	case strings.HasPrefix(req.Method, "trash."):
-		HandleTrash(ctx, w, req)
+		HandleTrash(ctx, w, req, deps)
 	case strings.HasPrefix(req.Method, "location."):
 		HandleLocation(ctx, w, req)
 	case req.Method == "files.preview":

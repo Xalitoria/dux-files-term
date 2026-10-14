@@ -38,6 +38,7 @@ Rectangle {
                 thumbnail: ghost.thumbnail !== "" ? ghost.thumbnail : ghost.mime === "image/svg+xml" ? ghost.path : ""
                 size: FilesMetrics.dragGhostSize
                 color: ghost.isDir ? Theme.primary : Theme.surfaceText
+                asynchronous: false
             }
 
             Rectangle {

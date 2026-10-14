@@ -18,6 +18,7 @@ DFlickable {
     signal dropRequested(string path, var drop)
     signal bookmarkMenuRequested(string path, real pointX, real pointY)
     signal bookmarkRenameRequested(string path)
+    signal trashMenuRequested(real pointX, real pointY)
     signal leaveRequested
 
     function rows() {
@@ -118,6 +119,11 @@ DFlickable {
             bookmarkRenameRequested(row.dropPath);
             break;
         case Qt.Key_Menu:
+            if (row && row.dropPath !== "" && row.dropPath === TrashService.filesPath) {
+                const point = row.mapToItem(sidebar, row.width / 2, row.height / 2);
+                trashMenuRequested(point.x, point.y);
+                break;
+            }
             if (bookmarkPath(row) === "")
                 return;
             {
@@ -151,6 +157,10 @@ DFlickable {
             onMenuRequested: (path, pointX, pointY) => {
                 const point = bookmarksSection.mapToItem(sidebar, pointX, pointY);
                 sidebar.bookmarkMenuRequested(path, point.x, point.y);
+            }
+            onTrashMenuRequested: (pointX, pointY) => {
+                const point = bookmarksSection.mapToItem(sidebar, pointX, pointY);
+                sidebar.trashMenuRequested(point.x, point.y);
             }
         }
 

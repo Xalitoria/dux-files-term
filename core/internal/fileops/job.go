@@ -196,7 +196,7 @@ func (j *job) viewLocked() View {
 		Skipped:        j.skipped,
 		Warnings:       j.warnings,
 		Cancelled:      j.cancelled,
-		Undoable:       j.record != nil && len(j.record.pairs) > 0,
+		Undoable:       j.record != nil && len(j.record.pairs) > 0 && !j.spec.undo,
 		Created:        j.created,
 		Error:          j.errMsg,
 		Code:           j.errCode,

@@ -21,6 +21,8 @@ Singleton {
     readonly property string action: {
         if (hoverDest === "" || paths.includes(hoverDest))
             return "";
+        if (hoverDest === TrashService.filesPath)
+            return paths.every(path => TrashService.holds(path)) ? "" : "trash";
         const resolved = resolve(overrideFor(FileDragHover.proposedAction), plainDrops[hoverDest] ?? "");
         if (resolved === "move" && allInside(paths, hoverDest))
             return "";
@@ -28,7 +30,7 @@ Singleton {
     }
 
     onHoverDestChanged: {
-        if (hoverDest === "" || plainDrops[hoverDest] !== undefined)
+        if (hoverDest === "" || hoverDest === TrashService.filesPath || plainDrops[hoverDest] !== undefined)
             return;
         const dest = hoverDest;
         const drag = generation;

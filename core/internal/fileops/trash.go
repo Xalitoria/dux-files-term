@@ -10,10 +10,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/AvengeMedia/dankgo/paths"
 	"github.com/AvengeMedia/dankgo/trash"
 )
 
 const trashInfoExt = ".trashinfo"
+
+var listTrash = trash.List
 
 func (r *runner) trash() error {
 	sources := r.job.spec.sources
@@ -64,7 +67,10 @@ func (r *runner) restore() error {
 		err := r.retryLocal(source, func() error {
 			var resolveErr error
 			target, resolveErr = restoreTarget(item.dst, item.src)
-			return resolveErr
+			if resolveErr != nil {
+				return resolveErr
+			}
+			return os.MkdirAll(filepath.Dir(target), 0o755)
 		})
 		switch {
 		case errors.Is(err, errSkipped):
@@ -72,10 +78,6 @@ func (r *runner) restore() error {
 		case errors.Is(err, context.Canceled):
 			return nil
 		case err != nil:
-			return err
-		}
-
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 			return err
 		}
 
@@ -110,8 +112,6 @@ func (r *runner) restoreItems() []pair {
 	return items
 }
 
-// restoreTarget mirrors the spec's Path rule: absolute for the home trash,
-// relative to the trash dir's topdir for a per-mountpoint trash.
 func restoreTarget(trashDir, name string) (string, error) {
 	body, err := os.ReadFile(filepath.Join(trashDir, "info", name+trashInfoExt))
 	if err != nil {
@@ -133,19 +133,86 @@ func restoreTarget(trashDir, name string) (string, error) {
 	if decoded, err := url.PathUnescape(stored); err == nil {
 		stored = decoded
 	}
-	if filepath.IsAbs(stored) {
-		return stored, nil
+	target, ok := RestorePath(trashDir, stored)
+	if !ok || (trashDir != homeTrash() && !resolvesInside(target, trashTopDir(trashDir))) {
+		return "", errors.New("invalid .trashinfo: Path leaves its volume: " + stored)
 	}
+	return target, nil
+}
 
+func RestorePath(trashDir, stored string) (string, bool) {
+	if stored == "" {
+		return "", false
+	}
+	topDir := trashTopDir(trashDir)
+	if filepath.IsAbs(stored) {
+		target := filepath.Clean(stored)
+		return target, trashDir == homeTrash() || isUnder(target, topDir)
+	}
+	target := filepath.Join(topDir, stored)
+	return target, isUnder(target, topDir)
+}
+
+func trashTopDir(trashDir string) string {
 	topDir := filepath.Dir(trashDir)
 	if filepath.Base(topDir) == ".Trash" {
-		topDir = filepath.Dir(topDir)
+		return filepath.Dir(topDir)
 	}
-	return filepath.Join(topDir, stored), nil
+	return topDir
+}
+
+func homeTrash() string {
+	return filepath.Join(paths.XDGDataHome(), "Trash")
+}
+
+func resolvesInside(target, topDir string) bool {
+	root, err := filepath.EvalSymlinks(topDir)
+	if err != nil {
+		return false
+	}
+	existing := filepath.Dir(target)
+	for {
+		if _, err := os.Lstat(existing); err == nil {
+			break
+		}
+		parent := filepath.Dir(existing)
+		if parent == existing {
+			return false
+		}
+		existing = parent
+	}
+	resolved, err := filepath.EvalSymlinks(existing)
+	if err != nil {
+		return false
+	}
+	return resolved == root || isUnder(resolved, root)
+}
+
+func forgetTrashed(path string) {
+	filesDir := filepath.Dir(path)
+	trashDir := filepath.Dir(filesDir)
+	if filepath.Base(filesDir) != "files" || !isTrashDir(trashDir) {
+		return
+	}
+	name := filepath.Base(path)
+	os.Remove(filepath.Join(trashDir, "info", name+trashInfoExt))
+	dropDirectorySize(trashDir, name)
+}
+
+func isTrashDir(dir string) bool {
+	uid := strconv.Itoa(os.Getuid())
+	switch {
+	case dir == homeTrash():
+		return true
+	case filepath.Base(dir) == ".Trash-"+uid:
+		return true
+	default:
+		return filepath.Base(dir) == uid && filepath.Base(filepath.Dir(dir)) == ".Trash"
+	}
 }
 
 func (r *runner) emptyTrash() error {
-	entries, err := trash.List()
+	entries, err := listTrash()
 	if err != nil {
 		return err
 	}

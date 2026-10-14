@@ -16,10 +16,60 @@ FileMenu {
     property bool forFolder: false
     property bool extractable: false
     property bool inResults: false
+    property bool inTrash: false
+    property int trashCount: 0
 
     signal actionTriggered(string id)
 
-    readonly property var entries: forFolder ? backgroundRows : itemRows
+    readonly property var entries: {
+        if (forFolder)
+            return inTrash ? trashBackgroundRows : backgroundRows;
+        return inTrash ? trashItemRows : itemRows;
+    }
+
+    readonly property var trashItemRows: [
+        {
+            "id": "restore",
+            "icon": "restore_from_trash",
+            "label": I18n.tr("Restore", "trash action returning items to where they were deleted from"),
+            "enabled": selectionCount > 0
+        },
+        {
+            "id": "separator"
+        },
+        {
+            "id": "deletePermanently",
+            "icon": "delete_forever",
+            "label": I18n.tr("Delete permanently", "context menu entry deleting the selection for good"),
+            "enabled": selectionCount > 0,
+            "danger": true
+        }
+    ]
+
+    readonly property var trashBackgroundRows: [
+        {
+            "id": "selectAll",
+            "icon": "select_all",
+            "label": I18n.tr("Select all", "menu entry selecting every item in the folder"),
+            "enabled": true
+        },
+        {
+            "id": "reload",
+            "icon": "refresh",
+            "label": I18n.tr("Reload", "menu entry re-reading the current folder"),
+            "enabled": true
+        },
+        {
+            "id": "separator"
+        },
+        {
+            "id": "emptyTrash",
+            "icon": "delete_forever",
+            "label": I18n.tr("Empty Trash", "action deleting everything in the trash"),
+            "enabled": trashCount > 0,
+            "danger": true
+        }
+    ]
 
     readonly property var itemRows: [
         {

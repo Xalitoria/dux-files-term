@@ -302,3 +302,21 @@ func TestPasswordsLeaveTheURI(t *testing.T) {
 	require.Error(t, err)
 	assert.NotContains(t, err.Error(), "s3cret")
 }
+
+func TestTrashOpensBeforeTheTrashExists(t *testing.T) {
+	root := t.TempDir()
+	env := HostEnv(filepath.Join(root, "data"), nil)
+	trash := filepath.Join(root, "data", "Trash", "files")
+	want := Location{Kind: KindFolder, Path: trash, Select: []string{}}
+
+	locations, err := Resolve([]string{"trash:///"}, nil, env)
+	require.NoError(t, err)
+	assert.Equal(t, []Location{want}, locations)
+
+	typed, err := Typed("trash:///", root, root, env)
+	require.NoError(t, err)
+	assert.Equal(t, want, typed)
+
+	_, err = Typed("trash:///old", root, root, env)
+	assert.Equal(t, CodeNotFound, CodeOf(err))
+}

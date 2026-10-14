@@ -22,16 +22,18 @@ FocusScope {
     readonly property alias path: browser.path
     readonly property alias canGoBack: browser.canGoBack
     readonly property alias canGoForward: browser.canGoForward
-    readonly property alias canGoUp: browser.canGoUp
+    readonly property bool canGoUp: browser.canGoUp && !trashActive
     readonly property alias editingPath: browser.editingPath
     readonly property alias renaming: browser.renaming
     readonly property alias searchModel: searchModel
     readonly property bool resultsActive: searchModel.active
+    readonly property bool trashActive: !resultsActive && TrashService.filesPath !== "" && browser.path === TrashService.filesPath
+    readonly property var trashView: trashActive ? trashLoader.item : null
     readonly property var scroller: body.view?.activeList ?? body.view
-    readonly property var selection: resultsActive ? results.selection : browser.selection
-    readonly property var body: resultsActive ? results.body : browser.body
-    readonly property var currentEntry: resultsActive ? results.body.cursorEntry() : browser.currentEntry
-    readonly property var selectedEntries: resultsActive ? results.body.selectedEntries() : browser.selectedEntries
+    readonly property var selection: resultsActive ? results.selection : trashView ? trashView.selection : browser.selection
+    readonly property var body: resultsActive ? results.body : trashView ? trashView.body : browser.body
+    readonly property var currentEntry: resultsActive ? results.body.cursorEntry() : trashView ? trashView.body.cursorEntry() : browser.currentEntry
+    readonly property var selectedEntries: resultsActive ? results.body.selectedEntries() : trashView ? trashView.body.selectedEntries() : browser.selectedEntries
     readonly property bool filtering: nameFilter !== "" && !resultsActive
 
     signal activateRequested(var entry)
@@ -47,6 +49,8 @@ FocusScope {
     signal columnsMenuRequested(real pointX, real pointY)
     signal focusRequested
     signal locationRequested(var location)
+    signal restoreRequested
+    signal emptyTrashRequested
 
     function navigate(target) {
         closeSearch();
@@ -74,6 +78,8 @@ FocusScope {
     }
 
     function up() {
+        if (trashActive)
+            return;
         closeSearch();
         browser.up();
     }
@@ -81,6 +87,10 @@ FocusScope {
     function refresh() {
         if (resultsActive) {
             searchModel.refresh();
+            return;
+        }
+        if (trashView) {
+            trashView.refresh();
             return;
         }
         browser.refresh();
@@ -109,10 +119,16 @@ FocusScope {
             results.focusBody();
             return;
         }
+        if (trashView && !editingPath) {
+            trashView.focusBody();
+            return;
+        }
         browser.focusBody();
     }
 
     function beginRename(target) {
+        if (trashActive)
+            return;
         if (resultsActive) {
             results.body.beginRename(target);
             return;
@@ -151,7 +167,7 @@ FocusScope {
     }
 
     function startSearch(query, filterState) {
-        if (path === "")
+        if (path === "" || trashActive)
             return;
         const state = filterState ?? results.chips.filterState;
         searchModel.rootPath = path;
@@ -212,6 +228,24 @@ FocusScope {
 
     Keys.onPressed: event => handleKey(event)
 
+    onTrashActiveChanged: refocus.restart()
+    onEditingPathChanged: {
+        if (!editingPath && trashActive)
+            refocus.restart();
+    }
+
+    function refocusIfOwned() {
+        if (pane.active && (pane.activeFocus || !pane.Window.activeFocusItem))
+            focusBody();
+    }
+
+    Timer {
+        id: refocus
+
+        interval: 0
+        onTriggered: pane.refocusIfOwned()
+    }
+
     function handleKey(event) {
         switch (event.key) {
         case Qt.Key_Return:
@@ -260,8 +294,8 @@ FocusScope {
         id: browser
 
         anchors.fill: parent
-        visible: !pane.resultsActive
-        focus: !pane.resultsActive
+        visible: !pane.resultsActive && (!pane.trashActive || pane.editingPath)
+        focus: !pane.resultsActive && (!pane.trashActive || pane.editingPath)
         showSidebar: false
         showNavigation: false
         showHidden: pane.showHidden
@@ -285,9 +319,16 @@ FocusScope {
         thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
         networkThumbnails: SettingsData.networkThumbnails
         folderJump: FolderHistory
+        unlistedPath: TrashService.filesPath
         header: pane.filtering ? filterHeader : null
         pathBarTrailing: paneStatus
-        emptyText: pane.filtering ? I18n.tr("No results", "search results header when nothing matched") : I18n.tr("This folder is empty", "empty directory placeholder")
+        emptyText: {
+            if (pane.trashActive)
+                return "";
+            if (pane.filtering)
+                return I18n.tr("No results", "search results header when nothing matched");
+            return I18n.tr("This folder is empty", "empty directory placeholder");
+        }
         paneColor: Theme.foregroundColor(Theme.cardSurface, true)
         paneRadius: FilesMetrics.paneRadius
         paneMargin: FilesMetrics.paneBodyMargin
@@ -340,6 +381,38 @@ FocusScope {
             pane.focusBody();
         }
         onFiltersChanged: pane.startSearch(searchModel.query, results.chips.filterState)
+    }
+
+    Loader {
+        id: trashLoader
+
+        anchors.fill: parent
+        active: pane.trashActive
+        visible: !pane.editingPath
+        sourceComponent: TrashView {
+            viewMode: pane.viewMode
+            gridZoom: SessionData.gridZoom
+            listZoom: SessionData.listZoom
+            columnWidths: SessionData.columnWidths
+            nameFilter: pane.nameFilter
+            singleClickActivates: SettingsData.clickToOpen === "single"
+            typeAheadEnabled: !SettingsData.vimKeys
+            countFolders: SettingsData.folderCounts
+            thumbnailsEnabled: SettingsData.thumbnails
+            thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
+            outlined: pane.showActiveOutline && pane.active
+            onActivateRequested: entry => pane.activateRequested(entry)
+            onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.itemMenuRequested(index, pointX, pointY, modifiers)
+            onBackgroundMenuRequested: (pointX, pointY) => pane.backgroundMenuRequested(pointX, pointY)
+            onRestoreRequested: pane.restoreRequested()
+            onEmptyRequested: pane.emptyTrashRequested()
+            onItemsDropped: drop => pane.dropOn(TrashService.filesPath, drop)
+            onZoomRequested: (mode, level) => pane.setZoom(mode, level)
+            onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
+            onFocusRequested: pane.focusRequested()
+            onBackRequested: pane.back()
+            onForwardRequested: pane.forward()
+        }
     }
 
     Component {

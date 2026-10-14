@@ -15,6 +15,7 @@ FilePlaceSection {
     signal tabRequested(string path)
     signal dropRequested(string path, var drop)
     signal menuRequested(string path, real pointX, real pointY)
+    signal trashMenuRequested(real pointX, real pointY)
 
     readonly property var places: DirectoryService.userDirs.map(dir => ({
                 "path": dir.path,
@@ -39,6 +40,28 @@ FilePlaceSection {
             onClicked: section.navigateRequested(modelData.path)
             onMiddleClicked: section.tabRequested(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
+        }
+    }
+
+    FilePlaceRow {
+        id: trashRow
+
+        visible: TrashService.filesPath !== ""
+        label: I18n.tr("Trash", "trash view header and sidebar entry")
+        iconName: TrashService.count > 0 ? "user-trash-full" : "user-trash"
+        tooltipText: TrashService.count > 0 ? FileFormat.count(TrashService.count) : I18n.tr("Trash is empty", "trash view placeholder and sidebar tooltip when nothing is trashed")
+        selected: TrashService.filesPath === section.currentPath
+        dropPath: TrashService.filesPath
+        onClicked: section.navigateRequested(TrashService.filesPath)
+        onMiddleClicked: section.tabRequested(TrashService.filesPath)
+        onDropped: drop => section.dropRequested(TrashService.filesPath, drop)
+
+        TapHandler {
+            acceptedButtons: Qt.RightButton
+            onTapped: point => {
+                const mapped = trashRow.mapToItem(section, point.position.x, point.position.y);
+                section.trashMenuRequested(mapped.x, mapped.y);
+            }
         }
     }
 

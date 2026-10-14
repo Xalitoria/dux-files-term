@@ -55,7 +55,7 @@ FloatingWindow {
     readonly property string currentPath: activePane.path
     readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
     readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || openConfirmDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible
+    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || openConfirmDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible || emptyTrashDialog.visible
     readonly property bool textEditing: surface.focusItem instanceof TextInput || surface.focusItem instanceof TextEdit
     readonly property bool sidebarFocused: isInside(surface.focusItem, dockedSidebar) || isInside(surface.focusItem, overlaySidebar)
     readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
@@ -298,6 +298,8 @@ FloatingWindow {
     function folderTitle(path) {
         if (path === "")
             return I18n.tr("Files", "main window title");
+        if (path === TrashService.filesPath)
+            return I18n.tr("Trash", "trash view header and sidebar entry");
         if (path === Paths.strip(Paths.home))
             return I18n.tr("Home", "sidebar entry for the user's home folder");
         if (path === "/")
@@ -465,12 +467,63 @@ FloatingWindow {
     }
 
     function selectSortKey(key) {
-        if (key !== "")
-            setSortOrder(key, sortDescending);
+        if (key === "")
+            return;
+        const trash = activePane.trashView;
+        if (trash) {
+            trash.model.setSort(key, trash.model.sortDescending);
+            return;
+        }
+        setSortOrder(key, sortDescending);
+    }
+
+    function toggleSortDirection() {
+        const trash = activePane.trashView;
+        if (trash) {
+            trash.model.setSort(trash.model.sortKey, !trash.model.sortDescending);
+            return;
+        }
+        setSortOrder(sortKey, !sortDescending);
+    }
+
+    function trashAction(id) {
+        switch (id) {
+        case "trash":
+            return "deletePermanently";
+        case "openWith":
+        case "openContainingFolder":
+        case "openInNewTab":
+        case "openInNewWindow":
+        case "openInPane":
+        case "openTerminal":
+        case "cut":
+        case "copy":
+        case "paste":
+        case "pasteInto":
+        case "pasteLink":
+        case "rename":
+        case "newFolder":
+        case "newDocument":
+        case "compress":
+        case "extract":
+        case "extractTo":
+        case "properties":
+        case "copyPath":
+        case "bookmark":
+            return "";
+        default:
+            return id;
+        }
     }
 
     function runAction(id) {
-        switch (id) {
+        switch (activePane.trashActive ? trashAction(id) : id) {
+        case "restore":
+            restoreEntries(selectedEntries());
+            return;
+        case "emptyTrash":
+            confirmEmptyTrash();
+            return;
         case "open":
             openEntries(selectedEntries());
             return;
@@ -814,6 +867,10 @@ FloatingWindow {
     function activate(entry) {
         if (!entry)
             return;
+        if (activePane.trashActive) {
+            offerRestore([entry]);
+            return;
+        }
         if (entry.isDir) {
             activePane.navigate(entry.path);
             return;
@@ -855,6 +912,10 @@ FloatingWindow {
     function openEntries(entries) {
         if (entries.length === 0)
             return;
+        if (activePane.trashActive) {
+            offerRestore(entries);
+            return;
+        }
         if (entries.length === 1) {
             activate(entries[0]);
             return;
@@ -1044,6 +1105,10 @@ FloatingWindow {
 
     function trashSelection() {
         const paths = selectedPaths();
+        trashPaths(paths, paths.length === 1 ? firstSelected().name : FileFormat.count(paths.length));
+    }
+
+    function trashPaths(paths, subject) {
         if (paths.length === 0)
             return;
         if (!SettingsData.confirmTrash) {
@@ -1051,8 +1116,47 @@ FloatingWindow {
             return;
         }
         trashConfirmDialog.pending = paths;
-        trashConfirmDialog.subject = paths.length === 1 ? firstSelected().name : FileFormat.count(paths.length);
+        trashConfirmDialog.subject = subject;
         trashConfirmDialog.open();
+    }
+
+    function trashDropped(paths) {
+        const outside = paths.filter(path => !TrashService.holds(path));
+        trashPaths(outside, outside.length === 1 ? FilePaths.baseName(outside[0]) : FileFormat.count(outside.length));
+    }
+
+    function restoreEntries(entries) {
+        const byDir = ({});
+        for (const entry of entries) {
+            if (!entry.trashDir)
+                continue;
+            byDir[entry.trashDir] = (byDir[entry.trashDir] ?? []).concat([entry.trashName]);
+        }
+        for (const dir in byDir)
+            FileOpsService.restore(byDir[dir], dir, opScope);
+    }
+
+    function offerRestore(entries) {
+        const items = entries.map(entry => ({
+                    "trashDir": entry.trashDir,
+                    "trashName": entry.trashName
+                }));
+        ToastService.show(I18n.tr("Items in the trash cannot be opened", "toast when opening an item inside the trash"), {
+            "actionLabel": I18n.tr("Restore", "trash action returning items to where they were deleted from"),
+            "action": () => window.restoreEntries(items)
+        });
+    }
+
+    function confirmEmptyTrash() {
+        if (TrashService.count === 0)
+            return;
+        emptyTrashDialog.subject = FileFormat.count(TrashService.count);
+        emptyTrashDialog.open();
+    }
+
+    function showTrashMenu(source, pointX, pointY) {
+        const point = source.mapToItem(surface, pointX, pointY);
+        trashMenu.openAt(point.x, point.y);
     }
 
     function deleteSelection() {
@@ -1173,6 +1277,10 @@ FloatingWindow {
     }
 
     function applyDrop(paths, dest, action) {
+        if (dest === TrashService.filesPath) {
+            trashDropped(paths);
+            return;
+        }
         switch (action) {
         case "copy":
             FileOpsService.copy(paths, dest, opScope);
@@ -1207,7 +1315,9 @@ FloatingWindow {
         dragSource.Drag.mimeData = DragService.mimeData();
         dragGhost.grabToImage(result => {
             dragSource.Drag.imageSource = result.url;
+            dragSource.Drag.active = true;
             dragSource.Drag.startDrag();
+            dragSource.Drag.active = false;
             DragService.end();
         });
     }
@@ -1216,6 +1326,8 @@ FloatingWindow {
         switch (job.kind) {
         case "trash":
             return I18n.tr("Moved to trash", "toast after trashing files");
+        case "restore":
+            return I18n.tr("Restored", "toast after restoring items from the trash");
         case "move":
             return I18n.tr("Moved", "toast after moving files");
         case "copy":
@@ -1361,6 +1473,8 @@ FloatingWindow {
             onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
             onFocusRequested: window.activePaneIndex = 1
             onLocationRequested: location => window.openTypedLocation(splitPane, location)
+            onRestoreRequested: window.runAction("restore")
+            onEmptyTrashRequested: window.runAction("emptyTrash")
             onPathChanged: {
                 window.captureTabs();
                 if (!window.applyingTab)
@@ -1410,6 +1524,7 @@ FloatingWindow {
             WindowService.activate(window.windowId);
             window.claimToplevel();
             ClipboardService.refresh();
+            TrashService.refresh();
             primaryPane.refresh();
             window.secondPane?.refresh();
         }
@@ -1517,6 +1632,7 @@ FloatingWindow {
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
                 onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, dockedSidebar, pointX, pointY)
+                onTrashMenuRequested: (pointX, pointY) => window.showTrashMenu(dockedSidebar, pointX, pointY)
                 onBookmarkRenameRequested: path => window.renameBookmark(path)
                 onLeaveRequested: window.leaveSidebar()
                 onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.overrideFor(drop.proposedAction))
@@ -1612,10 +1728,11 @@ FloatingWindow {
                 bookmarked: BookmarksService.has(window.currentPath)
                 backEnabled: window.activePane.canGoBack
                 forwardEnabled: window.activePane.canGoForward
-                sortKey: window.sortKey
-                sortDescending: window.sortDescending
+                sortKey: window.activePane.trashView?.model.sortKey ?? window.sortKey
+                sortDescending: window.activePane.trashView?.model.sortDescending ?? window.sortDescending
                 compact: window.compact
                 viewMode: window.viewMode
+                trashActive: window.activePane.trashActive
                 filterText: window.activePane.nameFilter
                 currentPath: window.currentPath
                 onFilterChanged: text => window.activePane.nameFilter = text
@@ -1631,13 +1748,13 @@ FloatingWindow {
                 onBackRequested: window.activePane.back()
                 onForwardRequested: window.activePane.forward()
                 onSplitToggled: window.toggleSplit()
-                onBookmarkToggled: BookmarksService.toggle(window.currentPath)
+                onBookmarkToggled: window.runAction("bookmark")
                 onSortKeySelected: key => window.selectSortKey(key)
-                onSortDirectionToggled: window.setSortOrder(window.sortKey, !window.sortDescending)
+                onSortDirectionToggled: window.toggleSortDirection()
                 onCopyPathRequested: window.copyText(window.currentPath)
                 onViewModeSelected: mode => window.setViewMode(mode)
                 onReloadRequested: window.runAction("reload")
-                onTerminalRequested: window.openTerminalHere()
+                onTerminalRequested: window.runAction("openTerminal")
                 onPropertiesRequested: window.runAction("properties")
                 onNewWindowRequested: window.runAction("newWindow")
             }
@@ -1680,6 +1797,8 @@ FloatingWindow {
                     onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
                     onFocusRequested: window.activePaneIndex = 0
                     onLocationRequested: location => window.openTypedLocation(primaryPane, location)
+                    onRestoreRequested: window.runAction("restore")
+                    onEmptyTrashRequested: window.runAction("emptyTrash")
                     onPathChanged: {
                         window.captureTabs();
                         if (!window.applyingTab)
@@ -1782,6 +1901,7 @@ FloatingWindow {
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
                 onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, overlaySidebar, pointX, pointY)
+                onTrashMenuRequested: (pointX, pointY) => window.showTrashMenu(overlaySidebar, pointX, pointY)
                 onBookmarkRenameRequested: path => window.renameBookmark(path)
                 onLeaveRequested: window.leaveSidebar()
                 onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.overrideFor(drop.proposedAction))
@@ -1871,6 +1991,7 @@ FloatingWindow {
         shiftHeld: window.shiftHeld
         extractable: window.selectionIsExtractable()
         inResults: window.activePane.resultsActive
+        inTrash: window.activePane.trashActive
         onActionTriggered: id => window.runAction(id)
     }
 
@@ -2039,7 +2160,56 @@ FloatingWindow {
         anchorItem: surface
         forFolder: true
         hasClipboard: ClipboardService.hasFiles
+        inTrash: window.activePane.trashActive
+        trashCount: TrashService.count
         onActionTriggered: id => window.runAction(id)
+    }
+
+    FileMenu {
+        id: trashMenu
+
+        anchorItem: surface
+
+        FileMenuItem {
+            text: I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
+            iconName: "tab"
+            onClicked: {
+                trashMenu.close();
+                window.newTab(TrashService.filesPath, false);
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Open in new window", "context menu entry opening a folder in another window")
+            iconName: "open_in_new"
+            onClicked: {
+                trashMenu.close();
+                window.newWindowRequested([window.folderLocation(TrashService.filesPath)]);
+            }
+        }
+
+        Item {
+            width: parent?.width ?? 0
+            height: Theme.spacingS * 2
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width - Theme.spacingM * 2
+                height: Theme.dividerWidth
+                color: Theme.outlineVariant
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Empty Trash", "action deleting everything in the trash")
+            iconName: "delete_forever"
+            danger: true
+            enabled: TrashService.count > 0
+            onClicked: {
+                trashMenu.close();
+                window.confirmEmptyTrash();
+            }
+        }
     }
 
     FileMenu {
@@ -2079,7 +2249,7 @@ FloatingWindow {
     Item {
         id: dragSource
 
-        Drag.dragType: Drag.Automatic
+        Drag.dragType: Drag.None
         Drag.supportedActions: Qt.CopyAction | Qt.MoveAction | Qt.LinkAction
     }
 
@@ -2254,6 +2424,15 @@ FloatingWindow {
         sourceComponent: SettingsModal {
             parentWindow: window
         }
+    }
+
+    ConfirmDialog {
+        id: emptyTrashDialog
+
+        title: I18n.tr("Empty the trash?", "confirmation header before deleting everything in the trash")
+        message: I18n.tr("%1 will be deleted permanently. This cannot be undone.", "permanent delete confirmation explanation").arg(subject)
+        confirmText: I18n.tr("Empty Trash", "action deleting everything in the trash")
+        onConfirmed: FileOpsService.emptyTrash()
     }
 
     ConfirmDialog {

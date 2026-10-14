@@ -198,6 +198,7 @@ func (r *runner) deleteAll() error {
 		case err != nil:
 			return err
 		}
+		forgetTrashed(path)
 		counted := r.scanned[path]
 		r.advance(path, max(counted.files, 1), counted.bytes)
 	}

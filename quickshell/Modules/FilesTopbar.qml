@@ -18,6 +18,7 @@ Item {
     property string viewMode: "list"
     property string sortKey: "name"
     property bool sortDescending: false
+    property bool trashActive: false
     property string filterText: ""
     property string currentPath: ""
     property bool searchFocused: false
@@ -41,6 +42,28 @@ Item {
         }
     ]
     readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
+    readonly property var trashSortKeys: [
+        {
+            "key": "deleted",
+            "icon": "delete",
+            "label": FileColumns.label("deleted")
+        },
+        {
+            "key": "name",
+            "icon": "sort_by_alpha",
+            "label": FileColumns.label("name")
+        },
+        {
+            "key": "origin",
+            "icon": "folder_open",
+            "label": FileColumns.label("origin")
+        },
+        {
+            "key": "size",
+            "icon": "straighten",
+            "label": FileColumns.label("size")
+        }
+    ]
     readonly property var recentSuggestions: searchFocused && search.text === "" ? FolderHistory.top(FileBrowserMetrics.suggestionRows, currentPath).map(match => PathCompletion.row(match, "visited")) : []
 
     signal sidebarToggled
@@ -131,6 +154,7 @@ Item {
         FlatButton {
             anchors.verticalCenter: parent.verticalCenter
             visible: !topbar.compact
+            enabled: !topbar.trashActive
             iconName: "bookmark"
             iconFilled: topbar.bookmarked
             iconColor: topbar.bookmarked ? Theme.primary : Theme.surfaceText
@@ -185,6 +209,7 @@ Item {
 
         FileSortButton {
             anchors.verticalCenter: parent.verticalCenter
+            keys: topbar.trashActive ? topbar.trashSortKeys : defaultKeys
             sortKey: topbar.sortKey
             descending: topbar.sortDescending
             showLabel: !topbar.compact
@@ -209,6 +234,7 @@ Item {
 
                 FileMenuItem {
                     visible: topbar.compact
+                    enabled: !topbar.trashActive
                     text: topbar.bookmarkLabel
                     iconName: topbar.bookmarked ? "bookmark_remove" : "bookmark"
                     onClicked: {
@@ -255,6 +281,7 @@ Item {
                 }
 
                 FileMenuItem {
+                    enabled: !topbar.trashActive
                     text: I18n.tr("Properties", "menu entry showing details about the current folder")
                     iconName: "info"
                     onClicked: {
@@ -264,6 +291,7 @@ Item {
                 }
 
                 FileMenuItem {
+                    enabled: !topbar.trashActive
                     text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
                     iconName: "content_copy"
                     onClicked: {
@@ -283,6 +311,7 @@ Item {
 
                 FileMenuItem {
                     visible: SandboxService.available("terminal")
+                    enabled: !topbar.trashActive
                     text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
                     iconName: "terminal"
                     onClicked: {

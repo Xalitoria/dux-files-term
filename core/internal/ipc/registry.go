@@ -108,7 +108,8 @@ var Methods = []MethodSpec{
 	{Name: "network.mountPortable", Group: "network", Desc: "Mount a phone or camera gvfs has detected", Params: []ParamSpec{req("monitor", "volume monitor bus name"), req("id", "volume id")}},
 
 	{Name: "trash.list", Group: "trash", Desc: "Trashed items across the home trash and every mounted volume's trash"},
-	{Name: "trash.count", Group: "trash", Desc: "Number of trashed items"},
+	{Name: "trash.count", Group: "trash", Desc: "Number of trashed items, plus a stamp that changes whenever the count or the home trash changes"},
+	{Name: "trash.entries", Group: "trash", Desc: "Trashed items as file entries for the trash view: original name and location, deletion time, newest first"},
 
 	{Name: "clipboard.copy", Group: "clipboard", Desc: "Put paths on the system clipboard as a file selection", Params: []ParamSpec{req("paths", "absolute paths"), opt("cut", "mark the selection for a move")}},
 	{Name: "clipboard.paths", Group: "clipboard", Desc: "Read the file selection on the system clipboard"},
