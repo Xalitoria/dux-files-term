@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import qs.DCommon.FileBrowser
 
 Singleton {
     id: root
@@ -37,6 +38,24 @@ Singleton {
         default:
             return I18n.tr("Not available", "explanation for a feature the environment does not permit");
         }
+    }
+
+    function timeLeft(seconds) {
+        const whole = Math.max(1, Math.ceil(seconds));
+        if (whole < 60)
+            return I18n.tr("%1 s left", "time left for a file operation, in seconds").arg(whole);
+        const minutes = Math.ceil(whole / 60);
+        if (minutes < 60)
+            return I18n.tr("%1 min left", "time left for a file operation, in minutes").arg(minutes);
+        return I18n.tr("%1 h %2 min left", "time left for a file operation, in hours and minutes").arg(Math.floor(minutes / 60)).arg(minutes % 60);
+    }
+
+    function transferHint(progress) {
+        if (!progress || progress.estimating || progress.bytesTotal <= 0 || progress.bytesPerSec <= 0)
+            return "";
+        const rate = I18n.tr("%1/s", "transfer speed, %1 is a size such as 12 MB").arg(FileFormat.size(progress.bytesPerSec));
+        const remaining = Math.max(0, progress.bytesTotal - progress.bytesDone) / progress.bytesPerSec;
+        return `${rate} · ${timeLeft(remaining)}`;
     }
 
     function extractable(mime) {

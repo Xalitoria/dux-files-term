@@ -298,7 +298,6 @@ func (m *Manager) publishJob(view View) {
 	m.publish(event{Kind: "job", JobID: view.ID, Job: &view})
 }
 
-// ask pauses the job until the UI answers, or until it is cancelled.
 func (j *job) ask(payload event, state State) Answer {
 	j.mu.Lock()
 	j.conflict = payload.Conflict
@@ -323,6 +322,7 @@ func (j *job) ask(payload event, state State) Answer {
 			j.failure = nil
 			j.password = nil
 			j.pendingID = ""
+			j.rate.restart(time.Now(), j.progress.BytesDone)
 			j.mu.Unlock()
 			j.setState(StateRunning)
 			if answer.Action == ActionCancel {
@@ -357,11 +357,8 @@ func (j *job) tick(force bool) {
 		j.mu.Unlock()
 		return
 	}
-	if elapsed := now.Sub(j.lastTick); elapsed > 0 && !j.lastTick.IsZero() {
-		j.progress.BytesPerSec = int64(float64(j.progress.BytesDone-j.lastBytes) / elapsed.Seconds())
-	}
+	j.progress.BytesPerSec = j.rate.sample(now, j.progress.BytesDone)
 	j.lastTick = now
-	j.lastBytes = j.progress.BytesDone
 	progress := j.progress
 	j.mu.Unlock()
 

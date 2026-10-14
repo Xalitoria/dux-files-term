@@ -168,3 +168,20 @@ func TestDropActionRejectsBadParams(t *testing.T) {
 		require.NotEmpty(t, out["error"])
 	}
 }
+
+func TestHandleNewFolderPassesUnique(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.Mkdir(filepath.Join(root, "Untitled folder"), 0o755))
+
+	manager, bus := newHarness(t)
+	out := call(t, manager, ipc.Request{Method: "files.op.newFolder", Params: map[string]any{
+		"path":   root,
+		"name":   "Untitled folder",
+		"unique": true,
+	}})
+
+	job := out["result"].(map[string]any)["job"].(map[string]any)
+	view := bus.wait(t, job["id"].(string))
+	require.Equal(t, StateDone, view.State)
+	require.DirExists(t, filepath.Join(root, "Untitled folder 2"))
+}

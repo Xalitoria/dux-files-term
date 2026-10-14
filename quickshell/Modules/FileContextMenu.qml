@@ -26,7 +26,7 @@ FileMenu {
             "id": "open",
             "icon": "open_in_new",
             "label": I18n.tr("Open", "context menu entry opening a file"),
-            "enabled": selectionCount === 1
+            "enabled": selectionCount > 0
         },
         {
             "id": "openWith",
@@ -129,9 +129,18 @@ FileMenu {
             "danger": true
         },
         {
+            "id": "separator"
+        },
+        {
             "id": "copyPath",
             "icon": "link",
             "label": I18n.tr("Copy location path", "menu entry copying the current path to the clipboard"),
+            "enabled": selectionCount > 0
+        },
+        {
+            "id": "copyName",
+            "icon": "text_fields",
+            "label": I18n.tr("Copy name", "context menu entry copying the selected item names to the clipboard"),
             "enabled": selectionCount > 0
         },
         {

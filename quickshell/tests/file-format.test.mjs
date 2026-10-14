@@ -61,3 +61,34 @@ test("extractable mirrors the formats the daemon unpacks", () => {
     for (const mime of ["application/x-iso9660-image", "application/x-lzip-compressed-zip", "application/pdf", ""])
         assert.equal(ctx.extractable(mime), false, mime);
 });
+
+function hintContext() {
+    const ctx = vm.createContext({ I18n: { tr: term => term } });
+    vm.runInContext(`String.prototype.arg = function (value) {
+        const lowest = Math.min(...[...this.matchAll(/%(\\d)/g)].map(match => Number(match[1])));
+        return this.split("%" + lowest).join(String(value));
+    };`, ctx);
+    lift(fileFormat, "size", ctx);
+    vm.runInContext("var FileFormat = { size: size };", ctx);
+    for (const name of ["timeLeft", "transferHint"])
+        lift(filesFormat, name, ctx);
+    return ctx;
+}
+
+const progress = (done, total, rate, estimating = false) => ({ bytesDone: done, bytesTotal: total, bytesPerSec: rate, estimating });
+
+test("the transfer hint waits for a known total and a measured rate", () => {
+    const ctx = hintContext();
+    assert.equal(ctx.transferHint(progress(0, 1e9, 0)), "");
+    assert.equal(ctx.transferHint(progress(0, 0, 12e6)), "");
+    assert.equal(ctx.transferHint(progress(0, 1e9, 12e6, true)), "");
+    assert.equal(ctx.transferHint(null), "");
+});
+
+test("the transfer hint shows speed and time left", () => {
+    const ctx = hintContext();
+    assert.equal(ctx.transferHint(progress(0, 120e6, 12e6)), "12.0 MB/s · 10 s left");
+    assert.equal(ctx.transferHint(progress(0, 1440e6, 12e6)), "12.0 MB/s · 2 min left");
+    assert.equal(ctx.transferHint(progress(119e6, 120e6, 12e6)), "12.0 MB/s · 1 s left");
+    assert.equal(ctx.transferHint(progress(0, 90000e6, 12e6)), "12.0 MB/s · 2 h 5 min left");
+});

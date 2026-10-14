@@ -12,6 +12,7 @@ FilePlaceSection {
     property string currentPath: ""
 
     signal navigateRequested(string path)
+    signal tabRequested(string path)
     signal dropRequested(string path, var drop)
     signal menuRequested(string path, real pointX, real pointY)
 
@@ -36,6 +37,7 @@ FilePlaceSection {
             selected: modelData.path === section.currentPath
             dropPath: modelData.path
             onClicked: section.navigateRequested(modelData.path)
+            onMiddleClicked: section.tabRequested(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
         }
     }
@@ -66,6 +68,7 @@ FilePlaceSection {
             z: dragging ? 1 : 0
             opacity: dragging ? Theme.pendingOpacity : 1
             onClicked: section.navigateRequested(modelData.path)
+            onMiddleClicked: section.tabRequested(modelData.path)
             onActionTriggered: BookmarksService.remove(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
 

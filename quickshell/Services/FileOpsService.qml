@@ -80,19 +80,21 @@ Singleton {
         });
     }
 
-    function newFolder(dir, name, scope) {
+    function newFolder(dir, name, scope, unique) {
         _start("files.op.newFolder", {
             "path": dir,
             "name": name,
+            "unique": unique === true,
             "scope": scope || ""
         });
     }
 
-    function newFile(dir, name, template, scope) {
+    function newFile(dir, name, template, scope, unique) {
         _start("files.op.newFile", {
             "path": dir,
             "name": name,
             "template": template || "",
+            "unique": unique === true,
             "scope": scope || ""
         });
     }

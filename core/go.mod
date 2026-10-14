@@ -3,7 +3,7 @@ module github.com/AvengeMedia/dankfiles/core
 go 1.27
 
 require (
-	github.com/AvengeMedia/dankgo v1.6.3-0.20261009141806-0a6056424f6d
+	github.com/AvengeMedia/dankgo v1.6.3-0.20261014163416-69bf1572e3de
 	github.com/bodgit/sevenzip v1.6.5
 	github.com/cavaliergopher/cpio v1.0.1
 	github.com/fsnotify/fsnotify v1.10.1

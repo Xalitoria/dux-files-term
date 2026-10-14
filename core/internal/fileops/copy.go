@@ -68,7 +68,7 @@ func (r *runner) transfer(src, dst string, move bool) (outcome, error) {
 		return outcome{}, err
 	}
 
-	res := r.resolve(src, dst, info.IsDir())
+	res := r.resolve(src, dst, info, move)
 	switch {
 	case res.abort:
 		return outcome{}, context.Canceled

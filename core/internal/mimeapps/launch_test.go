@@ -100,6 +100,43 @@ func TestOpenReportsMissingHandler(t *testing.T) {
 	assert.Equal(t, "EINVAL", CodeOf(err))
 }
 
+func TestOpenGroupsPathsByTheirDefaultApp(t *testing.T) {
+	svc, root := fixture(t)
+
+	note := writeFile(t, filepath.Join(root, "files", "note.txt"), []byte("hello"))
+	shot := writeFile(t, filepath.Join(root, "files", "shot.png"), []byte("\x89PNG\r\n\x1a\n"))
+	readme := writeFile(t, filepath.Join(root, "files", "readme.md"), []byte("# hi"))
+	disc := writeFile(t, filepath.Join(root, "files", "disc.iso"), []byte("nothing handles this"))
+	photo := writeFile(t, filepath.Join(root, "files", "photo.jpg"), []byte("\xff\xd8\xff"))
+
+	groups, unhandled, err := svc.groupByApp([]string{note, shot, readme, disc, photo})
+	require.NoError(t, err)
+	assert.Equal(t, []appGroup{
+		{app: "editor.desktop", paths: []string{note, readme}},
+		{app: "viewer.desktop", paths: []string{shot}},
+		{app: "system-viewer.desktop", paths: []string{photo}},
+	}, groups, "two types with the same default app share one launch")
+	assert.Equal(t, []string{"application/x-cd-image"}, unhandled)
+}
+
+func TestOpenStillLaunchesTheHandledPaths(t *testing.T) {
+	svc, root := fixture(t)
+
+	marker := filepath.Join(root, "opened")
+	shot := writeFile(t, filepath.Join(root, "files", "shot.png"), []byte("\x89PNG\r\n\x1a\n"))
+	disc := writeFile(t, filepath.Join(root, "files", "disc.iso"), []byte("nothing handles this"))
+	writeFile(t, filepath.Join(root, "xdg", "data", "applications", "viewer.desktop"), []byte(
+		"[Desktop Entry]\nType=Application\nName=Viewer\nExec=sh -c \"echo \\\"$1\\\" > "+marker+"\" sh %f\nMimeType=image/png;\n"))
+
+	err := svc.Open(context.Background(), []string{disc, shot}, LaunchOptions{})
+	require.Error(t, err)
+	assert.Equal(t, "NOTSUPPORTED", CodeOf(err))
+	require.Eventually(t, func() bool {
+		data, err := os.ReadFile(marker)
+		return err == nil && strings.TrimSpace(string(data)) == shot
+	}, waitFor, waitTick, "the png opened although the iso has no handler")
+}
+
 func TestOpenWithRejectsUnknownEntry(t *testing.T) {
 	svc, root := fixture(t)
 

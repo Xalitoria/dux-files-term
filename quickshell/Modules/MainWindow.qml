@@ -26,10 +26,10 @@ FloatingWindow {
     property int activePaneIndex: 0
     property bool splitView: false
     property real splitRatio: 0.5
-    property bool showHidden: SettingsData.showHidden
-    property string sortKey: SettingsData.defaultSort
-    property bool sortDescending: SettingsData.defaultSortDescending
-    property string viewMode: SettingsData.defaultView
+    property bool showHidden: SessionData.lastUsed("showHidden", SettingsData.showHidden)
+    property string sortKey: SessionData.lastUsed("sortKey", SettingsData.defaultSort)
+    property bool sortDescending: SessionData.lastUsed("sortDescending", SettingsData.defaultSortDescending)
+    property string viewMode: SessionData.lastUsed("viewMode", SettingsData.defaultView)
     property bool sidebarOverlayOpen: false
     property string pendingTrust: ""
     property bool applyingTab: false
@@ -55,12 +55,12 @@ FloatingWindow {
     readonly property string currentPath: activePane.path
     readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
     readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || newFolderDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || newDocumentDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible
+    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || openConfirmDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible
     readonly property bool textEditing: surface.focusItem instanceof TextInput || surface.focusItem instanceof TextEdit
     readonly property bool sidebarFocused: isInside(surface.focusItem, dockedSidebar) || isInside(surface.focusItem, overlaySidebar)
     readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
 
-    title: I18n.tr("Files", "main window title")
+    title: folderTitle(currentPath)
     implicitWidth: SessionData.windowWidth
     implicitHeight: SessionData.windowHeight
     minimumSize: Qt.size(FilesMetrics.windowMinWidth, FilesMetrics.windowMinHeight)
@@ -86,6 +86,7 @@ FloatingWindow {
     }
 
     Component.onCompleted: {
+        keepOwnBrowsing();
         const initial = WindowService.takePendingLocations(windowId);
         if (primary)
             restoreSession();
@@ -230,7 +231,7 @@ FloatingWindow {
         persistTabs();
     }
 
-    function newTab(path) {
+    function newTab(path, background) {
         captureTabs();
         const next = tabs.slice();
         next.push({
@@ -242,6 +243,10 @@ FloatingWindow {
             "active": 0
         });
         tabs = next;
+        if (background) {
+            persistTabs();
+            return;
+        }
         currentTab = next.length - 1;
         applyTab(currentTab);
         persistTabs();
@@ -288,13 +293,18 @@ FloatingWindow {
         persistTabs();
     }
 
-    function tabLabel(state) {
-        const path = state?.panes?.[0]?.path ?? "";
-        if (path === "" || path === Paths.strip(Paths.home))
+    function folderTitle(path) {
+        if (path === "")
+            return I18n.tr("Files", "main window title");
+        if (path === Paths.strip(Paths.home))
             return I18n.tr("Home", "sidebar entry for the user's home folder");
         if (path === "/")
             return "/";
-        return path.substring(path.lastIndexOf("/") + 1);
+        return FilePaths.baseName(path);
+    }
+
+    function tabLabel(state) {
+        return folderTitle(state?.panes?.[0]?.path || Paths.strip(Paths.home));
     }
 
     function persistTabs() {
@@ -345,7 +355,7 @@ FloatingWindow {
         if (path === "")
             return;
         if (inNewTab) {
-            newTab(path);
+            newTab(path, false);
             return;
         }
         activePane.navigate(path);
@@ -372,7 +382,7 @@ FloatingWindow {
             return;
         }
         if (inNewTab)
-            newTab(location.path);
+            newTab(location.path, false);
         activePane.reveal(location.select);
     }
 
@@ -416,26 +426,51 @@ FloatingWindow {
         });
     }
 
+    function keepOwnBrowsing() {
+        showHidden = showHidden;
+        sortKey = sortKey;
+        sortDescending = sortDescending;
+        viewMode = viewMode;
+    }
+
+    function setViewMode(mode) {
+        viewMode = mode;
+        SessionData.remember({
+            "viewMode": mode
+        });
+    }
+
+    function setShowHidden(show) {
+        showHidden = show;
+        SessionData.remember({
+            "showHidden": show
+        });
+    }
+
+    function setSortOrder(key, descending) {
+        sortKey = key;
+        sortDescending = descending;
+        SessionData.remember({
+            "sortKey": key,
+            "sortDescending": descending
+        });
+    }
+
     function setSort(key) {
         if (key === "")
             return;
-        if (sortKey === key) {
-            sortDescending = !sortDescending;
-            return;
-        }
-        sortKey = key;
-        sortDescending = false;
+        setSortOrder(key, sortKey === key ? !sortDescending : false);
     }
 
     function selectSortKey(key) {
         if (key !== "")
-            sortKey = key;
+            setSortOrder(key, sortDescending);
     }
 
     function runAction(id) {
         switch (id) {
         case "open":
-            activate(firstSelected());
+            openEntries(selectedEntries());
             return;
         case "openContainingFolder":
             openContainingFolder();
@@ -447,7 +482,7 @@ FloatingWindow {
             openTerminalHere();
             return;
         case "newTab":
-            newTab("");
+            newTab("", false);
             return;
         case "newWindow":
             newWindowRequested([folderLocation(currentPath)]);
@@ -522,13 +557,13 @@ FloatingWindow {
             swapPaneFocus();
             return;
         case "listView":
-            viewMode = "list";
+            setViewMode("list");
             return;
         case "gridView":
-            viewMode = "grid";
+            setViewMode("grid");
             return;
         case "columnsView":
-            viewMode = "columns";
+            setViewMode("columns");
             return;
         case "zoomIn":
             activePane.body.zoomBy(1);
@@ -537,7 +572,7 @@ FloatingWindow {
             activePane.body.zoomBy(-1);
             return;
         case "showHidden":
-            showHidden = !showHidden;
+            setShowHidden(!showHidden);
             return;
         case "reload":
             activePane.refresh();
@@ -583,13 +618,16 @@ FloatingWindow {
             FileOpsService.undo(opScope);
             return;
         case "newFolder":
-            newFolderDialog.ask(I18n.tr("Untitled folder", "default name for a new folder"));
+            FileOpsService.newFolder(currentPath, I18n.tr("Untitled folder", "default name for a new folder"), opScope, true);
             return;
         case "properties":
             showProperties();
             return;
         case "copyPath":
-            Paths.copyPathToClipboard((selectedPaths().length > 0 ? selectedPaths() : [currentPath]).join("\n"));
+            copyText((selectedPaths().length > 0 ? selectedPaths() : [currentPath]).join("\n"));
+            return;
+        case "copyName":
+            copyText(selectedEntries().map(entry => entry.name).join("\n"));
             return;
         case "contextMenu":
             showContextMenuAtCursor();
@@ -597,10 +635,15 @@ FloatingWindow {
         }
     }
 
+    function copyText(text) {
+        Paths.copyPathToClipboard(text);
+        ClipboardService.clear();
+    }
+
     function openSelectionInNewTab() {
         const entry = firstSelected();
         if (entry?.isDir)
-            newTab(entry.path);
+            newTab(entry.path, false);
     }
 
     function openSelectionInNewWindow() {
@@ -788,6 +831,50 @@ FloatingWindow {
         AppsService.open([entry.path], response => window.reportError(response));
     }
 
+    function openPlan(entries, extractArchives) {
+        const folders = entries.filter(entry => entry.isDir).map(entry => entry.path);
+        const files = entries.filter(entry => !entry.isDir);
+        const unpacks = entry => extractArchives && FilesFormat.extractable(entry.mime);
+        return {
+            "folder": folders[0] ?? "",
+            "tabs": folders.slice(1),
+            "files": files.filter(entry => !unpacks(entry)).map(entry => entry.path),
+            "archives": files.filter(entry => unpacks(entry)).map(entry => entry.path)
+        };
+    }
+
+    function openCount(plan) {
+        return plan.tabs.length + plan.files.length + plan.archives.length;
+    }
+
+    function openEntries(entries) {
+        if (entries.length === 0)
+            return;
+        if (entries.length === 1) {
+            activate(entries[0]);
+            return;
+        }
+        const plan = openPlan(entries, SettingsData.extractOnOpen);
+        if (openCount(plan) <= FilesMetrics.openConfirmLimit) {
+            runOpenPlan(plan);
+            return;
+        }
+        openConfirmDialog.pending = plan;
+        openConfirmDialog.subject = String(entries.length);
+        openConfirmDialog.open();
+    }
+
+    function runOpenPlan(plan) {
+        for (const path of plan.tabs)
+            newTab(path, true);
+        if (plan.files.length > 0)
+            AppsService.open(plan.files, response => window.reportError(response));
+        for (const path of plan.archives)
+            extractBeside(path, "reveal");
+        if (plan.folder !== "")
+            activePane.navigate(plan.folder);
+    }
+
     function extractBeside(path, follow) {
         extractTo([path], FilePaths.parentOf(path), follow);
     }
@@ -888,8 +975,17 @@ FloatingWindow {
     }
 
     function createDocument(template) {
-        newDocumentDialog.template = template?.path ?? "";
-        newDocumentDialog.ask(template ? template.name : I18n.tr("Untitled document", "default name for a new empty file"));
+        const name = template ? template.name : I18n.tr("Untitled document", "default name for a new empty file");
+        FileOpsService.newFile(currentPath, name, template?.path ?? "", opScope, true);
+    }
+
+    function revealCreated(job) {
+        const created = job.created?.[0]?.path ?? "";
+        if (created === "")
+            return;
+        const dir = FilePaths.parentOf(created);
+        const pane = [activePane, primaryPane, secondPane].find(candidate => candidate?.path === dir);
+        pane?.revealAndRename(created);
     }
 
     function showBookmarkMenu(path, source, pointX, pointY) {
@@ -1034,6 +1130,8 @@ FloatingWindow {
             FileOpsService.copy(paths, dest, opScope);
             return;
         case "move":
+            if (DragService.allInside(paths, dest))
+                return;
             FileOpsService.move(paths, dest, opScope);
             return;
         case "ask":
@@ -1044,13 +1142,7 @@ FloatingWindow {
             applyDrop(paths, dest, SettingsData.dragAction);
             return;
         }
-        FileOpsService.transport.sendRequest("files.op.dropAction", {
-            "paths": paths,
-            "dest": dest
-        }, response => {
-            const resolved = (response.result || {}).action === "move" ? "move" : "copy";
-            window.applyDrop(paths, dest, resolved);
-        });
+        DragService.plainDrop(paths, dest, resolved => window.applyDrop(paths, dest, resolved));
     }
 
     function beginDrag(paths) {
@@ -1086,6 +1178,26 @@ FloatingWindow {
             return I18n.tr("Archive created", "toast after compressing files");
         default:
             return "";
+        }
+    }
+
+    Connections {
+        target: SettingsData
+
+        function onDefaultViewChanged() {
+            window.setViewMode(SettingsData.defaultView);
+        }
+
+        function onDefaultSortChanged() {
+            window.setSortOrder(SettingsData.defaultSort, window.sortDescending);
+        }
+
+        function onDefaultSortDescendingChanged() {
+            window.setSortOrder(window.sortKey, SettingsData.defaultSortDescending);
+        }
+
+        function onShowHiddenChanged() {
+            window.setShowHidden(SettingsData.showHidden);
         }
     }
 
@@ -1144,8 +1256,13 @@ FloatingWindow {
             DevicesService.refreshUsage(true);
             if (job.scope !== window.opScope)
                 return;
-            if (job.kind === "extract") {
+            switch (job.kind) {
+            case "extract":
                 window.handleExtracted(job);
+                return;
+            case "newFolder":
+            case "newFile":
+                window.revealCreated(job);
                 return;
             }
             if (job.cancelled || !job.undoable)
@@ -1174,6 +1291,8 @@ FloatingWindow {
         id: secondPaneComponent
 
         FilesPane {
+            id: splitPane
+
             active: window.activePaneIndex === 1
             showHidden: window.showHidden
             sortKey: window.sortKey
@@ -1182,6 +1301,9 @@ FloatingWindow {
             showActiveOutline: window.splitView
             cutSet: window.cutSet
             onActivateRequested: entry => window.activate(entry)
+            onOpenRequested: entries => window.openEntries(entries)
+            onTabRequested: path => window.newTab(path, true)
+            onPathMenuRequested: (path, pointX, pointY) => pathMenu.present(path, splitPane, pointX, pointY)
             onItemMenuRequested: (index, pointX, pointY, modifiers) => window.showItemMenu(pointX, pointY, modifiers)
             onBackgroundMenuRequested: (pointX, pointY) => window.showBackgroundMenu(pointX, pointY)
             onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
@@ -1237,6 +1359,7 @@ FloatingWindow {
                 return;
             WindowService.activate(window.windowId);
             window.claimToplevel();
+            ClipboardService.refresh();
             primaryPane.refresh();
             window.secondPane?.refresh();
         }
@@ -1340,12 +1463,13 @@ FloatingWindow {
                         window.sidebarShown(dockedSidebar);
                 }
                 onNavigateRequested: path => window.openPath(path, false)
+                onTabRequested: path => window.newTab(path, true)
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
                 onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, dockedSidebar, pointX, pointY)
                 onBookmarkRenameRequested: path => window.renameBookmark(path)
                 onLeaveRequested: window.leaveSidebar()
-                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.actionFor(drop.modifiers ?? Qt.NoModifier))
+                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.overrideFor(drop.proposedAction))
             }
         }
 
@@ -1423,7 +1547,7 @@ FloatingWindow {
                 currentIndex: window.currentTab
                 onTabSelected: index => window.selectTab(index)
                 onTabClosed: index => window.closeTab(index)
-                onTabAdded: window.newTab("")
+                onTabAdded: window.newTab("", false)
                 onTabDropHovered: index => window.selectTab(index)
             }
 
@@ -1463,9 +1587,9 @@ FloatingWindow {
                 onSplitToggled: window.toggleSplit()
                 onBookmarkToggled: BookmarksService.toggle(window.currentPath)
                 onSortKeySelected: key => window.selectSortKey(key)
-                onSortDirectionToggled: window.sortDescending = !window.sortDescending
-                onCopyPathRequested: Paths.copyPathToClipboard(window.currentPath)
-                onViewModeSelected: mode => window.viewMode = mode
+                onSortDirectionToggled: window.setSortOrder(window.sortKey, !window.sortDescending)
+                onCopyPathRequested: window.copyText(window.currentPath)
+                onViewModeSelected: mode => window.setViewMode(mode)
                 onReloadRequested: window.runAction("reload")
                 onTerminalRequested: window.openTerminalHere()
                 onPropertiesRequested: window.runAction("properties")
@@ -1498,6 +1622,9 @@ FloatingWindow {
                     showActiveOutline: window.splitView
                     cutSet: window.cutSet
                     onActivateRequested: entry => window.activate(entry)
+                    onOpenRequested: entries => window.openEntries(entries)
+                    onTabRequested: path => window.newTab(path, true)
+                    onPathMenuRequested: (path, pointX, pointY) => pathMenu.present(path, primaryPane, pointX, pointY)
                     onItemMenuRequested: (index, pointX, pointY, modifiers) => window.showItemMenu(pointX, pointY, modifiers)
                     onBackgroundMenuRequested: (pointX, pointY) => window.showBackgroundMenu(pointX, pointY)
                     onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
@@ -1603,13 +1730,23 @@ FloatingWindow {
                     window.sidebarOverlayOpen = false;
                     window.openPath(path, false);
                 }
+                onTabRequested: path => window.newTab(path, true)
                 onUnlockRequested: device => unlockDialog.ask(device)
                 onConnectRequested: connectDialog.ask()
                 onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, overlaySidebar, pointX, pointY)
                 onBookmarkRenameRequested: path => window.renameBookmark(path)
                 onLeaveRequested: window.leaveSidebar()
-                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.actionFor(drop.modifiers ?? Qt.NoModifier))
+                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.overrideFor(drop.proposedAction))
             }
+        }
+
+        DragActionChip {
+            readonly property point pointer: FileDragHover.point
+
+            x: Math.max(0, Math.min(surface.width - width, pointer.x + dragGhost.width + Theme.spacingXS))
+            y: Math.max(0, Math.min(surface.height - height, pointer.y + (dragGhost.height - height) / 2))
+            visible: DragService.action !== "" && window.isInside(FileDragHover.area, surface)
+            action: DragService.action
         }
     }
 
@@ -1719,7 +1856,7 @@ FloatingWindow {
             iconName: "tab"
             onClicked: {
                 bookmarkMenu.close();
-                window.newTab(bookmarkMenu.path);
+                window.newTab(bookmarkMenu.path, false);
             }
         }
 
@@ -1747,6 +1884,68 @@ FloatingWindow {
             onClicked: {
                 bookmarkMenu.close();
                 BookmarksService.remove(bookmarkMenu.path);
+            }
+        }
+    }
+
+    FileMenu {
+        id: pathMenu
+
+        property string path: ""
+
+        anchorItem: surface
+
+        function present(target, source, pointX, pointY) {
+            path = target;
+            const point = source.mapToItem(surface, pointX, pointY);
+            openAt(point.x, point.y);
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
+            iconName: "tab"
+            onClicked: {
+                pathMenu.close();
+                window.newTab(pathMenu.path, false);
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Open in new window", "context menu entry opening a folder in another window")
+            iconName: "open_in_new"
+            onClicked: {
+                pathMenu.close();
+                window.newWindowRequested([window.folderLocation(pathMenu.path)]);
+            }
+        }
+
+        Item {
+            width: parent?.width ?? 0
+            height: Theme.spacingS * 2
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width - Theme.spacingM * 2
+                height: Theme.dividerWidth
+                color: Theme.outlineVariant
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
+            iconName: "link"
+            onClicked: {
+                pathMenu.close();
+                window.copyText(pathMenu.path);
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Properties", "menu entry showing details about the current folder")
+            iconName: "info"
+            onClicked: {
+                pathMenu.close();
+                window.showPropertiesFor([pathMenu.path]);
             }
         }
     }
@@ -1827,7 +2026,6 @@ FloatingWindow {
 
         x: -width * 2
         y: -height * 2
-        action: DragService.action
     }
 
     PropertiesDialog {
@@ -1928,24 +2126,6 @@ FloatingWindow {
     }
 
     NameDialog {
-        id: newFolderDialog
-
-        title: I18n.tr("New folder", "new folder dialog header")
-        acceptText: I18n.tr("Create", "dialog button creating an item")
-        onSubmitted: name => FileOpsService.newFolder(window.currentPath, name, window.opScope)
-    }
-
-    NameDialog {
-        id: newDocumentDialog
-
-        property string template: ""
-
-        title: I18n.tr("New document", "context menu entry creating a file from a template")
-        acceptText: I18n.tr("Create", "dialog button creating an item")
-        onSubmitted: name => FileOpsService.newFile(window.currentPath, name, template, window.opScope)
-    }
-
-    NameDialog {
         id: renameBookmarkDialog
 
         property string path: ""
@@ -1959,6 +2139,18 @@ FloatingWindow {
         id: compressDialog
 
         onSubmitted: (paths, name, format, password) => FileOpsService.compress(paths, window.currentPath, name, format, password, window.opScope)
+    }
+
+    ConfirmDialog {
+        id: openConfirmDialog
+
+        property var pending: null
+
+        title: I18n.tr("Open %1 items?", "confirmation before opening many selected items at once").arg(subject)
+        message: (pending?.archives?.length ?? 0) > 0 ? I18n.tr("Folders open in new tabs, archives are extracted and other files open in their applications.", "explanation in the confirmation before opening many items, some of them archives") : I18n.tr("Folders open in new tabs and files open in their applications.", "explanation in the confirmation before opening many items")
+        confirmText: I18n.tr("Open", "context menu entry opening a file")
+        danger: false
+        onConfirmed: window.runOpenPlan(pending)
     }
 
     ConfirmDialog {

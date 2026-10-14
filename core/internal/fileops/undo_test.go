@@ -187,3 +187,72 @@ func TestNewFileRefusesAnExistingName(t *testing.T) {
 	require.Equal(t, StateFailed, view.State)
 	require.Equal(t, "keep", read(t, filepath.Join(root, "a.txt")))
 }
+
+func TestNewItemsReportWhatTheyCreated(t *testing.T) {
+	root := t.TempDir()
+	template := write(t, filepath.Join(root, "templates", "Sheet.csv"), "a,b\n")
+	manager, bus := newHarness(t)
+
+	folder := run(t, manager, bus, spec{kind: KindNewFolder, scope: "w1", dest: root, name: "Fresh"})
+	require.Equal(t, []Created{{Path: filepath.Join(root, "Fresh"), Dir: true}}, folder.Created)
+
+	file := run(t, manager, bus, spec{kind: KindNewFile, scope: "w1", dest: root, name: "note.txt"})
+	require.Equal(t, []Created{{Path: filepath.Join(root, "note.txt")}}, file.Created)
+
+	copied := run(t, manager, bus, spec{kind: KindNewFile, scope: "w1", dest: root, name: "Budget.csv", template: template})
+	require.Equal(t, []Created{{Path: filepath.Join(root, "Budget.csv")}}, copied.Created)
+	require.True(t, copied.Undoable)
+}
+
+func TestUniqueNewItemsAreNumbered(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.Mkdir(filepath.Join(root, "Untitled folder"), 0o755))
+	require.NoError(t, os.Mkdir(filepath.Join(root, "Untitled folder 2"), 0o755))
+	write(t, filepath.Join(root, "notes.txt"), "kept")
+	write(t, filepath.Join(root, ".env"), "kept")
+	manager, bus := newHarness(t)
+
+	folder := run(t, manager, bus, spec{kind: KindNewFolder, dest: root, name: "Untitled folder", unique: true})
+	require.Equal(t, StateDone, folder.State)
+	require.Equal(t, filepath.Join(root, "Untitled folder 3"), folder.Created[0].Path)
+
+	file := run(t, manager, bus, spec{kind: KindNewFile, dest: root, name: "notes.txt", unique: true})
+	require.Equal(t, filepath.Join(root, "notes 2.txt"), file.Created[0].Path)
+	require.Equal(t, "kept", read(t, filepath.Join(root, "notes.txt")))
+
+	dotfile := run(t, manager, bus, spec{kind: KindNewFile, dest: root, name: ".env", unique: true})
+	require.Equal(t, filepath.Join(root, ".env 2"), dotfile.Created[0].Path)
+
+	free := run(t, manager, bus, spec{kind: KindNewFolder, dest: root, name: "Other", unique: true})
+	require.Equal(t, filepath.Join(root, "Other"), free.Created[0].Path)
+}
+
+func TestNewFileWithoutUniqueStillRefusesATakenName(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "notes.txt"), "kept")
+	manager, bus := newHarness(t)
+
+	view := run(t, manager, bus, spec{kind: KindNewFile, dest: root, name: "notes.txt"})
+	require.Equal(t, StateFailed, view.State)
+	require.Empty(t, view.Created)
+	require.NoFileExists(t, filepath.Join(root, "notes 2.txt"))
+}
+
+func TestUniqueNameMovesOnWhenAnotherJobTookIt(t *testing.T) {
+	root := t.TempDir()
+	r := &runner{job: &job{spec: spec{dest: root, name: "Untitled folder", unique: true}}}
+	path := filepath.Join(root, "Untitled folder")
+
+	raced := false
+	err := r.createUnique(&path, func(target string) error {
+		if !raced {
+			raced = true
+			require.NoError(t, os.Mkdir(target, 0o755))
+		}
+		return os.Mkdir(target, 0o755)
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(root, "Untitled folder 2"), path)
+	require.DirExists(t, path)
+}

@@ -137,6 +137,7 @@ type spec struct {
 	uid       int
 	gid       int
 	recursive bool
+	unique    bool
 	pairs     []pair
 	guards    []guard
 	trashDir  string
@@ -171,7 +172,7 @@ type job struct {
 	pendingID string
 	terminal  bool
 	lastTick  time.Time
-	lastBytes int64
+	rate      rateMeter
 }
 
 func (j *job) view() View {

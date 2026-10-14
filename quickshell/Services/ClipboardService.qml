@@ -5,9 +5,6 @@ import QtQuick
 import Quickshell
 import qs.Services
 
-// The clipboard lives in the daemon: it is the only side that can publish the
-// GNOME and KDE flavours other file managers paste, and the dfiles CLI reads
-// the same selection.
 Singleton {
     id: root
 
@@ -45,6 +42,17 @@ Singleton {
                 "cut": result.cut === true,
                 "source": result.source || ""
             });
+        });
+    }
+
+    function refresh() {
+        if (paths.length === 0)
+            return;
+        transport.sendRequest("clipboard.paths", null, response => {
+            const source = (response.result || {}).source || "";
+            if (response.error || source === "" || source === "dfiles")
+                return;
+            root.clear();
         });
     }
 

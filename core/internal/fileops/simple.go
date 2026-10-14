@@ -31,10 +31,12 @@ func (r *runner) newFolder() error {
 	path := r.target()
 	r.setTotals(1, 0, false)
 
-	if err := r.retry(path, func(fs FS) error { return fs.Mkdir(path, 0o755) }); err != nil {
+	if err := r.retry(path, func(fs FS) error {
+		return r.createUnique(&path, func(target string) error { return fs.Mkdir(target, 0o755) })
+	}); err != nil {
 		return skipToNil(err)
 	}
-	r.remember(KindDelete, path, "")
+	r.created(path, true)
 	r.advance(path, 1, 0)
 	return nil
 }
@@ -49,10 +51,12 @@ func (r *runner) newFile() error {
 
 	template := r.job.spec.template
 	if template == "" {
-		if err := r.retry(path, func(fs FS) error { return create(fs, path) }); err != nil {
+		if err := r.retry(path, func(fs FS) error {
+			return r.createUnique(&path, func(target string) error { return create(fs, target) })
+		}); err != nil {
 			return skipToNil(err)
 		}
-		r.remember(KindDelete, path, "")
+		r.created(path, false)
 		r.advance(path, 1, 0)
 		return nil
 	}
@@ -68,8 +72,32 @@ func (r *runner) newFile() error {
 	if err := r.transferFile(template, path, info, false, true); err != nil {
 		return skipToNil(err)
 	}
-	r.remember(KindDelete, path, "")
+	if _, err := os.Lstat(path); err != nil {
+		return nil
+	}
+	r.created(path, false)
 	return nil
+}
+
+func (r *runner) createUnique(path *string, attempt func(string) error) error {
+	err := attempt(*path)
+	base := filepath.Join(r.job.spec.dest, r.job.spec.name)
+	for r.job.spec.unique && errors.Is(err, os.ErrExist) {
+		next := numberedPath(base)
+		if next == *path {
+			return err
+		}
+		*path = next
+		err = attempt(next)
+	}
+	return err
+}
+
+func (r *runner) created(path string, dir bool) {
+	r.remember(KindDelete, path, "")
+	r.job.mu.Lock()
+	r.job.created = append(r.job.created, Created{Path: path, Dir: dir})
+	r.job.mu.Unlock()
 }
 
 func create(fs FS, path string) error {
@@ -192,7 +220,11 @@ func (r *runner) guarded(path string) bool {
 }
 
 func (r *runner) target() string {
-	return filepath.Join(r.job.spec.dest, r.job.spec.name)
+	path := filepath.Join(r.job.spec.dest, r.job.spec.name)
+	if !r.job.spec.unique {
+		return path
+	}
+	return numberedPath(path)
 }
 
 func skipToNil(err error) error {

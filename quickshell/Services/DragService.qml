@@ -4,28 +4,56 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import qs.Common
+import qs.Services
+import qs.DCommon.FileBrowser
 
-// One drag at a time, so the payload lives here instead of being re-parsed out
-// of the mime data by every drop target inside the window. Drops from other
-// applications carry no payload and fall back to their uri-list.
 Singleton {
     id: root
 
+    property var transport: DankFilesService
     property var paths: []
     property string sourceDir: ""
     property bool active: false
-    property string action: "move"
+    property int generation: 0
+    property var plainDrops: ({})
+
+    readonly property string hoverDest: active ? FileDragHover.dest : ""
+    readonly property string action: {
+        if (hoverDest === "" || paths.includes(hoverDest))
+            return "";
+        const resolved = resolve(overrideFor(FileDragHover.proposedAction), plainDrops[hoverDest] ?? "");
+        if (resolved === "move" && allInside(paths, hoverDest))
+            return "";
+        return resolved;
+    }
+
+    onHoverDestChanged: {
+        if (hoverDest === "" || plainDrops[hoverDest] !== undefined)
+            return;
+        const dest = hoverDest;
+        const drag = generation;
+        plainDrop(paths, dest, resolved => {
+            if (drag !== root.generation)
+                return;
+            const known = Object.assign({}, root.plainDrops);
+            known[dest] = resolved;
+            root.plainDrops = known;
+        });
+    }
 
     function begin(selection, dir) {
         paths = selection.slice();
         sourceDir = dir;
-        action = "move";
+        plainDrops = ({});
+        generation++;
         active = true;
     }
 
     function end() {
         paths = [];
         sourceDir = "";
+        plainDrops = ({});
+        generation++;
         active = false;
     }
 
@@ -37,8 +65,6 @@ Singleton {
         };
     }
 
-    // Internal drops keep the exact paths; a foreign drop is whatever local
-    // files its uri-list names.
     function pathsFrom(drop) {
         if (active && paths.length > 0)
             return paths.slice();
@@ -57,18 +83,44 @@ Singleton {
         return out;
     }
 
-    // Ctrl forces a copy, Shift forces a move, Alt asks; with no modifier the
-    // daemon decides from the device the sources sit on.
-    function actionFor(modifiers) {
-        switch (true) {
-        case (modifiers & Qt.ControlModifier) !== 0:
+    function allInside(sources, dir) {
+        for (const path of sources) {
+            if (FilePaths.parentOf(path) !== dir)
+                return false;
+        }
+        return true;
+    }
+
+    function overrideFor(proposedAction) {
+        if (!active)
+            return "";
+        switch (proposedAction) {
+        case Qt.CopyAction:
             return "copy";
-        case (modifiers & Qt.ShiftModifier) !== 0:
-            return "move";
-        case (modifiers & Qt.AltModifier) !== 0:
+        case Qt.LinkAction:
             return "ask";
         default:
             return "";
         }
+    }
+
+    function resolve(forced, plain) {
+        if (forced !== "")
+            return forced;
+        if (SettingsData.dragAction !== "auto")
+            return SettingsData.dragAction;
+        return plain;
+    }
+
+    function plainDrop(sources, dest, callback) {
+        const known = active ? plainDrops[dest] : undefined;
+        if (known !== undefined) {
+            callback(known);
+            return;
+        }
+        transport.sendRequest("files.op.dropAction", {
+            "paths": sources,
+            "dest": dest
+        }, response => callback((response.result || {}).action === "move" ? "move" : "copy"));
     }
 }

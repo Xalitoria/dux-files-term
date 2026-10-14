@@ -113,12 +113,27 @@ Item {
             }
         }
 
-        StyledText {
+        RowLayout {
             Layout.fillWidth: true
-            text: row.detail()
-            color: row.job.state === "failed" ? Theme.error : Theme.surfaceVariantText
-            font.pixelSize: Theme.fontSizeSmall
-            elide: Text.ElideMiddle
+            spacing: Theme.spacingS
+
+            StyledText {
+                Layout.fillWidth: true
+                text: row.detail()
+                color: row.job.state === "failed" ? Theme.error : Theme.surfaceVariantText
+                font.pixelSize: Theme.fontSizeSmall
+                elide: Text.ElideMiddle
+            }
+
+            StyledText {
+                visible: row.job.state === "running" && text !== ""
+                text: FilesFormat.transferHint(row.job.progress)
+                color: Theme.surfaceVariantText
+                font.pixelSize: Theme.fontSizeSmall
+                font.features: {
+                    "tnum": 1
+                }
+            }
         }
     }
 }

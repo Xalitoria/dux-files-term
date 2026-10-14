@@ -14,20 +14,8 @@ Rectangle {
     property string mime: ""
     property string path: ""
     property bool isDir: false
-    property string action: "move"
 
-    readonly property string actionLabel: {
-        switch (action) {
-        case "copy":
-            return I18n.tr("Copy", "context menu entry copying the selection");
-        case "link":
-            return I18n.tr("Link", "drag label for creating a symlink");
-        default:
-            return I18n.tr("Move", "drag label for moving files");
-        }
-    }
-
-    implicitWidth: body.implicitWidth + Theme.spacingM * 2
+    implicitWidth: body.implicitWidth + Theme.spacingS * 2
     implicitHeight: FilesMetrics.dragGhostSize + Theme.spacingS * 2
     radius: Theme.cornerRadiusL
     color: Theme.surfaceContainerHigh
@@ -38,7 +26,6 @@ Rectangle {
         id: body
 
         anchors.centerIn: parent
-        spacing: Theme.spacingS
 
         Item {
             anchors.verticalCenter: parent.verticalCenter
@@ -72,14 +59,6 @@ Rectangle {
                     font.weight: Theme.fontWeightMedium
                 }
             }
-        }
-
-        StyledText {
-            anchors.verticalCenter: parent.verticalCenter
-            text: ghost.actionLabel
-            color: Theme.surfaceText
-            font.pixelSize: Theme.fontSizeSmall
-            font.weight: Theme.fontWeightMedium
         }
     }
 }

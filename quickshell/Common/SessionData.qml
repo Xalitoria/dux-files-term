@@ -27,6 +27,7 @@ Singleton {
     property int listZoom: FilesMetrics.defaultListZoom
     property var listColumns: ["size", "modified", "type"]
     property var columnWidths: ({})
+    property var browsing: ({})
 
     readonly property var persistedState: ({
             "windowWidth": Math.round(windowWidth),
@@ -40,13 +41,25 @@ Singleton {
             "gridZoom": gridZoom,
             "listZoom": listZoom,
             "listColumns": listColumns,
-            "columnWidths": columnWidths
+            "columnWidths": columnWidths,
+            "browsing": browsing
         })
 
     readonly property int recentLimit: 20
 
     property bool _loaded: false
     property bool _selfWrite: false
+
+    function lastUsed(key, fallback) {
+        return browsing?.[key] ?? fallback;
+    }
+
+    function remember(values) {
+        const next = Object.assign({}, browsing, values);
+        if (JSON.stringify(next) === JSON.stringify(browsing))
+            return;
+        browsing = next;
+    }
 
     function recordRecent(path) {
         if (path === "" || recentDirs[0] === path)

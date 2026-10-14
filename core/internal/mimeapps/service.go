@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -66,8 +67,6 @@ func (s *Service) MimeOf(path string) (string, error) {
 	return s.detector.Detect(path, info.IsDir()), nil
 }
 
-// Open starts each path's default handler. Paths that share a type are handed
-// to their handler together.
 func (s *Service) Open(ctx context.Context, paths []string, opts LaunchOptions) error {
 	if len(paths) == 0 {
 		return fail("EINVAL", "no paths given")
@@ -76,21 +75,20 @@ func (s *Service) Open(ctx context.Context, paths []string, opts LaunchOptions) 
 		return openViaPortal(ctx, paths, false)
 	}
 
-	grouped, order, err := s.groupByMime(paths)
+	groups, unhandled, err := s.groupByApp(paths)
 	if err != nil {
 		return err
 	}
 
-	for _, mimeType := range order {
-		id := s.Default(mimeType)
-		if id == "" {
-			return fail("NOTSUPPORTED", "no application is registered for %s", mimeType)
-		}
+	for _, group := range groups {
 		batch := opts
-		batch.Paths = grouped[mimeType]
-		if err := s.Launch(s.EntryByID(id), batch); err != nil {
+		batch.Paths = group.paths
+		if err := s.Launch(s.EntryByID(group.app), batch); err != nil {
 			return fail("EIO", "%s", err)
 		}
+	}
+	if len(unhandled) > 0 {
+		return fail("NOTSUPPORTED", "no application is registered for %s", strings.Join(unhandled, ", "))
 	}
 	return nil
 }
@@ -171,21 +169,42 @@ func (s *Service) OpenURI(ctx context.Context, uri string) error {
 	return nil
 }
 
-func (s *Service) groupByMime(paths []string) (map[string][]string, []string, error) {
-	grouped := map[string][]string{}
-	var order []string
+type appGroup struct {
+	app   string
+	paths []string
+}
+
+func (s *Service) groupByApp(paths []string) ([]appGroup, []string, error) {
+	var groups []appGroup
+	var unhandled []string
+	at := map[string]int{}
+	defaults := map[string]string{}
 
 	for _, path := range paths {
 		mimeType, err := s.MimeOf(path)
 		if err != nil {
 			return nil, nil, err
 		}
-		if _, ok := grouped[mimeType]; !ok {
-			order = append(order, mimeType)
+		app, known := defaults[mimeType]
+		if !known {
+			app = s.Default(mimeType)
+			defaults[mimeType] = app
 		}
-		grouped[mimeType] = append(grouped[mimeType], path)
+		if app == "" {
+			if !slices.Contains(unhandled, mimeType) {
+				unhandled = append(unhandled, mimeType)
+			}
+			continue
+		}
+		index, ok := at[app]
+		if !ok {
+			index = len(groups)
+			at[app] = index
+			groups = append(groups, appGroup{app: app})
+		}
+		groups[index].paths = append(groups[index].paths, path)
 	}
-	return grouped, order, nil
+	return groups, unhandled, nil
 }
 
 func fileURIPath(uri string) string {

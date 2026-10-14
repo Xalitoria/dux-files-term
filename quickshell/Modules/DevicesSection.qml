@@ -13,6 +13,7 @@ FilePlaceSection {
     property string currentPath: ""
 
     signal navigateRequested(string path)
+    signal tabRequested(string path)
     signal unlockRequested(var device)
     signal dropRequested(string path, var drop)
 
@@ -133,6 +134,10 @@ FilePlaceSection {
             busy: section.busyId === modelData.id
             dropPath: modelData.mounted ? modelData.mountPoint : ""
             onClicked: section.activateOrMount(modelData)
+            onMiddleClicked: {
+                if (modelData.mounted && modelData.mountPoint)
+                    section.tabRequested(modelData.mountPoint);
+            }
             onDropped: drop => section.dropRequested(modelData.mountPoint, drop)
             onActionTriggered: {
                 if (modelData.system || modelData.protected)
@@ -178,6 +183,7 @@ FilePlaceSection {
             busy: section.busyId === modelData.id
             dropPath: modelData.path
             onClicked: section.navigateRequested(modelData.path)
+            onMiddleClicked: section.tabRequested(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
             onActionTriggered: {
                 section.busyId = modelData.id;

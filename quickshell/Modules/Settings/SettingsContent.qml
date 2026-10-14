@@ -729,7 +729,7 @@ Item {
             SettingsGroup {
                 OptionDropdownRow {
                     text: I18n.tr("Dropping without a modifier", "drag default action setting label")
-                    description: I18n.tr("Ctrl copies, Shift moves and Alt asks regardless.", "drag default action setting description")
+                    description: I18n.tr("Ctrl copies and Alt asks regardless.", "drag default action setting description")
                     optionList: root.dragOptions
                     current: SettingsData.dragAction
                     onPicked: value => SettingsData.dragAction = value

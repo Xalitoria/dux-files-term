@@ -45,6 +45,7 @@ Singleton {
     readonly property int tabHoverDelay: 700
 
     readonly property real dragGhostSize: FileBrowserMetrics.gridIconSizes[0]
+    readonly property int openConfirmLimit: 10
 
     readonly property real popoverWidth: Theme.smallBreakpoint * 0.75
     readonly property real propertiesIconSize: FileBrowserMetrics.listIconSizes[3]

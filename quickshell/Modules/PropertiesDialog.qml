@@ -190,6 +190,10 @@ OverlayDialog {
                     outlined: true
                     labelText: I18n.tr("Name", "label for a file name input")
                     text: root.primary?.name ?? ""
+                    onFocusStateChanged: hasFocus => {
+                        if (hasFocus && text === root.primary?.name)
+                            select(0, FileFormat.stemLength(text, root.primary.isDir));
+                    }
                     onAccepted: {
                         const trimmed = text.trim();
                         if (trimmed === "" || trimmed === root.primary.name || trimmed.includes("/"))

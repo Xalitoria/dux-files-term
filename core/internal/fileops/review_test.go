@@ -191,3 +191,27 @@ func TestDirectorySizeIsLeftOutWhenTheScanDidNotFinish(t *testing.T) {
 	require.DirExists(t, filepath.Join(trashDir, "files", "docs"))
 	require.NoFileExists(t, filepath.Join(trashDir, "directorysizes"), "a guessed size is worse than none")
 }
+
+func TestTransferOntoItselfKeepsTheSource(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "dir", "inner.txt"), "keep me")
+	write(t, filepath.Join(root, "a.txt"), "keep me too")
+	sources := []string{filepath.Join(root, "dir"), filepath.Join(root, "a.txt")}
+	manager, bus := newHarness(t)
+	bus.onConflict = func(c Conflict) Answer {
+		t.Errorf("asked about %s", c.Target.Path)
+		return Answer{ID: c.ID, Action: ActionReplace}
+	}
+
+	moved := run(t, manager, bus, spec{kind: KindMove, sources: sources, dest: root})
+	require.Equal(t, StateDone, moved.State)
+	require.False(t, moved.Undoable)
+	require.Equal(t, "keep me", read(t, filepath.Join(root, "dir", "inner.txt")))
+	require.Equal(t, "keep me too", read(t, filepath.Join(root, "a.txt")))
+
+	copied := run(t, manager, bus, spec{kind: KindCopy, sources: sources, dest: root})
+	require.Equal(t, StateDone, copied.State)
+	require.Equal(t, "keep me", read(t, filepath.Join(root, "dir", "inner.txt")))
+	require.Equal(t, "keep me", read(t, filepath.Join(root, "dir (copy)", "inner.txt")))
+	require.Equal(t, "keep me too", read(t, filepath.Join(root, "a (copy).txt")))
+}

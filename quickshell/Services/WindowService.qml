@@ -12,7 +12,7 @@ Singleton {
     readonly property int count: windows.count
     property int nextId: 1
     property int lastActiveId: 0
-    readonly property int primaryId: windows.count > 0 ? windows.get(0).windowId : 0
+    property int primaryId: 0
     property var pendingLocations: ({})
 
     signal openInWindow(int windowId, var locations)
@@ -44,6 +44,8 @@ Singleton {
         const pending = pendingLocations;
         pending[windowId] = locations ?? [];
         pendingLocations = pending;
+        if (windows.count === 0)
+            primaryId = windowId;
         windows.append({
             "windowId": windowId
         });
@@ -81,6 +83,7 @@ Singleton {
         if (index < 0)
             return;
         windows.remove(index);
+        primaryId = windows.count > 0 ? windows.get(0).windowId : 0;
         log.debug(`window ${windowId} closed, ${windows.count} open`);
         if (lastActiveId === windowId)
             lastActiveId = windows.count > 0 ? windows.get(windows.count - 1).windowId : 0;
@@ -89,6 +92,7 @@ Singleton {
     function closeAll() {
         log.debug(`closing all ${windows.count} windows`);
         windows.clear();
+        primaryId = 0;
         lastActiveId = 0;
         pendingLocations = ({});
     }

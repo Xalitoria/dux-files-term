@@ -34,6 +34,9 @@ FocusScope {
     readonly property bool filtering: nameFilter !== "" && !resultsActive
 
     signal activateRequested(var entry)
+    signal openRequested(var entries)
+    signal tabRequested(string path)
+    signal pathMenuRequested(string path, real pointX, real pointY)
     signal itemMenuRequested(int index, real pointX, real pointY, int modifiers)
     signal backgroundMenuRequested(real pointX, real pointY)
     signal dropRequested(var paths, string dest, string action)
@@ -51,6 +54,11 @@ FocusScope {
     function reveal(targets) {
         closeSearch();
         browser.reveal(targets);
+    }
+
+    function revealAndRename(target) {
+        closeSearch();
+        browser.revealAndRename(target);
     }
 
     function back() {
@@ -116,9 +124,9 @@ FocusScope {
     }
 
     function openSelection() {
-        const entry = selectedEntries[0] ?? currentEntry;
-        if (entry)
-            activateRequested(entry);
+        const entries = selectedEntries.length > 0 ? selectedEntries : [currentEntry].filter(entry => entry);
+        if (entries.length > 0)
+            openRequested(entries);
     }
 
     function cursorRect() {
@@ -148,7 +156,7 @@ FocusScope {
         const paths = DragService.pathsFrom(drop);
         if (paths.length === 0 || paths.includes(dest))
             return;
-        dropRequested(paths, dest, DragService.actionFor(drop.modifiers ?? Qt.NoModifier));
+        dropRequested(paths, dest, DragService.overrideFor(drop.proposedAction));
     }
 
     function setZoom(mode, level) {
@@ -263,6 +271,7 @@ FocusScope {
         networkThumbnails: SettingsData.networkThumbnails
         pathSuggestions: SessionData.recentDirs
         header: pane.filtering ? filterHeader : null
+        pathBarTrailing: paneStatus
         emptyText: pane.filtering ? I18n.tr("No results", "search results header when nothing matched") : I18n.tr("This folder is empty", "empty directory placeholder")
         paneColor: Theme.foregroundColor(Theme.cardSurface, true)
         paneRadius: FilesMetrics.paneRadius
@@ -280,6 +289,8 @@ FocusScope {
         onZoomRequested: (mode, level) => pane.setZoom(mode, level)
         onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
         onFocusRequested: pane.focusRequested()
+        onTabRequested: target => pane.tabRequested(target)
+        onPathMenuRequested: (target, pointX, pointY) => pane.pathMenuRequested(target, pointX, pointY)
     }
 
     SearchResults {
@@ -306,11 +317,23 @@ FocusScope {
         onZoomRequested: (mode, level) => pane.setZoom(mode, level)
         onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
         onFocusRequested: pane.focusRequested()
+        onTabRequested: target => pane.tabRequested(target)
         onCloseRequested: {
             pane.closeSearch();
             pane.focusBody();
         }
         onFiltersChanged: pane.startSearch(searchModel.query, results.chips.filterState)
+    }
+
+    Component {
+        id: paneStatus
+
+        PaneStatus {
+            total: browser.directory.total
+            hidden: pane.showHidden ? 0 : browser.directory.hiddenCount
+            compact: pane.width < Theme.smallBreakpoint
+            showClipboard: pane.active
+        }
     }
 
     Component {

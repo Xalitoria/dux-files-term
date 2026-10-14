@@ -47,8 +47,6 @@ func (m *Manager) Handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request) 
 	w.Respond(req.ID, map[string]any{"job": m.enqueue(s).view()})
 }
 
-// handleDropAction answers what a plain drag onto dest would do, so the drag
-// ghost can say "move" or "copy" before the user lets go.
 func handleDropAction(w *ipc.ConnWriter, req ipc.Request) {
 	sources, err := absPaths(req, "paths")
 	if err != nil {
@@ -61,12 +59,13 @@ func handleDropAction(w *ipc.ConnWriter, req ipc.Request) {
 		return
 	}
 
-	same := true
+	destDev, same := deviceOf(dest)
 	for _, src := range sources {
-		if !sameDevice(src, dest) {
-			same = false
+		if !same {
 			break
 		}
+		srcDev, found := deviceOf(src)
+		same = found && srcDev == destDev
 	}
 	action := "copy"
 	if same {
@@ -109,6 +108,7 @@ func specOf(req ipc.Request) (spec, error) {
 		s.dest = params.StringOpt(req.Params, "path", "")
 		s.name = params.StringOpt(req.Params, "name", "")
 		s.template = params.StringOpt(req.Params, "template", "")
+		s.unique = params.BoolLoose(req.Params, "unique")
 		if !filepath.IsAbs(s.dest) || !validName(s.name) {
 			return spec{}, invalid(req.Method + " requires an absolute path and a name")
 		}

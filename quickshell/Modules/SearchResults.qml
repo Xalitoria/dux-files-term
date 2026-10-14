@@ -44,6 +44,7 @@ Rectangle {
     signal zoomRequested(string viewMode, int level)
     signal columnResizeRequested(string id, real width)
     signal focusRequested
+    signal tabRequested(string path)
     signal closeRequested
     signal filtersChanged
 
@@ -164,6 +165,7 @@ Rectangle {
         onZoomRequested: (mode, level) => results.zoomRequested(mode, level)
         onColumnResizeRequested: (id, width) => results.columnResizeRequested(id, width)
         onFocusRequested: results.focusRequested()
+        onTabRequested: target => results.tabRequested(target)
         onOpenRequested: target => {
             if (target === "..")
                 return;

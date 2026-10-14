@@ -12,6 +12,7 @@ FilePlaceSection {
     property string busyId: ""
 
     signal navigateRequested(string path)
+    signal tabRequested(string path)
     signal dropRequested(string path, var drop)
     signal connectRequested
 
@@ -40,6 +41,7 @@ FilePlaceSection {
             busy: section.busyId === modelData.id
             dropPath: modelData.path
             onClicked: section.navigateRequested(modelData.path)
+            onMiddleClicked: section.tabRequested(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
             onActionTriggered: {
                 section.busyId = modelData.id;

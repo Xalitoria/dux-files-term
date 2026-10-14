@@ -22,18 +22,22 @@ type resolution struct {
 	unknown bool
 }
 
-func (r *runner) resolve(src, dst string, srcIsDir bool) resolution {
+func (r *runner) resolve(src, dst string, info os.FileInfo, move bool) resolution {
 	target, err := os.Lstat(dst)
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
 		return resolution{dst: dst}
 	case err != nil:
 		return resolution{dst: dst, unknown: true}
+	case os.SameFile(info, target) && move:
+		return resolution{skip: true}
+	case os.SameFile(info, target):
+		return resolution{dst: uniquePath(dst)}
 	}
 
 	action := r.conflictAll
 	if action == "" {
-		action = r.askConflict(src, dst, srcIsDir && target.IsDir())
+		action = r.askConflict(src, dst, info.IsDir() && target.IsDir())
 	}
 
 	switch action {
@@ -92,6 +96,21 @@ func uniquePath(path string) string {
 			suffix = " (copy " + strconv.Itoa(i) + ")"
 		}
 		candidate := filepath.Join(dir, stem+suffix+ext)
+		if _, err := os.Lstat(candidate); err != nil {
+			return candidate
+		}
+	}
+}
+
+func numberedPath(path string) string {
+	if _, err := os.Lstat(path); err != nil {
+		return path
+	}
+	dir := filepath.Dir(path)
+	stem, ext := splitName(filepath.Base(path))
+
+	for i := 2; ; i++ {
+		candidate := filepath.Join(dir, stem+" "+strconv.Itoa(i)+ext)
 		if _, err := os.Lstat(candidate); err != nil {
 			return candidate
 		}
