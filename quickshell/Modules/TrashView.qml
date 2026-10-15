@@ -13,6 +13,8 @@ Rectangle {
     property int gridZoom: 1
     property int listZoom: 0
     property var columnWidths: ({})
+    property bool previewOpen: false
+    property real previewWidth: 0
     property string nameFilter: ""
     property bool singleClickActivates: false
     property bool typeAheadEnabled: true
@@ -45,6 +47,8 @@ Rectangle {
     signal itemsDropped(var drop)
     signal zoomRequested(string viewMode, int level)
     signal columnResizeRequested(string id, real width)
+    signal previewToggleRequested
+    signal previewResized(real width)
     signal focusRequested
     signal backRequested
     signal forwardRequested
@@ -192,7 +196,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottomMargin: FilesMetrics.paneBodyMargin
         anchors.leftMargin: FilesMetrics.paneBodyMarginH
-        anchors.rightMargin: FilesMetrics.paneBodyMarginH
+        anchors.rightMargin: FilesMetrics.paneBodyMarginH + drawer.width
         focus: true
         directory: trashModel
         selection: selectionModel
@@ -201,6 +205,7 @@ Rectangle {
         listZoom: trashView.listZoom
         listColumns: ["origin", "deleted", "size"]
         columnWidths: trashView.columnWidths
+        previewKeys: true
         sortKey: trashModel.sortKey
         sortDescending: trashModel.sortDescending
         showHidden: true
@@ -227,6 +232,28 @@ Rectangle {
         onSortRequested: key => trashModel.sortBy(key)
         onZoomRequested: (mode, level) => trashView.zoomRequested(mode, level)
         onColumnResizeRequested: (id, width) => trashView.columnResizeRequested(id, width)
+        onPreviewKeyRequested: (action, step) => {
+            if (action === "toggle") {
+                trashView.previewToggleRequested();
+                return;
+            }
+            drawer.handleKey(action, step);
+        }
+        onFocusRequested: trashView.focusRequested()
+    }
+
+    FilePreviewDrawer {
+        id: drawer
+
+        anchors.top: viewBody.top
+        anchors.bottom: viewBody.bottom
+        anchors.right: parent.right
+        anchors.rightMargin: FilesMetrics.paneBodyMarginH
+        body: viewBody
+        open: trashView.previewOpen
+        available: trashView.width - FilesMetrics.paneBodyMarginH * 2
+        preferredWidth: trashView.previewWidth
+        onResized: width => trashView.previewResized(width)
         onFocusRequested: trashView.focusRequested()
     }
 

@@ -12,6 +12,7 @@ Singleton {
     property alias wallpaperLastPath: adapter.wallpaperLastPath
     property alias profileLastPath: adapter.profileLastPath
     property alias sidebarWidth: adapter.sidebarWidth
+    property alias previewWidth: adapter.previewWidth
 
     function saveCache() {
         if (!cacheFile.loaded)
@@ -42,6 +43,7 @@ Singleton {
             property string wallpaperLastPath: ""
             property string profileLastPath: ""
             property int sidebarWidth: FilesMetrics.sidebarWidth
+            property int previewWidth: 0
         }
     }
 }

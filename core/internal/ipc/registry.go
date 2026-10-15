@@ -41,6 +41,7 @@ var Methods = []MethodSpec{
 	{Name: "files.unwatch", Group: "files", Desc: "Close a watch and its event topic", Params: []ParamSpec{req("watchId", "id from files.watch")}},
 	{Name: "files.stat", Group: "files", Desc: "Metadata for a single path", Params: []ParamSpec{req("path", "absolute path")}},
 	{Name: "files.preview", Group: "files", Desc: "Head of a text file for the preview column; binary content is flagged instead of returned", Params: []ParamSpec{req("path", "absolute file path"), opt("maxBytes", "bytes to read (default 16384, max 262144)")}},
+	{Name: "files.imageSize", Group: "files", Desc: "Pixel size of an image read from its header; png, jpeg, gif, webp, bmp and tiff", Params: []ParamSpec{req("path", "absolute file path")}},
 	{Name: "files.count", Group: "files", Desc: "Child counts for directories, capped at 10000", Params: []ParamSpec{req("paths", "absolute directory paths"), opt("includeHidden", "count dot-prefixed entries")}},
 	{Name: "files.thumbnail", Group: "files", Desc: "Thumbnail cache paths, generating what is missing", Params: []ParamSpec{req("paths", "absolute file paths"), opt("size", "normal|large|x-large|xx-large"), opt("watchId", "deliver late results on this watch topic")}},
 	{Name: "files.userDirs", Group: "files", Desc: "XDG user directories, home first"},

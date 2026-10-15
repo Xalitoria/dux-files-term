@@ -21,9 +21,11 @@ Singleton {
     property var _searchTopics: ({})
     readonly property var _eventHandler: data => root.watchEvent(data)
     readonly property var _searchHandler: data => root._onSearchEvent(data)
+    readonly property var _sizeHandler: data => root.sizeEvent(data)
 
     signal watchEvent(var data)
     signal searchEvent(var data)
+    signal sizeEvent(var data)
 
     readonly property string templatesDir: userDirs.find(dir => dir.key === "templates")?.path ?? ""
 
@@ -99,6 +101,12 @@ Singleton {
         _send("files.preview", {
             "path": path,
             "maxBytes": maxBytes
+        }, callback);
+    }
+
+    function imageSize(path, callback) {
+        _send("files.imageSize", {
+            "path": path
         }, callback);
     }
 
@@ -219,7 +227,10 @@ Singleton {
         return params;
     }
 
-    Component.onCompleted: refreshUserDirs()
+    Component.onCompleted: {
+        DankFilesService.subscribeTopic("sizes", _sizeHandler);
+        refreshUserDirs();
+    }
 
     Connections {
         target: DankFilesService

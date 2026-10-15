@@ -15,6 +15,7 @@ FocusScope {
     property string sortKey: "name"
     property bool sortDescending: false
     property string viewMode: "list"
+    property bool previewOpen: true
     property var cutSet: ({})
     property string nameFilter: ""
     property int connectRequest: 0
@@ -47,6 +48,7 @@ FocusScope {
     signal renameRequested(string target, string name)
     signal sortRequested(string key)
     signal columnsMenuRequested(real pointX, real pointY)
+    signal previewToggleRequested
     signal focusRequested
     signal locationRequested(var location)
     signal restoreRequested
@@ -198,6 +200,10 @@ FocusScope {
         SessionData.listZoom = level;
     }
 
+    function setPreviewWidth(width) {
+        CacheData.previewWidth = Math.round(width);
+    }
+
     function setColumnWidth(id, width) {
         const widths = Object.assign({}, SessionData.columnWidths);
         widths[id] = width;
@@ -309,6 +315,10 @@ FocusScope {
         dragEnabled: true
         dropEnabled: true
         showSelectionFooter: true
+        previewDrawer: true
+        previewOpen: pane.previewOpen
+        previewWidth: CacheData.previewWidth
+        previewKeys: true
         cutSet: pane.cutSet
         nameFilter: pane.nameFilter
         singleClickActivates: SettingsData.clickToOpen === "single"
@@ -344,6 +354,8 @@ FocusScope {
         onSortRequested: key => pane.sortRequested(key)
         onZoomRequested: (mode, level) => pane.setZoom(mode, level)
         onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
+        onPreviewToggleRequested: pane.previewToggleRequested()
+        onPreviewResized: width => pane.setPreviewWidth(width)
         onFocusRequested: pane.focusRequested()
         onTabRequested: target => pane.tabRequested(target)
         onPathMenuRequested: (target, pointX, pointY) => pane.pathMenuRequested(target, pointX, pointY)
@@ -362,6 +374,8 @@ FocusScope {
         gridZoom: SessionData.gridZoom
         listZoom: SessionData.listZoom
         columnWidths: SessionData.columnWidths
+        previewOpen: pane.previewOpen
+        previewWidth: CacheData.previewWidth
         cutSet: pane.cutSet
         singleClickActivates: SettingsData.clickToOpen === "single"
         typeAheadEnabled: !SettingsData.vimKeys
@@ -374,6 +388,8 @@ FocusScope {
         onRenameRequested: (target, name) => pane.renameRequested(target, name)
         onZoomRequested: (mode, level) => pane.setZoom(mode, level)
         onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
+        onPreviewToggleRequested: pane.previewToggleRequested()
+        onPreviewResized: width => pane.setPreviewWidth(width)
         onFocusRequested: pane.focusRequested()
         onTabRequested: target => pane.tabRequested(target)
         onCloseRequested: {
@@ -394,6 +410,8 @@ FocusScope {
             gridZoom: SessionData.gridZoom
             listZoom: SessionData.listZoom
             columnWidths: SessionData.columnWidths
+            previewOpen: pane.previewOpen
+            previewWidth: CacheData.previewWidth
             nameFilter: pane.nameFilter
             singleClickActivates: SettingsData.clickToOpen === "single"
             typeAheadEnabled: !SettingsData.vimKeys
@@ -409,6 +427,8 @@ FocusScope {
             onItemsDropped: drop => pane.dropOn(TrashService.filesPath, drop)
             onZoomRequested: (mode, level) => pane.setZoom(mode, level)
             onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
+            onPreviewToggleRequested: pane.previewToggleRequested()
+            onPreviewResized: width => pane.setPreviewWidth(width)
             onFocusRequested: pane.focusRequested()
             onBackRequested: pane.back()
             onForwardRequested: pane.forward()

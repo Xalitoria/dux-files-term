@@ -278,14 +278,10 @@ FileMenu {
 
             width: parent?.width ?? 0
             visible: modelData.visible !== false
-            height: visible ? (separator ? Theme.spacingS * 2 : Theme.menuItemHeight) : 0
+            height: visible ? (separator ? FileBrowserMetrics.menuDividerHeight : Theme.menuItemHeight) : 0
 
-            Rectangle {
-                anchors.centerIn: parent
+            FileMenuDivider {
                 visible: slot.separator
-                width: parent.width - Theme.spacingM * 2
-                height: Theme.dividerWidth
-                color: Theme.outlineVariant
             }
 
             FileMenuItem {

@@ -169,14 +169,18 @@ ShellRoot {
         check("a selected file is the preview entry", columns().pickedEntry.name, "readme.txt");
 
         browser.selection.select("/home/me/docs/sub");
+        const listedBefore = fixture.watches;
         browser.body.enterCursor();
         check("entering the cursor folder makes it the active column", browser.path, "/home/me/docs/sub");
         check("the chain grows by one", columns().ancestors, ["/home/me", "/home/me/docs"]);
+        check("the folder on screen is not listed again", fixture.watches - listedBefore, 0);
+        check("the active column keeps the lookahead's rows", browser.body.directory.count, 0);
 
         browser.body.leaveColumn();
         check("leaving goes to the parent", browser.path, "/home/me/docs");
         check("the former folder stays selected", browser.selection.paths, ["/home/me/docs/sub"]);
         check("so its column stays open as the lookahead", columns().lookaheadPath, "/home/me/docs/sub");
+        check("and going up lists nothing either", fixture.watches - listedBefore, 0);
 
         browser.body.revealRequested("/home/me/notes.txt");
         check("revealing an ancestor item moves the active column", browser.path, "/home/me");
@@ -186,16 +190,16 @@ ShellRoot {
         browser.reveal("/home/me/gone.txt");
         check("a reveal that misses drops the old selection", browser.selection.paths, []);
 
-        preview.entry = fixture.tree["/home/me/docs"][1];
-        preview.load();
-        check("text preview comes from the backend", preview.text, "hello from /home/me/docs/readme.txt");
-        check("truncation is reported", preview.truncated, true);
-        check("text files are previewable", preview.canPreview, true);
+        preview.entries = [fixture.tree["/home/me/docs"][1]];
+        preview.settleNow();
+        check("text preview comes from the backend", [preview.viewer, preview.viewerItem?.lines], ["text", ["hello from /home/me/docs/readme.txt"]]);
+        check("truncation is reported", preview.viewerItem?.note !== "", true);
 
+        const asked = fixture.previewed.length;
         preview.imageSizeLimit = 1;
-        preview.entry = fixture.tree["/home/me/docs"][2];
-        preview.load();
-        check("images skip the text request", [preview.canPreview, preview.imageLike, fixture.previewed.length], [false, false, 1]);
+        preview.entries = [fixture.tree["/home/me/docs"][2]];
+        preview.settleNow();
+        check("an image over the cap skips the text request", [preview.viewer, fixture.previewed.length - asked], ["", 0]);
 
         browser.navigate("/home/me/docs");
         browser.selection.clear();

@@ -276,6 +276,34 @@ Singleton {
             "vim": ["."]
         },
         {
+            "id": "togglePreview",
+            "keys": ["Space"],
+            "group": "view",
+            "scope": "view",
+            "label": I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
+        },
+        {
+            "id": "previewStep",
+            "keys": ["Shift+Space", "Ctrl+Shift+Space"],
+            "group": "view",
+            "scope": "view",
+            "label": I18n.tr("Preview the next or previous selected item", "keyboard shortcut")
+        },
+        {
+            "id": "previewScroll",
+            "keys": ["Alt+PgUp", "Alt+PgDown"],
+            "group": "view",
+            "scope": "view",
+            "label": I18n.tr("Scroll the preview", "keyboard shortcut")
+        },
+        {
+            "id": "previewResize",
+            "keys": ["Ctrl+Alt+Left", "Ctrl+Alt+Right", "Ctrl+Alt+0"],
+            "group": "view",
+            "scope": "view",
+            "label": I18n.tr("Resize the preview, or reset its width", "keyboard shortcut")
+        },
+        {
             "id": "reload",
             "keys": ["F5", "Ctrl+R"],
             "group": "view",
@@ -312,7 +340,7 @@ Singleton {
         },
         {
             "id": "toggleItem",
-            "keys": ["Space"],
+            "keys": ["Ctrl+Space"],
             "group": "selection",
             "scope": "view",
             "label": I18n.tr("Add or remove the item under the cursor", "keyboard shortcut"),

@@ -30,6 +30,7 @@ FloatingWindow {
     property string sortKey: SessionData.lastUsed("sortKey", SettingsData.defaultSort)
     property bool sortDescending: SessionData.lastUsed("sortDescending", SettingsData.defaultSortDescending)
     property string viewMode: SessionData.lastUsed("viewMode", SettingsData.defaultView)
+    property bool previewOpen: SessionData.lastUsed("previewOpen", true)
     property bool sidebarOverlayOpen: false
     property string pendingTrust: ""
     property bool applyingTab: false
@@ -435,6 +436,14 @@ FloatingWindow {
         sortKey = sortKey;
         sortDescending = sortDescending;
         viewMode = viewMode;
+        previewOpen = previewOpen;
+    }
+
+    function setPreviewOpen(open) {
+        previewOpen = open;
+        SessionData.remember({
+            "previewOpen": open
+        });
     }
 
     function setViewMode(mode) {
@@ -622,6 +631,9 @@ FloatingWindow {
             return;
         case "columnsView":
             setViewMode("columns");
+            return;
+        case "togglePreview":
+            setPreviewOpen(!previewOpen);
             return;
         case "zoomIn":
             activePane.body.zoomBy(1);
@@ -1458,6 +1470,7 @@ FloatingWindow {
             sortKey: window.sortKey
             sortDescending: window.sortDescending
             viewMode: window.viewMode
+            previewOpen: window.previewOpen
             showActiveOutline: window.splitView
             cutSet: window.cutSet
             onActivateRequested: entry => window.activate(entry)
@@ -1472,6 +1485,7 @@ FloatingWindow {
             onSortRequested: key => window.setSort(key)
             onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
             onFocusRequested: window.activePaneIndex = 1
+            onPreviewToggleRequested: window.runAction("togglePreview")
             onLocationRequested: location => window.openTypedLocation(splitPane, location)
             onRestoreRequested: window.runAction("restore")
             onEmptyTrashRequested: window.runAction("emptyTrash")
@@ -1610,9 +1624,9 @@ FloatingWindow {
             Behavior on width {
                 enabled: Theme.animationsEnabled && !sidebarResizeArea.pressed
                 NumberAnimation {
-                    duration: Theme.expressiveDurations.expressiveDefaultSpatial
+                    duration: Theme.expressiveDurations.expressiveFastSpatial
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Theme.expressiveCurves.expressiveDefaultSpatial
+                    easing.bezierCurve: Theme.expressiveCurves.standard
                 }
             }
 
@@ -1732,6 +1746,7 @@ FloatingWindow {
                 sortDescending: window.activePane.trashView?.model.sortDescending ?? window.sortDescending
                 compact: window.compact
                 viewMode: window.viewMode
+                previewOpen: window.previewOpen
                 trashActive: window.activePane.trashActive
                 filterText: window.activePane.nameFilter
                 currentPath: window.currentPath
@@ -1753,6 +1768,7 @@ FloatingWindow {
                 onSortDirectionToggled: window.toggleSortDirection()
                 onCopyPathRequested: window.copyText(window.currentPath)
                 onViewModeSelected: mode => window.setViewMode(mode)
+                onPreviewToggled: window.runAction("togglePreview")
                 onReloadRequested: window.runAction("reload")
                 onTerminalRequested: window.runAction("openTerminal")
                 onPropertiesRequested: window.runAction("properties")
@@ -1782,6 +1798,7 @@ FloatingWindow {
                     sortKey: window.sortKey
                     sortDescending: window.sortDescending
                     viewMode: window.viewMode
+                    previewOpen: window.previewOpen
                     showActiveOutline: window.splitView
                     cutSet: window.cutSet
                     onActivateRequested: entry => window.activate(entry)
@@ -1796,6 +1813,7 @@ FloatingWindow {
                     onSortRequested: key => window.setSort(key)
                     onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
                     onFocusRequested: window.activePaneIndex = 0
+                    onPreviewToggleRequested: window.runAction("togglePreview")
                     onLocationRequested: location => window.openTypedLocation(primaryPane, location)
                     onRestoreRequested: window.runAction("restore")
                     onEmptyTrashRequested: window.runAction("emptyTrash")
@@ -2102,17 +2120,7 @@ FloatingWindow {
             }
         }
 
-        Item {
-            width: parent?.width ?? 0
-            height: Theme.spacingS * 2
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width - Theme.spacingM * 2
-                height: Theme.dividerWidth
-                color: Theme.outlineVariant
-            }
-        }
+        FileMenuDivider {}
 
         FileMenuItem {
             text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
@@ -2188,17 +2196,7 @@ FloatingWindow {
             }
         }
 
-        Item {
-            width: parent?.width ?? 0
-            height: Theme.spacingS * 2
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width - Theme.spacingM * 2
-                height: Theme.dividerWidth
-                color: Theme.outlineVariant
-            }
-        }
+        FileMenuDivider {}
 
         FileMenuItem {
             text: I18n.tr("Empty Trash", "action deleting everything in the trash")

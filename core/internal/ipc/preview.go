@@ -1,18 +1,25 @@
 package ipc
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 	"unicode/utf8"
 )
 
 const (
 	previewDefaultBytes = 16 * 1024
 	previewMaxBytes     = 256 * 1024
+	imageHeaderBytes    = 4 << 20
 )
 
 type previewResult struct {
@@ -21,6 +28,12 @@ type previewResult struct {
 	Truncated bool   `json:"truncated"`
 	Size      int64  `json:"size"`
 	Lines     int    `json:"lines"`
+}
+
+type imageSizeResult struct {
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	Format string `json:"format"`
 }
 
 func HandlePreview(_ context.Context, w *ConnWriter, req Request) {
@@ -44,20 +57,59 @@ func HandlePreview(_ context.Context, w *ConnWriter, req Request) {
 	w.Respond(req.ID, result)
 }
 
+func HandleImageSize(_ context.Context, w *ConnWriter, req Request) {
+	path := ParamString(req.Params, "path")
+	if !filepath.IsAbs(path) {
+		w.RespondError(req.ID, "path is not an absolute path")
+		return
+	}
+	result, err := readImageSize(path)
+	if err != nil {
+		w.RespondError(req.ID, err.Error())
+		return
+	}
+	w.Respond(req.ID, result)
+}
+
+func openRegular(path string) (*os.File, os.FileInfo, error) {
+	file, err := os.OpenFile(path, os.O_RDONLY|syscall.O_NONBLOCK, 0)
+	if err != nil {
+		return nil, nil, err
+	}
+	info, err := file.Stat()
+	switch {
+	case err != nil:
+	case info.IsDir():
+		err = errors.New("path is a directory")
+	case !info.Mode().IsRegular():
+		err = errors.New("path is not a regular file")
+	default:
+		return file, info, nil
+	}
+	file.Close()
+	return nil, nil, err
+}
+
+func readImageSize(path string) (imageSizeResult, error) {
+	file, _, err := openRegular(path)
+	if err != nil {
+		return imageSizeResult{}, err
+	}
+	defer file.Close()
+
+	config, format, err := image.DecodeConfig(bufio.NewReader(io.LimitReader(file, imageHeaderBytes)))
+	if err != nil {
+		return imageSizeResult{}, err
+	}
+	return imageSizeResult{Width: config.Width, Height: config.Height, Format: format}, nil
+}
+
 func readPreview(path string, limit int) (previewResult, error) {
-	file, err := os.Open(path)
+	file, info, err := openRegular(path)
 	if err != nil {
 		return previewResult{}, err
 	}
 	defer file.Close()
-
-	info, err := file.Stat()
-	if err != nil {
-		return previewResult{}, err
-	}
-	if info.IsDir() {
-		return previewResult{}, errors.New("path is a directory")
-	}
 
 	buf := make([]byte, limit+1)
 	n, err := io.ReadFull(file, buf)

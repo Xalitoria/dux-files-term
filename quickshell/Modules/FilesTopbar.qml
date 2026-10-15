@@ -16,6 +16,7 @@ Item {
     property bool forwardEnabled: false
     property bool compact: false
     property string viewMode: "list"
+    property bool previewOpen: false
     property string sortKey: "name"
     property bool sortDescending: false
     property bool trashActive: false
@@ -41,6 +42,7 @@ Item {
             "label": I18n.tr("Column view", "view mode showing folders side by side")
         }
     ]
+    readonly property string previewLabel: I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
     readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
     readonly property var trashSortKeys: [
         {
@@ -72,6 +74,7 @@ Item {
     signal splitToggled
     signal bookmarkToggled
     signal viewModeSelected(string mode)
+    signal previewToggled
     signal sortKeySelected(string key)
     signal sortDirectionToggled
     signal propertiesRequested
@@ -194,7 +197,29 @@ Item {
                         }
                     }
                 }
+
+                FileMenuDivider {}
+
+                FileMenuItem {
+                    text: topbar.previewLabel
+                    iconName: "view_sidebar"
+                    checked: topbar.previewOpen
+                    onClicked: {
+                        viewMenu.close();
+                        topbar.previewToggled();
+                    }
+                }
             }
+        }
+
+        FlatButton {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: !topbar.compact
+            iconName: "view_sidebar"
+            iconColor: topbar.previewOpen ? Theme.onPrimary : Theme.surfaceText
+            backgroundColor: topbar.previewOpen ? Theme.primary : Theme.chipSurface
+            tooltipText: topbar.previewLabel
+            onClicked: topbar.previewToggled()
         }
 
         FlatButton {
@@ -257,6 +282,17 @@ Item {
                             overflowMenu.close();
                             topbar.viewModeSelected(modelData.value);
                         }
+                    }
+                }
+
+                FileMenuItem {
+                    visible: topbar.compact
+                    text: topbar.previewLabel
+                    iconName: "view_sidebar"
+                    checked: topbar.previewOpen
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.previewToggled();
                     }
                 }
 

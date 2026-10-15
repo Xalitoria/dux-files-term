@@ -16,6 +16,8 @@ Rectangle {
     property int gridZoom: 1
     property int listZoom: 0
     property var columnWidths: ({})
+    property bool previewOpen: false
+    property real previewWidth: 0
     property var cutSet: ({})
     property bool singleClickActivates: false
     property bool typeAheadEnabled: true
@@ -43,6 +45,8 @@ Rectangle {
     signal renameRequested(string target, string name)
     signal zoomRequested(string viewMode, int level)
     signal columnResizeRequested(string id, real width)
+    signal previewToggleRequested
+    signal previewResized(real width)
     signal focusRequested
     signal tabRequested(string path)
     signal closeRequested
@@ -133,7 +137,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottomMargin: FilesMetrics.paneBodyMargin
         anchors.leftMargin: FilesMetrics.paneBodyMarginH
-        anchors.rightMargin: FilesMetrics.paneBodyMarginH
+        anchors.rightMargin: FilesMetrics.paneBodyMarginH + drawer.width
         focus: true
         directory: results.model
         selection: selectionModel
@@ -142,6 +146,7 @@ Rectangle {
         listZoom: results.listZoom
         listColumns: ["location", "size", "modified"]
         columnWidths: results.columnWidths
+        previewKeys: true
         sortKey: ""
         showHidden: chips.includeHidden
         dragEnabled: true
@@ -164,6 +169,13 @@ Rectangle {
         onRenameRequested: (target, name) => results.renameRequested(target, name)
         onZoomRequested: (mode, level) => results.zoomRequested(mode, level)
         onColumnResizeRequested: (id, width) => results.columnResizeRequested(id, width)
+        onPreviewKeyRequested: (action, step) => {
+            if (action === "toggle") {
+                results.previewToggleRequested();
+                return;
+            }
+            drawer.handleKey(action, step);
+        }
         onFocusRequested: results.focusRequested()
         onTabRequested: target => results.tabRequested(target)
         onOpenRequested: target => {
@@ -175,5 +187,20 @@ Rectangle {
                 "isDir": true
             });
         }
+    }
+
+    FilePreviewDrawer {
+        id: drawer
+
+        anchors.top: viewBody.top
+        anchors.bottom: viewBody.bottom
+        anchors.right: parent.right
+        anchors.rightMargin: FilesMetrics.paneBodyMarginH
+        body: viewBody
+        open: results.previewOpen
+        available: results.width - FilesMetrics.paneBodyMarginH * 2
+        preferredWidth: results.previewWidth
+        onResized: width => results.previewResized(width)
+        onFocusRequested: results.focusRequested()
     }
 }

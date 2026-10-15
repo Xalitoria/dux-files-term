@@ -26,8 +26,8 @@ Singleton {
     readonly property real paneRadius: FileBrowserMetrics.paneRadius
     readonly property real paneBodyMargin: FileBrowserMetrics.paneMargin
     readonly property real paneBodyMarginH: FileBrowserMetrics.paneMarginHorizontal
-    readonly property real splitterWidth: Theme.spacingM
-    readonly property real splitterHandleHeight: Theme.iconSizeLarge
+    readonly property real splitterWidth: FileBrowserMetrics.splitterWidth
+    readonly property real splitterHandleHeight: FileBrowserMetrics.splitterHandleHeight
     readonly property real minimumPaneFraction: 0.2
 
     readonly property real tabHeight: Theme.buttonHeightS
@@ -49,7 +49,7 @@ Singleton {
 
     readonly property real popoverWidth: Theme.smallBreakpoint * 0.75
     readonly property real propertiesIconSize: FileBrowserMetrics.listIconSizes[3]
-    readonly property real propertiesLabelWidth: Theme.spacingXL * 5
+    readonly property real propertiesLabelWidth: FileBrowserMetrics.detailLabelWidth
 
     readonly property int folderHistoryWriteDelay: 10000
     readonly property int folderVerifyInterval: 60000
