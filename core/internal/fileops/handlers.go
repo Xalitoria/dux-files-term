@@ -34,6 +34,16 @@ func (m *Manager) Handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request) 
 	case "files.op.undo":
 		m.handleUndo(w, req)
 		return
+	case "files.op.redo":
+		m.handleRedo(w, req)
+		return
+	case "files.op.forget":
+		m.Forget(params.StringOpt(req.Params, "scope", ""))
+		w.Respond(req.ID, map[string]any{"forgotten": true})
+		return
+	case "files.op.pasteImage":
+		m.handlePasteImage(w, req)
+		return
 	case "files.op.dropAction":
 		handleDropAction(w, req)
 		return
@@ -111,6 +121,38 @@ func specOf(req ipc.Request) (spec, error) {
 		s.unique = params.BoolLoose(req.Params, "unique")
 		if !filepath.IsAbs(s.dest) || !validName(s.name) {
 			return spec{}, invalid(req.Method + " requires an absolute path and a name")
+		}
+	case "files.op.duplicate":
+		s.kind = KindDuplicate
+		sources, err := absPaths(req, "paths")
+		if err != nil {
+			return spec{}, err
+		}
+		s.sources = sources
+		if len(s.sources) == 0 {
+			return spec{}, invalid("files.op.duplicate requires absolute paths")
+		}
+		for _, src := range s.sources {
+			if filepath.Dir(src) == src {
+				return spec{}, invalid("cannot duplicate " + src)
+			}
+			s.pairs = append(s.pairs, pair{src: src, dst: src})
+		}
+	case "files.op.newFolderWith":
+		s.kind = KindNewFolderWith
+		sources, err := absPaths(req, "paths")
+		if err != nil {
+			return spec{}, err
+		}
+		s.sources = sources
+		s.dest = params.StringOpt(req.Params, "path", "")
+		s.name = params.StringOpt(req.Params, "name", "")
+		s.unique = params.BoolLoose(req.Params, "unique")
+		if len(s.sources) == 0 || !filepath.IsAbs(s.dest) || !validName(s.name) {
+			return spec{}, invalid("files.op.newFolderWith requires paths, an absolute path and a name")
+		}
+		if nested := nestedSource(s.sources, s.dest); nested != "" {
+			return spec{}, invalid("cannot put " + nested + " inside itself")
 		}
 	case "files.op.trash", "files.op.delete":
 		s.kind = Kind(strings.TrimPrefix(req.Method, "files.op."))
@@ -240,6 +282,44 @@ func (m *Manager) handleUndo(w *ipc.ConnWriter, req ipc.Request) {
 		return
 	}
 	w.Respond(req.ID, map[string]any{"job": view})
+}
+
+func (m *Manager) handleRedo(w *ipc.ConnWriter, req ipc.Request) {
+	view, err := m.Redo(params.StringOpt(req.Params, "scope", ""))
+	if err != nil {
+		respondErr(w, req.ID, invalid(err.Error()))
+		return
+	}
+	w.Respond(req.ID, map[string]any{"job": view})
+}
+
+// handlePasteImage answers without a job when the clipboard holds no image,
+// so text on it stays a no-op for the caller.
+func (m *Manager) handlePasteImage(w *ipc.ConnWriter, req ipc.Request) {
+	dest := params.StringOpt(req.Params, "path", "")
+	stem := params.StringOpt(req.Params, "name", "Pasted image")
+	if !filepath.IsAbs(dest) || !validName(stem) {
+		respondErr(w, req.ID, invalid("files.op.pasteImage requires an absolute path and a name"))
+		return
+	}
+	if m.images == nil {
+		respondErr(w, req.ID, &files.Error{Code: files.CodeNotSupported, Err: errors.New("no clipboard image source")})
+		return
+	}
+	data, mime, ok := m.images.Image()
+	if !ok {
+		w.Respond(req.ID, map[string]any{"image": false})
+		return
+	}
+	s := spec{
+		kind:   KindPasteImage,
+		scope:  params.StringOpt(req.Params, "scope", ""),
+		dest:   dest,
+		name:   stem + imageExt(mime),
+		data:   data,
+		unique: true,
+	}
+	w.Respond(req.ID, map[string]any{"image": true, "job": m.enqueue(s).view()})
 }
 
 // maxID excludes (uid_t)-1, which the kernel reads as "leave unchanged".

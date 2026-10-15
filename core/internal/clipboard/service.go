@@ -3,6 +3,7 @@ package clipboard
 import (
 	"errors"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 
@@ -16,14 +17,18 @@ type selection interface {
 	Close()
 }
 
-type reader func() ([]byte, string, error)
+type selector func(choose func([]string) string) ([]byte, string, error)
+
+var imageFormats = []string{"image/png", "image/jpeg", "image/webp"}
+
+var fileFormats = []string{MimeTextUTF8, "text/plain", "UTF8_STRING", "STRING", "TEXT", MimeGnomeCopiedFiles, MimeUriList}
 
 // Service owns the wayland selection while dfiles holds it. The owner keeps a
 // wayland connection and a goroutine alive, so it is created on the first copy
 // and dropped again on clear or shutdown.
 type Service struct {
 	newOwner func() (selection, error)
-	paste    reader
+	pick     selector
 
 	mu       sync.Mutex
 	owner    selection
@@ -36,8 +41,43 @@ type Service struct {
 func NewService() *Service {
 	return &Service{
 		newOwner: func() (selection, error) { return wlclipboard.NewOwner() },
-		paste:    wlclipboard.Paste,
+		pick:     wlclipboard.PasteSelect,
 	}
+}
+
+// Image reads an image off the clipboard in the format it is offered in:
+// png, jpeg or webp first, then any other image type.
+func (s *Service) Image() ([]byte, string, bool) {
+	data, mime, err := s.pick(chooseImage)
+	if err != nil || len(data) == 0 {
+		return nil, "", false
+	}
+	return data, mime, true
+}
+
+// chooseFiles declines an image-only clipboard so Paths never pulls an image
+// across the pipe just to find no paths in it.
+func chooseFiles(offered []string) string {
+	for _, want := range fileFormats {
+		if slices.Contains(offered, want) {
+			return want
+		}
+	}
+	return ""
+}
+
+func chooseImage(offered []string) string {
+	for _, want := range imageFormats {
+		if slices.Contains(offered, want) {
+			return want
+		}
+	}
+	for _, mime := range offered {
+		if strings.HasPrefix(mime, "image/") {
+			return mime
+		}
+	}
+	return ""
 }
 
 func Handles(method string) bool { return strings.HasPrefix(method, "clipboard.") }
@@ -84,7 +124,7 @@ func (s *Service) Copy(paths []string, cut bool) error {
 // Paths reads the selection back. Our own is returned exactly; anything else is
 // parsed out of whatever flavour the owner serves.
 func (s *Service) Paths() ([]string, bool, string) {
-	data, mime, err := s.paste()
+	data, mime, err := s.pick(chooseFiles)
 	if err != nil {
 		return nil, false, ""
 	}

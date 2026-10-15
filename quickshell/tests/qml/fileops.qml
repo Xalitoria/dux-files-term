@@ -96,6 +96,14 @@ ShellRoot {
                 });
                 return;
             }
+            if (method === "files.op.pasteImage") {
+                callback({
+                    "result": {
+                        "image": false
+                    }
+                });
+                return;
+            }
             callback({
                 "result": {
                     "job": fixture.job("j1")
@@ -245,6 +253,21 @@ ShellRoot {
             "group": "",
             "recursive": true
         });
+
+        FileOpsService.newFolderWith(["/tmp/a.txt", "/tmp/b.txt"], "/tmp", "Untitled folder", "w1", true);
+        check("new folder with selection params", sent[sent.length - 1].params, {
+            "paths": ["/tmp/a.txt", "/tmp/b.txt"],
+            "path": "/tmp",
+            "name": "Untitled folder",
+            "unique": true,
+            "scope": "w1"
+        });
+
+        const before = states();
+        FileOpsService.pasteImage("/tmp", "Pasted image", "w1");
+        check("paste image request", sent[sent.length - 1].method, "files.op.pasteImage");
+        check("no image stores no job", states(), before);
+        check("no image is not an error", requestErrors.length, 3);
 
         if (failures === 0)
             log.info("FIXTURE PASS");

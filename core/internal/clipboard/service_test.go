@@ -41,12 +41,13 @@ func newFake(t *testing.T) (*Service, *fakeSelection) {
 	t.Helper()
 	sel := &fakeSelection{}
 	svc := &Service{newOwner: func() (selection, error) { return sel, nil }}
-	svc.paste = func() ([]byte, string, error) {
-		data, ok := sel.data(MimeTextUTF8)
+	svc.pick = func(choose func([]string) string) ([]byte, string, error) {
+		mime := choose([]string{MimeGnomeCopiedFiles, MimeUriList, MimeTextUTF8})
+		data, ok := sel.data(mime)
 		if !ok {
 			return nil, "", wlclipboard.ErrNoData
 		}
-		return data, MimeTextUTF8, nil
+		return data, mime, nil
 	}
 	return svc, sel
 }
@@ -111,7 +112,7 @@ func TestPathsReturnsOurOwnSelectionExactly(t *testing.T) {
 func TestPathsParsesAForeignSelection(t *testing.T) {
 	svc, _ := newFake(t)
 	require.NoError(t, svc.Copy([]string{"/home/me/mine.txt"}, true))
-	svc.paste = func() ([]byte, string, error) {
+	svc.pick = func(func([]string) string) ([]byte, string, error) {
 		return GnomePayload([]string{"/home/me/theirs.txt"}, false), MimeGnomeCopiedFiles, nil
 	}
 
@@ -144,7 +145,7 @@ func TestCopyReusesOneOwner(t *testing.T) {
 	sel := &fakeSelection{}
 	svc := &Service{
 		newOwner: func() (selection, error) { made++; return sel, nil },
-		paste:    func() ([]byte, string, error) { return nil, "", wlclipboard.ErrNoData },
+		pick:     func(func([]string) string) ([]byte, string, error) { return nil, "", wlclipboard.ErrNoData },
 	}
 	require.NoError(t, svc.Copy([]string{"/a"}, false))
 	require.NoError(t, svc.Copy([]string{"/b"}, false))
@@ -154,9 +155,54 @@ func TestCopyReusesOneOwner(t *testing.T) {
 func TestAFailedOwnerMarksTheClipboardUnusable(t *testing.T) {
 	svc := &Service{
 		newOwner: func() (selection, error) { return nil, errors.New("no data-control") },
-		paste:    func() ([]byte, string, error) { return nil, "", wlclipboard.ErrNoData },
+		pick:     func(func([]string) string) ([]byte, string, error) { return nil, "", wlclipboard.ErrNoData },
 	}
 	assert.True(t, svc.Available())
 	require.Error(t, svc.Copy([]string{"/a"}, false))
 	assert.False(t, svc.Available())
+}
+
+func TestPathsDeclinesAnImageOnlyClipboard(t *testing.T) {
+	asked := ""
+	svc := &Service{pick: func(choose func([]string) string) ([]byte, string, error) {
+		asked = choose([]string{"image/png", "text/html"})
+		if asked == "" {
+			return nil, "", wlclipboard.ErrNoData
+		}
+		return []byte("bytes"), asked, nil
+	}}
+	paths, _, _ := svc.Paths()
+	require.Empty(t, paths)
+	require.Equal(t, "", asked)
+}
+
+func TestImagePrefersPngThenAnyImageAndIgnoresText(t *testing.T) {
+	offered := []string{}
+	svc := &Service{pick: func(choose func([]string) string) ([]byte, string, error) {
+		mime := choose(offered)
+		if mime == "" {
+			return nil, "", errors.New("no data")
+		}
+		return []byte(mime), mime, nil
+	}}
+
+	offered = []string{"text/plain", "image/jpeg", "image/png"}
+	data, mime, ok := svc.Image()
+	require.True(t, ok)
+	require.Equal(t, "image/png", mime)
+	require.Equal(t, "image/png", string(data))
+
+	offered = []string{"image/webp", "image/jpeg"}
+	_, mime, ok = svc.Image()
+	require.True(t, ok)
+	require.Equal(t, "image/jpeg", mime)
+
+	offered = []string{"text/html", "image/bmp"}
+	_, mime, ok = svc.Image()
+	require.True(t, ok)
+	require.Equal(t, "image/bmp", mime)
+
+	offered = []string{"text/plain;charset=utf-8", "text/uri-list"}
+	_, _, ok = svc.Image()
+	require.False(t, ok)
 }

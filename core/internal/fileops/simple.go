@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (r *runner) rename() error {
@@ -95,9 +96,116 @@ func (r *runner) createUnique(path *string, attempt func(string) error) error {
 
 func (r *runner) created(path string, dir bool) {
 	r.remember(KindDelete, path, "")
+	r.noteCreated(path, dir)
+}
+
+func (r *runner) noteCreated(path string, dir bool) {
 	r.job.mu.Lock()
 	r.job.created = append(r.job.created, Created{Path: path, Dir: dir})
 	r.job.mu.Unlock()
+}
+
+// newFolderWith makes the folder and moves the selection into it as one job,
+// so one undo takes the items back out and removes it again.
+func (r *runner) newFolderWith() error {
+	if r.job.spec.replay == replayUndo {
+		return r.dissolveFolder()
+	}
+	folder := r.target()
+	r.setTotals(1, 0, false)
+
+	if err := r.retry(folder, func(fs FS) error {
+		return r.createUnique(&folder, func(target string) error { return fs.Mkdir(target, 0o755) })
+	}); err != nil {
+		return skipToNil(err)
+	}
+	r.rememberFolder(folder)
+	r.advance(folder, 1, 0)
+
+	pairs := make([]pair, 0, len(r.job.spec.sources))
+	for _, src := range r.job.spec.sources {
+		pairs = append(pairs, pair{src: src, dst: filepath.Join(folder, filepath.Base(src))})
+	}
+	return r.transferPairs(pairs, true)
+}
+
+func (r *runner) rememberFolder(folder string) {
+	r.job.mu.Lock()
+	r.job.record = &undoRecord{kind: KindNewFolderWith, dest: folder}
+	r.job.mu.Unlock()
+	r.noteCreated(folder, true)
+}
+
+func (r *runner) dissolveFolder() error {
+	pairs := r.job.spec.pairs
+	r.setTotals(len(pairs)+1, 0, false)
+
+	for _, p := range pairs {
+		if r.job.closed() {
+			return nil
+		}
+		if !r.guarded(p.src) {
+			return errors.New("changed since the operation it would replay: " + p.src)
+		}
+		_, err := r.transfer(p.src, p.dst, true)
+		switch {
+		case errors.Is(err, errSkipped):
+			continue
+		case errors.Is(err, context.Canceled):
+			return nil
+		case err != nil:
+			return err
+		}
+	}
+
+	folder := r.job.spec.dest
+	if err := r.retry(folder, func(fs FS) error { return fs.Remove(folder) }); err != nil {
+		return skipToNil(err)
+	}
+	r.advance(folder, 1, 0)
+	return nil
+}
+
+func (r *runner) pasteImage() error {
+	path := r.target()
+	data := r.job.spec.data
+	r.setTotals(1, int64(len(data)), false)
+
+	tmp := r.tempPath(path)
+	err := r.retryLocal(path, func() error {
+		if err := os.WriteFile(tmp, data, 0o644); err != nil {
+			return err
+		}
+		return r.createUnique(&path, func(target string) error { return renameNoReplace(tmp, target) })
+	})
+	if err != nil {
+		os.Remove(tmp)
+		return skipToNil(err)
+	}
+	r.created(path, false)
+	r.advance(path, 1, int64(len(data)))
+	return nil
+}
+
+func imageExt(mime string) string {
+	switch mime {
+	case "image/png":
+		return ".png"
+	case "image/jpeg":
+		return ".jpg"
+	case "image/webp":
+		return ".webp"
+	case "image/svg+xml":
+		return ".svg"
+	case "image/tiff":
+		return ".tiff"
+	}
+	subtype := strings.TrimPrefix(mime, "image/")
+	subtype, _, _ = strings.Cut(subtype, "+")
+	if subtype == "" || strings.ContainsAny(subtype, "/\x00") {
+		return ".png"
+	}
+	return "." + subtype
 }
 
 func create(fs FS, path string) error {
@@ -187,7 +295,7 @@ func (r *runner) deleteAll() error {
 			return nil
 		}
 		if !r.guarded(path) {
-			return errors.New("changed since the operation it would undo: " + path)
+			return errors.New("changed since the operation it would replay: " + path)
 		}
 		err := r.retry(path, func(fs FS) error { return fs.RemoveAll(path) })
 		switch {
@@ -208,7 +316,7 @@ func (r *runner) deleteAll() error {
 // guarded holds an undo back when the file it would remove or move is no
 // longer the one the original operation produced.
 func (r *runner) guarded(path string) bool {
-	if !r.job.spec.undo {
+	if r.job.spec.replay == replayNone {
 		return true
 	}
 	for i, p := range r.job.spec.pairs {

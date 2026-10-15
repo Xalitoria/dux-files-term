@@ -15,11 +15,14 @@ var copyChunk = 256 << 10
 type outcome struct {
 	dst      string
 	undoable bool
+	dir      bool
 }
 
 func (r *runner) transferAll(move bool) error {
-	pairs := r.targets()
+	return r.transferPairs(r.targets(), move)
+}
 
+func (r *runner) transferPairs(pairs []pair, move bool) error {
 	var needScan []string
 	for _, p := range pairs {
 		if move && sameDevice(p.src, filepath.Dir(p.dst)) {
@@ -41,7 +44,7 @@ func (r *runner) transferAll(move bool) error {
 			return nil
 		}
 		if !r.guarded(p.src) {
-			return errors.New("changed since the operation it would undo: " + p.src)
+			return errors.New("changed since the operation it would replay: " + p.src)
 		}
 		done, err := r.transfer(p.src, p.dst, move)
 		switch {
@@ -53,6 +56,9 @@ func (r *runner) transferAll(move bool) error {
 			return err
 		case done.undoable:
 			r.remember(inverseOf(move), done.dst, p.src)
+		}
+		if r.job.spec.kind == KindDuplicate && done.dst != "" {
+			r.noteCreated(done.dst, done.dir)
 		}
 	}
 	return nil
@@ -79,7 +85,7 @@ func (r *runner) transfer(src, dst string, move bool) (outcome, error) {
 
 	undoable := !res.merge && !res.replaced
 	if move && !res.merge && r.renameInto(src, dst, info) {
-		return outcome{dst: dst, undoable: undoable}, nil
+		return outcome{dst: dst, undoable: undoable, dir: info.IsDir()}, nil
 	}
 	if err := r.clearTarget(dst, res, info.IsDir()); err != nil {
 		return outcome{}, err
@@ -87,7 +93,7 @@ func (r *runner) transfer(src, dst string, move bool) (outcome, error) {
 
 	switch {
 	case info.IsDir():
-		return outcome{dst: dst, undoable: undoable}, r.transferDir(src, dst, move, res.merge)
+		return outcome{dst: dst, undoable: undoable, dir: true}, r.transferDir(src, dst, move, res.merge)
 	case info.Mode()&fs.ModeSymlink != 0:
 		return outcome{dst: dst, undoable: undoable}, r.transferLink(src, dst, move, res.unknown)
 	case info.Mode().IsRegular():

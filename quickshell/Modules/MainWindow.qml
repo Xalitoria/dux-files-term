@@ -61,6 +61,8 @@ FloatingWindow {
     readonly property bool sidebarFocused: isInside(surface.focusItem, dockedSidebar) || isInside(surface.focusItem, overlaySidebar)
     readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
 
+    Component.onDestruction: FileOpsService.forget(opScope)
+
     title: folderTitle(currentPath)
     implicitWidth: SessionData.windowWidth
     implicitHeight: SessionData.windowHeight
@@ -566,7 +568,11 @@ FloatingWindow {
         case "pasteInto":
         case "pasteLink":
         case "rename":
+        case "duplicate":
+        case "moveTo":
+        case "copyTo":
         case "newFolder":
+        case "newFolderWith":
         case "newDocument":
         case "compress":
         case "extract":
@@ -748,8 +754,23 @@ FloatingWindow {
         case "undo":
             FileOpsService.undo(opScope);
             return;
+        case "redo":
+            FileOpsService.redo(opScope);
+            return;
+        case "duplicate":
+            duplicateSelection();
+            return;
+        case "moveTo":
+            askTransferTo(selectedPaths(), true);
+            return;
+        case "copyTo":
+            askTransferTo(selectedPaths(), false);
+            return;
         case "newFolder":
             FileOpsService.newFolder(currentPath, I18n.tr("Untitled folder", "default name for a new folder"), opScope, true);
+            return;
+        case "newFolderWith":
+            newFolderWithSelection();
             return;
         case "properties":
             showProperties();
@@ -1077,6 +1098,67 @@ FloatingWindow {
         });
     }
 
+    function handleReplayed(job) {
+        if (job.cancelled)
+            return;
+        if (job.replay === "redo") {
+            if (job.undoable)
+                undoToast(I18n.tr("Redone", "toast after repeating an undone operation"));
+            return;
+        }
+        const message = I18n.tr("Undone", "toast after reversing an operation");
+        if (!job.redoable) {
+            ToastService.info(message);
+            return;
+        }
+        ToastService.show(message, {
+            "actionLabel": I18n.tr("Redo", "toast action repeating the operation that was just undone"),
+            "action": () => FileOpsService.redo(opScope)
+        });
+    }
+
+    function duplicateSelection() {
+        const paths = selectedPaths();
+        if (paths.length === 0 || activePane.resultsActive)
+            return;
+        FileOpsService.duplicate(paths, opScope);
+    }
+
+    function newFolderWithSelection() {
+        const paths = selectedPaths();
+        if (paths.length === 0 || activePane.resultsActive)
+            return;
+        FileOpsService.newFolderWith(paths, currentPath, I18n.tr("Untitled folder", "default name for a new folder"), opScope, true);
+    }
+
+    function askTransferTo(paths, move) {
+        if (paths.length === 0)
+            return;
+        transferPickerLoader.active = true;
+        transferPickerLoader.item.paths = paths;
+        transferPickerLoader.item.move = move;
+        transferPickerLoader.item.open();
+    }
+
+    function transferTo(dest) {
+        const picker = transferPickerLoader.item;
+        FileOpsService.lastDestination = dest;
+        if (picker.move) {
+            FileOpsService.move(picker.paths, dest, opScope);
+            return;
+        }
+        FileOpsService.copy(picker.paths, dest, opScope);
+    }
+
+    function revealNew(job) {
+        const paths = (job.created ?? []).map(entry => entry.path);
+        if (paths.length === 0)
+            return;
+        const dir = FilePaths.parentOf(paths[0]);
+        const pane = [activePane, primaryPane, secondPane].find(candidate => candidate?.path === dir && !candidate.resultsActive);
+        pane?.reveal(paths);
+    }
+
     function openWithCurrent() {
         const entry = firstSelected();
         if (!entry)
@@ -1250,8 +1332,11 @@ FloatingWindow {
 
     function pasteInto(dest, asLink) {
         ClipboardService.read(result => {
-            if (result.paths.length === 0)
+            if (result.paths.length === 0) {
+                if (!asLink)
+                    FileOpsService.pasteImage(dest, I18n.tr("Pasted image", "file name for an image pasted from the clipboard"), window.opScope);
                 return;
+            }
             if (asLink) {
                 FileOpsService.link(result.paths, dest, window.opScope);
                 return;
@@ -1409,6 +1494,10 @@ FloatingWindow {
             return I18n.tr("Renamed", "toast after renaming a file");
         case "compress":
             return I18n.tr("Archive created", "toast after compressing files");
+        case "duplicate":
+            return I18n.tr("Duplicated", "toast after copying files beside themselves");
+        case "pasteImage":
+            return I18n.tr("Image pasted", "toast after writing a clipboard image into the folder");
         default:
             return "";
         }
@@ -1489,14 +1578,23 @@ FloatingWindow {
             DevicesService.refreshUsage(true);
             if (job.scope !== window.opScope)
                 return;
+            if (job.replay) {
+                window.handleReplayed(job);
+                return;
+            }
             switch (job.kind) {
             case "extract":
                 window.handleExtracted(job);
                 return;
             case "newFolder":
             case "newFile":
+            case "newFolderWith":
                 window.revealCreated(job);
                 return;
+            case "duplicate":
+            case "pasteImage":
+                window.revealNew(job);
+                break;
             }
             if (job.cancelled || !job.undoable)
                 return;
@@ -2546,6 +2644,24 @@ FloatingWindow {
             mode: "openFolder"
             revealPath: window.currentPath
             onAccepted: paths => window.extractTo(archives, paths[0], "reveal")
+        }
+    }
+
+    LazyLoader {
+        id: transferPickerLoader
+
+        active: false
+
+        FileBrowserModal {
+            property var paths: []
+            property bool move: false
+
+            parentModal: window
+            browserTitle: move ? I18n.tr("Move to", "folder picker title for moving the selection") : I18n.tr("Copy to", "folder picker title for copying the selection")
+            bucket: "transfer"
+            mode: "openFolder"
+            revealPath: FileOpsService.lastDestination !== "" ? FileOpsService.lastDestination : window.currentPath
+            onAccepted: picked => window.transferTo(picked[0])
         }
     }
 

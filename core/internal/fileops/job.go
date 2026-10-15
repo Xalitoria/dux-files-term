@@ -39,6 +39,17 @@ const (
 	KindSetOwner       Kind = "setOwner"
 	KindCompress       Kind = "compress"
 	KindExtract        Kind = "extract"
+	KindDuplicate      Kind = "duplicate"
+	KindNewFolderWith  Kind = "newFolderWith"
+	KindPasteImage     Kind = "pasteImage"
+)
+
+type replay string
+
+const (
+	replayNone replay = ""
+	replayUndo replay = "undo"
+	replayRedo replay = "redo"
 )
 
 type Action string
@@ -110,6 +121,8 @@ type View struct {
 	Warnings       int             `json:"warnings"`
 	Cancelled      bool            `json:"cancelled"`
 	Undoable       bool            `json:"undoable"`
+	Redoable       bool            `json:"redoable"`
+	Replay         string          `json:"replay,omitempty"`
 	Created        []Created       `json:"created,omitempty"`
 	Error          string          `json:"error,omitempty"`
 	Code           string          `json:"code,omitempty"`
@@ -141,7 +154,30 @@ type spec struct {
 	pairs     []pair
 	guards    []guard
 	trashDir  string
-	undo      bool
+	data      []byte
+	replay    replay
+	origin    *spec
+	epoch     uint64
+}
+
+// asOrigin is what a redo replays after an undo: the request without its
+// replay state and without bytes that would otherwise sit in the stack.
+func (s spec) asOrigin() spec {
+	s.replay = replayNone
+	s.origin = nil
+	s.data = nil
+	s.epoch = 0
+	return s
+}
+
+func (s spec) replayable() bool {
+	switch {
+	case s.kind == KindPasteImage:
+		return false
+	case s.kind == KindCompress && s.password != "":
+		return false
+	}
+	return true
 }
 
 type job struct {
@@ -171,6 +207,7 @@ type job struct {
 	nextEvent int
 	pendingID string
 	terminal  bool
+	redoable  bool
 	lastTick  time.Time
 	rate      rateMeter
 }
@@ -196,7 +233,9 @@ func (j *job) viewLocked() View {
 		Skipped:        j.skipped,
 		Warnings:       j.warnings,
 		Cancelled:      j.cancelled,
-		Undoable:       j.record != nil && len(j.record.pairs) > 0 && !j.spec.undo,
+		Undoable:       !j.record.empty() && j.spec.replay != replayUndo,
+		Redoable:       j.redoable,
+		Replay:         string(j.spec.replay),
 		Created:        j.created,
 		Error:          j.errMsg,
 		Code:           j.errCode,

@@ -446,11 +446,32 @@ Singleton {
             "vim": ["u"]
         },
         {
+            "id": "redo",
+            "keys": ["Ctrl+Shift+Z", "Ctrl+Y"],
+            "group": "operations",
+            "scope": "window",
+            "label": I18n.tr("Redo", "toast action repeating the operation that was just undone")
+        },
+        {
+            "id": "duplicate",
+            "keys": ["Ctrl+Shift+D"],
+            "group": "operations",
+            "scope": "selection",
+            "label": I18n.tr("Duplicate", "context menu entry copying the selection beside itself")
+        },
+        {
             "id": "newFolder",
             "keys": ["Ctrl+Shift+N"],
             "group": "operations",
             "scope": "window",
             "label": I18n.tr("New folder", "new folder dialog header")
+        },
+        {
+            "id": "newFolderWith",
+            "keys": ["Ctrl+Alt+N"],
+            "group": "operations",
+            "scope": "selection",
+            "label": I18n.tr("New folder with selection", "context menu entry moving the selection into a new folder")
         },
         {
             "id": "copyPath",

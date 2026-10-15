@@ -36,6 +36,27 @@ type undoRecord struct {
 	pairs    []pair
 	guards   []guard
 	trashDir string
+	dest     string
+}
+
+func (r *undoRecord) empty() bool {
+	return r == nil || (len(r.pairs) == 0 && r.dest == "")
+}
+
+func (r *undoRecord) spec() *spec {
+	if r.empty() {
+		return nil
+	}
+	s := &spec{kind: r.kind, pairs: r.pairs, guards: r.guards, trashDir: r.trashDir, dest: r.dest}
+	for _, p := range r.pairs {
+		s.sources = append(s.sources, p.src)
+	}
+	return s
+}
+
+type undoEntry struct {
+	inverse spec
+	origin  *spec
 }
 
 type guard struct {
@@ -43,10 +64,15 @@ type guard struct {
 	mtimeMs int64
 }
 
+type ImageSource interface {
+	Image() (data []byte, mime string, ok bool)
+}
+
 type Manager struct {
 	bus      Publisher
 	stater   Stater
 	elevator Elevator
+	images   ImageSource
 	slots    chan struct{}
 
 	mu       sync.Mutex
@@ -54,7 +80,9 @@ type Manager struct {
 	active   map[string]*job
 	order    []string
 	finished []View
-	undo     map[string][]*undoRecord
+	undo     map[string][]undoEntry
+	redo     map[string][]spec
+	epoch    map[string]uint64
 }
 
 func NewManager(bus Publisher, stater Stater) *Manager {
@@ -63,14 +91,29 @@ func NewManager(bus Publisher, stater Stater) *Manager {
 		stater: stater,
 		slots:  make(chan struct{}, maxConcurrent),
 		active: map[string]*job{},
-		undo:   map[string][]*undoRecord{},
+		undo:   map[string][]undoEntry{},
+		redo:   map[string][]spec{},
+		epoch:  map[string]uint64{},
 	}
+}
+
+// Forget drops a scope's history, for a window that closed.
+func (m *Manager) Forget(scope string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.undo, scope)
+	delete(m.redo, scope)
+	delete(m.epoch, scope)
 }
 
 // SetElevator installs the "retry as administrator" route; call it before
 // the first job.
 func (m *Manager) SetElevator(e Elevator) {
 	m.elevator = e
+}
+
+func (m *Manager) SetImageSource(src ImageSource) {
+	m.images = src
 }
 
 type Elevation struct {
@@ -114,6 +157,10 @@ func (m *Manager) enqueue(s spec) *job {
 	}
 	m.active[j.id] = j
 	m.order = append(m.order, j.id)
+	if s.replay == replayNone {
+		delete(m.redo, s.scope)
+		m.epoch[s.scope]++
+	}
 	m.mu.Unlock()
 
 	m.publishJob(j.view())
@@ -153,16 +200,55 @@ func (j *job) finish(err error) {
 	default:
 		j.state = StateDone
 	}
-	record := j.record
+	entry, redo := j.outcome()
 	scope := j.spec.scope
-	view := j.viewLocked()
 	j.mu.Unlock()
 
-	if record != nil && len(record.pairs) > 0 && !j.spec.undo {
-		j.mgr.pushUndo(scope, record)
+	redoable := false
+	switch {
+	case entry != nil:
+		j.mgr.pushUndo(scope, *entry)
+	case redo != nil:
+		redoable = j.mgr.pushRedo(scope, *redo)
 	}
+
+	j.mu.Lock()
+	j.redoable = redoable
+	view := j.viewLocked()
+	j.mu.Unlock()
 	j.mgr.retire(view)
 	j.mgr.publishJob(view)
+}
+
+// outcome decides where a finished job's reversal goes. A plain job and a
+// redo push their inverse onto the undo stack. An undo pushes its own
+// inverse where the runner produced one (move, rename, trash, restore) and
+// otherwise, when it fully ran, the request it reversed, so a deleted copy
+// is copied again.
+func (j *job) outcome() (*undoEntry, *spec) {
+	inverse := j.record.spec()
+	if j.spec.replay != replayUndo {
+		if inverse == nil {
+			return nil, nil
+		}
+		entry := &undoEntry{inverse: *inverse}
+		if j.spec.replayable() {
+			origin := j.spec.asOrigin()
+			entry.origin = &origin
+		}
+		return entry, nil
+	}
+	clean := j.state == StateDone && !j.cancelled && j.skipped == 0
+	switch {
+	case inverse != nil:
+		inverse.epoch = j.spec.epoch
+		return nil, inverse
+	case clean && j.spec.origin != nil:
+		origin := *j.spec.origin
+		origin.epoch = j.spec.epoch
+		return nil, &origin
+	}
+	return nil, nil
 }
 
 func (m *Manager) retire(view View) {
@@ -182,50 +268,77 @@ func (m *Manager) retire(view View) {
 	}
 }
 
-func (m *Manager) pushUndo(scope string, record *undoRecord) {
+func (m *Manager) pushUndo(scope string, entry undoEntry) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	stack := append(m.undo[scope], record)
-	if len(stack) > undoCap {
-		stack = stack[len(stack)-undoCap:]
-	}
-	m.undo[scope] = stack
+	m.undo[scope] = capped(append(m.undo[scope], entry))
 }
 
-func (m *Manager) popUndo(scope string) *undoRecord {
+// pushRedo drops an undo's redo when a newer operation ran in the scope
+// while the undo was still working, so history stays linear.
+func (m *Manager) pushRedo(scope string, s spec) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	stack := m.undo[scope]
+	if s.epoch != m.epoch[scope] {
+		return false
+	}
+	m.redo[scope] = capped(append(m.redo[scope], s))
+	return true
+}
+
+func capped[T any](stack []T) []T {
+	if len(stack) <= undoCap {
+		return stack
+	}
+	drop := len(stack) - undoCap
+	clear(stack[:drop])
+	return stack[drop:]
+}
+
+func pop[T any](stacks map[string][]T, scope string) (T, bool) {
+	stack := stacks[scope]
 	if len(stack) == 0 {
-		delete(m.undo, scope)
-		return nil
+		delete(stacks, scope)
+		var none T
+		return none, false
 	}
-	record := stack[len(stack)-1]
+	top := stack[len(stack)-1]
+	clear(stack[len(stack)-1:])
 	if len(stack) == 1 {
-		delete(m.undo, scope)
-		return record
+		delete(stacks, scope)
+		return top, true
 	}
-	m.undo[scope] = stack[:len(stack)-1]
-	return record
+	stacks[scope] = stack[:len(stack)-1]
+	return top, true
 }
 
 func (m *Manager) Undo(scope string) (View, error) {
-	record := m.popUndo(scope)
-	if record == nil {
+	m.mu.Lock()
+	entry, ok := pop(m.undo, scope)
+	epoch := m.epoch[scope]
+	m.mu.Unlock()
+	if !ok {
 		return View{}, errors.New("nothing to undo")
 	}
 
-	s := spec{
-		kind:     record.kind,
-		scope:    scope,
-		pairs:    record.pairs,
-		guards:   record.guards,
-		trashDir: record.trashDir,
-		undo:     true,
+	s := entry.inverse
+	s.scope = scope
+	s.replay = replayUndo
+	s.origin = entry.origin
+	s.epoch = epoch
+	return m.enqueue(s).view(), nil
+}
+
+func (m *Manager) Redo(scope string) (View, error) {
+	m.mu.Lock()
+	s, ok := pop(m.redo, scope)
+	m.mu.Unlock()
+	if !ok {
+		return View{}, errors.New("nothing to redo")
 	}
-	for _, p := range record.pairs {
-		s.sources = append(s.sources, p.src)
-	}
+
+	s.scope = scope
+	s.replay = replayRedo
 	return m.enqueue(s).view(), nil
 }
 

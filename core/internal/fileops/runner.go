@@ -68,6 +68,12 @@ func execute(j *job) error {
 		return r.compress()
 	case KindExtract:
 		return r.extract()
+	case KindDuplicate:
+		return r.transferAll(false)
+	case KindNewFolderWith:
+		return r.newFolderWith()
+	case KindPasteImage:
+		return r.pasteImage()
 	}
 	return errors.New("unknown operation: " + string(j.spec.kind))
 }
@@ -76,13 +82,14 @@ func (r *runner) remember(kind Kind, from, to string) {
 	r.rememberPair(kind, pair{src: from, dst: to}, guardOf(from))
 }
 
+// rememberPair keeps the first kind a job records, so a composite job owns
+// its inverse even where the steps it reuses would record their own.
 func (r *runner) rememberPair(kind Kind, p pair, g guard) {
 	r.job.mu.Lock()
 	defer r.job.mu.Unlock()
 	if r.job.record == nil {
-		r.job.record = &undoRecord{}
+		r.job.record = &undoRecord{kind: kind}
 	}
-	r.job.record.kind = kind
 	r.job.record.pairs = append(r.job.record.pairs, p)
 	r.job.record.guards = append(r.job.record.guards, g)
 }

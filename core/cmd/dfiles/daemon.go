@@ -110,6 +110,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 	}
 
 	clipboardService := clipboard.NewService()
+	opsManager.SetImageSource(clipboardService)
 	searchService := search.NewService(bus, fileService)
 	bookmarkStore := bookmarks.New(bus, config, filepath.Join(filepath.Dir(config), "gtk-3.0", "bookmarks"))
 	if err := bookmarkStore.Start(); err != nil {

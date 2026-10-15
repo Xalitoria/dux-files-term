@@ -13,6 +13,7 @@ Singleton {
     readonly property bool connected: transport.connected
 
     property var jobs: []
+    property string lastDestination: ""
 
     readonly property int activeCount: jobs.filter(job => job.state !== "done" && job.state !== "failed").length
 
@@ -194,6 +195,43 @@ Singleton {
 
     function undo(scope) {
         _start("files.op.undo", {
+            "scope": scope || ""
+        });
+    }
+
+    function forget(scope) {
+        transport.sendRequest("files.op.forget", {
+            "scope": scope || ""
+        }, null);
+    }
+
+    function redo(scope) {
+        _start("files.op.redo", {
+            "scope": scope || ""
+        });
+    }
+
+    function duplicate(paths, scope) {
+        _start("files.op.duplicate", {
+            "paths": paths,
+            "scope": scope || ""
+        });
+    }
+
+    function newFolderWith(paths, dir, name, scope, unique) {
+        _start("files.op.newFolderWith", {
+            "paths": paths,
+            "path": dir,
+            "name": name,
+            "unique": unique === true,
+            "scope": scope || ""
+        });
+    }
+
+    function pasteImage(dir, name, scope) {
+        _start("files.op.pasteImage", {
+            "path": dir,
+            "name": name,
             "scope": scope || ""
         });
     }

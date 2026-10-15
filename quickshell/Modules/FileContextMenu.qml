@@ -118,6 +118,18 @@ FileMenu {
             "enabled": selectionCount > 0
         },
         {
+            "id": "moveTo",
+            "icon": "drive_file_move",
+            "label": I18n.tr("Move to…", "context menu entry moving the selection into a chosen folder"),
+            "enabled": selectionCount > 0
+        },
+        {
+            "id": "copyTo",
+            "icon": "file_copy",
+            "label": I18n.tr("Copy to…", "context menu entry copying the selection into a chosen folder"),
+            "enabled": selectionCount > 0
+        },
+        {
             "id": "pasteInto",
             "icon": "content_paste",
             "label": I18n.tr("Paste into folder", "context menu entry pasting the clipboard into the selected folder"),
@@ -128,6 +140,20 @@ FileMenu {
             "icon": "edit",
             "label": I18n.tr("Rename", "rename dialog header"),
             "enabled": selectionCount === 1
+        },
+        {
+            "id": "duplicate",
+            "icon": "difference",
+            "label": I18n.tr("Duplicate", "context menu entry copying the selection beside itself"),
+            "enabled": selectionCount > 0,
+            "visible": !inResults
+        },
+        {
+            "id": "newFolderWith",
+            "icon": "create_new_folder",
+            "label": I18n.tr("New folder with selection", "context menu entry moving the selection into a new folder"),
+            "enabled": selectionCount > 1,
+            "visible": selectionCount > 1 && !inResults
         },
         {
             "id": "separator"
