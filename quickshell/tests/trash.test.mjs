@@ -7,8 +7,10 @@ const trashModel = source("../Modules/TrashModel.qml");
 const mainWindow = source("../Modules/MainWindow.qml");
 
 function modelContext() {
-    const ctx = vm.createContext({});
-    for (const name of ["sorted", "matches", "syncInto"])
+    const ctx = vm.createContext({ NameFilter: {} });
+    vm.runInContext(source("../DCommon/FileBrowser/NameFilter.js").replace(/^\.pragma.*$/gm, ""), ctx);
+    Object.assign(ctx.NameFilter, { compile: ctx.compile, entryMatches: ctx.entryMatches });
+    for (const name of ["sorted", "filtered", "syncInto"])
         lift(trashModel, name, ctx);
     return ctx;
 }
@@ -56,9 +58,11 @@ test("newest deleted comes first and ties fall back to the name", () => {
 
 test("the filter matches the original name", () => {
     const ctx = modelContext();
-    assert.equal(ctx.matches(item("Report.pdf", 1), "rep"), true);
-    assert.equal(ctx.matches(item("Report.pdf", 1), "zzz"), false);
-    assert.equal(ctx.matches(item("Report.pdf", 1), ""), true);
+    const rows = [item("Report.pdf", 1), item("notes.txt", 2)];
+    assert.deepEqual(ctx.filtered(rows, "rep").map(row => row.name), ["Report.pdf"]);
+    assert.deepEqual(ctx.filtered(rows, "*.txt").map(row => row.name), ["notes.txt"]);
+    assert.deepEqual(ctx.filtered(rows, "zzz"), []);
+    assert.deepEqual(ctx.filtered(rows, ""), rows);
 });
 
 test("a refresh keeps the rows that stayed and lands on the new order", () => {

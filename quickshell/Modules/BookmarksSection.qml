@@ -40,6 +40,7 @@ FilePlaceSection {
             onClicked: section.navigateRequested(modelData.path)
             onMiddleClicked: section.tabRequested(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
+            onSpringLoaded: section.navigateRequested(modelData.path)
         }
     }
 
@@ -52,6 +53,7 @@ FilePlaceSection {
         tooltipText: TrashService.count > 0 ? FileFormat.count(TrashService.count) : I18n.tr("Trash is empty", "trash view placeholder and sidebar tooltip when nothing is trashed")
         selected: TrashService.filesPath === section.currentPath
         dropPath: TrashService.filesPath
+        springLoad: false
         onClicked: section.navigateRequested(TrashService.filesPath)
         onMiddleClicked: section.tabRequested(TrashService.filesPath)
         onDropped: drop => section.dropRequested(TrashService.filesPath, drop)
@@ -94,6 +96,7 @@ FilePlaceSection {
             onMiddleClicked: section.tabRequested(modelData.path)
             onActionTriggered: BookmarksService.remove(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
+            onSpringLoaded: section.navigateRequested(modelData.path)
 
             Behavior on y {
                 enabled: reorderList.animateLayout && !row.dragging && Theme.animationsEnabled

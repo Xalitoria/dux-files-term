@@ -418,9 +418,22 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Vim keys", "toggle label for vim style navigation")
-                    description: I18n.tr("h j k l move, / searches and letters run commands instead of jumping to a name.", "vim keys toggle description")
+                    description: I18n.tr("h j k l move, / searches and letters run commands instead of jumping to or filtering names.", "vim keys toggle description")
                     checked: SettingsData.vimKeys
                     onToggled: checked => SettingsData.vimKeys = checked
+                }
+
+                SettingsButtonGroupRow {
+                    text: I18n.tr("Typing in the file list", "setting label choosing what typed letters do in the file list")
+                    description: I18n.tr("Jump to the first name starting with what you type, or filter the folder through the search field.", "typing in the file list setting description")
+                    model: [I18n.tr("Jump to name", "typing in the file list option"), I18n.tr("Filter", "typing in the file list option")]
+                    currentIndex: SettingsData.listTyping === "filter" ? 1 : 0
+                    enabled: !SettingsData.vimKeys
+                    onSelectionChanged: (index, selected) => {
+                        if (!selected)
+                            return;
+                        SettingsData.listTyping = index === 1 ? "filter" : "jump";
+                    }
                 }
 
                 SettingsRow {

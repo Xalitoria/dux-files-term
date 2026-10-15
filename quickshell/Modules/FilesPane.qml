@@ -53,6 +53,8 @@ FocusScope {
     signal locationRequested(var location)
     signal restoreRequested
     signal emptyTrashRequested
+    signal filterRequested(string text)
+    signal filterFocusRequested
 
     function navigate(target) {
         closeSearch();
@@ -323,6 +325,7 @@ FocusScope {
         nameFilter: pane.nameFilter
         singleClickActivates: SettingsData.clickToOpen === "single"
         typeAheadEnabled: !SettingsData.vimKeys
+        typeAheadMode: SettingsData.listTyping
         countFolders: SettingsData.folderCounts
         dirsFirst: SettingsData.foldersFirst
         thumbnailsEnabled: SettingsData.thumbnails
@@ -361,6 +364,8 @@ FocusScope {
         onPathMenuRequested: (target, pointX, pointY) => pane.pathMenuRequested(target, pointX, pointY)
         onLocationRequested: location => pane.locationRequested(location)
         onLocationCancelled: pane.connectRequest++
+        onFilterRequested: text => pane.filterRequested(text)
+        onFilterFocusRequested: pane.filterFocusRequested()
     }
 
     SearchResults {
@@ -415,10 +420,13 @@ FocusScope {
             nameFilter: pane.nameFilter
             singleClickActivates: SettingsData.clickToOpen === "single"
             typeAheadEnabled: !SettingsData.vimKeys
+            typeAheadMode: SettingsData.listTyping
             countFolders: SettingsData.folderCounts
             thumbnailsEnabled: SettingsData.thumbnails
             thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
             outlined: pane.showActiveOutline && pane.active
+            onFilterRequested: text => pane.filterRequested(text)
+            onFilterFocusRequested: pane.filterFocusRequested()
             onActivateRequested: entry => pane.activateRequested(entry)
             onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.itemMenuRequested(index, pointX, pointY, modifiers)
             onBackgroundMenuRequested: (pointX, pointY) => pane.backgroundMenuRequested(pointX, pointY)

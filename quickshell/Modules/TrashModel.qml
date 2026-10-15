@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import qs.Services
+import "../DCommon/FileBrowser/NameFilter.js" as NameFilter
 
 QtObject {
     id: root
@@ -64,7 +65,7 @@ QtObject {
             root.errorCode = result.code ?? "";
             root._all = root.sorted(Array.from(result.entries || []), root.sortKey, root.sortDescending);
             root.total = root._all.length;
-            root._shown = root.syncInto(root.entries, root._shown, root._all.filter(entry => root.matches(entry, root.nameFilter)));
+            root._shown = root.syncInto(root.entries, root._shown, root.filtered(root._all, root.nameFilter));
             root._index();
             root.listed();
         });
@@ -131,11 +132,11 @@ QtObject {
         return items.slice().sort((a, b) => direction * compare(a, b) || byName(a, b));
     }
 
-    function matches(entry, filter) {
+    function filtered(entries, filter) {
         if (filter === "")
-            return true;
-        const needle = filter.toLowerCase();
-        return entry.name.toLowerCase().includes(needle) || (entry.displayName ?? "").toLowerCase().includes(needle);
+            return entries.slice();
+        const matcher = NameFilter.compile(filter);
+        return entries.filter(entry => NameFilter.entryMatches(matcher, entry));
     }
 
     function syncInto(list, shown, next) {
@@ -173,7 +174,7 @@ QtObject {
     }
 
     function _refilter() {
-        _shown = _all.filter(entry => matches(entry, nameFilter));
+        _shown = filtered(_all, nameFilter);
         entries.clear();
         entries.append(_shown);
         _index();

@@ -256,22 +256,7 @@ FloatingWindow {
     }
 
     function closeTab(index) {
-        if (tabs.length <= 1)
-            return;
-        captureTabs();
-        closedTabs = closedTabs.concat([
-            {
-                "index": index,
-                "state": tabs[index]
-            }
-        ]).slice(-FilesMetrics.closedTabHistory);
-        const next = tabs.slice();
-        next.splice(index, 1);
-        const target = index < currentTab ? currentTab - 1 : Math.min(currentTab, next.length - 1);
-        tabs = next;
-        currentTab = target;
-        applyTab(target);
-        persistTabs();
+        closeTabsAt([index], index);
     }
 
     function cycleTab(step) {
@@ -294,6 +279,76 @@ FloatingWindow {
         currentTab = index;
         applyTab(index);
         persistTabs();
+    }
+
+    function moveTab(from, to) {
+        if (from === to || from < 0 || to < 0 || from >= tabs.length || to >= tabs.length)
+            return;
+        captureTabs();
+        const current = tabs[currentTab];
+        const next = tabs.slice();
+        const moved = next.splice(from, 1)[0];
+        next.splice(to, 0, moved);
+        tabs = next;
+        currentTab = next.indexOf(current);
+        persistTabs();
+    }
+
+    function closeTabsAt(indices, fallback) {
+        const closing = indices.filter(index => index >= 0 && index < tabs.length);
+        if (closing.length === 0 || closing.length >= tabs.length)
+            return;
+        captureTabs();
+        const current = tabs[currentTab];
+        closedTabs = closedTabs.concat(closing.slice().sort((a, b) => b - a).map(index => ({
+                    "index": index,
+                    "state": tabs[index]
+                }))).slice(-FilesMetrics.closedTabHistory);
+        const kept = tabs.filter((_, index) => !closing.includes(index));
+        tabs = kept;
+        const index = kept.indexOf(current);
+        if (index >= 0) {
+            currentTab = index;
+            persistTabs();
+            return;
+        }
+        currentTab = Math.max(0, Math.min(fallback, kept.length - 1));
+        applyTab(currentTab);
+        persistTabs();
+    }
+
+    function closeOtherTabs(index) {
+        closeTabsAt(tabs.map((_, other) => other).filter(other => other !== index), 0);
+    }
+
+    function closeTabsToRight(index) {
+        closeTabsAt(tabs.map((_, other) => other).filter(other => other > index), index);
+    }
+
+    function duplicateTab(index) {
+        if (!tabState(index))
+            return;
+        captureTabs();
+        const next = tabs.slice();
+        next.splice(index + 1, 0, JSON.parse(JSON.stringify(tabs[index])));
+        tabs = next;
+        currentTab = index + 1;
+        applyTab(currentTab);
+        persistTabs();
+    }
+
+    function dropOnTab(index, drop) {
+        const state = tabState(index);
+        const dest = index === currentTab ? activePane.path : (state?.panes?.[state.active ?? 0]?.path || state?.panes?.[0]?.path || "");
+        const paths = DragService.pathsFrom(drop);
+        if (dest === "" || paths.length === 0 || paths.includes(dest))
+            return;
+        applyDrop(paths, dest, DragService.overrideFor(drop.proposedAction));
+    }
+
+    function enterFilterResults() {
+        activePane.focusBody();
+        activePane.body.jumpTo(0, Qt.NoModifier);
     }
 
     function folderTitle(path) {
@@ -559,6 +614,12 @@ FloatingWindow {
             return;
         case "reopenTab":
             reopenTab();
+            return;
+        case "moveTabLeft":
+            moveTab(currentTab, currentTab - 1);
+            return;
+        case "moveTabRight":
+            moveTab(currentTab, currentTab + 1);
             return;
         case "home":
             openPath(Paths.strip(Paths.home), false);
@@ -1489,6 +1550,8 @@ FloatingWindow {
             onLocationRequested: location => window.openTypedLocation(splitPane, location)
             onRestoreRequested: window.runAction("restore")
             onEmptyTrashRequested: window.runAction("emptyTrash")
+            onFilterRequested: text => topbar.openFilter(text)
+            onFilterFocusRequested: topbar.focusFilter()
             onPathChanged: {
                 window.captureTabs();
                 if (!window.applyingTab)
@@ -1729,6 +1792,9 @@ FloatingWindow {
                 onTabClosed: index => window.closeTab(index)
                 onTabAdded: window.newTab("", false)
                 onTabDropHovered: index => window.selectTab(index)
+                onTabDropped: (index, drop) => window.dropOnTab(index, drop)
+                onTabMoved: (from, to) => window.moveTab(from, to)
+                onTabMenuRequested: (index, pointX, pointY) => tabMenu.present(index, tabRow, pointX, pointY)
             }
 
             FilesTopbar {
@@ -1757,6 +1823,7 @@ FloatingWindow {
                     window.activePane.focusBody();
                 }
                 onNavigateRequested: path => window.openRecentFolder(path)
+                onResultsRequested: window.enterFilterResults()
                 onSettingsRequested: window.openSettings()
                 onShortcutsRequested: window.runAction("shortcuts")
                 onSidebarToggled: window.toggleSidebar()
@@ -1817,6 +1884,8 @@ FloatingWindow {
                     onLocationRequested: location => window.openTypedLocation(primaryPane, location)
                     onRestoreRequested: window.runAction("restore")
                     onEmptyTrashRequested: window.runAction("emptyTrash")
+                    onFilterRequested: text => topbar.openFilter(text)
+                    onFilterFocusRequested: topbar.focusFilter()
                     onPathChanged: {
                         window.captureTabs();
                         if (!window.applyingTab)
@@ -2085,6 +2154,71 @@ FloatingWindow {
             onClicked: {
                 bookmarkMenu.close();
                 BookmarksService.remove(bookmarkMenu.path);
+            }
+        }
+    }
+
+    FileMenu {
+        id: tabMenu
+
+        property int index: -1
+
+        anchorItem: surface
+
+        function present(target, source, pointX, pointY) {
+            index = target;
+            const point = source.mapToItem(surface, pointX, pointY);
+            openAt(point.x, point.y);
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Duplicate tab", "tab context menu entry opening a copy of this tab beside it")
+            iconName: "tab_duplicate"
+            onClicked: {
+                tabMenu.close();
+                window.duplicateTab(tabMenu.index);
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Reopen the closed tab", "keyboard shortcut")
+            iconName: "history"
+            enabled: window.closedTabs.length > 0
+            onClicked: {
+                tabMenu.close();
+                window.reopenTab();
+            }
+        }
+
+        FileMenuDivider {}
+
+        FileMenuItem {
+            text: I18n.tr("Close tab", "tooltip on the button closing a tab")
+            iconName: "close"
+            enabled: window.tabs.length > 1
+            onClicked: {
+                tabMenu.close();
+                window.closeTab(tabMenu.index);
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Close other tabs", "tab context menu entry closing every tab but this one")
+            iconName: "tab_close"
+            enabled: window.tabs.length > 1
+            onClicked: {
+                tabMenu.close();
+                window.closeOtherTabs(tabMenu.index);
+            }
+        }
+
+        FileMenuItem {
+            text: I18n.tr("Close tabs to the right", "tab context menu entry closing the tabs after this one")
+            iconName: "tab_close_right"
+            enabled: tabMenu.index < window.tabs.length - 1
+            onClicked: {
+                tabMenu.close();
+                window.closeTabsToRight(tabMenu.index);
             }
         }
     }

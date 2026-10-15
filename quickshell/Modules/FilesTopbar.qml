@@ -88,10 +88,21 @@ Item {
     signal searchRequested(string query)
     signal searchCleared
     signal navigateRequested(string path)
+    signal resultsRequested
 
     function focusSearch() {
         search.forceActiveFocus();
         search.selectAll();
+    }
+
+    function openFilter(text) {
+        search.text = filterText + text;
+        focusFilter();
+    }
+
+    function focusFilter() {
+        search.forceActiveFocus();
+        search.cursorPosition = search.text.length;
     }
 
     function searchContains(x, y) {
@@ -415,9 +426,13 @@ Item {
             topbar.clearSearch();
             break;
         case Qt.Key_Down:
-            if (recentPopup.rows.length === 0)
+            if (recentPopup.rows.length > 0) {
+                recentPopup.move(1);
+                break;
+            }
+            if (topbar.filterText === "")
                 return;
-            recentPopup.move(1);
+            topbar.resultsRequested();
             break;
         case Qt.Key_Up:
             if (recentPopup.rows.length === 0)

@@ -9,15 +9,112 @@ Item {
 
     property var tabs: []
     property int currentIndex: 0
+    property int draggingIndex: -1
+    property var order: []
+    property var positions: []
+    property real dragX: 0
+    property real pressOffset: 0
 
     signal tabSelected(int index)
     signal tabClosed(int index)
     signal tabAdded
     signal tabDropHovered(int index)
+    signal tabDropped(int index, var drop)
+    signal tabMoved(int from, int to)
+    signal tabMenuRequested(int index, real pointX, real pointY)
 
     implicitHeight: FilesMetrics.tabHeight
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
+
+    function identityOrder() {
+        return Array.from({
+            "length": tabRepeater.count
+        }, (_, index) => index);
+    }
+
+    function layout() {
+        let cursor = 0;
+        const next = [];
+        for (const index of draggingIndex >= 0 ? order : identityOrder()) {
+            const item = tabRepeater.itemAt(index);
+            if (!item)
+                continue;
+            next[index] = cursor;
+            cursor += item.width + FilesMetrics.tabSpacing;
+        }
+        positions = next;
+        strapline.width = Math.max(0, cursor - FilesMetrics.tabSpacing);
+    }
+
+    function reset() {
+        draggingIndex = -1;
+        order = identityOrder();
+        layout();
+    }
+
+    function physicalX(logical, width) {
+        return row.LayoutMirroring.enabled ? strapline.width - logical - width : logical;
+    }
+
+    function logicalX(physical) {
+        return row.LayoutMirroring.enabled ? strapline.width - physical : physical;
+    }
+
+    function begin(index, pointerX) {
+        const item = tabRepeater.itemAt(index);
+        if (!item || tabRepeater.count < 2)
+            return;
+        order = identityOrder();
+        draggingIndex = index;
+        pressOffset = pointerX - (positions[index] ?? 0);
+        dragX = positions[index] ?? 0;
+    }
+
+    function dragTo(pointerX) {
+        const item = tabRepeater.itemAt(draggingIndex);
+        if (!item)
+            return;
+        dragX = Math.max(0, Math.min(strapline.width - item.width, pointerX - pressOffset));
+        const from = order.indexOf(draggingIndex);
+        let target = from;
+        for (let slot = 0; slot < order.length; slot++) {
+            if (slot === from)
+                continue;
+            const other = tabRepeater.itemAt(order[slot]);
+            if (!other)
+                continue;
+            const middle = positions[order[slot]] + other.width / 2;
+            if (slot < from && dragX < middle)
+                target = Math.min(target, slot);
+            if (slot > from && dragX + item.width > middle)
+                target = Math.max(target, slot);
+        }
+        if (target === from)
+            return;
+        const next = order.slice();
+        next.splice(from, 1);
+        next.splice(target, 0, draggingIndex);
+        order = next;
+        layout();
+    }
+
+    function finish() {
+        const from = draggingIndex;
+        if (from < 0)
+            return;
+        const to = order.indexOf(from);
+        reset();
+        if (to !== from)
+            tabMoved(from, to);
+    }
+
+    Timer {
+        id: relayout
+
+        interval: 0
+        onTriggered: row.reset()
+    }
 
     DFlickable {
         id: strip
@@ -28,6 +125,7 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         wheelEnabled: false
+        interactive: false
         clip: true
         flickableDirection: Flickable.HorizontalFlick
         contentWidth: strapline.width
@@ -41,25 +139,72 @@ Item {
             }
         }
 
-        Row {
+        Item {
             id: strapline
 
             height: strip.height
-            spacing: FilesMetrics.tabSpacing
 
             Repeater {
-                model: row.tabs
+                id: tabRepeater
+
+                model: row.tabs.length
+                onItemAdded: relayout.restart()
+                onItemRemoved: relayout.restart()
 
                 FilesTab {
-                    required property int index
-                    required property var modelData
+                    id: tab
 
-                    label: modelData
+                    required property int index
+
+                    x: row.physicalX(dragging ? row.dragX : (row.positions[index] ?? 0), width)
+                    z: dragging ? 1 : 0
+                    dragging: row.draggingIndex === index
+                    label: row.tabs[index] ?? ""
                     current: index === row.currentIndex
                     closable: row.tabs.length > 1
+                    onWidthChanged: row.layout()
                     onClicked: row.tabSelected(index)
                     onCloseRequested: row.tabClosed(index)
                     onDropHovered: row.tabDropHovered(index)
+                    onDropped: drop => row.tabDropped(index, drop)
+                    onMenuRequested: (pointX, pointY) => {
+                        const point = tab.mapToItem(row, pointX, pointY);
+                        row.tabMenuRequested(index, point.x, point.y);
+                    }
+
+                    Behavior on x {
+                        enabled: row.draggingIndex >= 0 && !tab.dragging && Theme.animationsEnabled
+                        NumberAnimation {
+                            duration: Theme.expressiveDurations.expressiveFastSpatial
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Theme.expressiveCurves.expressiveFastSpatial
+                        }
+                    }
+
+                    DragHandler {
+                        target: null
+                        yAxis.enabled: false
+                        enabled: row.tabs.length > 1
+                        onGrabChanged: (transition, point) => {
+                            switch (transition) {
+                            case PointerDevice.GrabExclusive:
+                                row.begin(tab.index, row.logicalX(strapline.mapFromItem(null, point.scenePressPosition.x, 0).x));
+                                row.dragTo(row.logicalX(strapline.mapFromItem(null, point.scenePosition.x, 0).x));
+                                return;
+                            case PointerDevice.UngrabExclusive:
+                                row.finish();
+                                return;
+                            case PointerDevice.CancelGrabExclusive:
+                                row.reset();
+                                return;
+                            }
+                        }
+                        onCentroidChanged: {
+                            if (!active || !tab.dragging)
+                                return;
+                            row.dragTo(row.logicalX(strapline.mapFromItem(null, centroid.scenePosition.x, 0).x));
+                        }
+                    }
                 }
             }
         }

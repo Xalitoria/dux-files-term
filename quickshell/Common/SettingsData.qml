@@ -106,6 +106,8 @@ Singleton {
     property alias mountOnClick: adapter.mountOnClick
     property alias searchHidden: adapter.searchHidden
     property alias vimKeys: adapter.vimKeys
+    // "jump" moves to the first matching name, "filter" opens the pane filter
+    property alias listTyping: adapter.listTyping
     property alias gtkBookmarksOffered: adapter.gtkBookmarksOffered
 
     readonly property var locale: language !== "" ? Qt.locale(language) : Qt.locale()
@@ -180,6 +182,7 @@ Singleton {
             property bool mountOnClick: true
             property bool searchHidden: false
             property bool vimKeys: false
+            property string listTyping: "jump"
             property bool gtkBookmarksOffered: false
         }
     }

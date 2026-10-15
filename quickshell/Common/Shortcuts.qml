@@ -74,7 +74,7 @@ Singleton {
             "keys": ["A-Z"],
             "group": "navigation",
             "scope": "view",
-            "label": I18n.tr("Jump to the first name starting with what you type", "keyboard shortcut"),
+            "label": I18n.tr("Jump to a name or filter the folder with what you type", "keyboard shortcut"),
             "plainOnly": true
         },
         {
@@ -188,6 +188,20 @@ Singleton {
             "group": "navigation",
             "scope": "tabs",
             "label": I18n.tr("Go to that tab", "keyboard shortcut")
+        },
+        {
+            "id": "moveTabLeft",
+            "keys": ["Ctrl+Shift+PgUp"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Move the tab left", "keyboard shortcut moving the tab toward the start of the tab row")
+        },
+        {
+            "id": "moveTabRight",
+            "keys": ["Ctrl+Shift+PgDown"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Move the tab right", "keyboard shortcut moving the tab toward the end of the tab row")
         },
         {
             "id": "splitView",

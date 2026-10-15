@@ -139,6 +139,7 @@ FilePlaceSection {
                     section.tabRequested(modelData.mountPoint);
             }
             onDropped: drop => section.dropRequested(modelData.mountPoint, drop)
+            onSpringLoaded: section.navigateRequested(modelData.mountPoint)
             onActionTriggered: {
                 if (modelData.system || modelData.protected)
                     return;
@@ -185,6 +186,7 @@ FilePlaceSection {
             onClicked: section.navigateRequested(modelData.path)
             onMiddleClicked: section.tabRequested(modelData.path)
             onDropped: drop => section.dropRequested(modelData.path, drop)
+            onSpringLoaded: section.navigateRequested(modelData.path)
             onActionTriggered: {
                 section.busyId = modelData.id;
                 NetworkService.disconnect(modelData.id, () => section.busyId = "");

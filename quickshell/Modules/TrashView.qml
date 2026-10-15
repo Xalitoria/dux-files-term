@@ -5,6 +5,7 @@ import qs.Common
 import qs.Services
 import qs.DCommon.Widgets
 import qs.DCommon.FileBrowser
+import "../DCommon/FileBrowser/NameFilter.js" as NameFilter
 
 Rectangle {
     id: trashView
@@ -18,6 +19,7 @@ Rectangle {
     property string nameFilter: ""
     property bool singleClickActivates: false
     property bool typeAheadEnabled: true
+    property string typeAheadMode: "jump"
     property bool countFolders: true
     property bool thumbnailsEnabled: true
     property real thumbnailSizeLimit: -1
@@ -52,6 +54,8 @@ Rectangle {
     signal focusRequested
     signal backRequested
     signal forwardRequested
+    signal filterRequested(string text)
+    signal filterFocusRequested
 
     function focusBody() {
         viewBody.focusBody();
@@ -216,8 +220,12 @@ Rectangle {
         surfaceColor: trashView.color
         singleClickActivates: trashView.singleClickActivates
         typeAheadEnabled: trashView.typeAheadEnabled
+        typeAheadMode: trashView.typeAheadMode
         countFolders: trashView.countFolders
-        nameHighlight: trashView.nameFilter
+        nameHighlight: NameFilter.needle(trashView.nameFilter)
+        filtering: trashView.nameFilter !== ""
+        onFilterRequested: text => trashView.filterRequested(text)
+        onFilterFocusRequested: trashView.filterFocusRequested()
         onActivateRequested: entry => trashView.activateRequested(entry)
         onItemMenuRequested: (index, pointX, pointY, modifiers) => {
             trashView.focusRequested();

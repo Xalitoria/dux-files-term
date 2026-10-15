@@ -12,16 +12,19 @@ StyledButton {
     property string label: ""
     property bool current: false
     property bool closable: true
+    property bool dragging: false
 
     signal closeRequested
     signal dropHovered
+    signal dropped(var drop)
+    signal menuRequested(real pointX, real pointY)
 
     readonly property color contentColor: current ? Theme.primary : Theme.onSurfaceVariant
 
     implicitWidth: Math.max(FilesMetrics.tabMinWidth, Math.min(FilesMetrics.tabMaxWidth, title.implicitWidth + closeButton.width + Theme.spacingL))
     implicitHeight: FilesMetrics.tabHeight
     radius: Theme.cornerRadiusM
-    color: dropZone.containsDrag ? Theme.primaryContainer : "transparent"
+    color: dragging ? Theme.surfaceContainerHigh : dropZone.containsDrag ? Theme.primaryContainer : "transparent"
     Accessible.role: Accessible.PageTab
     Accessible.name: label
     Accessible.selected: current
@@ -37,7 +40,10 @@ StyledButton {
         anchors.fill: parent
         onEntered: hoverSwitch.restart()
         onExited: hoverSwitch.stop()
-        onDropped: hoverSwitch.stop()
+        onDropped: drop => {
+            hoverSwitch.stop();
+            tab.dropped(drop);
+        }
     }
 
     Timer {
@@ -53,6 +59,19 @@ StyledButton {
             if (tab.closable)
                 tab.closeRequested();
         }
+    }
+
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        onTapped: point => tab.menuRequested(point.position.x, point.position.y)
+    }
+
+    Keys.onPressed: event => {
+        const shifted = (event.modifiers & Qt.ShiftModifier) !== 0;
+        if (event.key !== Qt.Key_Menu && !(event.key === Qt.Key_F10 && shifted))
+            return;
+        event.accepted = true;
+        tab.menuRequested(tab.width / 2, tab.height / 2);
     }
 
     FocusRing {
