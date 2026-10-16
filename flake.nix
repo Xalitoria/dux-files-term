@@ -63,7 +63,7 @@
             pname = "dankfiles";
             src = ./.;
             modRoot = "core";
-            vendorHash = "sha256-6ZVwg8jV2xs/4aePzQBt550S+RUh93e1Qs/Xme6INlA=";
+            vendorHash = "sha256-k6Q1jY613kwGiDjzUNQptUeV3TBGNentrqrxijNJ+Ek=";
 
             subPackages = [ "cmd/dfiles" ];
 
