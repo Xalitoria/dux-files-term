@@ -126,8 +126,9 @@ func removedBefore(files []assocFile, mimeType, id string) bool {
 }
 
 // Associations lists every launchable handler for a mime type, most preferred
-// first. The type is resolved before its ancestors, so an exact registration
-// beats a parent type's default, which is the order gio produces.
+// first. The type is resolved before its ancestors, and within a type every
+// file's defaults come before any file's added associations, which is the
+// order gio produces.
 func (s *Service) Associations(mimeType string) []*Entry {
 	files := loadAssocFiles()
 	cache := loadMimeinfoCaches()
@@ -152,6 +153,8 @@ func (s *Service) Associations(mimeType string) []*Entry {
 			for _, id := range file.defaults[m] {
 				add(m, id, files[:i])
 			}
+		}
+		for i, file := range files {
 			for _, id := range file.added[m] {
 				add(m, id, files[:i])
 			}
@@ -195,7 +198,7 @@ func (s *Service) SetDefault(mimeType, desktopID string) error {
 
 	path := writePath()
 	original, _ := os.ReadFile(path)
-	updated := setDefaultLine(original, s.detector.db.Canonical(mimeType), desktopID)
+	updated := setGroupLine(original, groupDefaults, s.detector.db.Canonical(mimeType), desktopID)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
@@ -206,10 +209,10 @@ func safeIniField(s string) bool {
 	return s != "" && !strings.ContainsAny(s, "\n\r[]=")
 }
 
-// setDefaultLine replaces the key inside [Default Applications], leaving every
-// other line of the file byte for byte as it was.
-func setDefaultLine(original []byte, mimeType, desktopID string) []byte {
-	line := mimeType + "=" + desktopID
+// setGroupLine replaces one key inside a group, leaving every other line of
+// the file byte for byte as it was.
+func setGroupLine(original []byte, group, key, value string) []byte {
+	line := key + "=" + value
 	lines := strings.Split(strings.TrimRight(string(original), "\n"), "\n")
 	if len(lines) == 1 && lines[0] == "" {
 		lines = nil
@@ -221,7 +224,7 @@ func setDefaultLine(original []byte, mimeType, desktopID string) []byte {
 		if !strings.HasPrefix(trimmed, "[") || !strings.HasSuffix(trimmed, "]") {
 			continue
 		}
-		if trimmed == "["+groupDefaults+"]" {
+		if trimmed == "["+group+"]" {
 			start = i
 			continue
 		}
@@ -234,14 +237,14 @@ func setDefaultLine(original []byte, mimeType, desktopID string) []byte {
 		if len(lines) > 0 {
 			lines = append(lines, "")
 		}
-		return joinLines(append(lines, "["+groupDefaults+"]", line))
+		return joinLines(append(lines, "["+group+"]", line))
 	}
 	if end < 0 {
 		end = len(lines)
 	}
 
 	for i := start + 1; i < end; i++ {
-		if strings.HasPrefix(strings.TrimSpace(lines[i]), mimeType+"=") {
+		if strings.HasPrefix(strings.TrimSpace(lines[i]), key+"=") {
 			lines[i] = line
 			return joinLines(lines)
 		}

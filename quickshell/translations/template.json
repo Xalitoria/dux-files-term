@@ -28,6 +28,13 @@
     "comment": ""
   },
   {
+    "term": "%1 h %2 min left",
+    "translation": "",
+    "context": "time left for a file operation, in hours and minutes",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 has not been marked as trusted. Running it allows it to start any program.",
     "translation": "",
     "context": "untrusted desktop file dialog explanation",
@@ -42,6 +49,13 @@
     "comment": ""
   },
   {
+    "term": "%1 hidden",
+    "translation": "",
+    "context": "count of hidden items left out of a folder listing",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 is encrypted. Enter its passphrase to unlock it.",
     "translation": "",
     "context": "unlock dialog explanation",
@@ -49,9 +63,58 @@
     "comment": ""
   },
   {
+    "term": "%1 is password protected.",
+    "translation": "",
+    "context": "archive password dialog explanation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 items copied",
+    "translation": "",
+    "context": "clipboard indicator for copied items",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 items cut",
+    "translation": "",
+    "context": "clipboard indicator for cut items",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 matching “%2”",
     "translation": "",
     "context": "filter bar above a folder listing, count then the typed text",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 min left",
+    "translation": "",
+    "context": "time left for a file operation, in minutes",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 px",
+    "translation": "",
+    "context": "icon size option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 s left",
+    "translation": "",
+    "context": "time left for a file operation, in seconds",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 used · %2 free · %3 total",
+    "translation": "",
+    "context": "storage volume usage, free space and total capacity",
     "reference": "",
     "comment": ""
   },
@@ -70,9 +133,30 @@
     "comment": ""
   },
   {
+    "term": "%1/s",
+    "translation": "",
+    "context": "transfer speed, %1 is a size such as 12 MB",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "1 MB to 100 MB",
     "translation": "",
     "context": "search filter chip for medium files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "1 item copied",
+    "translation": "",
+    "context": "clipboard indicator for a single copied item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "1 item cut",
+    "translation": "",
+    "context": "clipboard indicator for a single cut item",
     "reference": "",
     "comment": ""
   },
@@ -252,6 +336,13 @@
     "comment": ""
   },
   {
+    "term": "Ask",
+    "translation": "",
+    "context": "drag label when the drop opens a copy, move or link menu",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Ask every time",
     "translation": "",
     "context": "drag default action option",
@@ -297,6 +388,13 @@
     "term": "Back",
     "translation": "",
     "context": "tooltip on the button going to the previous location",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Back to the files",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
@@ -371,6 +469,13 @@
     "comment": ""
   },
   {
+    "term": "Clear the clipboard",
+    "translation": "",
+    "context": "tooltip on the button dropping the copied or cut items",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Clear the selection",
     "translation": "",
     "context": "keyboard shortcut",
@@ -392,6 +497,13 @@
     "comment": ""
   },
   {
+    "term": "Close other tabs",
+    "translation": "",
+    "context": "tab context menu entry closing every tab but this one",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Close tab",
     "translation": "",
     "context": "tooltip on the button closing a tab",
@@ -399,9 +511,23 @@
     "comment": ""
   },
   {
+    "term": "Close tabs to the right",
+    "translation": "",
+    "context": "tab context menu entry closing the tabs after this one",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Color source",
     "translation": "",
     "context": "color source setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Column view",
+    "translation": "",
+    "context": "view mode showing folders side by side",
     "reference": "",
     "comment": ""
   },
@@ -497,6 +623,27 @@
     "comment": ""
   },
   {
+    "term": "Copy name",
+    "translation": "",
+    "context": "context menu entry copying the selected item names to the clipboard",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Copy to",
+    "translation": "",
+    "context": "folder picker title for copying the selection",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Copy to…",
+    "translation": "",
+    "context": "context menu entry copying the selection into a chosen folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Copying",
     "translation": "",
     "context": "file operation in progress",
@@ -507,6 +654,13 @@
     "term": "Could not read that file, expected a JSON color theme.",
     "translation": "",
     "context": "custom theme error when file is invalid",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Count items in folders",
+    "translation": "",
+    "context": "folder counts toggle label",
     "reference": "",
     "comment": ""
   },
@@ -525,7 +679,7 @@
     "comment": ""
   },
   {
-    "term": "Ctrl copies, Shift moves and Alt asks regardless.",
+    "term": "Ctrl copies and Alt asks regardless.",
     "translation": "",
     "context": "drag default action setting description",
     "reference": "",
@@ -535,6 +689,13 @@
     "term": "Ctrl+H still toggles them for the current window.",
     "translation": "",
     "context": "show hidden files setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Ctrl+Wheel or Ctrl and plus or minus resize the current window.",
+    "translation": "",
+    "context": "icon size setting description",
     "reference": "",
     "comment": ""
   },
@@ -577,6 +738,13 @@
     "term": "Default applications",
     "translation": "",
     "context": "capability row on the about page",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Default icon size",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
@@ -626,6 +794,13 @@
     "term": "Devices",
     "translation": "",
     "context": "sidebar section listing drives and volumes",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Disconnect",
+    "translation": "",
+    "context": "network mount action",
     "reference": "",
     "comment": ""
   },
@@ -700,6 +875,27 @@
     "comment": ""
   },
   {
+    "term": "Duplicate",
+    "translation": "",
+    "context": "context menu entry copying the selection beside itself",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Duplicate tab",
+    "translation": "",
+    "context": "tab context menu entry opening a copy of this tab beside it",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Duplicated",
+    "translation": "",
+    "context": "toast after copying files beside themselves",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Duration",
     "translation": "",
     "context": "animation duration slider label",
@@ -707,9 +903,30 @@
     "comment": ""
   },
   {
+    "term": "Eject",
+    "translation": "",
+    "context": "device action",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Empty Trash",
+    "translation": "",
+    "context": "action deleting everything in the trash",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Empty file",
     "translation": "",
     "context": "new document menu entry creating a blank file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Empty the trash?",
+    "translation": "",
+    "context": "confirmation header before deleting everything in the trash",
     "reference": "",
     "comment": ""
   },
@@ -742,9 +959,30 @@
     "comment": ""
   },
   {
+    "term": "Extract archives on open",
+    "translation": "",
+    "context": "setting label for opening archives",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Extract here",
     "translation": "",
     "context": "context menu entry unpacking the selected archives",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Extract to",
+    "translation": "",
+    "context": "folder picker title for unpacking archives",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Extract to…",
+    "translation": "",
+    "context": "context menu entry unpacking the selected archives into a chosen folder",
     "reference": "",
     "comment": ""
   },
@@ -756,9 +994,23 @@
     "comment": ""
   },
   {
+    "term": "Extracted to %1",
+    "translation": "",
+    "context": "toast after unpacking into another folder, %1 is the folder name",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "File operations",
     "translation": "",
     "context": "jobs popover header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "File system",
+    "translation": "",
+    "context": "storage volume containing the root directory",
     "reference": "",
     "comment": ""
   },
@@ -777,6 +1029,13 @@
     "comment": ""
   },
   {
+    "term": "Filter",
+    "translation": "",
+    "context": "typing in the file list option",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Finished",
     "translation": "",
     "context": "file operation completed",
@@ -791,9 +1050,37 @@
     "comment": ""
   },
   {
+    "term": "Focus the sidebar",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Folders",
     "translation": "",
     "context": "search filter chip for directories",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Folders before files",
+    "translation": "",
+    "context": "folders first toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Folders open in new tabs and files open in their applications.",
+    "translation": "",
+    "context": "explanation in the confirmation before opening many items",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Folders open in new tabs, archives are extracted and other files open in their applications.",
+    "translation": "",
+    "context": "explanation in the confirmation before opening many items, some of them archives",
     "reference": "",
     "comment": ""
   },
@@ -840,9 +1127,30 @@
     "comment": ""
   },
   {
+    "term": "Go to that tab",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Go to the home folder",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Go to the parent folder",
     "translation": "",
     "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Grid icon size",
+    "translation": "",
+    "context": "setting label for the grid view icon size",
     "reference": "",
     "comment": ""
   },
@@ -878,6 +1186,13 @@
     "term": "How new windows start and how folders open.",
     "translation": "",
     "context": "general settings section subtitle",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Image pasted",
+    "translation": "",
+    "context": "toast after writing a clipboard image into the folder",
     "reference": "",
     "comment": ""
   },
@@ -931,9 +1246,37 @@
     "comment": ""
   },
   {
-    "term": "Jump to the first name starting with what you type",
+    "term": "Items in the trash cannot be opened",
+    "translation": "",
+    "context": "toast when opening an item inside the trash",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Jump to a folder you visited",
     "translation": "",
     "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Jump to a name or filter the folder with what you type",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Jump to name",
+    "translation": "",
+    "context": "typing in the file list option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Jump to the first name starting with what you type, or filter the folder through the search field.",
+    "translation": "",
+    "context": "typing in the file list setting description",
     "reference": "",
     "comment": ""
   },
@@ -955,6 +1298,13 @@
     "term": "Keep running",
     "translation": "",
     "context": "close behavior button group option keeping the daemon warm",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Keyboard",
+    "translation": "",
+    "context": "general settings section label",
     "reference": "",
     "comment": ""
   },
@@ -1008,6 +1358,13 @@
     "comment": ""
   },
   {
+    "term": "List icon size",
+    "translation": "",
+    "context": "setting label for the list view icon size",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "List view",
     "translation": "",
     "context": "view mode showing one row per item",
@@ -1032,6 +1389,13 @@
     "term": "Locations opened from other applications get their own tab instead of replacing the current one.",
     "translation": "",
     "context": "setting description for external open requests",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Lock",
+    "translation": "",
+    "context": "device action",
     "reference": "",
     "comment": ""
   },
@@ -1078,6 +1442,13 @@
     "comment": ""
   },
   {
+    "term": "Mount",
+    "translation": "",
+    "context": "device action",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Mount and open the drive together. Off mounts it and leaves you where you are.",
     "translation": "",
     "context": "devices setting description",
@@ -1099,6 +1470,20 @@
     "comment": ""
   },
   {
+    "term": "Move the tab left",
+    "translation": "",
+    "context": "keyboard shortcut moving the tab toward the start of the tab row",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move the tab right",
+    "translation": "",
+    "context": "keyboard shortcut moving the tab toward the end of the tab row",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Move through the folder",
     "translation": "",
     "context": "keyboard shortcut",
@@ -1106,9 +1491,30 @@
     "comment": ""
   },
   {
+    "term": "Move through the sidebar",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move to",
+    "translation": "",
+    "context": "folder picker title for moving the selection",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Move to Trash",
     "translation": "",
     "context": "context menu entry trashing the selection",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move to…",
+    "translation": "",
+    "context": "context menu entry moving the selection into a chosen folder",
     "reference": "",
     "comment": ""
   },
@@ -1137,13 +1543,6 @@
     "term": "Moving to trash",
     "translation": "",
     "context": "file operation in progress",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "My Computer",
-    "translation": "",
-    "context": "sidebar entry for the drive the system runs from",
     "reference": "",
     "comment": ""
   },
@@ -1197,9 +1596,23 @@
     "comment": ""
   },
   {
+    "term": "New folder with selection",
+    "translation": "",
+    "context": "context menu entry moving the selection into a new folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "New tab",
     "translation": "",
     "context": "context menu entry opening a folder in a new tab | tooltip on the button opening a new tab",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "New window",
+    "translation": "",
+    "context": "menu entry opening another file manager window",
     "reference": "",
     "comment": ""
   },
@@ -1281,6 +1694,13 @@
     "comment": ""
   },
   {
+    "term": "Off lets the compositor decorate windows. Open windows update when reopened.",
+    "translation": "",
+    "context": "window title bars toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Offline",
     "translation": "",
     "context": "about page daemon status value",
@@ -1291,6 +1711,13 @@
     "term": "Open",
     "translation": "",
     "context": "context menu entry opening a file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open %1 items?",
+    "translation": "",
+    "context": "confirmation before opening many selected items at once",
     "reference": "",
     "comment": ""
   },
@@ -1316,6 +1743,13 @@
     "comment": ""
   },
   {
+    "term": "Open in new window",
+    "translation": "",
+    "context": "context menu entry opening a folder in another window",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open in terminal",
     "translation": "",
     "context": "context menu entry opening a terminal",
@@ -1337,6 +1771,13 @@
     "comment": ""
   },
   {
+    "term": "Open the bookmark menu",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open the containing folder",
     "translation": "",
     "context": "keyboard shortcut",
@@ -1345,6 +1786,13 @@
   },
   {
     "term": "Open the context menu",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open the place",
     "translation": "",
     "context": "keyboard shortcut",
     "reference": "",
@@ -1361,6 +1809,20 @@
     "term": "Open with",
     "translation": "",
     "context": "open with dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Opening an archive unpacks it into a folder beside it instead of launching another application.",
+    "translation": "",
+    "context": "setting description for opening archives",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Other applications",
+    "translation": "",
+    "context": "open with dialog section listing every remaining app",
     "reference": "",
     "comment": ""
   },
@@ -1435,6 +1897,13 @@
     "comment": ""
   },
   {
+    "term": "Password required",
+    "translation": "",
+    "context": "archive password dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Paste",
     "translation": "",
     "context": "context menu entry pasting the clipboard here",
@@ -1452,6 +1921,13 @@
     "term": "Paste into folder",
     "translation": "",
     "context": "context menu entry pasting the clipboard into the selected folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Pasted image",
+    "translation": "",
+    "context": "file name for an image pasted from the clipboard",
     "reference": "",
     "comment": ""
   },
@@ -1484,6 +1960,27 @@
     "comment": ""
   },
   {
+    "term": "Press ? or F1 in the main window for the full list.",
+    "translation": "",
+    "context": "keyboard shortcuts settings row description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Preview",
+    "translation": "",
+    "context": "view menu entry and shortcut showing or hiding the preview drawer",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Preview the next or previous selected item",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Previews for images, videos and PDFs, cached under the shared thumbnail folder.",
     "translation": "",
     "context": "thumbnails toggle description",
@@ -1505,16 +2002,16 @@
     "comment": ""
   },
   {
-    "term": "Protocol",
+    "term": "Protect with a password",
     "translation": "",
-    "context": "label for the network protocol picker",
+    "context": "compress dialog option encrypting the archive",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "Quick access",
+    "term": "Protocol",
     "translation": "",
-    "context": "header above the shortcuts on the home folder",
+    "context": "label for the network protocol picker",
     "reference": "",
     "comment": ""
   },
@@ -1554,9 +2051,37 @@
     "comment": ""
   },
   {
+    "term": "Recently used",
+    "translation": "",
+    "context": "open with dialog section listing apps picked before for this file type",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Recommended",
+    "translation": "",
+    "context": "open with dialog section listing apps registered for the file type",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Recursive searches also descend into dot folders.",
     "translation": "",
     "context": "search hidden files toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Redo",
+    "translation": "",
+    "context": "toast action repeating the operation that was just undone",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Redone",
+    "translation": "",
+    "context": "toast after repeating an undone operation",
     "reference": "",
     "comment": ""
   },
@@ -1596,6 +2121,13 @@
     "comment": ""
   },
   {
+    "term": "Remove the bookmark or eject the drive",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Rename",
     "translation": "",
     "context": "rename dialog header",
@@ -1603,9 +2135,23 @@
     "comment": ""
   },
   {
+    "term": "Rename the bookmark",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Renamed",
     "translation": "",
     "context": "toast after renaming a file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Reopen the closed tab",
+    "translation": "",
+    "context": "keyboard shortcut",
     "reference": "",
     "comment": ""
   },
@@ -1620,6 +2166,27 @@
     "term": "Resize icons",
     "translation": "",
     "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Resize the preview, or reset its width",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Restore",
+    "translation": "",
+    "context": "trash action returning items to where they were deleted from",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Restored",
+    "translation": "",
+    "context": "toast after restoring items from the trash",
     "reference": "",
     "comment": ""
   },
@@ -1708,6 +2275,13 @@
     "comment": ""
   },
   {
+    "term": "Scroll the preview",
+    "translation": "",
+    "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Search applications",
     "translation": "",
     "context": "open with dialog search placeholder",
@@ -1771,6 +2345,13 @@
     "comment": ""
   },
   {
+    "term": "Show",
+    "translation": "",
+    "context": "toast action revealing the extracted files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Show hidden files",
     "translation": "",
     "context": "menu entry listing dot files",
@@ -1795,6 +2376,13 @@
     "term": "Showing the first %1 results",
     "translation": "",
     "context": "search results header when the cap was hit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sidebar",
+    "translation": "",
+    "context": "keyboard shortcut group",
     "reference": "",
     "comment": ""
   },
@@ -1827,7 +2415,7 @@
     "comment": ""
   },
   {
-    "term": "Skip files larger than",
+    "term": "Skip images larger than",
     "translation": "",
     "context": "thumbnail size cap slider label",
     "reference": "",
@@ -1904,6 +2492,13 @@
     "comment": ""
   },
   {
+    "term": "Support Dank Linux",
+    "translation": "",
+    "context": "about page hero button, opens the Ko-fi donation page",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Switch pane",
     "translation": "",
     "context": "keyboard shortcut",
@@ -1956,6 +2551,13 @@
     "term": "The session bus refused the registration.",
     "translation": "",
     "context": "file manager registration setting description when requesting the name failed",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The size column shows how many entries a folder holds, one request per folder in view.",
+    "translation": "",
+    "context": "folder counts toggle description",
     "reference": "",
     "comment": ""
   },
@@ -2051,6 +2653,13 @@
     "comment": ""
   },
   {
+    "term": "Title bars",
+    "translation": "",
+    "context": "window title bars toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Today",
     "translation": "",
     "context": "search filter chip for files changed today",
@@ -2067,7 +2676,14 @@
   {
     "term": "Trash",
     "translation": "",
-    "context": "capability row on the about page",
+    "context": "capability row on the about page | trash view header and sidebar entry",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Trash is empty",
+    "translation": "",
+    "context": "trash view placeholder and sidebar tooltip when nothing is trashed",
     "reference": "",
     "comment": ""
   },
@@ -2100,6 +2716,13 @@
     "comment": ""
   },
   {
+    "term": "Typing in the file list",
+    "translation": "",
+    "context": "setting label choosing what typed letters do in the file list",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Typography",
     "translation": "",
     "context": "appearance settings section label",
@@ -2121,6 +2744,13 @@
     "comment": ""
   },
   {
+    "term": "Undone",
+    "translation": "",
+    "context": "toast after reversing an operation",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Unknown",
     "translation": "",
     "context": "capability status when the daemon did not report it",
@@ -2130,7 +2760,14 @@
   {
     "term": "Unlock",
     "translation": "",
-    "context": "unlock dialog header for an encrypted device",
+    "context": "Unlock | unlock dialog header for an encrypted device",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Unmount",
+    "translation": "",
+    "context": "device action",
     "reference": "",
     "comment": ""
   },
@@ -2205,6 +2842,13 @@
     "comment": ""
   },
   {
+    "term": "Vim keys",
+    "translation": "",
+    "context": "toggle label for vim style navigation",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Waiting",
     "translation": "",
     "context": "file operation is queued",
@@ -2240,6 +2884,13 @@
     "comment": ""
   },
   {
+    "term": "Windows",
+    "translation": "",
+    "context": "appearance settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Working",
     "translation": "",
     "context": "file operation in progress",
@@ -2254,9 +2905,30 @@
     "comment": ""
   },
   {
+    "term": "Wrong password",
+    "translation": "",
+    "context": "archive password dialog error after a failed attempt",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "dark",
     "translation": "",
     "context": "current scheme name in theme mode description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "h j k l move, / searches and letters run commands instead of jumping to a name.",
+    "translation": "",
+    "context": "vim keys toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "h j k l move, / searches and letters run commands instead of jumping to or filtering names.",
+    "translation": "",
+    "context": "vim keys toggle description",
     "reference": "",
     "comment": ""
   },

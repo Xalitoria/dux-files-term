@@ -23,6 +23,15 @@ type appView struct {
 	IsDefault   bool   `json:"isDefault"`
 }
 
+type sectionsResult struct {
+	MimeTypes   []string  `json:"mimeTypes"`
+	DefaultID   string    `json:"defaultId,omitempty"`
+	Mixed       bool      `json:"mixed"`
+	Recent      []appView `json:"recent"`
+	Recommended []appView `json:"recommended"`
+	Other       []appView `json:"other"`
+}
+
 type appsResult struct {
 	MimeType  string    `json:"mimeType,omitempty"`
 	DefaultID string    `json:"defaultId,omitempty"`
@@ -33,7 +42,7 @@ type appsResult struct {
 func Handles(method string) bool {
 	switch method {
 	case "files.open", "files.openWith", "files.openTerminal", "files.run",
-		"files.apps.forMime", "files.apps.all", "files.apps.setDefault", "files.apps.terminals":
+		"files.apps.forMime", "files.apps.sections", "files.apps.all", "files.apps.setDefault", "files.apps.terminals":
 		return true
 	}
 	return false
@@ -51,6 +60,8 @@ func (s *Service) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 		s.handleOpenTerminal(w, req)
 	case "files.apps.forMime":
 		s.handleForMime(w, req)
+	case "files.apps.sections":
+		s.handleSections(w, req)
 	case "files.apps.all":
 		w.Respond(req.ID, appsResult{Apps: viewsOf(s.Apps(), "")})
 	case "files.apps.setDefault":
@@ -86,7 +97,8 @@ func (s *Service) handleOpenWith(ctx context.Context, w *ipc.ConnWriter, req ipc
 		respondErr(w, req.ID, err)
 		return
 	}
-	w.Respond(req.ID, map[string]any{"opened": true})
+	recorded := (!Sandboxed() || writableConfig()) && params.BoolOpt(req.Params, "record", true) && s.RecordUseForPaths(paths, desktopID) == nil
+	w.Respond(req.ID, map[string]any{"opened": true, "recorded": recorded})
 }
 
 func (s *Service) handleRun(w *ipc.ConnWriter, req ipc.Request) {
@@ -135,6 +147,32 @@ func (s *Service) handleForMime(w *ipc.ConnWriter, req ipc.Request) {
 		MimeType:  mimeType,
 		DefaultID: defaultID,
 		Apps:      viewsOf(s.Associations(mimeType), defaultID),
+	})
+}
+
+func (s *Service) handleSections(w *ipc.ConnWriter, req ipc.Request) {
+	mimeTypes := params.StringSlice(req.Params, "mimes")
+	for _, path := range params.StringSlice(req.Params, "paths") {
+		resolved, err := s.MimeOf(path)
+		if err != nil {
+			respondErr(w, req.ID, err)
+			return
+		}
+		mimeTypes = append(mimeTypes, resolved)
+	}
+	if len(mimeTypes) == 0 {
+		respondCode(w, req.ID, "EINVAL", "files.apps.sections requires mimes or paths")
+		return
+	}
+
+	sections := s.Sections(mimeTypes)
+	w.Respond(req.ID, sectionsResult{
+		MimeTypes:   sections.MimeTypes,
+		DefaultID:   sections.DefaultID,
+		Mixed:       len(sections.MimeTypes) > 1,
+		Recent:      viewsOf(sections.Recent, sections.DefaultID),
+		Recommended: viewsOf(sections.Recommended, sections.DefaultID),
+		Other:       viewsOf(sections.Other, sections.DefaultID),
 	})
 }
 

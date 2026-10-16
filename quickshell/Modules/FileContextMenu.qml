@@ -79,10 +79,11 @@ FileMenu {
             "enabled": selectionCount > 0
         },
         {
-            "id": "openWith",
+            "id": "openWithMenu",
             "icon": "apps",
             "label": I18n.tr("Open with", "open with dialog header"),
-            "enabled": hasFile
+            "enabled": selectionCount > 0,
+            "submenu": true
         },
         {
             "id": "openInNewTab",
@@ -280,6 +281,13 @@ FileMenu {
             "label": I18n.tr("Open in terminal", "context menu entry opening a terminal"),
             "enabled": true,
             "visible": SandboxService.available("terminal")
+        },
+        {
+            "id": "openFolderWith",
+            "icon": "apps",
+            "label": I18n.tr("Open with", "open with dialog header"),
+            "enabled": true,
+            "submenu": true
         },
         {
             "id": "separator"

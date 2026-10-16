@@ -45,6 +45,15 @@ Singleton {
         _send("files.apps.forMime", params, callback);
     }
 
+    function sections(mimes, paths, callback) {
+        const params = {};
+        if (mimes && mimes.length > 0)
+            params.mimes = mimes;
+        else
+            params.paths = paths;
+        _send("files.apps.sections", params, callback);
+    }
+
     function allApps(callback) {
         _send("files.apps.all", {}, callback);
     }

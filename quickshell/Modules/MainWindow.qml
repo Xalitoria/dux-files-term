@@ -557,6 +557,8 @@ FloatingWindow {
         case "trash":
             return "deletePermanently";
         case "openWith":
+        case "openWithMenu":
+        case "openFolderWith":
         case "openContainingFolder":
         case "openInNewTab":
         case "openInNewWindow":
@@ -602,6 +604,12 @@ FloatingWindow {
             return;
         case "openWith":
             openWithCurrent();
+            return;
+        case "openWithMenu":
+            showOpenWithMenu([], selectedPaths(), itemMenu);
+            return;
+        case "openFolderWith":
+            showOpenWithMenu(["inode/directory"], [currentPath], backgroundMenu);
             return;
         case "openTerminal":
             openTerminalHere();
@@ -1160,10 +1168,10 @@ FloatingWindow {
     }
 
     function openWithCurrent() {
-        const entry = firstSelected();
-        if (!entry)
+        const paths = selectedPaths();
+        if (paths.length === 0)
             return;
-        openWithDialog.ask(entry.mime, selectedPaths());
+        openWithDialog.ask([], paths);
     }
 
     function openContainingFolder() {
@@ -1246,15 +1254,24 @@ FloatingWindow {
         backgroundMenu.openAt(point.x, point.y);
     }
 
-    function loadOpenWithMenu() {
-        openWithMenu.apps = [];
-        const entry = firstSelected();
-        if (!entry)
+    function showOpenWithMenu(mimes, paths, source) {
+        if (paths.length === 0)
             return;
-        AppsService.appsForMime(entry.mime, entry.path, response => {
-            if (response.error)
+        openWithMenu.mimes = mimes;
+        openWithMenu.paths = paths;
+        openWithMenu.apps = [];
+        itemMenu.close();
+        backgroundMenu.close();
+        openWithMenu.openAt(source.x, source.y);
+        const token = ++openWithMenu.requestSerial;
+        AppsService.sections(mimes, paths, response => {
+            if (response.error || token !== openWithMenu.requestSerial || !openWithMenu.visible)
                 return;
-            openWithMenu.apps = (response.apps || []).slice(0, 5);
+            openWithMenu.mimes = response.mimeTypes || [];
+            const recommended = response.recommended || [];
+            const preferred = recommended.find(app => app.isDefault === true);
+            const rest = recommended.filter(app => app !== preferred);
+            openWithMenu.apps = (preferred ? [preferred] : []).concat(response.recent || [], rest).slice(0, 5);
         });
     }
 
@@ -2446,8 +2463,12 @@ FloatingWindow {
         id: openWithMenu
 
         property var apps: []
+        property var mimes: []
+        property var paths: []
+        property int requestSerial: 0
 
         anchorItem: surface
+        onClosed: apps = []
 
         Repeater {
             model: openWithMenu.apps
@@ -2459,10 +2480,13 @@ FloatingWindow {
                 checked: modelData.isDefault === true
                 onClicked: {
                     openWithMenu.close();
-                    itemMenu.close();
-                    AppsService.openWith(window.selectedPaths(), modelData.id, response => window.reportError(response));
+                    AppsService.openWith(openWithMenu.paths, modelData.id, response => window.reportError(response));
                 }
             }
+        }
+
+        FileMenuDivider {
+            visible: openWithMenu.apps.length > 0
         }
 
         FileMenuItem {
@@ -2470,8 +2494,7 @@ FloatingWindow {
             iconName: "more_horiz"
             onClicked: {
                 openWithMenu.close();
-                itemMenu.close();
-                window.openWithCurrent();
+                openWithDialog.ask(openWithMenu.mimes, openWithMenu.paths);
             }
         }
     }

@@ -89,6 +89,15 @@ ShellRoot {
             "path": "/tmp/a.txt"
         });
 
+        AppsService.sections(["text/plain"], ["/tmp/a.txt"], null);
+        check("sections prefers given types over paths", lastSent().params, {
+            "mimes": ["text/plain"]
+        });
+        AppsService.sections([], ["/tmp/a.txt"], null);
+        check("sections types the paths when no type is given", lastSent().params, {
+            "paths": ["/tmp/a.txt"]
+        });
+
         AppsService.setDefault("text/plain", "editor.desktop", null);
         check("setDefault params", lastSent().params, {
             "mime": "text/plain",
