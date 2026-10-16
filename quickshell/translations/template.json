@@ -1,5 +1,12 @@
 [
   {
+    "term": "%1 already exist in this folder. Do you want to overwrite them?",
+    "translation": "",
+    "context": "file chooser overwrite dialog message, %1 lists the file names",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 already exists in this folder.",
     "translation": "",
     "context": "file conflict dialog explanation",
@@ -210,6 +217,13 @@
     "comment": ""
   },
   {
+    "term": "Add to bookmarks",
+    "translation": "",
+    "context": "context menu entry pinning the selected folder to the sidebar",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Address",
     "translation": "",
     "context": "label for a server address input",
@@ -248,6 +262,13 @@
     "term": "Already here",
     "translation": "",
     "context": "file conflict dialog label for the existing item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Already in the sidebar",
+    "translation": "",
+    "context": "tooltip on the bookmark button over a folder the sidebar lists on its own",
     "reference": "",
     "comment": ""
   },
@@ -409,6 +430,27 @@
     "term": "Backend",
     "translation": "",
     "context": "about page daemon section header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Backend: not reachable, no activation file",
+    "translation": "",
+    "context": "portal chooser status line",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Backend: served by this instance",
+    "translation": "",
+    "context": "portal chooser status line",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Backend: started on demand through %1",
+    "translation": "",
+    "context": "portal chooser status line, %1 is a path",
     "reference": "",
     "comment": ""
   },
@@ -952,6 +994,13 @@
     "comment": ""
   },
   {
+    "term": "Enter filename...",
+    "translation": "",
+    "context": "file browser save filename input placeholder",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Estimating…",
     "translation": "",
     "context": "file operation is still measuring the work",
@@ -1206,7 +1255,7 @@
   {
     "term": "Grid view",
     "translation": "",
-    "context": "view mode showing items as tiles",
+    "context": "file browser toolbar button switching to the grid | view mode showing items as tiles",
     "reference": "",
     "comment": ""
   },
@@ -1430,7 +1479,7 @@
   {
     "term": "List view",
     "translation": "",
-    "context": "view mode showing one row per item",
+    "context": "file browser toolbar button switching to the list | view mode showing one row per item",
     "reference": "",
     "comment": ""
   },
@@ -1624,6 +1673,13 @@
     "comment": ""
   },
   {
+    "term": "Needed before the change takes effect.",
+    "translation": "",
+    "context": "settings row subtitle when xdg-desktop-portal still runs the old configuration",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Network",
     "translation": "",
     "context": "sidebar section listing network locations | sidebar section listing remote locations",
@@ -1661,7 +1717,7 @@
   {
     "term": "New folder",
     "translation": "",
-    "context": "new folder dialog header",
+    "context": "file browser toolbar button creating a folder | new folder dialog header",
     "reference": "",
     "comment": ""
   },
@@ -1778,9 +1834,16 @@
     "comment": ""
   },
   {
+    "term": "Only the window process serves the portal",
+    "translation": "",
+    "context": "explanation when a daemon without a window answers a portal question",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open",
     "translation": "",
-    "context": "context menu entry opening a file",
+    "context": "context menu entry opening a file | file browser open button",
     "reference": "",
     "comment": ""
   },
@@ -1788,6 +1851,27 @@
     "term": "Open %1 items?",
     "translation": "",
     "context": "confirmation before opening many selected items at once",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open and save dialogs",
+    "translation": "",
+    "context": "general settings section label for the portal file chooser",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open file",
+    "translation": "",
+    "context": "file chooser default title when picking one file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open files",
+    "translation": "",
+    "context": "file chooser default title when picking several files",
     "reference": "",
     "comment": ""
   },
@@ -1904,6 +1988,13 @@
     "comment": ""
   },
   {
+    "term": "Other apps open and save files through Dank Files.",
+    "translation": "",
+    "context": "portal chooser setting description while enabled",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Other apps open folders and reveal files here.",
     "translation": "",
     "context": "file manager registration setting description while registered",
@@ -1914,6 +2005,13 @@
     "term": "Other apps open folders with whichever file manager they find.",
     "translation": "",
     "context": "file manager registration setting description while not registered",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Other apps use the desktop's default open and save dialogs.",
+    "translation": "",
+    "context": "portal chooser setting description while disabled",
     "reference": "",
     "comment": ""
   },
@@ -2019,6 +2117,41 @@
     "term": "Playful",
     "translation": "",
     "context": "spring bounce option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Portal file: %1",
+    "translation": "",
+    "context": "portal chooser status line, %1 is a path",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Portal file: not installed",
+    "translation": "",
+    "context": "portal chooser status line",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Preference: %1 is used",
+    "translation": "",
+    "context": "portal chooser status line, %1 is another backend name",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Preference: %1 names Dank Files",
+    "translation": "",
+    "context": "portal chooser status line, %1 is a path",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Preference: no file chooser backend configured",
+    "translation": "",
+    "context": "portal chooser status line",
     "reference": "",
     "comment": ""
   },
@@ -2254,6 +2387,27 @@
     "comment": ""
   },
   {
+    "term": "Restart",
+    "translation": "",
+    "context": "dialog button restarting xdg-desktop-portal",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Restart the portal service",
+    "translation": "",
+    "context": "settings row restarting xdg-desktop-portal",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Restart the portal service?",
+    "translation": "",
+    "context": "dialog title before restarting xdg-desktop-portal",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Restore",
     "translation": "",
     "context": "trash action returning items to where they were deleted from",
@@ -2347,7 +2501,35 @@
   {
     "term": "Save",
     "translation": "",
-    "context": "dialog button to confirm a name",
+    "context": "dialog button to confirm a name | file browser save button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Save file",
+    "translation": "",
+    "context": "file chooser default title when saving one file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Save files",
+    "translation": "",
+    "context": "file chooser default title when saving several files into a folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Save here",
+    "translation": "",
+    "context": "file chooser accept button when several files go into the chosen folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Saving %1 into the chosen folder",
+    "translation": "",
+    "context": "file chooser footer listing the names an app wants to save",
     "reference": "",
     "comment": ""
   },
@@ -2429,6 +2611,13 @@
     "comment": ""
   },
   {
+    "term": "Select folder",
+    "translation": "",
+    "context": "file chooser default title when picking a folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Selection",
     "translation": "",
     "context": "keyboard shortcut group",
@@ -2459,7 +2648,7 @@
   {
     "term": "Show hidden files",
     "translation": "",
-    "context": "menu entry listing dot files",
+    "context": "file browser toolbar toggle | menu entry listing dot files",
     "reference": "",
     "comment": ""
   },
@@ -2663,6 +2852,20 @@
     "term": "Terminal, drag and thumbnails",
     "translation": "",
     "context": "settings sidebar tab hint",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The change takes effect after xdg-desktop-portal restarts. Open and save dialogs other apps have open will close.",
+    "translation": "",
+    "context": "dialog message before restarting xdg-desktop-portal",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The portal list is managed by the system; add Dank Files to it there.",
+    "translation": "",
+    "context": "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set",
     "reference": "",
     "comment": ""
   },
@@ -2919,9 +3122,23 @@
     "comment": ""
   },
   {
+    "term": "Use Dank Files for open and save dialogs",
+    "translation": "",
+    "context": "setting label for serving the desktop portal file chooser",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Use a bundled color palette.",
     "translation": "",
     "context": "color source description for preset",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Use this folder",
+    "translation": "",
+    "context": "file browser folder selection confirm button",
     "reference": "",
     "comment": ""
   },

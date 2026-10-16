@@ -42,7 +42,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&jsonOutput, "json", false, "Output JSON for programmatic usage (where supported)")
 	rootCmd.PersistentFlags().BoolVar(&dbusActivated, "dbus-activated", false, "Started by the bus for org.freedesktop.FileManager1: claim the name whatever the setting says, quit if no window ever opens")
 	rootCmd.PersistentFlags().BoolVar(&keepRunning, "keep-running", false, "Started to stay resident (the systemd unit): closing the window hides it")
+	rootCmd.PersistentFlags().BoolVar(&portalActivated, "portal-activated", false, "Started by the bus for the portal file chooser: quit once no dialog or window is open")
 	_ = rootCmd.PersistentFlags().MarkHidden("dbus-activated")
+	_ = rootCmd.PersistentFlags().MarkHidden("portal-activated")
 	_ = rootCmd.PersistentFlags().MarkHidden("keep-running")
 
 	rootCmd.AddCommand(versionCmd)
@@ -57,6 +59,7 @@ func init() {
 	rootCmd.AddCommand(mimeCmd)
 	rootCmd.AddCommand(devicesCmd)
 	rootCmd.AddCommand(searchCmd)
+	rootCmd.AddCommand(portalCmd)
 	rootCmd.AddCommand(ipcCmd)
 	rootCmd.AddCommand(helperCmd)
 }

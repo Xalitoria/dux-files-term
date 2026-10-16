@@ -15,12 +15,16 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
 	"github.com/AvengeMedia/dankfiles/core/internal/devices"
 	"github.com/AvengeMedia/dankfiles/core/internal/elevate"
+	"github.com/AvengeMedia/dankfiles/core/internal/filechooser"
 	"github.com/AvengeMedia/dankfiles/core/internal/filemanager1"
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
+	"github.com/AvengeMedia/dankfiles/core/internal/mimeglobs"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
 	"github.com/AvengeMedia/dankfiles/core/internal/paths"
+	"github.com/AvengeMedia/dankfiles/core/internal/portal"
+	"github.com/AvengeMedia/dankfiles/core/internal/portalsetup"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 	"github.com/AvengeMedia/dankfiles/core/internal/search"
 	"github.com/AvengeMedia/dankfiles/core/internal/settings"
@@ -45,6 +49,7 @@ type daemonServices struct {
 	search    *search.Service
 	bookmarks *bookmarks.Store
 	fm1       *filemanager1.Service
+	chooser   *filechooser.Service
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -60,6 +65,9 @@ func (s *daemonServices) Close() {
 	}
 	if s.fm1 != nil {
 		s.fm1.Close()
+	}
+	if s.chooser != nil {
+		s.chooser.Close()
 	}
 	if s.files != nil {
 		s.files.Close()
@@ -92,6 +100,12 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 	sandbox.ExportHostDirs(caps)
 
 	bus := ipc.NewEventBus()
+	pending := &ipc.PendingOpen{}
+	var chooser *filechooser.Service
+	var portalController *portal.Controller
+	if ownsWindow {
+		chooser, portalController = startPortalChooser(ipc.Deps{Bus: bus, Pending: pending}, caps)
+	}
 
 	appService := mimeapps.NewService()
 	fileService := files.NewService(bus, cacheHome(), appService.Detector())
@@ -128,7 +142,8 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 
 	deps := ipc.Deps{
 		Bus:         bus,
-		Pending:     &ipc.PendingOpen{},
+		Pending:     pending,
+		Portal:      portalController,
 		Version:     Version,
 		ColorScheme: colorSchemeWatcher,
 		Files:       fileService,
@@ -156,10 +171,13 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 		if fm1 != nil {
 			fm1.Close()
 		}
+		if chooser != nil {
+			chooser.Close()
+		}
 		return nil, err
 	}
 
-	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore, fm1: fm1}, nil
+	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore, fm1: fm1, chooser: chooser}, nil
 }
 
 // localMounts lists where the mounted local drives sit, leaving out the
@@ -207,6 +225,30 @@ func startFileManager1(deps ipc.Deps, enabled bool) *filemanager1.Service {
 	}
 	svc.SetEnabled(enabled)
 	return svc
+}
+
+func startPortalChooser(deps ipc.Deps, caps sandbox.Capabilities) (*filechooser.Service, *portal.Controller) {
+	if caps.Sandboxed {
+		return nil, portal.Unavailable(sandbox.ReasonSandboxed)
+	}
+	conn, err := dbus.ConnectSessionBus()
+	if err != nil {
+		log.Warnf("portal file chooser unavailable: %v", err)
+		return nil, portal.NewController(nil, keepRunning)
+	}
+	svc, err := filechooser.New(conn, ipc.ChooserUI{Deps: deps}, mimeGlobs)
+	if err != nil {
+		conn.Close()
+		log.Warnf("portal file chooser unavailable: %v", err)
+		return nil, portal.NewController(nil, keepRunning)
+	}
+	svc.SetEnabled(true)
+	return svc, portal.NewController(svc, keepRunning)
+}
+
+func mimeGlobs() func(string) []string {
+	env := portalsetup.FromProcess()
+	return mimeglobs.Load(env.DataHome, env.DataDirs).Globs
 }
 
 func configHome() string {

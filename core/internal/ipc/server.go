@@ -37,6 +37,7 @@ func NewServer(deps Deps) *Server {
 
 func publishPending(deps Deps, topics []string) {
 	if deps.Pending == nil {
+		republishChoosers(deps)
 		return
 	}
 	for _, t := range topics {
@@ -44,6 +45,7 @@ func publishPending(deps Deps, topics []string) {
 			continue
 		}
 		deps.Pending.Flush(deps.Bus)
+		republishChoosers(deps)
 		return
 	}
 }

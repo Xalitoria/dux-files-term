@@ -1,6 +1,7 @@
 import QtQuick
 import qs.Common
 import qs.Services
+import qs.Modules
 import qs.DCommon.Widgets
 import qs.DCommon.FileBrowser
 
@@ -11,6 +12,8 @@ Item {
     property var hostWindow: null
     property var terminals: []
     property var fileManagerStatus: ({})
+    property var portalStatus: ({})
+    property bool portalBusy: false
 
     readonly property var colorSourceOptions: [
         {
@@ -148,6 +151,77 @@ Item {
         });
     }
 
+    function loadPortalStatus() {
+        DankFilesService.sendRequest("system.portal.get", null, response => {
+            if (response.error)
+                return;
+            root.portalStatus = response.result || {};
+        });
+    }
+
+    function setPortal(enabled) {
+        root.portalBusy = true;
+        DankFilesService.sendRequest(enabled ? "system.portal.install" : "system.portal.uninstall", null, response => {
+            root.portalBusy = false;
+            if (response.error) {
+                ToastService.info(response.error);
+                root.loadPortalStatus();
+                return;
+            }
+            root.portalStatus = response.result || {};
+            if (root.portalStatus.frontend?.restartNeeded === true)
+                portalRestartDialog.open();
+        });
+    }
+
+    function restartPortal() {
+        root.portalBusy = true;
+        DankFilesService.sendRequest("system.portal.restart", null, response => {
+            root.portalBusy = false;
+            if (response.error)
+                ToastService.info(response.error);
+            root.loadPortalStatus();
+        });
+    }
+
+    function portalDescription() {
+        const status = portalStatus;
+        if (status.available === false)
+            return FilesFormat.featureUnavailable(status.reason ?? "");
+        if (status.systemManaged === true)
+            return I18n.tr("The portal list is managed by the system; add Dank Files to it there.", "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set");
+        if (status.active === true)
+            return I18n.tr("Other apps open and save files through Dank Files.", "portal chooser setting description while enabled");
+        return I18n.tr("Other apps use the desktop's default open and save dialogs.", "portal chooser setting description while disabled");
+    }
+
+    function portalFileLine() {
+        const file = portalStatus.portalFile ?? ({});
+        if (file.found !== true)
+            return I18n.tr("Portal file: not installed", "portal chooser status line");
+        return I18n.tr("Portal file: %1", "portal chooser status line, %1 is a path").arg(file.path ?? "");
+    }
+
+    function portalPreferenceLine() {
+        const config = portalStatus.config ?? ({});
+        const effective = config.effective ?? "";
+        if (effective === "dfiles")
+            return I18n.tr("Preference: %1 names Dank Files", "portal chooser status line, %1 is a path").arg(config.path ?? "");
+        if (effective !== "")
+            return I18n.tr("Preference: %1 is used", "portal chooser status line, %1 is another backend name").arg(effective);
+        return I18n.tr("Preference: no file chooser backend configured", "portal chooser status line");
+    }
+
+    function portalBackendLine() {
+        const backend = portalStatus.backend ?? ({});
+        const service = portalStatus.service ?? ({});
+        if (backend.owned === true)
+            return I18n.tr("Backend: served by this instance", "portal chooser status line");
+        if (service.found === true)
+            return I18n.tr("Backend: started on demand through %1", "portal chooser status line, %1 is a path").arg(service.path ?? "");
+        return I18n.tr("Backend: not reachable, no activation file", "portal chooser status line");
+    }
+
     function loadFileManagerStatus() {
         DankFilesService.sendRequest("system.fileManager.get", null, response => {
             if (response.error)
@@ -187,14 +261,27 @@ Item {
     Component.onCompleted: {
         loadTerminals();
         loadFileManagerStatus();
+        loadPortalStatus();
     }
 
     Connections {
         target: root.hostWindow
         function onVisibleChanged() {
-            if (root.hostWindow.visible)
-                root.loadFileManagerStatus();
+            if (!root.hostWindow.visible)
+                return;
+            root.loadFileManagerStatus();
+            root.loadPortalStatus();
         }
+    }
+
+    ConfirmDialog {
+        id: portalRestartDialog
+
+        title: I18n.tr("Restart the portal service?", "dialog title before restarting xdg-desktop-portal")
+        message: I18n.tr("The change takes effect after xdg-desktop-portal restarts. Open and save dialogs other apps have open will close.", "dialog message before restarting xdg-desktop-portal")
+        confirmText: I18n.tr("Restart", "dialog button restarting xdg-desktop-portal")
+        danger: false
+        onConfirmed: root.restartPortal()
     }
 
     Loader {
@@ -324,6 +411,53 @@ Item {
                     optionList: root.languageOptions
                     current: SettingsData.language
                     onPicked: value => SettingsData.language = value
+                }
+            }
+
+            SettingsSectionLabel {
+                text: I18n.tr("Open and save dialogs", "general settings section label for the portal file chooser")
+            }
+
+            SettingsGroup {
+                SettingsToggleRow {
+                    text: I18n.tr("Use Dank Files for open and save dialogs", "setting label for serving the desktop portal file chooser")
+                    description: root.portalDescription()
+                    enabled: root.portalStatus.available === true && root.portalStatus.systemManaged !== true
+                    toggling: root.portalBusy
+                    checked: root.portalStatus.active === true
+                    onToggled: checked => root.setPortal(checked)
+                }
+
+                SettingsRow {
+                    visible: root.portalStatus.available === true
+                    iconName: root.portalStatus.portalFile?.found === true ? "check_circle" : "info"
+                    iconColor: root.portalStatus.portalFile?.found === true ? Theme.success : Theme.surfaceVariantText
+                    title: root.portalFileLine()
+                }
+
+                SettingsRow {
+                    visible: root.portalStatus.available === true
+                    iconName: root.portalStatus.config?.effective === "dfiles" ? "check_circle" : "info"
+                    iconColor: root.portalStatus.config?.effective === "dfiles" ? Theme.success : Theme.surfaceVariantText
+                    title: root.portalPreferenceLine()
+                }
+
+                SettingsRow {
+                    visible: root.portalStatus.available === true
+                    iconName: root.portalStatus.backend?.owned === true || root.portalStatus.service?.found === true ? "check_circle" : "info"
+                    iconColor: root.portalStatus.backend?.owned === true || root.portalStatus.service?.found === true ? Theme.success : Theme.surfaceVariantText
+                    title: root.portalBackendLine()
+                }
+
+                SettingsRow {
+                    visible: root.portalStatus.frontend?.restartNeeded === true
+                    iconName: "restart_alt"
+                    iconColor: Theme.error
+                    clickable: true
+                    title: I18n.tr("Restart the portal service", "settings row restarting xdg-desktop-portal")
+                    subtitle: I18n.tr("Needed before the change takes effect.", "settings row subtitle when xdg-desktop-portal still runs the old configuration")
+                    showChevron: true
+                    onClicked: portalRestartDialog.open()
                 }
             }
 

@@ -24,7 +24,12 @@ Item {
     property string currentPath: ""
     property bool searchFocused: false
 
-    readonly property string bookmarkLabel: bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
+    readonly property bool bookmarkPlace: BookmarksService.isPlace(currentPath)
+    readonly property string bookmarkLabel: {
+        if (bookmarkPlace)
+            return I18n.tr("Already in the sidebar", "tooltip on the bookmark button over a folder the sidebar lists on its own");
+        return bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button");
+    }
     readonly property var viewModes: [
         {
             "value": "list",
@@ -197,7 +202,7 @@ Item {
         FlatButton {
             anchors.verticalCenter: parent.verticalCenter
             visible: !topbar.compact
-            enabled: !topbar.trashActive
+            enabled: !topbar.trashActive && !topbar.bookmarkPlace
             iconName: "bookmark"
             iconFilled: topbar.bookmarked
             iconColor: topbar.bookmarked ? Theme.primary : Theme.surfaceText
@@ -301,7 +306,7 @@ Item {
 
                 FileMenuItem {
                     visible: topbar.compact
-                    enabled: !topbar.trashActive
+                    enabled: !topbar.trashActive && !topbar.bookmarkPlace
                     text: topbar.bookmarkLabel
                     iconName: topbar.bookmarked ? "bookmark_remove" : "bookmark"
                     onClicked: {

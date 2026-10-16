@@ -20,8 +20,10 @@ ShellRoot {
     readonly property bool enableHotReload: Quickshell.env("DFILES_ENABLE_HOTRELOAD") === "1" || Quickshell.env("DFILES_ENABLE_HOTRELOAD") === "true"
 
     readonly property bool dbusActivated: Quickshell.env("DFILES_DBUS_ACTIVATED") === "1"
-    readonly property bool quitOnLastClose: SettingsData.closeBehavior === "quit" && Quickshell.env("DFILES_KEEP_RUNNING") !== "1"
-    property bool windowShown: false
+    readonly property bool keepRunning: Quickshell.env("DFILES_KEEP_RUNNING") === "1"
+    readonly property bool quitOnLastClose: SettingsData.closeBehavior === "quit" && !keepRunning
+    readonly property bool idle: WindowService.count === 0 && ChooserService.count === 0
+    property bool quitDeferred: false
 
     Component.onCompleted: {
         Quickshell.watchFiles = enableHotReload;
@@ -111,11 +113,23 @@ ShellRoot {
 
     function closeWindow(windowId) {
         if (WindowService.count <= 1 && quitOnLastClose) {
+            if (ChooserService.count > 0) {
+                quitDeferred = true;
+                WindowService.close(windowId);
+                return;
+            }
             FolderHistory.unload();
             DankFilesService.quit();
             return;
         }
         WindowService.close(windowId);
+    }
+
+    function quitWhenIdle() {
+        if (!idle)
+            return;
+        FolderHistory.unload();
+        DankFilesService.quit();
     }
 
     Connections {
@@ -136,6 +150,12 @@ ShellRoot {
             root.focusWindow(windowId);
             root.windowObject(windowId)?.showPropertiesFor(paths);
         }
+        function onChooserRequested(request) {
+            ChooserService.open(request);
+        }
+        function onChooserCloseRequested(id) {
+            ChooserService.close(id);
+        }
     }
 
     Connections {
@@ -144,15 +164,14 @@ ShellRoot {
             root.windowObject(windowId)?.openLocations(locations, false);
         }
         function onWindowAdded() {
-            root.windowShown = true;
             focusRetry.restart();
         }
     }
 
     Timer {
         interval: 30000
-        running: root.dbusActivated && !root.windowShown
-        onTriggered: DankFilesService.quit()
+        running: root.idle && !root.keepRunning && (root.dbusActivated || root.quitDeferred)
+        onTriggered: root.quitWhenIdle()
     }
 
     Timer {
@@ -160,6 +179,18 @@ ShellRoot {
         interval: 150
         repeat: false
         onTriggered: root.focusWindow(WindowService.lastActiveId)
+    }
+
+    Instantiator {
+        id: chooserInstances
+
+        model: ChooserService.requests
+
+        ChooserWindow {
+            required property string id
+
+            request: ChooserService.requestFor(id)
+        }
     }
 
     Instantiator {

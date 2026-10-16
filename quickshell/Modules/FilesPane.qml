@@ -18,6 +18,10 @@ FocusScope {
     property bool previewOpen: true
     property var cutSet: ({})
     property string nameFilter: ""
+    property var filters: []
+    property bool multiSelect: true
+    property bool escapeClearsSelection: true
+    property bool typeAhead: !SettingsData.vimKeys
     property int connectRequest: 0
 
     readonly property alias path: browser.path
@@ -160,8 +164,10 @@ FocusScope {
 
     function openSelection() {
         const entries = selectedEntries.length > 0 ? selectedEntries : [currentEntry].filter(entry => entry);
-        if (entries.length > 0)
-            openRequested(entries);
+        if (entries.length === 0)
+            return false;
+        openRequested(entries);
+        return true;
     }
 
     function cursorRect() {
@@ -270,7 +276,8 @@ FocusScope {
         case Qt.Key_Enter:
             if (event.modifiers !== Qt.NoModifier && event.modifiers !== Qt.KeypadModifier)
                 return;
-            openSelection();
+            if (!openSelection())
+                return;
             break;
         case Qt.Key_Up:
             if ((event.modifiers & Qt.AltModifier) === 0)
@@ -333,8 +340,11 @@ FocusScope {
         previewKeys: true
         cutSet: pane.cutSet
         nameFilter: pane.nameFilter
+        filters: pane.filters
+        multiSelect: pane.multiSelect
+        escapeClearsSelection: pane.escapeClearsSelection
         singleClickActivates: SettingsData.clickToOpen === "single"
-        typeAheadEnabled: !SettingsData.vimKeys
+        typeAheadEnabled: pane.typeAhead
         typeAheadMode: SettingsData.listTyping
         countFolders: SettingsData.folderCounts
         dirsFirst: SettingsData.foldersFirst
@@ -393,7 +403,7 @@ FocusScope {
         previewWidth: CacheData.previewWidth
         cutSet: pane.cutSet
         singleClickActivates: SettingsData.clickToOpen === "single"
-        typeAheadEnabled: !SettingsData.vimKeys
+        typeAheadEnabled: pane.typeAhead
         countFolders: SettingsData.folderCounts
         border.width: pane.showActiveOutline && pane.active ? Theme.outlineWidthFocused : 0
         border.color: Theme.primary

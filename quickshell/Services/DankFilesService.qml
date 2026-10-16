@@ -31,6 +31,8 @@ Singleton {
     signal windowActionRequested(string action)
     signal openRequested(var locations, bool newWindow)
     signal propertiesRequested(var paths)
+    signal chooserRequested(var request)
+    signal chooserCloseRequested(string id)
     signal colorSchemeUpdate(var data)
 
     Component.onCompleted: {
@@ -205,6 +207,12 @@ Singleton {
             return;
         case "properties":
             propertiesRequested(data.paths || []);
+            return;
+        case "chooser":
+            chooserRequested(data.request || null);
+            return;
+        case "chooserClose":
+            chooserCloseRequested(data.id || "");
             return;
         }
         windowActionRequested(data.action || "");

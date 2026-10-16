@@ -35,6 +35,10 @@ Singleton {
             return I18n.tr("Not available because the sandbox cannot start programs on the host", "explanation for a feature that needs flatpak-spawn");
         case "PORTALCHOOSER":
             return I18n.tr("The system application chooser opens instead", "explanation when open with is handed to the desktop portal");
+        case "NOWINDOW":
+            return I18n.tr("Only the window process serves the portal", "explanation when a daemon without a window answers a portal question");
+        case "NOBUS":
+            return I18n.tr("This instance cannot reach the session bus.", "file manager registration setting description when the daemon has no session bus connection");
         default:
             return I18n.tr("Not available", "explanation for a feature the environment does not permit");
         }

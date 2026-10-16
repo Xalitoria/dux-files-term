@@ -22,6 +22,7 @@ func features(c Capabilities) map[string]Feature {
 		"openWith":       degradedUnless(!c.Sandboxed, ReasonPortalChooser),
 		"elevation":      gate(!c.Sandboxed, ReasonSandboxed),
 		"indexSearch":    gate(!c.Sandboxed, ReasonSandboxed),
+		"portalChooser":  gate(!c.Sandboxed, ReasonSandboxed),
 	}
 }
 

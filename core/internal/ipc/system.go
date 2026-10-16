@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/filemanager1"
+	"github.com/AvengeMedia/dankfiles/core/internal/portal"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 )
 
@@ -35,6 +36,37 @@ func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			return
 		}
 		w.Respond(req.ID, deps.FileManager.SetEnabled(ParamBool(req.Params, "enabled")))
+	case "system.portal.get":
+		if deps.Portal == nil {
+			w.Respond(req.ID, map[string]any{"available": false, "reason": portal.ReasonNoWindow})
+			return
+		}
+		w.Respond(req.ID, deps.Portal.Status())
+	case "system.portal.install", "system.portal.uninstall":
+		if deps.Portal == nil {
+			w.RespondError(req.ID, "only the window process serves the portal")
+			return
+		}
+		change := deps.Portal.Install
+		if req.Method == "system.portal.uninstall" {
+			change = deps.Portal.Uninstall
+		}
+		report, err := change()
+		if err != nil {
+			w.RespondError(req.ID, err.Error())
+			return
+		}
+		w.Respond(req.ID, report)
+	case "system.portal.restart":
+		if deps.Portal == nil {
+			w.RespondError(req.ID, "only the window process serves the portal")
+			return
+		}
+		if err := deps.Portal.Restart(); err != nil {
+			w.RespondError(req.ID, err.Error())
+			return
+		}
+		w.Respond(req.ID, map[string]any{"restarted": true})
 	case "system.openUri":
 		if deps.Apps == nil {
 			w.RespondError(req.ID, "uri opener unavailable")

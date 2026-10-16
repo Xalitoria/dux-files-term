@@ -24,6 +24,23 @@ While it runs, dfiles owns `org.freedesktop.FileManager1` on the session bus, so
 
 The systemd user unit starts dfiles with `--keep-running`, so the close button hides the window there. Started any other way, closing the window quits unless Close behavior says to keep running.
 
+### Open and save dialogs
+
+dfiles can serve `org.freedesktop.impl.portal.FileChooser`, the backend side of the desktop portal's file chooser. Apps that ask the portal for files (Flatpak apps, Chromium browsers, Firefox with `widget.use-xdg-desktop-portal.file-picker` set to 1, GTK 4 apps under `GDK_DEBUG=portals`, Qt apps under `QT_QPA_PLATFORMTHEME=xdgdesktopportal`) then get a Dank Files window with the same sidebar, bookmarks, search and keys as the file manager. The dialog is a standalone window: Qt 6.12 and Quickshell do not import xdg-foreign handles, so it is not attached to the calling window and the `modal` option is ignored. Apps that draw their own dialogs are unchanged.
+
+Nothing is switched on by install. `make install` ships `dfiles.portal` and the activation file `org.freedesktop.impl.portal.desktop.dfiles.service`; the choice is per user, in `~/.config/xdg-desktop-portal/<desktop>-portals.conf`. Settings, General, "Use Dank Files for open and save dialogs" or `dfiles portal install` write the per-user files when the packaged ones are missing, put `dfiles` first in that file's `org.freedesktop.impl.portal.FileChooser` key (keeping the previous backend as the fallback and every other line as it was) and record what changed, so Restore or `dfiles portal uninstall` puts it back. `dfiles portal status` shows each part. xdg-desktop-portal reads its configuration once at startup, so the change takes effect after `systemctl --user restart xdg-desktop-portal.service`; the UI and the CLI ask before doing that, because the restart cancels file dialogs other apps have open.
+
+The portal activates the backend on demand through the activation file. Without the systemd user unit that means one hidden start of dfiles whenever xdg-desktop-portal starts (it quits again after 30 s with nothing to show) and a cold start for the first dialog; with the unit the resident instance answers at once. A niri rule that floats the chooser, which carries the app's own id and the title the app asked for:
+
+```kdl
+window-rule {
+    match app-id=r#"^com\.danklinux\.dankfiles$"# title=r#"^(Open|Save|Select|Upload|Export|Import)"#
+    open-floating true
+}
+```
+
+Packagers: install `assets/portal/dfiles.portal` under `share/xdg-desktop-portal/portals/` and the service file under `share/dbus-1/services/` with the binary path substituted, and do not ship a `portals.conf` that prefers it. On NixOS and home-manager the module's `programs.dank-files.portal.enable` registers the backend and `portal.preferred` writes the preference into `xdg.portal.config.<portal.desktop>`. The Flatpak build cannot register the backend: Flatpak exports no `share/xdg-desktop-portal` files.
+
 To open folders here from other apps:
 
 ```sh

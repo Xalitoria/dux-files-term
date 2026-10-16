@@ -107,6 +107,13 @@
               substituteInPlace $out/share/dbus-1/services/com.danklinux.dankfiles.FileManager1.service \
                 --replace-fail /usr/bin/dfiles $out/bin/dfiles
 
+              install -Dm644 ${./assets/portal/dfiles.portal} \
+                $out/share/xdg-desktop-portal/portals/dfiles.portal
+              install -Dm644 ${./assets/dbus/org.freedesktop.impl.portal.desktop.dfiles.service} \
+                $out/share/dbus-1/services/org.freedesktop.impl.portal.desktop.dfiles.service
+              substituteInPlace $out/share/dbus-1/services/org.freedesktop.impl.portal.desktop.dfiles.service \
+                --replace-fail /usr/bin/dfiles $out/bin/dfiles
+
               install -Dm644 ${./assets/systemd/dfiles.service} \
                 $out/lib/systemd/user/dfiles.service
               substituteInPlace $out/lib/systemd/user/dfiles.service \

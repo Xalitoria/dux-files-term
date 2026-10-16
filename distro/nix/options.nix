@@ -21,6 +21,22 @@ in
       };
     };
 
+    portal = {
+      enable = lib.mkEnableOption "serving open and save dialogs through xdg-desktop-portal (registers the dfiles backend)";
+
+      preferred = lib.mkOption {
+        type = types.bool;
+        default = false;
+        description = "Prefer dfiles for org.freedesktop.impl.portal.FileChooser in the portal configuration named by portal.desktop.";
+      };
+
+      desktop = lib.mkOption {
+        type = types.str;
+        default = "common";
+        description = "Which xdg.portal.config entry receives the FileChooser preference (a lowercased XDG_CURRENT_DESKTOP name, or common).";
+      };
+    };
+
     systemd = {
       enable = lib.mkEnableOption "DankFiles systemd startup";
 

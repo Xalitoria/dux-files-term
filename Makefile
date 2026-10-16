@@ -12,6 +12,9 @@ APPLICATIONS_DIR=$(DATA_DIR)/applications
 METAINFO_DIR=$(DATA_DIR)/metainfo
 DBUS_SERVICES_DIR=$(DATA_DIR)/dbus-1/services
 DBUS_SERVICE=$(DESKTOP_ID).FileManager1.service
+PORTAL_SERVICE=org.freedesktop.impl.portal.desktop.dfiles.service
+PORTALS_DIR=$(DATA_DIR)/xdg-desktop-portal/portals
+PORTAL_FILE=dfiles.portal
 POLKIT_ACTIONS_DIR ?= /usr/share/polkit-1/actions
 
 USER_HOME := $(if $(SUDO_USER),$(shell getent passwd $(SUDO_USER) | cut -d: -f6),$(HOME))
@@ -22,7 +25,7 @@ SHELL_DIR=quickshell
 ASSETS_DIR=assets
 DESKTOP_ID=com.danklinux.dankfiles
 
-.PHONY: all build dev run clean test fmt vet lint-qml test-qml flatpak-build flatpak-run flatpak-lint flatpak-modules update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-polkit install-dbus install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-polkit uninstall-dbus uninstall-systemd help
+.PHONY: all build dev run clean test fmt vet lint-qml test-qml flatpak-build flatpak-run flatpak-lint flatpak-modules update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-polkit install-dbus install-portal install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-polkit uninstall-dbus uninstall-portal uninstall-systemd help
 
 FLATPAK_MANIFEST=distro/flatpak/$(DESKTOP_ID).yml
 
@@ -129,6 +132,13 @@ install-dbus:
 	@sed 's|/usr/bin/dfiles|$(INSTALL_DIR)/$(BINARY_NAME)|g' $(ASSETS_DIR)/dbus/$(DBUS_SERVICE) > $(DESTDIR)$(DBUS_SERVICES_DIR)/$(DBUS_SERVICE)
 	@chmod 644 $(DESTDIR)$(DBUS_SERVICES_DIR)/$(DBUS_SERVICE)
 
+install-portal:
+	@echo "Installing the portal file chooser backend (not preferred until 'dfiles portal install')..."
+	@install -D -m 644 $(ASSETS_DIR)/portal/$(PORTAL_FILE) $(DESTDIR)$(PORTALS_DIR)/$(PORTAL_FILE)
+	@install -d -m 755 $(DESTDIR)$(DBUS_SERVICES_DIR)
+	@sed 's|/usr/bin/dfiles|$(INSTALL_DIR)/$(BINARY_NAME)|g' $(ASSETS_DIR)/dbus/$(PORTAL_SERVICE) > $(DESTDIR)$(DBUS_SERVICES_DIR)/$(PORTAL_SERVICE)
+	@chmod 644 $(DESTDIR)$(DBUS_SERVICES_DIR)/$(PORTAL_SERVICE)
+
 install-systemd:
 	@echo "Installing systemd user service to $(SYSTEMD_USER_DIR)..."
 	@mkdir -p $(SYSTEMD_USER_DIR)
@@ -136,12 +146,13 @@ install-systemd:
 	@chmod 644 $(SYSTEMD_USER_DIR)/$(BINARY_NAME).service
 	@if [ -n "$(SUDO_USER)" ]; then chown $(SUDO_USER) $(SYSTEMD_USER_DIR)/$(BINARY_NAME).service; fi
 
-install: install-bin install-icon install-desktop install-metainfo install-polkit install-dbus
+install: install-bin install-icon install-desktop install-metainfo install-polkit install-dbus install-portal
 	@echo ""
 	@echo "Installation complete."
 	@echo "Launch with 'dfiles show' or the Dank Files desktop entry."
 	@echo "Optional: 'make install-systemd' then 'systemctl --user enable --now dfiles'."
 	@echo "Optional: 'xdg-mime default $(DESKTOP_ID).desktop inode/directory' to open folders here."
+	@echo "Optional: 'dfiles portal install' to serve other apps' open and save dialogs."
 
 uninstall-bin:
 	@rm -f $(DESTDIR)$(INSTALL_DIR)/$(BINARY_NAME)
@@ -160,11 +171,14 @@ uninstall-polkit:
 uninstall-dbus:
 	@rm -f $(DESTDIR)$(DBUS_SERVICES_DIR)/$(DBUS_SERVICE)
 
+uninstall-portal:
+	@rm -f $(DESTDIR)$(PORTALS_DIR)/$(PORTAL_FILE) $(DESTDIR)$(DBUS_SERVICES_DIR)/$(PORTAL_SERVICE)
+
 uninstall-systemd:
 	@rm -f $(SYSTEMD_USER_DIR)/$(BINARY_NAME).service
 	@echo "Stop/disable the service manually if running: systemctl --user disable --now $(BINARY_NAME)"
 
-uninstall: uninstall-desktop uninstall-icon uninstall-bin uninstall-polkit uninstall-dbus uninstall-systemd
+uninstall: uninstall-desktop uninstall-icon uninstall-bin uninstall-polkit uninstall-dbus uninstall-portal uninstall-systemd
 	@echo "Uninstallation complete."
 
 help:
@@ -184,7 +198,7 @@ help:
 	@echo "  i18n-check         - Fail if local i18n is out of sync with POEditor"
 	@echo ""
 	@echo "Install (PREFIX=$(PREFIX)):"
-	@echo "  install            - Binary (UI embedded), icon, desktop entry, metainfo, polkit policy, FileManager1 D-Bus activation"
+	@echo "  install            - Binary (UI embedded), icon, desktop entry, metainfo, polkit policy, FileManager1 D-Bus activation, portal file chooser files"
 	@echo "  install-systemd    - Optional systemd user unit (autostarts with the session)"
 	@echo "  uninstall          - Remove everything"
 	@echo ""

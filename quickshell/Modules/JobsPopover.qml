@@ -11,6 +11,7 @@ Popup {
     id: root
 
     width: FilesMetrics.popoverWidth
+    margins: 0
     padding: Theme.spacingL
     modal: false
     focus: false

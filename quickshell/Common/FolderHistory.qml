@@ -32,7 +32,7 @@ Singleton {
     function load() {
         if (loaded)
             return true;
-        if (WindowService.count === 0)
+        if (!wanted)
             return false;
         historyFile.path = historyPath;
         const parsed = FolderJump.parse(historyFile.text() ?? "");
@@ -108,16 +108,14 @@ Singleton {
         return FolderJump.top(prepared(), Date.now(), limit, stored(exclude ?? ""));
     }
 
-    Connections {
-        target: WindowService
+    readonly property bool wanted: WindowService.count > 0 || ChooserService.count > 0
 
-        function onCountChanged() {
-            if (WindowService.count > 0) {
-                root.load();
-                return;
-            }
-            root.unload();
+    onWantedChanged: {
+        if (wanted) {
+            load();
+            return;
         }
+        unload();
     }
 
     Timer {

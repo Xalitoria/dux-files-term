@@ -33,6 +33,9 @@ in
 
     dbus.packages = [ cfg.package ];
 
+    xdg.portal.extraPortals = lib.mkIf cfg.portal.enable [ cfg.package ];
+    xdg.portal.config.${cfg.portal.desktop}."org.freedesktop.impl.portal.FileChooser" = lib.mkIf (cfg.portal.enable && cfg.portal.preferred) [ "dfiles" ];
+
     systemd.user.services.dfiles = lib.mkIf cfg.systemd.enable {
       Unit = {
         Description = "DankFiles";

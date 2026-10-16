@@ -598,6 +598,7 @@ FloatingWindow {
         case "properties":
         case "copyPath":
         case "bookmark":
+        case "bookmarkSelected":
             return "";
         default:
             return id;
@@ -666,6 +667,13 @@ FloatingWindow {
         case "bookmark":
             BookmarksService.toggle(currentPath);
             return;
+        case "bookmarkSelected":
+            {
+                const folder = selectedEntries().find(entry => entry.isDir);
+                if (folder)
+                    BookmarksService.toggle(folder.path);
+                return;
+            }
         case "zoomReset":
             activePane.setZoom(viewMode, FilesMetrics.defaultZoom(viewMode));
             return;
@@ -2228,6 +2236,8 @@ FloatingWindow {
         extractable: window.selectionIsExtractable()
         inResults: window.activePane.resultsActive
         inTrash: window.activePane.trashActive
+        selectedBookmarked: window.selectionIsDirectory() && BookmarksService.has(window.selectedPaths()[0] ?? "")
+        selectedPlace: window.selectionIsDirectory() && BookmarksService.isPlace(window.selectedPaths()[0] ?? "")
         onActionTriggered: id => window.runAction(id)
     }
 

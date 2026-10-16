@@ -17,13 +17,14 @@ var shellApp = shellapp.New(shellapp.Config{
 })
 
 var (
-	dbusActivated bool
-	keepRunning   bool
+	dbusActivated   bool
+	portalActivated bool
+	keepRunning     bool
 )
 
 func uiEnv(string) []string {
 	var env []string
-	if dbusActivated {
+	if dbusActivated || portalActivated {
 		env = append(env, "DFILES_DBUS_ACTIVATED=1")
 	}
 	if keepRunning {
