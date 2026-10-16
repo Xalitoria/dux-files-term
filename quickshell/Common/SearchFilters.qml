@@ -40,6 +40,24 @@ Singleton {
         }
     ]
 
+    readonly property var scopes: [
+        {
+            "value": "folder",
+            "label": I18n.tr("This folder", "search scope chip limiting the search to the current folder"),
+            "icon": "folder"
+        },
+        {
+            "value": "home",
+            "label": I18n.tr("Home", "sidebar entry for the user's home folder"),
+            "icon": "home"
+        },
+        {
+            "value": "everywhere",
+            "label": I18n.tr("Everywhere", "search scope chip covering home and every mounted local drive"),
+            "icon": "hard_drive"
+        }
+    ]
+
     readonly property var modified: [
         {
             "value": "",
@@ -104,11 +122,15 @@ Singleton {
         };
     }
 
-    // Builds the search.start options from the chip state.
     function options(state) {
         const range = sizeRange(state.size ?? "");
         return {
+            "scope": state.scope ?? "folder",
             "includeHidden": state.includeHidden === true,
+            "includeIgnored": state.includeIgnored === true,
+            "fuzzy": state.fuzzy === true,
+            "contents": state.contents === true,
+            "direct": state.direct === true,
             "crossDevice": state.crossDevice === true,
             "types": state.types ?? [],
             "modifiedAfterMs": modifiedAfterMs(state.modified ?? ""),

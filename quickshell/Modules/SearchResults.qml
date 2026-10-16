@@ -29,15 +29,43 @@ Rectangle {
     readonly property string summary: {
         if (model.error !== "")
             return FileFormat.listingError(model.errorCode);
-        if (model.loading)
-            return I18n.tr("Searching…", "search results header while the daemon walks the tree");
-        if (model.truncated)
-            return I18n.tr("Showing the first %1 results", "search results header when the cap was hit").arg(model.count) + (model.unreadable > 0 ? " · " + unreadableText : "");
-        if (model.count === 0)
-            return I18n.tr("No results", "search results header when nothing matched");
-        return FileFormat.count(model.count) + (model.unreadable > 0 ? " · " + unreadableText : "");
+        const notes = [];
+        switch (true) {
+        case model.loading:
+            notes.push(I18n.tr("Searching…", "search results header while the daemon walks the tree"));
+            break;
+        case model.truncated:
+            notes.push(I18n.tr("Showing the first %1 results", "search results header when the cap was hit").arg(model.count));
+            break;
+        case model.count === 0:
+            notes.push(I18n.tr("No results", "search results header when nothing matched"));
+            break;
+        default:
+            notes.push(FileFormat.count(model.count));
+            break;
+        }
+        if (model.unreadable > 0)
+            notes.push(I18n.tr("%1 folders could not be read", "search results header note").arg(model.unreadable));
+        if (model.partial)
+            notes.push(I18n.tr("Some matches may be missing", "search results header note when the index could not return every candidate"));
+        if (model.servedBy === "index") {
+            notes.push(model.indexPhase === "idle" || model.indexPhase === "" ? I18n.tr("From the index", "search results header note when danksearch served the search") : I18n.tr("Index is still building, results may be incomplete", "search results header note while danksearch is indexing"));
+            if (model.depthLimit > 0)
+                notes.push(I18n.tr("%1 levels deep", "search results header note giving how far below the folder the index reaches").arg(model.depthLimit));
+        }
+        return notes.join(" · ");
     }
-    readonly property string unreadableText: I18n.tr("%1 folders could not be read", "search results header note").arg(model.unreadable)
+    property bool indexAvailable: false
+    readonly property string scopeText: {
+        switch (chips.scope) {
+        case "home":
+            return Paths.shortenHome(Paths.strip(Paths.home));
+        case "everywhere":
+            return I18n.tr("Everywhere", "search scope chip covering home and every mounted local drive");
+        default:
+            return Paths.shortenHome(results.model.rootPath);
+        }
+    }
 
     signal activateRequested(var entry)
     signal itemMenuRequested(int index, real pointX, real pointY, int modifiers)
@@ -85,7 +113,7 @@ Rectangle {
 
             StyledText {
                 width: parent.width
-                text: results.model.query !== "" ? I18n.tr("Results for “%1” in %2", "search results header, query then folder").arg(results.model.query).arg(Paths.shortenHome(results.model.rootPath)) : I18n.tr("Results in %1", "search results header without a query").arg(Paths.shortenHome(results.model.rootPath))
+                text: results.model.query !== "" ? I18n.tr("Results for “%1” in %2", "search results header, query then folder").arg(results.model.query).arg(results.scopeText) : I18n.tr("Results in %1", "search results header without a query").arg(results.scopeText)
                 color: Theme.surfaceText
                 font.pixelSize: Theme.fontSizeMedium
                 font.weight: Theme.fontWeightMedium
@@ -124,7 +152,22 @@ Rectangle {
         anchors.right: parent.right
         anchors.leftMargin: FilesMetrics.paneBodyMarginH
         anchors.rightMargin: FilesMetrics.paneBodyMarginH
+        contentsAvailable: results.indexAvailable
         onChanged: results.filtersChanged()
+    }
+
+    Connections {
+        target: results.model
+
+        function onServedByChanged() {
+            if (results.model.servedBy === "")
+                return;
+            if (chips.direct)
+                return;
+            results.indexAvailable = results.model.servedBy === "index";
+            if (!results.indexAvailable)
+                chips.contents = false;
+        }
     }
 
     FileViewBody {
@@ -147,7 +190,11 @@ Rectangle {
         listColumns: ["location", "size", "modified"]
         columnWidths: results.columnWidths
         previewKeys: true
-        sortKey: ""
+        sortKey: results.model.sortKey
+        sortDescending: results.model.sortDescending
+        columnSortKeys: ({
+                "location": "location"
+            })
         showHidden: chips.includeHidden
         dragEnabled: true
         dropEnabled: false
@@ -167,6 +214,7 @@ Rectangle {
         }
         onDragRequested: paths => results.dragRequested(paths)
         onRenameRequested: (target, name) => results.renameRequested(target, name)
+        onSortRequested: key => results.model.setSort(key)
         onZoomRequested: (mode, level) => results.zoomRequested(mode, level)
         onColumnResizeRequested: (id, width) => results.columnResizeRequested(id, width)
         onPreviewKeyRequested: (action, step) => {

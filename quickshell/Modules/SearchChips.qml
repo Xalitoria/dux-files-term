@@ -4,31 +4,62 @@ import QtQuick
 import qs.Common
 import qs.DCommon.Widgets
 
-// The filter row above search results: type chips toggle, the date and size
-// chips pick one each, hidden is a toggle. Every change restarts the search.
 Flow {
     id: chips
 
+    property string scope: "folder"
     property var types: []
     property string modified: ""
     property string size: ""
     property bool includeHidden: SettingsData.searchHidden
+    property bool includeIgnored: false
+    property bool fuzzy: false
+    property bool contents: false
+    property bool contentsAvailable: false
+    property bool direct: false
 
     readonly property var filterState: ({
+            "scope": scope,
             "types": types,
             "modified": modified,
             "size": size,
-            "includeHidden": includeHidden
+            "includeHidden": includeHidden,
+            "includeIgnored": includeIgnored,
+            "fuzzy": fuzzy,
+            "contents": contents && contentsAvailable && !direct,
+            "direct": direct
         })
 
     signal changed
 
     function reset() {
+        scope = "folder";
         types = [];
         modified = "";
         size = "";
+        includeIgnored = false;
+        fuzzy = false;
+        contents = false;
+        direct = false;
         changed();
     }
+
+    function resetScope() {
+        scope = "folder";
+        contents = false;
+    }
+
+    function focusFirst() {
+        scopeChips.requestFocus(false);
+    }
+
+    function indexOf(entries, value) {
+        return Math.max(0, entries.findIndex(entry => entry.value === value));
+    }
+
+    onScopeChanged: scopeChips.currentIndex = indexOf(SearchFilters.scopes, scope)
+    onModifiedChanged: modifiedChips.currentIndex = indexOf(SearchFilters.modified, modified)
+    onSizeChanged: sizeChips.currentIndex = indexOf(SearchFilters.sizes, size)
 
     // A Flow only knows its single-row width once it has one; summing the
     // chips keeps each group on one line and lets the outer Flow wrap groups.
@@ -47,6 +78,25 @@ Flow {
     spacing: Theme.spacingS
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
+
+    DFilterChips {
+        id: scopeChips
+
+        width: chips.rowWidth(scopeChips)
+        model: SearchFilters.scopes
+        currentIndex: chips.indexOf(SearchFilters.scopes, chips.scope)
+        showCounts: false
+        onSelectionChanged: index => {
+            chips.scope = SearchFilters.scopes[index].value;
+            chips.changed();
+        }
+    }
+
+    Rectangle {
+        width: Theme.dividerWidth
+        height: Theme.buttonHeightXS
+        color: Theme.outlineVariant
+    }
 
     DFilterChips {
         id: typeChips
@@ -74,7 +124,7 @@ Flow {
 
         width: chips.rowWidth(modifiedChips)
         model: SearchFilters.modified
-        currentIndex: Math.max(0, SearchFilters.modified.findIndex(entry => entry.value === chips.modified))
+        currentIndex: chips.indexOf(SearchFilters.modified, chips.modified)
         showCounts: false
         onSelectionChanged: index => {
             chips.modified = SearchFilters.modified[index].value;
@@ -93,7 +143,7 @@ Flow {
 
         width: chips.rowWidth(sizeChips)
         model: SearchFilters.sizes
-        currentIndex: Math.max(0, SearchFilters.sizes.findIndex(entry => entry.value === chips.size))
+        currentIndex: chips.indexOf(SearchFilters.sizes, chips.size)
         showCounts: false
         onSelectionChanged: index => {
             chips.size = SearchFilters.sizes[index].value;
@@ -108,21 +158,56 @@ Flow {
     }
 
     DFilterChips {
-        id: hiddenChips
+        id: toggleChips
 
-        width: chips.rowWidth(hiddenChips)
-        model: [
+        readonly property var options: [
+            {
+                "value": "fuzzy",
+                "label": I18n.tr("Fuzzy", "search chip also matching names whose letters appear in order")
+            },
             {
                 "value": "hidden",
                 "label": I18n.tr("Show hidden files", "menu entry listing dot files")
+            },
+            {
+                "value": "ignored",
+                "label": I18n.tr("Include ignored", "search chip walking gitignored entries and heavy folders too")
+            },
+            {
+                "value": "direct",
+                "label": I18n.tr("Search the disk", "search chip bypassing the danksearch index and walking the folder")
             }
         ]
+
+        width: chips.rowWidth(toggleChips)
+        model: chips.contentsAvailable && !chips.direct ? options.concat([
+                {
+                    "value": "contents",
+                    "label": I18n.tr("Contents", "search chip matching the text inside indexed files")
+                }
+            ]) : options
         multiSelect: true
-        selectedValues: chips.includeHidden ? ["hidden"] : []
+        selectedValues: [chips.fuzzy ? "fuzzy" : "", chips.includeHidden ? "hidden" : "", chips.includeIgnored ? "ignored" : "", chips.direct ? "direct" : "", chips.contents ? "contents" : ""].filter(value => value !== "")
         showCounts: false
         onSelectionToggled: (index, selected) => {
-            chips.includeHidden = selected;
-            SettingsData.searchHidden = selected;
+            switch (toggleChips.model[index].value) {
+            case "fuzzy":
+                chips.fuzzy = selected;
+                break;
+            case "hidden":
+                chips.includeHidden = selected;
+                SettingsData.searchHidden = selected;
+                break;
+            case "ignored":
+                chips.includeIgnored = selected;
+                break;
+            case "contents":
+                chips.contents = selected;
+                break;
+            case "direct":
+                chips.direct = selected;
+                break;
+            }
             chips.changed();
         }
     }

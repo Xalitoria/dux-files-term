@@ -138,6 +138,20 @@ Singleton {
             "label": I18n.tr("Search in Files", "placeholder in the search field")
         },
         {
+            "id": "searchHome",
+            "keys": ["Ctrl+Shift+F"],
+            "group": "navigation",
+            "scope": "path",
+            "label": I18n.tr("Search your home folder", "keyboard shortcut opening search with the Home scope")
+        },
+        {
+            "id": "searchFilters",
+            "keys": ["Alt+F"],
+            "group": "navigation",
+            "scope": "path",
+            "label": I18n.tr("Move to the search filters", "keyboard shortcut focusing the chips above search results")
+        },
+        {
             "id": "newWindow",
             "keys": ["Ctrl+N"],
             "group": "navigation",
@@ -280,6 +294,20 @@ Singleton {
             "group": "view",
             "scope": "view",
             "label": I18n.tr("Resize icons", "keyboard shortcut")
+        },
+        {
+            "id": "sortKey",
+            "keys": ["Ctrl+Shift+S"],
+            "group": "view",
+            "scope": "window",
+            "label": I18n.tr("Sort by the next column", "keyboard shortcut cycling the sort criterion")
+        },
+        {
+            "id": "sortDirection",
+            "keys": ["Ctrl+Shift+R"],
+            "group": "view",
+            "scope": "window",
+            "label": I18n.tr("Reverse the sort order", "keyboard shortcut flipping between ascending and descending")
         },
         {
             "id": "showHidden",

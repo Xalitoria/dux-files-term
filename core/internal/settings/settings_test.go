@@ -20,6 +20,7 @@ func TestLoad(t *testing.T) {
 		{"partial file keeps other defaults", `{"themeMode": "dark"}`, Defaults()},
 		{"terminal", `{"terminal": "kitty"}`, UISettings{Terminal: "kitty", RegisterFileManager: true}},
 		{"file manager registration off", `{"registerFileManager": false}`, UISettings{RegisterFileManager: false}},
+		{"search exclusions", `{"searchExcludes": ["Steam", "~/big"]}`, UISettings{RegisterFileManager: true, SearchExcludes: []string{"Steam", "~/big"}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

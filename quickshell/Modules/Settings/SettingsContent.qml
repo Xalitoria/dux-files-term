@@ -793,6 +793,23 @@ Item {
                     checked: SettingsData.searchHidden
                     onToggled: checked => SettingsData.searchHidden = checked
                 }
+
+                SettingsRow {
+                    title: I18n.tr("Folders to skip", "search exclusions setting label")
+                    subtitle: I18n.tr("Folder names or paths, separated by commas. Build and cache folders are always skipped unless Include ignored is on.", "search exclusions setting description")
+
+                    body: DTextField {
+                        width: parent.width
+                        outlined: true
+                        text: SettingsData.searchExcludes.join(", ")
+                        placeholderText: I18n.tr("Steam, ~/VirtualBox VMs", "example list in the search exclusions field, folder names or paths separated by commas")
+                        onEditingFinished: {
+                            const names = text.split(",").map(entry => entry.trim()).filter(entry => entry !== "");
+                            if (JSON.stringify(names) !== JSON.stringify(SettingsData.searchExcludes))
+                                SettingsData.searchExcludes = names;
+                        }
+                    }
+                }
             }
         }
     }

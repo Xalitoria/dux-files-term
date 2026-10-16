@@ -44,6 +44,35 @@ Item {
     ]
     readonly property string previewLabel: I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
     readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
+    property bool resultsActive: false
+    readonly property var resultSortKeys: [
+        {
+            "key": "",
+            "icon": "sort",
+            "label": I18n.tr("Relevance", "sort criterion for search results, best match first")
+        },
+        {
+            "key": "name",
+            "icon": "sort_by_alpha",
+            "label": FileColumns.label("name")
+        },
+        {
+            "key": "mtime",
+            "icon": "history",
+            "label": FileColumns.label("modified")
+        },
+        {
+            "key": "size",
+            "icon": "straighten",
+            "label": FileColumns.label("size")
+        },
+        {
+            "key": "location",
+            "icon": "folder_open",
+            "label": FileColumns.label("location")
+        }
+    ]
+    readonly property var sortKeys: sortButton.defaultKeys
     readonly property var trashSortKeys: [
         {
             "key": "deleted",
@@ -244,8 +273,10 @@ Item {
         }
 
         FileSortButton {
+            id: sortButton
+
             anchors.verticalCenter: parent.verticalCenter
-            keys: topbar.trashActive ? topbar.trashSortKeys : defaultKeys
+            keys: topbar.resultsActive ? topbar.resultSortKeys : topbar.trashActive ? topbar.trashSortKeys : defaultKeys
             sortKey: topbar.sortKey
             descending: topbar.sortDescending
             showLabel: !topbar.compact

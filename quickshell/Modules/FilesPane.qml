@@ -174,16 +174,26 @@ FocusScope {
         if (path === "" || trashActive)
             return;
         const state = filterState ?? results.chips.filterState;
-        searchModel.rootPath = path;
+        searchModel.rootPath = state.scope === "folder" ? path : Paths.strip(Paths.home);
         searchModel.query = query;
         searchModel.options = SearchFilters.options(state);
         searchModel.start();
         results.focusBody();
     }
 
+    function setSearchScope(scope) {
+        results.chips.scope = scope;
+    }
+
+    function focusSearchChips() {
+        if (resultsActive)
+            results.chips.focusFirst();
+    }
+
     function closeSearch() {
         if (resultsActive)
             searchModel.clear();
+        results.chips.resetScope();
         nameFilter = "";
     }
 

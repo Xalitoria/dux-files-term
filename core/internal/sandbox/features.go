@@ -21,6 +21,7 @@ func features(c Capabilities) map[string]Feature {
 		"run":            hostSpawn,
 		"openWith":       degradedUnless(!c.Sandboxed, ReasonPortalChooser),
 		"elevation":      gate(!c.Sandboxed, ReasonSandboxed),
+		"indexSearch":    gate(!c.Sandboxed, ReasonSandboxed),
 	}
 }
 

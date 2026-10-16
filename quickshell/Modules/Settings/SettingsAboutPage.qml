@@ -58,6 +58,10 @@ Item {
         {
             "id": "elevation",
             "label": I18n.tr("Retry as administrator", "file operation error dialog action")
+        },
+        {
+            "id": "indexSearch",
+            "label": I18n.tr("Search with the danksearch index", "capability row on the about page")
         }
     ]
 

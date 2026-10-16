@@ -3,11 +3,13 @@ package search
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/AvengeMedia/dankgo/files"
 )
@@ -31,6 +33,9 @@ type Service struct {
 	stater       Stater
 	workers      int
 	attachOnOpen atomic.Bool
+	index        indexBackend
+	mounts       func() []string
+	excludes     func() []string
 
 	mu       sync.Mutex
 	searches map[string]*search
@@ -43,8 +48,18 @@ func NewService(bus Publisher, stater Stater) *Service {
 		stater:   stater,
 		workers:  min(4, runtime.NumCPU()),
 		searches: map[string]*search{},
+		index:    indexBackend{now: time.Now, infoWait: infoTimeout, searchWait: searchTimeout},
 	}
 }
+
+// SetIndexEnabled allows searches to be answered by a running danksearch.
+func (s *Service) SetIndexEnabled(enabled bool) { s.index.enabled.Store(enabled) }
+
+// SetMounts supplies the mounted local drives scope Everywhere adds to home.
+func (s *Service) SetMounts(mounts func() []string) { s.mounts = mounts }
+
+// SetExcludes supplies the user's folder exclusions, read at every search.
+func (s *Service) SetExcludes(excludes func() []string) { s.excludes = excludes }
 
 // Attach flushes what a search buffered before its topic had a subscriber.
 func (s *Service) Attach(topics []string) {
@@ -75,12 +90,14 @@ func (s *Service) Close() {
 	}
 }
 
-// Start walks root for entries matching query and opts, streaming batches on
-// the returned topic. The search ends with the connection context.
+// Start searches root (or the scope's roots) for entries matching query and
+// opts, streaming batches on the returned topic. The search ends with the
+// connection context.
 func (s *Service) Start(ctx context.Context, root, query string, opts Options) (id, topic string, err error) {
 	if err := validate(root, query, opts); err != nil {
 		return "", "", err
 	}
+	root = filepath.Clean(root)
 
 	sc := newSearch(s)
 	if err := s.register(sc); err != nil {

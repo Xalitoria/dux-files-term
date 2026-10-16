@@ -8,9 +8,20 @@ import (
 	"github.com/AvengeMedia/dankgo/files"
 )
 
+const (
+	ScopeFolder     = "folder"
+	ScopeHome       = "home"
+	ScopeEverywhere = "everywhere"
+)
+
 type Options struct {
+	Scope           string
 	IncludeHidden   bool
+	IncludeIgnored  bool
 	CrossDevice     bool
+	Fuzzy           bool
+	Contents        bool
+	Direct          bool
 	Types           []string
 	ModifiedAfterMs int64
 	MinSize         int64
@@ -18,7 +29,6 @@ type Options struct {
 	Limit           int
 }
 
-// Types the UI offers as chips; anything else is rejected up front.
 var knownTypes = map[string]bool{
 	"documents": true,
 	"images":    true,
@@ -32,6 +42,8 @@ func validate(root, query string, opts Options) error {
 	switch {
 	case !filepath.IsAbs(root):
 		return &files.Error{Code: files.CodeInvalid, Path: root, Err: errors.New("root must be absolute")}
+	case opts.Scope != "" && opts.Scope != ScopeFolder && opts.Scope != ScopeHome && opts.Scope != ScopeEverywhere:
+		return &files.Error{Code: files.CodeInvalid, Err: errors.New("unknown scope: " + opts.Scope)}
 	case strings.TrimSpace(query) == "" && !opts.filtered():
 		return &files.Error{Code: files.CodeInvalid, Err: errors.New("search needs a query or a filter")}
 	case opts.MinSize > 0 && opts.MaxSize > 0 && opts.MaxSize < opts.MinSize:

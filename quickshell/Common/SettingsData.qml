@@ -105,6 +105,7 @@ Singleton {
     property alias showSystemPartitions: adapter.showSystemPartitions
     property alias mountOnClick: adapter.mountOnClick
     property alias searchHidden: adapter.searchHidden
+    property alias searchExcludes: adapter.searchExcludes
     property alias vimKeys: adapter.vimKeys
     // "jump" moves to the first matching name, "filter" opens the pane filter
     property alias listTyping: adapter.listTyping
@@ -181,6 +182,7 @@ Singleton {
             property bool showSystemPartitions: false
             property bool mountOnClick: true
             property bool searchHidden: false
+            property var searchExcludes: []
             property bool vimKeys: false
             property string listTyping: "jump"
             property bool gtkBookmarksOffered: false

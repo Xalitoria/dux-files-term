@@ -2,12 +2,20 @@ package search
 
 import "sync"
 
+type dirItem struct {
+	path     string
+	relLower string
+	depth    int
+	root     *rootInfo
+	patterns []ignorePattern
+}
+
 // dirQueue hands directories to a bounded set of workers without ever
 // blocking the worker that discovered them.
 type dirQueue struct {
 	mu      sync.Mutex
 	cond    *sync.Cond
-	items   []string
+	items   []dirItem
 	closed  bool
 	pending sync.WaitGroup
 }
@@ -18,16 +26,16 @@ func (q *dirQueue) init() {
 	}
 }
 
-func (q *dirQueue) push(dir string) {
+func (q *dirQueue) push(item dirItem) {
 	q.mu.Lock()
 	q.init()
 	q.pending.Add(1)
-	q.items = append(q.items, dir)
+	q.items = append(q.items, item)
 	q.cond.Signal()
 	q.mu.Unlock()
 }
 
-func (q *dirQueue) pop() (string, bool) {
+func (q *dirQueue) pop() (dirItem, bool) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	q.init()
@@ -35,11 +43,11 @@ func (q *dirQueue) pop() (string, bool) {
 		q.cond.Wait()
 	}
 	if len(q.items) == 0 {
-		return "", false
+		return dirItem{}, false
 	}
-	dir := q.items[0]
+	item := q.items[0]
 	q.items = q.items[1:]
-	return dir, true
+	return item, true
 }
 
 func (q *dirQueue) done() { q.pending.Done() }

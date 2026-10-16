@@ -84,6 +84,13 @@
     "comment": ""
   },
   {
+    "term": "%1 levels deep",
+    "translation": "",
+    "context": "search results header note giving how far below the folder the index reaches",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 matching “%2”",
     "translation": "",
     "context": "filter bar above a folder listing, count then the typed text",
@@ -602,6 +609,13 @@
     "comment": ""
   },
   {
+    "term": "Contents",
+    "translation": "",
+    "context": "search chip matching the text inside indexed files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Copied",
     "translation": "",
     "context": "toast after copying files",
@@ -952,6 +966,13 @@
     "comment": ""
   },
   {
+    "term": "Everywhere",
+    "translation": "",
+    "context": "search scope chip covering home and every mounted local drive",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Execute",
     "translation": "",
     "context": "permission bit",
@@ -1057,6 +1078,13 @@
     "comment": ""
   },
   {
+    "term": "Folder names or paths, separated by commas. Build and cache folders are always skipped unless Include ignored is on.",
+    "translation": "",
+    "context": "search exclusions setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Folders",
     "translation": "",
     "context": "search filter chip for directories",
@@ -1085,6 +1113,13 @@
     "comment": ""
   },
   {
+    "term": "Folders to skip",
+    "translation": "",
+    "context": "search exclusions setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Follow DankMaterialShell colors, falling back to a preset.",
     "translation": "",
     "context": "color source description for auto",
@@ -1102,6 +1137,20 @@
     "term": "Forward",
     "translation": "",
     "context": "tooltip on the button going to the next location",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "From the index",
+    "translation": "",
+    "context": "search results header note when danksearch served the search",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Fuzzy",
+    "translation": "",
+    "context": "search chip also matching names whose letters appear in order",
     "reference": "",
     "comment": ""
   },
@@ -1225,9 +1274,23 @@
     "comment": ""
   },
   {
+    "term": "Include ignored",
+    "translation": "",
+    "context": "search chip walking gitignored entries and heavy folders too",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Increase",
     "translation": "",
     "context": "slider row step up button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Index is still building, results may be incomplete",
+    "translation": "",
+    "context": "search results header note while danksearch is indexing",
     "reference": "",
     "comment": ""
   },
@@ -1508,6 +1571,13 @@
     "term": "Move to Trash",
     "translation": "",
     "context": "context menu entry trashing the selection",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Move to the search filters",
+    "translation": "",
+    "context": "keyboard shortcut focusing the chips above search results",
     "reference": "",
     "comment": ""
   },
@@ -2100,6 +2170,13 @@
     "comment": ""
   },
   {
+    "term": "Relevance",
+    "translation": "",
+    "context": "sort criterion for search results, best match first",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Reload",
     "translation": "",
     "context": "menu entry re-reading the current folder",
@@ -2219,6 +2296,13 @@
     "comment": ""
   },
   {
+    "term": "Reverse the sort order",
+    "translation": "",
+    "context": "keyboard shortcut flipping between ascending and descending",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Ripple effects",
     "translation": "",
     "context": "ripple effects toggle label",
@@ -2299,6 +2383,27 @@
     "term": "Search subfolders",
     "translation": "",
     "context": "chip that turns the folder filter into a recursive search",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search the disk",
+    "translation": "",
+    "context": "search chip bypassing the danksearch index and walking the folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search with the danksearch index",
+    "translation": "",
+    "context": "capability row on the about page",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search your home folder",
+    "translation": "",
+    "context": "keyboard shortcut opening search with the Home scope",
     "reference": "",
     "comment": ""
   },
@@ -2443,9 +2548,23 @@
     "comment": ""
   },
   {
+    "term": "Some matches may be missing",
+    "translation": "",
+    "context": "search results header note when the index could not return every candidate",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Sort by",
     "translation": "",
     "context": "setting label for the default sort key",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Sort by the next column",
+    "translation": "",
+    "context": "keyboard shortcut cycling the sort criterion",
     "reference": "",
     "comment": ""
   },
@@ -2481,6 +2600,13 @@
     "term": "Status",
     "translation": "",
     "context": "about page daemon status column label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Steam, ~/VirtualBox VMs",
+    "translation": "",
+    "context": "example list in the search exclusions field, folder names or paths separated by commas",
     "reference": "",
     "comment": ""
   },
@@ -2586,6 +2712,13 @@
     "term": "Thickness",
     "translation": "",
     "context": "focus ring thickness slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This folder",
+    "translation": "",
+    "context": "search scope chip limiting the search to the current folder",
     "reference": "",
     "comment": ""
   },

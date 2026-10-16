@@ -12,8 +12,9 @@ import (
 const FileName = "ui-settings.json"
 
 type UISettings struct {
-	Terminal            string `json:"terminal"`
-	RegisterFileManager bool   `json:"registerFileManager"`
+	Terminal            string   `json:"terminal"`
+	RegisterFileManager bool     `json:"registerFileManager"`
+	SearchExcludes      []string `json:"searchExcludes"`
 }
 
 func Defaults() UISettings {

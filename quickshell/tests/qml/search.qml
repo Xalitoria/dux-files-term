@@ -163,6 +163,60 @@ ShellRoot {
         model.clear();
         check("clear leaves results mode", [model.active, names()], [false, []]);
 
+        model.start();
+        fakeBackend.searchEvent({
+            "searchId": "s3",
+            "kind": "backend",
+            "backend": "index",
+            "phase": "syncing",
+            "depthLimit": 4
+        });
+        check("backend event is exposed", [model.servedBy, model.indexPhase, model.depthLimit], ["index", "syncing", 4]);
+        const scored = (name, score, size, mtimeMs) => Object.assign(entry(name), {
+            "score": score,
+            "size": size,
+            "mtimeMs": mtimeMs
+        });
+        fakeBackend.searchEvent({
+            "searchId": "s3",
+            "kind": "results",
+            "entries": [scored("b.txt", 600, 30, 3), scored("a.txt", 800, 10, 1)],
+            "count": 2
+        });
+        fakeBackend.searchEvent({
+            "searchId": "s3",
+            "kind": "results",
+            "entries": [scored("c.txt", 700, 20, 2), scored("d.txt", 600, 40, 4)],
+            "count": 4
+        });
+        check("batches insert by score, ties by arrival", names(), ["a.txt", "c.txt", "b.txt", "d.txt"]);
+        model.setSort("name");
+        check("name sort", names(), ["a.txt", "b.txt", "c.txt", "d.txt"]);
+        model.setSort("name");
+        check("same key flips direction", [model.sortDescending, names()], [true, ["d.txt", "c.txt", "b.txt", "a.txt"]]);
+        model.setSort("size");
+        check("size sort resets direction", [model.sortDescending, names()], [false, ["a.txt", "c.txt", "b.txt", "d.txt"]]);
+        fakeBackend.searchEvent({
+            "searchId": "s3",
+            "kind": "results",
+            "entries": [scored("e.txt", 900, 25, 5)],
+            "count": 5
+        });
+        check("late batches respect the current sort", names(), ["a.txt", "c.txt", "e.txt", "b.txt", "d.txt"]);
+        model.setSort("mtime");
+        model.sortDescending = true;
+        check("modified sort", names(), ["e.txt", "d.txt", "b.txt", "c.txt", "a.txt"]);
+        model.setSort("");
+        check("relevance again", [model.sortDescending, names()], [false, ["e.txt", "a.txt", "c.txt", "b.txt", "d.txt"]]);
+        fakeBackend.searchEvent({
+            "searchId": "s3",
+            "kind": "done",
+            "count": 5,
+            "partial": true
+        });
+        check("done reports partial", [model.partial, model.loading], [true, false]);
+        check("path lookup follows the sorted rows", [model.indexOfPath("/tmp/c.txt"), model.indexOfPath("/tmp/d.txt"), model.indexOfPath("/tmp/nope")], [2, 4, -1]);
+
         startResponse = {
             "error": "not a directory",
             "code": "ENOTDIR"

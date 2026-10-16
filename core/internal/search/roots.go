@@ -1,0 +1,63 @@
+package search
+
+import (
+	"os"
+	"path/filepath"
+	"slices"
+	"sort"
+	"strings"
+)
+
+// roots resolves the scope to the directories a search walks: the folder
+// itself, the home directory, or home plus every mounted local drive, with
+// nested roots folded into their parent.
+func roots(scope, root string, mounts func() []string) []string {
+	switch scope {
+	case ScopeHome:
+		return []string{homeOr(root)}
+	case ScopeEverywhere:
+		all := []string{homeOr(root)}
+		if mounts != nil {
+			all = append(all, mounts()...)
+		}
+		return dedupeRoots(all)
+	}
+	return []string{root}
+}
+
+func homeOr(fallback string) string {
+	home, err := os.UserHomeDir()
+	if err != nil || home == "" {
+		return fallback
+	}
+	return filepath.Clean(home)
+}
+
+func dedupeRoots(paths []string) []string {
+	cleaned := make([]string, 0, len(paths))
+	for _, p := range paths {
+		if p == "" || !filepath.IsAbs(p) {
+			continue
+		}
+		cleaned = append(cleaned, filepath.Clean(p))
+	}
+	sort.Strings(cleaned)
+	var out []string
+	for _, p := range cleaned {
+		if slices.ContainsFunc(out, func(kept string) bool { return inside(p, kept) }) {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
+}
+
+func inside(path, root string) bool {
+	if path == root {
+		return true
+	}
+	if root == "/" {
+		return true
+	}
+	return strings.HasPrefix(path, root+"/")
+}

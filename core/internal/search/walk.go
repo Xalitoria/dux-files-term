@@ -1,10 +1,12 @@
 package search
 
 import (
+	"container/heap"
 	"context"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,18 +16,29 @@ import (
 )
 
 const (
-	batchSize     = 200
-	flushInterval = 100 * time.Millisecond
+	batchSize      = 200
+	flushInterval  = 100 * time.Millisecond
+	fuzzyReservoir = 2000
 )
 
+type hit struct {
+	files.Entry
+	Score int `json:"score"`
+}
+
 type event struct {
-	SearchID   string        `json:"searchId"`
-	Kind       string        `json:"kind"`
-	Entries    []files.Entry `json:"entries,omitempty"`
-	Count      int           `json:"count"`
-	Truncated  bool          `json:"truncated,omitempty"`
-	Cancelled  bool          `json:"cancelled,omitempty"`
-	Unreadable int           `json:"unreadable,omitempty"`
+	SearchID   string `json:"searchId"`
+	Kind       string `json:"kind"`
+	Entries    []hit  `json:"entries,omitempty"`
+	Count      int    `json:"count"`
+	Truncated  bool   `json:"truncated,omitempty"`
+	Partial    bool   `json:"partial,omitempty"`
+	Cancelled  bool   `json:"cancelled,omitempty"`
+	Unreadable int    `json:"unreadable,omitempty"`
+	Backend    string `json:"backend,omitempty"`
+	Phase      string `json:"phase,omitempty"`
+	DepthLimit int    `json:"depthLimit,omitempty"`
+	Reason     string `json:"reason,omitempty"`
 }
 
 type search struct {
@@ -60,23 +73,40 @@ func (sc *search) run(root, query string, opts Options) {
 	defer close(sc.finished)
 	defer sc.retire()
 
+	targets := roots(opts.Scope, root, sc.svc.mounts)
+	terms := parseTerms(query)
+	em := newEmitter(sc, opts.limit())
+	reason := sc.svc.index.serve(sc, em, targets, query, terms, opts)
+	if reason == "" {
+		return
+	}
+	sc.walk(em, targets, terms, opts, reason)
+}
+
+func (sc *search) walk(em *emitter, targets []string, terms []term, opts Options, reason string) {
+	sc.publish(event{Kind: "backend", Backend: "walk", Reason: reason})
+	var excludes []string
+	if sc.svc.excludes != nil {
+		excludes = sc.svc.excludes()
+	}
 	w := &walker{
-		sc:      sc,
-		query:   strings.ToLower(query),
-		opts:    opts,
-		limit:   opts.limit(),
-		matches: make(chan files.Entry, batchSize),
+		sc:        sc,
+		em:        em,
+		terms:     terms,
+		opts:      opts,
+		rules:     newIgnoreRules(excludes, opts.IncludeIgnored),
+		reservoir: reservoir{limit: fuzzyReservoir},
 	}
-	if !opts.CrossDevice {
-		if dev, ok := deviceOf(root); ok {
-			w.device, w.sameDevice = dev, true
+	for _, target := range targets {
+		info := &rootInfo{path: target}
+		if !opts.CrossDevice {
+			if dev, ok := deviceOf(target); ok {
+				info.device, info.sameDevice = dev, true
+			}
 		}
+		w.queue.push(dirItem{path: target, root: info, patterns: w.rules.rootPatterns(target)})
 	}
 
-	collected := make(chan event, 1)
-	go w.collect(collected)
-
-	w.queue.push(root)
 	var workers sync.WaitGroup
 	for range sc.svc.workers {
 		workers.Add(1)
@@ -90,12 +120,8 @@ func (sc *search) run(root, query string, opts Options) {
 		w.queue.close()
 	}()
 	workers.Wait()
-	close(w.matches)
-
-	done := <-collected
-	done.Cancelled = sc.ctx.Err() != nil && !done.Truncated
-	done.Unreadable = int(w.unreadable.Load())
-	sc.publish(done)
+	w.flushReservoir()
+	em.finish(false, int(w.unreadable.Load()))
 }
 
 func (sc *search) publish(ev event) {
@@ -147,38 +173,44 @@ func (sc *search) drop() {
 	sc.svc.unregister(sc.id)
 }
 
-type walker struct {
-	sc         *search
-	query      string
-	opts       Options
-	limit      int
+type rootInfo struct {
+	path       string
 	device     uint64
 	sameDevice bool
+}
+
+type walker struct {
+	sc         *search
+	em         *emitter
+	terms      []term
+	opts       Options
+	rules      ignoreRules
 	queue      dirQueue
-	matches    chan files.Entry
+	reservoir  reservoir
 	unreadable atomic.Int64
 }
 
 func (w *walker) work() {
 	for {
-		dir, ok := w.queue.pop()
+		item, ok := w.queue.pop()
 		if !ok {
 			return
 		}
-		w.readDir(dir)
+		w.readDir(item)
 		w.queue.done()
 	}
 }
 
-func (w *walker) readDir(dir string) {
+func (w *walker) readDir(item dirItem) {
 	if w.sc.ctx.Err() != nil {
 		return
 	}
-	children, err := os.ReadDir(dir)
+	children, err := os.ReadDir(item.path)
 	if err != nil {
 		w.unreadable.Add(1)
 		return
 	}
+	patterns := w.rules.loadIf(item.path, children, item.patterns)
 	for _, child := range children {
 		if w.sc.ctx.Err() != nil {
 			return
@@ -187,40 +219,145 @@ func (w *walker) readDir(dir string) {
 		if !w.opts.IncludeHidden && strings.HasPrefix(name, ".") {
 			continue
 		}
-		full := filepath.Join(dir, name)
-		if child.Type()&fs.ModeSymlink == 0 && child.IsDir() && w.descends(full) {
-			w.queue.push(full)
-		}
-		if w.query != "" && !strings.Contains(strings.ToLower(name), w.query) {
+		full := filepath.Join(item.path, name)
+		isDir := child.Type()&fs.ModeSymlink == 0 && child.IsDir()
+		if isDir && w.rules.skipsDir(name, full) {
 			continue
 		}
-		w.emit(full)
+		if ignored(patterns, full, isDir) {
+			continue
+		}
+		nameLower := strings.ToLower(name)
+		relLower := nameLower
+		if item.relLower != "" {
+			relLower = item.relLower + "/" + nameLower
+		}
+		if isDir && w.descends(full, item.root) {
+			w.queue.push(dirItem{
+				path:     full,
+				relLower: relLower,
+				depth:    item.depth + 1,
+				root:     item.root,
+				patterns: patterns,
+			})
+		}
+		points, tier := score(nameLower, relLower, item.depth, w.terms, w.opts.Fuzzy)
+		switch tier {
+		case tierNone:
+		case tierFuzzy:
+			w.reservoir.offer(full, points)
+		default:
+			if !w.emit(full, points) {
+				return
+			}
+		}
 	}
 }
 
-func (w *walker) descends(dir string) bool {
-	if !w.sameDevice {
+func (w *walker) descends(dir string, root *rootInfo) bool {
+	if !root.sameDevice {
 		return true
 	}
 	dev, ok := deviceOf(dir)
-	return !ok || dev == w.device
+	return !ok || dev == root.device
 }
 
-func (w *walker) emit(path string) {
+func (w *walker) emit(path string, points int) bool {
 	entry, err := w.sc.svc.stater.Stat(path)
 	if err != nil || !w.opts.accepts(entry) {
-		return
+		return true
 	}
-	select {
-	case w.matches <- entry:
-	case <-w.sc.ctx.Done():
+	return w.em.emit(hit{Entry: entry, Score: points})
+}
+
+// flushReservoir stats and emits the best fuzzy-only matches once the walk
+// is over, so they never crowd out stronger matches found later in the tree.
+func (w *walker) flushReservoir() {
+	for _, f := range w.reservoir.drain() {
+		if w.sc.ctx.Err() != nil {
+			return
+		}
+		if !w.emit(f.path, f.score) {
+			return
+		}
 	}
 }
 
-// collect batches matches into events, flushing on size or after a short
-// pause, and stops the walk at the cap.
-func (w *walker) collect(out chan<- event) {
-	var batch []files.Entry
+type fuzzyHit struct {
+	path  string
+	score int
+}
+
+type fuzzyHeap []fuzzyHit
+
+func (h fuzzyHeap) Len() int           { return len(h) }
+func (h fuzzyHeap) Less(i, j int) bool { return h[i].score < h[j].score }
+func (h fuzzyHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+func (h *fuzzyHeap) Push(x any)        { *h = append(*h, x.(fuzzyHit)) }
+func (h *fuzzyHeap) Pop() any          { old := *h; x := old[len(old)-1]; *h = old[:len(old)-1]; return x }
+
+type reservoir struct {
+	mu    sync.Mutex
+	limit int
+	items fuzzyHeap
+}
+
+func (r *reservoir) offer(path string, score int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	switch {
+	case len(r.items) < r.limit:
+		heap.Push(&r.items, fuzzyHit{path, score})
+	case score > r.items[0].score:
+		r.items[0] = fuzzyHit{path, score}
+		heap.Fix(&r.items, 0)
+	}
+}
+
+func (r *reservoir) drain() []fuzzyHit {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := r.items
+	r.items = nil
+	sort.SliceStable(out, func(i, j int) bool { return out[i].score > out[j].score })
+	return out
+}
+
+// emitter batches hits into events, flushing on size or after a short pause,
+// and stops the search at the cap.
+type emitter struct {
+	sc      *search
+	limit   int
+	matches chan hit
+	done    chan event
+}
+
+func newEmitter(sc *search, limit int) *emitter {
+	em := &emitter{sc: sc, limit: limit, matches: make(chan hit, batchSize), done: make(chan event, 1)}
+	go em.collect()
+	return em
+}
+
+func (em *emitter) emit(h hit) bool {
+	select {
+	case em.matches <- h:
+		return true
+	case <-em.sc.ctx.Done():
+		return false
+	}
+}
+
+func (em *emitter) finish(partial bool, unreadable int) {
+	close(em.matches)
+	done := <-em.done
+	done.Cancelled = em.sc.ctx.Err() != nil && !done.Truncated
+	done.Partial = partial
+	done.Unreadable = unreadable
+	em.sc.publish(done)
+}
+
+func (em *emitter) collect() {
+	var batch []hit
 	count := 0
 	truncated := false
 	var timer *time.Timer
@@ -230,7 +367,7 @@ func (w *walker) collect(out chan<- event) {
 		if len(batch) == 0 {
 			return
 		}
-		w.sc.publish(event{Kind: "results", Entries: batch, Count: count})
+		em.sc.publish(event{Kind: "results", Entries: batch, Count: count})
 		batch = nil
 	}
 	arm := func() {
@@ -244,24 +381,24 @@ func (w *walker) collect(out chan<- event) {
 
 	for {
 		select {
-		case entry, ok := <-w.matches:
+		case h, ok := <-em.matches:
 			if !ok {
 				flush()
 				if timer != nil {
 					timer.Stop()
 				}
-				out <- event{Kind: "done", Count: count, Truncated: truncated}
+				em.done <- event{Kind: "done", Count: count, Truncated: truncated}
 				return
 			}
 			if truncated {
 				continue
 			}
-			batch = append(batch, entry)
+			batch = append(batch, h)
 			count++
 			switch {
-			case count >= w.limit:
+			case count >= em.limit:
 				truncated = true
-				w.sc.cancel()
+				em.sc.cancel()
 				flush()
 			case len(batch) == 1:
 				arm()

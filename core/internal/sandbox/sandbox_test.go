@@ -119,6 +119,7 @@ func TestSandboxWithHostAccess(t *testing.T) {
 	assert.Equal(t, Feature{Available: true}, caps.Features["terminal"])
 	assert.Equal(t, Feature{Available: true, Degraded: true, Reason: ReasonPortalChooser}, caps.Features["openWith"])
 	assert.Equal(t, Feature{Reason: ReasonSandboxed}, caps.Features["elevation"])
+	assert.Equal(t, Feature{Reason: ReasonSandboxed}, caps.Features["indexSearch"])
 }
 
 func TestHostXDGOverridesWin(t *testing.T) {

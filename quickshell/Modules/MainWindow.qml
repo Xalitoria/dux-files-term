@@ -533,6 +533,12 @@ FloatingWindow {
     }
 
     function selectSortKey(key) {
+        if (activePane.resultsActive) {
+            const model = activePane.searchModel;
+            if (key !== model.sortKey)
+                model.setSort(key);
+            return;
+        }
         if (key === "")
             return;
         const trash = activePane.trashView;
@@ -544,12 +550,22 @@ FloatingWindow {
     }
 
     function toggleSortDirection() {
+        if (activePane.resultsActive) {
+            activePane.searchModel.sortDescending = !activePane.searchModel.sortDescending;
+            return;
+        }
         const trash = activePane.trashView;
         if (trash) {
             trash.model.setSort(trash.model.sortKey, !trash.model.sortDescending);
             return;
         }
         setSortOrder(sortKey, !sortDescending);
+    }
+
+    function cycleSortKey() {
+        const keys = topbar.resultsActive ? topbar.resultSortKeys : topbar.trashActive ? topbar.trashSortKeys : topbar.sortKeys;
+        const index = keys.findIndex(entry => entry.key === topbar.sortKey);
+        selectSortKey(keys[(index + 1) % keys.length].key);
     }
 
     function trashAction(id) {
@@ -678,6 +694,23 @@ FloatingWindow {
             activePane.startJump();
             return;
         case "search":
+            topbar.focusSearch();
+            return;
+        case "sortKey":
+            cycleSortKey();
+            return;
+        case "sortDirection":
+            toggleSortDirection();
+            return;
+        case "searchFilters":
+            activePane.focusSearchChips();
+            return;
+        case "searchHome":
+            activePane.setSearchScope("home");
+            if (activePane.nameFilter.trim() !== "") {
+                activePane.startSearch(activePane.nameFilter.trim(), null);
+                return;
+            }
             topbar.focusSearch();
             return;
         case "settings":
@@ -1923,8 +1956,9 @@ FloatingWindow {
                 bookmarked: BookmarksService.has(window.currentPath)
                 backEnabled: window.activePane.canGoBack
                 forwardEnabled: window.activePane.canGoForward
-                sortKey: window.activePane.trashView?.model.sortKey ?? window.sortKey
-                sortDescending: window.activePane.trashView?.model.sortDescending ?? window.sortDescending
+                sortKey: window.activePane.resultsActive ? window.activePane.searchModel.sortKey : window.activePane.trashView?.model.sortKey ?? window.sortKey
+                sortDescending: window.activePane.resultsActive ? window.activePane.searchModel.sortDescending : window.activePane.trashView?.model.sortDescending ?? window.sortDescending
+                resultsActive: window.activePane.resultsActive
                 compact: window.compact
                 viewMode: window.viewMode
                 previewOpen: window.previewOpen

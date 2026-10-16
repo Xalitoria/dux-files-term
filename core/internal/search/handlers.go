@@ -35,8 +35,13 @@ func (s *Service) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 func (s *Service) handleStart(ctx context.Context, w *ipc.ConnWriter, req ipc.Request) {
 	p := req.Params
 	opts := Options{
+		Scope:           params.StringOpt(p, "scope", ""),
 		IncludeHidden:   params.BoolLoose(p, "includeHidden"),
+		IncludeIgnored:  params.BoolLoose(p, "includeIgnored"),
 		CrossDevice:     params.BoolLoose(p, "crossDevice"),
+		Fuzzy:           params.BoolLoose(p, "fuzzy"),
+		Contents:        params.BoolLoose(p, "contents"),
+		Direct:          params.BoolLoose(p, "direct"),
 		Types:           stringsParam(p, "types"),
 		ModifiedAfterMs: int64Param(p, "modifiedAfterMs"),
 		MinSize:         int64Param(p, "minSize"),
