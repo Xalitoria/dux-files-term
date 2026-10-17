@@ -79,7 +79,13 @@ func execute(j *job) error {
 }
 
 func (r *runner) remember(kind Kind, from, to string) {
-	r.rememberPair(kind, pair{src: from, dst: to}, guardOf(from))
+	p := pair{src: from, dst: to}
+	g := guard{}
+	if info, err := os.Lstat(from); err == nil {
+		p.dir = info.IsDir()
+		g = guard{size: info.Size(), mtimeMs: info.ModTime().UnixMilli()}
+	}
+	r.rememberPair(kind, p, g)
 }
 
 // rememberPair keeps the first kind a job records, so a composite job owns

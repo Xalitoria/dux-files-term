@@ -13,13 +13,14 @@ Rectangle {
     property bool highlighted: false
     property bool isFirstInGroup: true
     property bool isLastInGroup: true
+    property int matchCount: -1
 
     signal clicked
 
     activeFocusOnTab: enabled
     Accessible.role: Accessible.Button
     Accessible.name: title
-    Accessible.description: hint
+    Accessible.description: matchCount > 0 ? I18n.tr("%1, %2 matches", "accessible description of a settings page while searching, name then count").arg(hint).arg(matchCount) : hint
     Accessible.onPressAction: clicked()
 
     Keys.onPressed: event => {
@@ -132,12 +133,24 @@ Rectangle {
         }
     }
 
+    StyledText {
+        id: countBadge
+        anchors.right: parent.right
+        anchors.rightMargin: Theme.spacingL
+        anchors.verticalCenter: parent.verticalCenter
+        visible: root.matchCount > 0
+        text: root.matchCount
+        font.pixelSize: Theme.fontSizeSmall
+        font.weight: Theme.fontWeightMedium
+        color: Theme.primary
+    }
+
     Column {
         id: textColumn
         anchors.left: iconCircle.right
         anchors.leftMargin: Theme.spacingM
-        anchors.right: parent.right
-        anchors.rightMargin: Theme.spacingL
+        anchors.right: countBadge.visible ? countBadge.left : parent.right
+        anchors.rightMargin: countBadge.visible ? Theme.spacingM : Theme.spacingL
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.spacingXXS
 

@@ -23,6 +23,8 @@ Item {
     property string filterText: ""
     property string currentPath: ""
     property bool searchFocused: false
+    property bool folderRemembered: false
+    property bool folderHasSettings: false
 
     readonly property bool bookmarkPlace: BookmarksService.isPlace(currentPath)
     readonly property string bookmarkLabel: {
@@ -48,6 +50,8 @@ Item {
         }
     ]
     readonly property string previewLabel: I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
+    readonly property string useForAllLabel: I18n.tr("Use these settings for all folders", "view menu entry making this folder's sort and view the defaults")
+    readonly property string resetFolderLabel: I18n.tr("Reset this folder", "view menu entry dropping this folder's own sort and view")
     readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
     property bool resultsActive: false
     readonly property var resultSortKeys: [
@@ -111,6 +115,8 @@ Item {
     signal previewToggled
     signal sortKeySelected(string key)
     signal sortDirectionToggled
+    signal useForAllFoldersRequested
+    signal resetFolderRequested
     signal propertiesRequested
     signal newWindowRequested
     signal copyPathRequested
@@ -254,6 +260,31 @@ Item {
                         topbar.previewToggled();
                     }
                 }
+
+                FileMenuDivider {
+                    visible: topbar.folderRemembered
+                }
+
+                FileMenuItem {
+                    visible: topbar.folderRemembered
+                    text: topbar.useForAllLabel
+                    iconName: "done_all"
+                    onClicked: {
+                        viewMenu.close();
+                        topbar.useForAllFoldersRequested();
+                    }
+                }
+
+                FileMenuItem {
+                    visible: topbar.folderRemembered
+                    enabled: topbar.folderHasSettings
+                    text: topbar.resetFolderLabel
+                    iconName: "restart_alt"
+                    onClicked: {
+                        viewMenu.close();
+                        topbar.resetFolderRequested();
+                    }
+                }
             }
         }
 
@@ -351,6 +382,27 @@ Item {
                     onClicked: {
                         overflowMenu.close();
                         topbar.splitToggled();
+                    }
+                }
+
+                FileMenuItem {
+                    visible: topbar.compact && topbar.folderRemembered
+                    text: topbar.useForAllLabel
+                    iconName: "done_all"
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.useForAllFoldersRequested();
+                    }
+                }
+
+                FileMenuItem {
+                    visible: topbar.compact && topbar.folderRemembered
+                    enabled: topbar.folderHasSettings
+                    text: topbar.resetFolderLabel
+                    iconName: "restart_alt"
+                    onClicked: {
+                        overflowMenu.close();
+                        topbar.resetFolderRequested();
                     }
                 }
 

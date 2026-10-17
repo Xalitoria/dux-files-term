@@ -12,9 +12,10 @@ FocusScope {
     property bool active: true
     property bool showActiveOutline: false
     property bool showHidden: false
-    property string sortKey: "name"
-    property bool sortDescending: false
-    property string viewMode: "list"
+    property string sortKey: SessionData.lastUsed("sortKey", SettingsData.defaultSort)
+    property bool sortDescending: SessionData.lastUsed("sortDescending", SettingsData.defaultSortDescending)
+    property string viewMode: SessionData.lastUsed("viewMode", SettingsData.defaultView)
+    property bool hasFolderSettings: false
     property bool previewOpen: true
     property var cutSet: ({})
     property string nameFilter: ""
@@ -40,6 +41,7 @@ FocusScope {
     readonly property var currentEntry: resultsActive ? results.body.cursorEntry() : trashView ? trashView.body.cursorEntry() : browser.currentEntry
     readonly property var selectedEntries: resultsActive ? results.body.selectedEntries() : trashView ? trashView.body.selectedEntries() : browser.selectedEntries
     readonly property bool filtering: nameFilter !== "" && !resultsActive
+    readonly property bool folderRemembered: SettingsData.rememberFolderViews && path !== "" && !trashActive && !resultsActive
 
     signal activateRequested(var entry)
     signal openRequested(var entries)
@@ -63,6 +65,62 @@ FocusScope {
     function navigate(target) {
         closeSearch();
         browser.navigate(target);
+    }
+
+    function resolveFolder(target) {
+        const entry = SettingsData.rememberFolderViews ? FolderViews.lookup(target) : null;
+        const values = FolderViews.resolve(entry, SessionData.browsing, {
+            "sortKey": SettingsData.defaultSort,
+            "sortDescending": SettingsData.defaultSortDescending,
+            "viewMode": SettingsData.defaultView
+        });
+        hasFolderSettings = entry !== null;
+        sortKey = values.sortKey;
+        sortDescending = values.sortDescending;
+        viewMode = values.viewMode;
+        if (entry)
+            FolderViews.touch(target);
+    }
+
+    function refreshFolder() {
+        if (path === "" || resultsActive)
+            return;
+        resolveFolder(path);
+    }
+
+    function toggleSort(key) {
+        setSortOrder(key, sortKey === key ? !sortDescending : false);
+    }
+
+    function setSortOrder(key, descending) {
+        sortKey = key;
+        sortDescending = descending;
+        const values = {
+            "sortKey": key,
+            "sortDescending": descending
+        };
+        if (folderRemembered) {
+            FolderViews.set(path, values);
+            return;
+        }
+        SessionData.remember(values);
+    }
+
+    function setViewMode(mode) {
+        viewMode = mode;
+        if (folderRemembered) {
+            FolderViews.set(path, {
+                "viewMode": mode
+            });
+            return;
+        }
+        SessionData.remember({
+            "viewMode": mode
+        });
+    }
+
+    function resetFolder() {
+        FolderViews.reset(path);
     }
 
     function reveal(targets) {
@@ -307,6 +365,32 @@ FocusScope {
         }
     }
 
+    Connections {
+        target: FolderViews
+
+        function onChanged(key) {
+            if (key !== "" && pane.path !== "" && key !== FolderViews.key(pane.path))
+                return;
+            pane.refreshFolder();
+        }
+    }
+
+    Connections {
+        target: SettingsData
+
+        function onRememberFolderViewsChanged() {
+            pane.refreshFolder();
+        }
+    }
+
+    Connections {
+        target: DevicesService
+
+        function onDevicesChanged() {
+            pane.refreshFolder();
+        }
+    }
+
     SearchModel {
         id: searchModel
 
@@ -367,6 +451,7 @@ FocusScope {
         paneMargin: FilesMetrics.paneBodyMargin
         paneBorderWidth: pane.showActiveOutline && pane.active ? Theme.outlineWidthFocused : 0
         paneBorderColor: Theme.primary
+        onNavigating: target => pane.resolveFolder(target)
         onActivateRequested: entry => pane.activateRequested(entry)
         onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.itemMenuRequested(index, pointX, pointY, modifiers)
         onBackgroundMenuRequested: (pointX, pointY) => pane.backgroundMenuRequested(pointX, pointY)

@@ -959,6 +959,13 @@
     "comment": ""
   },
   {
+    "term": "Each folder keeps the sort and view picked in it. Off applies the last choice everywhere.",
+    "translation": "",
+    "context": "setting description for per-folder sort and view memory",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Eject",
     "translation": "",
     "context": "device action",
@@ -1004,6 +1011,13 @@
     "term": "Estimating…",
     "translation": "",
     "context": "file operation is still measuring the work",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Every folder goes back to the default sort and view.",
+    "translation": "",
+    "context": "dialog message before clearing every remembered folder sort and view",
     "reference": "",
     "comment": ""
   },
@@ -1179,6 +1193,27 @@
     "term": "Following the system color scheme (currently %1).",
     "translation": "",
     "context": "theme mode setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Forget",
+    "translation": "",
+    "context": "dialog button clearing the remembered folder settings",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Forget all folder settings",
+    "translation": "",
+    "context": "settings row clearing every remembered folder sort and view",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Forget all folder settings?",
+    "translation": "",
+    "context": "dialog title before clearing every remembered folder sort and view",
     "reference": "",
     "comment": ""
   },
@@ -2324,6 +2359,13 @@
     "comment": ""
   },
   {
+    "term": "Remember view and sort per folder",
+    "translation": "",
+    "context": "setting label for per-folder sort and view memory",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Remove bookmark",
     "translation": "",
     "context": "tooltip on the bookmark button",
@@ -2369,6 +2411,13 @@
     "term": "Replace",
     "translation": "",
     "context": "file conflict dialog button to overwrite the existing item",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Reset this folder",
+    "translation": "",
+    "context": "view menu entry dropping this folder's own sort and view",
     "reference": "",
     "comment": ""
   },
@@ -2558,6 +2607,20 @@
     "term": "Search in Files",
     "translation": "",
     "context": "placeholder in the search field",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search results",
+    "translation": "",
+    "context": "settings page header while a search query is typed",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search settings",
+    "translation": "",
+    "context": "placeholder in the settings search field",
     "reference": "",
     "comment": ""
   },
@@ -3136,6 +3199,13 @@
     "comment": ""
   },
   {
+    "term": "Use these settings for all folders",
+    "translation": "",
+    "context": "view menu entry making this folder's sort and view the defaults",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Use this folder",
     "translation": "",
     "context": "file browser folder selection confirm button",
@@ -3262,9 +3332,177 @@
     "comment": ""
   },
   {
+    "term": "accessibility animation disable",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "animation click feedback",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "animation speed motion",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "bounce animation motion",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "capability available sandbox",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "console emulator shell command line",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "corners rounding shape square",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "custom theme json file",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "daemon connected offline socket",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "daemon path unix",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "daemon protocol",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "daemon release build",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "dark",
     "translation": "",
     "context": "current scheme name in theme mode description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "decorations csd window header",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "default file manager dbus reveal",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "delete confirmation prompt",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "directories first sort",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "documentation help manual",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "dotfiles invisible",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "drag drop copy move ask default action",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "flatpak app id",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "focus ring width outline",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "folder memory per-folder remember",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "font bold typography",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "font size text zoom typography",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
     "comment": ""
   },
@@ -3283,9 +3521,212 @@
     "comment": ""
   },
   {
+    "term": "hjkl keyboard navigation modal",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "internal drives udisks home boot",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "keyboard outline accessibility",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "keys bindings hotkeys F1",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "light",
     "translation": "",
     "context": "current scheme name in theme mode description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "light dark mode system color scheme",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "list grid columns icons tiles",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "locale translation interface",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "mount usb removable sidebar",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "order direction ascending reverse",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "order name size modified type date",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "palette dms preset custom accent",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "portal file chooser picker xdg",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "preset palette swatch colors",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "previews images video pdf",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "quit exit hide daemon keep running",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "remote sftp smb previews",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "reset clear per-folder memory",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "search dotfiles recursive",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "search exclude ignore",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "single double click activate",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "size column entries",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "source code repository issues",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "tabs external open location",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "thumbnail size limit cap megabytes",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "type-ahead jump filter search keyboard",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "xdg-desktop-portal",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "zip tar unpack compressed",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "zoom rows",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "zoom thumbnails tiles",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
     "comment": ""
   }

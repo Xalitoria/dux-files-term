@@ -204,8 +204,8 @@ ShellRoot {
             NetworkService.transport = root.fakeTransport;
             wait(200);
             const pane = win.activePane;
-            win.viewMode = "grid";
             pane.navigate("/tmp");
+            pane.setViewMode("grid");
             wait(100);
             entries(pane.body.directory);
             wait(150);
@@ -255,7 +255,7 @@ ShellRoot {
             wait(250);
             check(view.contentY > view.originY, true);
             mouseRelease(view, view.cellWidth - 2, view.height - 2);
-            win.viewMode = "list";
+            pane.setViewMode("list");
             wait(150);
             view = pane.body.view;
             dragSpy.target = view;

@@ -27,9 +27,6 @@ FloatingWindow {
     property bool splitView: false
     property real splitRatio: 0.5
     property bool showHidden: SessionData.lastUsed("showHidden", SettingsData.showHidden)
-    property string sortKey: SessionData.lastUsed("sortKey", SettingsData.defaultSort)
-    property bool sortDescending: SessionData.lastUsed("sortDescending", SettingsData.defaultSortDescending)
-    property string viewMode: SessionData.lastUsed("viewMode", SettingsData.defaultView)
     property bool previewOpen: SessionData.lastUsed("previewOpen", true)
     property bool sidebarOverlayOpen: false
     property string pendingTrust: ""
@@ -490,9 +487,6 @@ FloatingWindow {
 
     function keepOwnBrowsing() {
         showHidden = showHidden;
-        sortKey = sortKey;
-        sortDescending = sortDescending;
-        viewMode = viewMode;
         previewOpen = previewOpen;
     }
 
@@ -504,10 +498,27 @@ FloatingWindow {
     }
 
     function setViewMode(mode) {
-        viewMode = mode;
-        SessionData.remember({
-            "viewMode": mode
-        });
+        activePane.setViewMode(mode);
+    }
+
+    function resolvePanes() {
+        for (const pane of [primaryPane, secondPane]) {
+            if (pane && pane.path !== "")
+                pane.resolveFolder(pane.path);
+        }
+    }
+
+    function useForAllFolders() {
+        const values = {
+            "sortKey": activePane.sortKey,
+            "sortDescending": activePane.sortDescending,
+            "viewMode": activePane.viewMode
+        };
+        SettingsData.defaultSort = values.sortKey;
+        SettingsData.defaultSortDescending = values.sortDescending;
+        SettingsData.defaultView = values.viewMode;
+        SessionData.remember(values);
+        FolderViews.dropMatching(values);
     }
 
     function setShowHidden(show) {
@@ -518,18 +529,13 @@ FloatingWindow {
     }
 
     function setSortOrder(key, descending) {
-        sortKey = key;
-        sortDescending = descending;
-        SessionData.remember({
-            "sortKey": key,
-            "sortDescending": descending
-        });
+        activePane.setSortOrder(key, descending);
     }
 
     function setSort(key) {
         if (key === "")
             return;
-        setSortOrder(key, sortKey === key ? !sortDescending : false);
+        activePane.toggleSort(key);
     }
 
     function selectSortKey(key) {
@@ -546,7 +552,7 @@ FloatingWindow {
             trash.model.setSort(key, trash.model.sortDescending);
             return;
         }
-        setSortOrder(key, sortDescending);
+        setSortOrder(key, activePane.sortDescending);
     }
 
     function toggleSortDirection() {
@@ -559,7 +565,7 @@ FloatingWindow {
             trash.model.setSort(trash.model.sortKey, !trash.model.sortDescending);
             return;
         }
-        setSortOrder(sortKey, !sortDescending);
+        setSortOrder(activePane.sortKey, !activePane.sortDescending);
     }
 
     function cycleSortKey() {
@@ -675,7 +681,7 @@ FloatingWindow {
                 return;
             }
         case "zoomReset":
-            activePane.setZoom(viewMode, FilesMetrics.defaultZoom(viewMode));
+            activePane.setZoom(activePane.viewMode, FilesMetrics.defaultZoom(activePane.viewMode));
             return;
         case "openInPane":
             openInOtherPane(firstSelected()?.path ?? "");
@@ -1565,15 +1571,24 @@ FloatingWindow {
         target: SettingsData
 
         function onDefaultViewChanged() {
-            window.setViewMode(SettingsData.defaultView);
+            SessionData.remember({
+                "viewMode": SettingsData.defaultView
+            });
+            window.resolvePanes();
         }
 
         function onDefaultSortChanged() {
-            window.setSortOrder(SettingsData.defaultSort, window.sortDescending);
+            SessionData.remember({
+                "sortKey": SettingsData.defaultSort
+            });
+            window.resolvePanes();
         }
 
         function onDefaultSortDescendingChanged() {
-            window.setSortOrder(window.sortKey, SettingsData.defaultSortDescending);
+            SessionData.remember({
+                "sortDescending": SettingsData.defaultSortDescending
+            });
+            window.resolvePanes();
         }
 
         function onShowHiddenChanged() {
@@ -1684,9 +1699,6 @@ FloatingWindow {
 
             active: window.activePaneIndex === 1
             showHidden: window.showHidden
-            sortKey: window.sortKey
-            sortDescending: window.sortDescending
-            viewMode: window.viewMode
             previewOpen: window.previewOpen
             showActiveOutline: window.splitView
             cutSet: window.cutSet
@@ -1699,7 +1711,7 @@ FloatingWindow {
             onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
             onDragRequested: paths => window.beginDrag(paths)
             onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
-            onSortRequested: key => window.setSort(key)
+            onSortRequested: key => splitPane.toggleSort(key)
             onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
             onFocusRequested: window.activePaneIndex = 1
             onPreviewToggleRequested: window.runAction("togglePreview")
@@ -1964,11 +1976,13 @@ FloatingWindow {
                 bookmarked: BookmarksService.has(window.currentPath)
                 backEnabled: window.activePane.canGoBack
                 forwardEnabled: window.activePane.canGoForward
-                sortKey: window.activePane.resultsActive ? window.activePane.searchModel.sortKey : window.activePane.trashView?.model.sortKey ?? window.sortKey
-                sortDescending: window.activePane.resultsActive ? window.activePane.searchModel.sortDescending : window.activePane.trashView?.model.sortDescending ?? window.sortDescending
+                sortKey: window.activePane.resultsActive ? window.activePane.searchModel.sortKey : window.activePane.trashView?.model.sortKey ?? window.activePane.sortKey
+                sortDescending: window.activePane.resultsActive ? window.activePane.searchModel.sortDescending : window.activePane.trashView?.model.sortDescending ?? window.activePane.sortDescending
                 resultsActive: window.activePane.resultsActive
                 compact: window.compact
-                viewMode: window.viewMode
+                viewMode: window.activePane.viewMode
+                folderRemembered: window.activePane.folderRemembered
+                folderHasSettings: window.activePane.hasFolderSettings
                 previewOpen: window.previewOpen
                 trashActive: window.activePane.trashActive
                 filterText: window.activePane.nameFilter
@@ -1992,6 +2006,8 @@ FloatingWindow {
                 onSortDirectionToggled: window.toggleSortDirection()
                 onCopyPathRequested: window.copyText(window.currentPath)
                 onViewModeSelected: mode => window.setViewMode(mode)
+                onUseForAllFoldersRequested: window.useForAllFolders()
+                onResetFolderRequested: window.activePane.resetFolder()
                 onPreviewToggled: window.runAction("togglePreview")
                 onReloadRequested: window.runAction("reload")
                 onTerminalRequested: window.runAction("openTerminal")
@@ -2019,9 +2035,6 @@ FloatingWindow {
                     width: window.splitView ? panesRow.usableWidth * window.splitRatio : panesRow.width
                     active: window.activePaneIndex === 0
                     showHidden: window.showHidden
-                    sortKey: window.sortKey
-                    sortDescending: window.sortDescending
-                    viewMode: window.viewMode
                     previewOpen: window.previewOpen
                     showActiveOutline: window.splitView
                     cutSet: window.cutSet
@@ -2034,7 +2047,7 @@ FloatingWindow {
                     onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
                     onDragRequested: paths => window.beginDrag(paths)
                     onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
-                    onSortRequested: key => window.setSort(key)
+                    onSortRequested: key => primaryPane.toggleSort(key)
                     onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
                     onFocusRequested: window.activePaneIndex = 0
                     onPreviewToggleRequested: window.runAction("togglePreview")

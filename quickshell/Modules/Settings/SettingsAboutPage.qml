@@ -112,6 +112,7 @@ Item {
             SettingsLinkRow {
                 iconName: "menu_book"
                 title: I18n.tr("Docs", "about page resource button")
+                keywords: I18n.tr("documentation help manual", "settings search keywords, space separated, add synonyms in your language")
                 subtitle: root.host(root.docsUrl)
                 url: root.docsUrl
             }
@@ -119,6 +120,7 @@ Item {
             SettingsLinkRow {
                 iconName: "code"
                 title: I18n.tr("GitHub", "about page resource button")
+                keywords: I18n.tr("source code repository issues", "settings search keywords, space separated, add synonyms in your language")
                 subtitle: root.host(root.githubUrl)
                 url: root.githubUrl
             }
@@ -131,16 +133,19 @@ Item {
         SettingsGroup {
             SettingsRow {
                 title: I18n.tr("Version", "about page daemon version column label")
+                keywords: I18n.tr("daemon release build", "settings search keywords, space separated, add synonyms in your language")
                 trailingBadge: DankFilesService.daemonVersion || "—"
             }
 
             SettingsRow {
                 title: I18n.tr("API", "about page daemon api version column label")
+                keywords: I18n.tr("daemon protocol", "settings search keywords, space separated, add synonyms in your language")
                 trailingBadge: DankFilesService.apiVersion > 0 ? `v${DankFilesService.apiVersion}` : "—"
             }
 
             SettingsRow {
                 title: I18n.tr("Status", "about page daemon status column label")
+                keywords: I18n.tr("daemon connected offline socket", "settings search keywords, space separated, add synonyms in your language")
                 trailingBadge: DankFilesService.connected ? I18n.tr("Connected", "about page daemon status value") : I18n.tr("Offline", "about page daemon status value")
 
                 DBadge {
@@ -150,12 +155,14 @@ Item {
 
             SettingsRow {
                 title: I18n.tr("Socket", "about page daemon socket row label")
+                keywords: I18n.tr("daemon path unix", "settings search keywords, space separated, add synonyms in your language")
                 subtitle: DankFilesService.socketPath || "—"
             }
 
             SettingsRow {
                 visible: SandboxService.sandboxed
                 title: I18n.tr("Sandbox", "about page row naming the flatpak id")
+                keywords: I18n.tr("flatpak app id", "settings search keywords, space separated, add synonyms in your language")
                 subtitle: SandboxService.appId
             }
         }
@@ -174,6 +181,7 @@ Item {
                     readonly property var status: root.statusFor(modelData.id)
 
                     title: modelData.label
+                    keywords: I18n.tr("capability available sandbox", "settings search keywords, space separated, add synonyms in your language")
                     trailingBadge: status.text
                     trailingBadgeColor: status.color
                 }

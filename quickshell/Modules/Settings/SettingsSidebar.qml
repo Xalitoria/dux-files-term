@@ -7,8 +7,23 @@ Item {
 
     property int currentIndex: 0
     property int highlightIndex: -1
+    property var matchCounts: []
+    property bool fieldOnly: false
+    property alias query: searchField.text
 
     signal tabSelected(int index)
+    signal searchAccepted
+
+    function focusSearch() {
+        searchField.forceActiveFocus();
+    }
+
+    function clearSearch() {
+        if (searchField.text === "")
+            return false;
+        searchField.text = "";
+        return true;
+    }
 
     function tabOrder() {
         return groups.reduce((all, group) => all.concat(group.map(tab => tab.index)), []);
@@ -78,6 +93,7 @@ Item {
         ]]
 
     implicitWidth: SettingsMetrics.sidebarWidth
+    implicitHeight: fieldOnly ? searchField.height + navColumn.padding * 2 : 0
 
     Rectangle {
         anchors.right: parent.right
@@ -100,8 +116,18 @@ Item {
             padding: Theme.spacingL
             spacing: SettingsMetrics.sidebarGroupGap
 
+            DSearchField {
+                id: searchField
+
+                width: navColumn.width - navColumn.padding * 2
+                controlHeight: Theme.buttonHeightM
+                backgroundColor: Theme.surfaceContainerLowest
+                placeholderText: I18n.tr("Search settings", "placeholder in the settings search field")
+                onAccepted: root.searchAccepted()
+            }
+
             Repeater {
-                model: root.groups
+                model: root.fieldOnly ? [] : root.groups
 
                 Column {
                     id: groupColumn
@@ -122,6 +148,7 @@ Item {
                             accent: modelData.accent
                             active: root.currentIndex === modelData.index
                             highlighted: root.highlightIndex === modelData.index
+                            matchCount: root.matchCounts[modelData.index] ?? -1
                             isFirstInGroup: index === 0
                             isLastInGroup: index === groupColumn.modelData.length - 1
                             onActiveFocusChanged: {

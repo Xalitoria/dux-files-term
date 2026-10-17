@@ -124,17 +124,26 @@ type View struct {
 	Redoable       bool            `json:"redoable"`
 	Replay         string          `json:"replay,omitempty"`
 	Created        []Created       `json:"created,omitempty"`
+	Moved          []Moved         `json:"moved,omitempty"`
 	Error          string          `json:"error,omitempty"`
 	Code           string          `json:"code,omitempty"`
 	StartedMs      int64           `json:"startedMs"`
 	EndedMs        int64           `json:"endedMs,omitempty"`
 }
 
-type pair struct{ src, dst string }
+type pair struct {
+	src, dst string
+	dir      bool
+}
 
 type Created struct {
 	Path string `json:"path"`
 	Dir  bool   `json:"dir"`
+}
+
+type Moved struct {
+	From string `json:"from"`
+	To   string `json:"to"`
 }
 
 type spec struct {
@@ -237,11 +246,31 @@ func (j *job) viewLocked() View {
 		Redoable:       j.redoable,
 		Replay:         string(j.spec.replay),
 		Created:        j.created,
+		Moved:          j.movedLocked(),
 		Error:          j.errMsg,
 		Code:           j.errCode,
 		StartedMs:      j.startedMs,
 		EndedMs:        j.endedMs,
 	}
+}
+
+func (j *job) movedLocked() []Moved {
+	if !j.terminal || j.record == nil {
+		return nil
+	}
+	switch j.record.kind {
+	case KindMove, KindNewFolderWith:
+	default:
+		return nil
+	}
+	var moved []Moved
+	for _, p := range j.record.pairs {
+		if !p.dir {
+			continue
+		}
+		moved = append(moved, Moved{From: p.dst, To: p.src})
+	}
+	return moved
 }
 
 func (j *job) setState(state State) {

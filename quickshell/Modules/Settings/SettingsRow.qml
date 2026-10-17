@@ -15,6 +15,8 @@ T.Control {
 
     property string title: ""
     property string subtitle: ""
+    property string keywords: ""
+    property bool flashing: false
     property color subtitleColor: Theme.surfaceVariantText
     property string iconName: ""
     property bool clickable: false
@@ -40,6 +42,18 @@ T.Control {
     readonly property real minHeight: subtitle !== "" ? Theme.listItemTwoLineHeight : Theme.listItemHeight
 
     signal clicked
+
+    function flash() {
+        flashing = true;
+        flashTimer.restart();
+    }
+
+    Timer {
+        id: flashTimer
+
+        interval: SettingsMetrics.flashHold
+        onTriggered: root.flashing = false
+    }
 
     focusPolicy: clickable ? Qt.StrongFocus : Qt.NoFocus
     Accessible.role: clickable ? Accessible.Button : Accessible.NoRole
@@ -85,11 +99,20 @@ T.Control {
 
     Rectangle {
         anchors.fill: parent
-        color: root.rowColor
+        color: root.flashing ? Theme.blend(root.rowColor, Theme.primary, SettingsMetrics.highlightBlend) : root.rowColor
         topLeftRadius: root.topRadius
         topRightRadius: root.topRadius
         bottomLeftRadius: root.bottomRadius
         bottomRightRadius: root.bottomRadius
+
+        Behavior on color {
+            enabled: Theme.animationsEnabled
+            ColorAnimation {
+                duration: SettingsMetrics.fadeDuration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.expressiveCurves.expressiveEffects
+            }
+        }
     }
 
     Rectangle {

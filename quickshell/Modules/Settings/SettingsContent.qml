@@ -10,6 +10,15 @@ Item {
 
     property int currentIndex: 0
     property var hostWindow: null
+    property string searchQuery: ""
+    property var results: []
+    property var matchCounts: []
+
+    readonly property bool searching: searchQuery.trim() !== ""
+    readonly property var pageComponents: [generalPage, appearancePage, behaviourPage, devicesPage, aboutPage]
+    readonly property var pageLabels: [I18n.tr("General", "settings sidebar tab label"), I18n.tr("Appearance", "settings sidebar tab label"), I18n.tr("Behaviour", "settings sidebar tab label"), I18n.tr("Devices", "sidebar section listing drives and volumes"), I18n.tr("About", "settings sidebar tab label")]
+
+    signal resultPicked(int page, var row)
     property var terminals: []
     property var fileManagerStatus: ({})
     property var portalStatus: ({})
@@ -258,6 +267,110 @@ Item {
         return I18n.tr("Other apps open folders with whichever file manager they find.", "file manager registration setting description while not registered");
     }
 
+    function collectRows(item, out, state) {
+        for (const child of item.children) {
+            if (!child.visible)
+                continue;
+            if (child.isSettingsSectionLabel === true) {
+                state.section = child.text;
+                continue;
+            }
+            if (child.isSettingsRow === true) {
+                if (child.title !== "")
+                    out.push({
+                        "row": child,
+                        "section": state.section
+                    });
+                continue;
+            }
+            collectRows(child, out, state);
+        }
+        return out;
+    }
+
+    function rebuildResults() {
+        if (!searching) {
+            results = [];
+            matchCounts = [];
+            return;
+        }
+        const found = [];
+        const counts = [];
+        for (let page = 0; page < pages.count; page++) {
+            counts.push(0);
+            const item = pages.itemAt(page)?.item;
+            if (!item)
+                continue;
+            for (const hit of collectRows(item, [], {
+                "section": ""
+            })) {
+                const score = SettingsSearch.score(searchQuery, hit.row.title, hit.row.subtitle, hit.row.keywords);
+                if (score <= 0)
+                    continue;
+                counts[page]++;
+                found.push({
+                    "page": page,
+                    "order": found.length,
+                    "score": score,
+                    "title": hit.row.title,
+                    "where": [pageLabels[page], hit.section].filter(part => part !== "").join(" · "),
+                    "row": hit.row
+                });
+            }
+        }
+        found.sort((a, b) => b.score - a.score || a.order - b.order);
+        results = found;
+        matchCounts = counts;
+    }
+
+    function pickFirst() {
+        if (results.length === 0)
+            return;
+        resultPicked(results[0].page, results[0].row);
+    }
+
+    function revealRow(row) {
+        revealTimer.row = row;
+        revealTimer.restart();
+    }
+
+    function scrollToRow(row) {
+        if (!row)
+            return;
+        let page = row.parent;
+        while (page && page.isSettingsPage !== true)
+            page = page.parent;
+        if (!page)
+            return;
+        page.revealRow(row);
+        row.flash();
+    }
+
+    onSearchQueryChanged: rebuild.restart()
+    onTerminalsChanged: rebuild.restart()
+    onFileManagerStatusChanged: rebuild.restart()
+    onPortalStatusChanged: rebuild.restart()
+
+    Timer {
+        id: rebuild
+
+        interval: 0
+        onTriggered: root.rebuildResults()
+    }
+
+    Timer {
+        id: revealTimer
+
+        property var row: null
+
+        interval: 0
+        onTriggered: {
+            if (row)
+                root.scrollToRow(row);
+            row = null;
+        }
+    }
+
     Component.onCompleted: {
         loadTerminals();
         loadFileManagerStatus();
@@ -284,22 +397,68 @@ Item {
         onConfirmed: root.restartPortal()
     }
 
-    Loader {
+    ConfirmDialog {
+        id: forgetFoldersDialog
+
+        title: I18n.tr("Forget all folder settings?", "dialog title before clearing every remembered folder sort and view")
+        message: I18n.tr("Every folder goes back to the default sort and view.", "dialog message before clearing every remembered folder sort and view")
+        confirmText: I18n.tr("Forget", "dialog button clearing the remembered folder settings")
+        onConfirmed: FolderViews.clear()
+    }
+
+    Item {
+        id: pagesHost
+
         anchors.fill: parent
-        sourceComponent: {
-            switch (root.currentIndex) {
-            case 0:
-                return generalPage;
-            case 1:
-                return appearancePage;
-            case 2:
-                return behaviourPage;
-            case 3:
-                return devicesPage;
-            case 4:
-                return aboutPage;
-            default:
-                return generalPage;
+        clip: true
+
+        Repeater {
+            id: pages
+
+            model: root.pageComponents.length
+
+            Loader {
+                id: pageLoader
+
+                required property int index
+                readonly property bool current: root.currentIndex === index
+
+                width: pagesHost.width
+                height: pagesHost.height
+                y: current ? 0 : pagesHost.height
+                active: current || root.searching
+                enabled: current && !root.searching
+                sourceComponent: root.pageComponents[index]
+                onLoaded: rebuild.restart()
+            }
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        visible: root.searching
+        color: Theme.surface
+
+        SettingsPage {
+            PageHeader {
+                title: I18n.tr("Search results", "settings page header while a search query is typed")
+                subtitle: root.results.length === 0 ? I18n.tr("No results", "search results header when nothing matched") : ""
+            }
+
+            SettingsGroup {
+                Repeater {
+                    model: root.results
+
+                    SettingsRow {
+                        required property var modelData
+
+                        clickable: true
+                        showChevron: true
+                        title: modelData.title
+                        subtitle: modelData.where
+                        onClicked: root.resultPicked(modelData.page, modelData.row)
+                    }
+                }
             }
         }
     }
@@ -373,6 +532,7 @@ Item {
             SettingsGroup {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Close behavior", "close behavior setting label")
+                    keywords: I18n.tr("quit exit hide daemon keep running", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("What the window's close button does.", "close behavior setting description")
                     model: [I18n.tr("Keep running", "close behavior button group option keeping the daemon warm"), I18n.tr("Quit", "close behavior button group option to quit the app")]
                     currentIndex: SettingsData.closeBehavior === "quit" ? 1 : 0
@@ -385,6 +545,7 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Register as the session file manager", "setting label for owning org.freedesktop.FileManager1")
+                    keywords: I18n.tr("default file manager dbus reveal", "settings search keywords, space separated, add synonyms in your language")
                     description: root.fileManagerDescription()
                     enabled: root.fileManagerStatus.available !== false
                     checked: SettingsData.registerFileManager
@@ -393,6 +554,7 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Open folders in a new tab", "setting label for external open requests")
+                    keywords: I18n.tr("tabs external open location", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Locations opened from other applications get their own tab instead of replacing the current one.", "setting description for external open requests")
                     checked: SettingsData.openLocationIn === "tab"
                     onToggled: checked => SettingsData.openLocationIn = checked ? "tab" : "current"
@@ -400,6 +562,7 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Extract archives on open", "setting label for opening archives")
+                    keywords: I18n.tr("zip tar unpack compressed", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Opening an archive unpacks it into a folder beside it instead of launching another application.", "setting description for opening archives")
                     checked: SettingsData.extractOnOpen
                     onToggled: checked => SettingsData.extractOnOpen = checked
@@ -407,6 +570,7 @@ Item {
 
                 OptionDropdownRow {
                     text: I18n.tr("Language", "interface language setting label")
+                    keywords: I18n.tr("locale translation interface", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Language of the interface.", "interface language setting description")
                     optionList: root.languageOptions
                     current: SettingsData.language
@@ -421,6 +585,7 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Use Dank Files for open and save dialogs", "setting label for serving the desktop portal file chooser")
+                    keywords: I18n.tr("portal file chooser picker xdg", "settings search keywords, space separated, add synonyms in your language")
                     description: root.portalDescription()
                     enabled: root.portalStatus.available === true && root.portalStatus.systemManaged !== true
                     toggling: root.portalBusy
@@ -455,6 +620,7 @@ Item {
                     iconColor: Theme.error
                     clickable: true
                     title: I18n.tr("Restart the portal service", "settings row restarting xdg-desktop-portal")
+                    keywords: I18n.tr("xdg-desktop-portal", "settings search keywords, space separated, add synonyms in your language")
                     subtitle: I18n.tr("Needed before the change takes effect.", "settings row subtitle when xdg-desktop-portal still runs the old configuration")
                     showChevron: true
                     onClicked: portalRestartDialog.open()
@@ -468,6 +634,7 @@ Item {
             SettingsGroup {
                 OptionGroupRow {
                     text: I18n.tr("Default view", "setting label for the view a new window starts in")
+                    keywords: I18n.tr("list grid columns icons tiles", "settings search keywords, space separated, add synonyms in your language")
                     optionList: root.viewOptions
                     current: SettingsData.defaultView
                     onPicked: value => SettingsData.defaultView = value
@@ -475,6 +642,7 @@ Item {
 
                 OptionDropdownRow {
                     text: I18n.tr("Sort by", "setting label for the default sort key")
+                    keywords: I18n.tr("order name size modified type date", "settings search keywords, space separated, add synonyms in your language")
                     optionList: root.sortOptions
                     current: SettingsData.defaultSort
                     onPicked: value => SettingsData.defaultSort = value
@@ -482,12 +650,14 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Sort descending", "sort direction option")
+                    keywords: I18n.tr("order direction ascending reverse", "settings search keywords, space separated, add synonyms in your language")
                     checked: SettingsData.defaultSortDescending
                     onToggled: checked => SettingsData.defaultSortDescending = checked
                 }
 
                 SettingsToggleRow {
                     text: I18n.tr("Show hidden files", "menu entry listing dot files")
+                    keywords: I18n.tr("dotfiles invisible", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Ctrl+H still toggles them for the current window.", "show hidden files setting description")
                     checked: SettingsData.showHidden
                     onToggled: checked => SettingsData.showHidden = checked
@@ -495,12 +665,34 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Folders before files", "folders first toggle label")
+                    keywords: I18n.tr("directories first sort", "settings search keywords, space separated, add synonyms in your language")
                     checked: SettingsData.foldersFirst
                     onToggled: checked => SettingsData.foldersFirst = checked
                 }
 
+                SettingsToggleRow {
+                    text: I18n.tr("Remember view and sort per folder", "setting label for per-folder sort and view memory")
+                    keywords: I18n.tr("folder memory per-folder remember", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Each folder keeps the sort and view picked in it. Off applies the last choice everywhere.", "setting description for per-folder sort and view memory")
+                    checked: SettingsData.rememberFolderViews
+                    onToggled: checked => SettingsData.rememberFolderViews = checked
+                }
+
+                SettingsRow {
+                    clickable: true
+                    iconName: "delete_sweep"
+                    iconColor: Theme.error
+                    enabled: SettingsData.rememberFolderViews
+                    title: I18n.tr("Forget all folder settings", "settings row clearing every remembered folder sort and view")
+                    keywords: I18n.tr("reset clear per-folder memory", "settings search keywords, space separated, add synonyms in your language")
+                    subtitle: I18n.tr("Every folder goes back to the default sort and view.", "dialog message before clearing every remembered folder sort and view")
+                    showChevron: true
+                    onClicked: forgetFoldersDialog.open()
+                }
+
                 OptionDropdownRow {
                     text: I18n.tr("Grid icon size", "setting label for the grid view icon size")
+                    keywords: I18n.tr("zoom thumbnails tiles", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Ctrl+Wheel or Ctrl and plus or minus resize the current window.", "icon size setting description")
                     optionList: root.gridSizeOptions
                     current: SessionData.gridZoom
@@ -509,6 +701,7 @@ Item {
 
                 OptionDropdownRow {
                     text: I18n.tr("List icon size", "setting label for the list view icon size")
+                    keywords: I18n.tr("zoom rows", "settings search keywords, space separated, add synonyms in your language")
                     optionList: root.listSizeOptions
                     current: SessionData.listZoom
                     onPicked: value => SessionData.listZoom = value
@@ -516,6 +709,7 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Count items in folders", "folder counts toggle label")
+                    keywords: I18n.tr("size column entries", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("The size column shows how many entries a folder holds, one request per folder in view.", "folder counts toggle description")
                     checked: SettingsData.folderCounts
                     onToggled: checked => SettingsData.folderCounts = checked
@@ -529,6 +723,7 @@ Item {
             SettingsGroup {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Open items with", "setting label choosing single or double click")
+                    keywords: I18n.tr("single double click activate", "settings search keywords, space separated, add synonyms in your language")
                     model: [I18n.tr("Double click", "click to open option"), I18n.tr("Single click", "click to open option")]
                     currentIndex: SettingsData.clickToOpen === "single" ? 1 : 0
                     onSelectionChanged: (index, selected) => {
@@ -540,6 +735,7 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Confirm before moving to the trash", "setting label")
+                    keywords: I18n.tr("delete confirmation prompt", "settings search keywords, space separated, add synonyms in your language")
                     checked: SettingsData.confirmTrash
                     onToggled: checked => SettingsData.confirmTrash = checked
                 }
@@ -552,6 +748,7 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Vim keys", "toggle label for vim style navigation")
+                    keywords: I18n.tr("hjkl keyboard navigation modal", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("h j k l move, / searches and letters run commands instead of jumping to or filtering names.", "vim keys toggle description")
                     checked: SettingsData.vimKeys
                     onToggled: checked => SettingsData.vimKeys = checked
@@ -559,6 +756,7 @@ Item {
 
                 SettingsButtonGroupRow {
                     text: I18n.tr("Typing in the file list", "setting label choosing what typed letters do in the file list")
+                    keywords: I18n.tr("type-ahead jump filter search keyboard", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Jump to the first name starting with what you type, or filter the folder through the search field.", "typing in the file list setting description")
                     model: [I18n.tr("Jump to name", "typing in the file list option"), I18n.tr("Filter", "typing in the file list option")]
                     currentIndex: SettingsData.listTyping === "filter" ? 1 : 0
@@ -572,6 +770,7 @@ Item {
 
                 SettingsRow {
                     title: I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
+                    keywords: I18n.tr("keys bindings hotkeys F1", "settings search keywords, space separated, add synonyms in your language")
                     subtitle: I18n.tr("Press ? or F1 in the main window for the full list.", "keyboard shortcuts settings row description")
                     iconName: "keyboard"
                 }
@@ -596,6 +795,7 @@ Item {
             SettingsGroup {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Theme", "theme mode setting label")
+                    keywords: I18n.tr("light dark mode system color scheme", "settings search keywords, space separated, add synonyms in your language")
                     description: {
                         switch (SettingsData.themeMode) {
                         case "light":
@@ -636,6 +836,7 @@ Item {
 
                 OptionGroupRow {
                     text: I18n.tr("Color source", "color source setting label")
+                    keywords: I18n.tr("palette dms preset custom accent", "settings search keywords, space separated, add synonyms in your language")
                     description: {
                         switch (SettingsData.colorSource) {
                         case "preset":
@@ -661,6 +862,7 @@ Item {
                 SettingsRow {
                     visible: SettingsData.colorSource === "preset"
                     title: I18n.tr("Palette: %1", "selected preset palette name").arg(Theme.presetLabel(SettingsData.presetTheme))
+                    keywords: I18n.tr("preset palette swatch colors", "settings search keywords, space separated, add synonyms in your language")
 
                     body: Flow {
                         width: parent.width
@@ -699,6 +901,7 @@ Item {
                     clickable: true
                     iconName: "folder_open"
                     title: SettingsData.customThemeFile ? SettingsData.customThemeFile.split('/').pop() : I18n.tr("No theme file selected", "custom theme empty state title")
+                    keywords: I18n.tr("custom theme json file", "settings search keywords, space separated, add synonyms in your language")
                     subtitle: {
                         if (!SettingsData.customThemeFile)
                             return I18n.tr("Choose a JSON color theme file.", "custom theme hint when none selected");
@@ -722,6 +925,7 @@ Item {
             SettingsGroup {
                 SettingsSliderRow {
                     text: I18n.tr("Radius strength", "global component corner rounding")
+                    keywords: I18n.tr("corners rounding shape square", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("50 uses Material shapes. Lower values reduce rounding; higher values increase it.", "radius strength slider description")
                     minimumLabel: I18n.tr("Square", "radius strength slider label at zero")
                     value: SettingsData.radiusStrength
@@ -739,6 +943,7 @@ Item {
             SettingsGroup {
                 SettingsSliderRow {
                     text: I18n.tr("Weight", "font weight slider label")
+                    keywords: I18n.tr("font bold typography", "settings search keywords, space separated, add synonyms in your language")
                     minimum: Font.Thin
                     maximum: Font.Black
                     step: 100
@@ -750,6 +955,7 @@ Item {
 
                 SettingsSliderRow {
                     text: I18n.tr("Scale", "font scale slider label")
+                    keywords: I18n.tr("font size text zoom typography", "settings search keywords, space separated, add synonyms in your language")
                     minimum: 75
                     maximum: 150
                     unit: "%"
@@ -765,6 +971,7 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Title bars", "window title bars toggle label")
+                    keywords: I18n.tr("decorations csd window header", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Off lets the compositor decorate windows. Open windows update when reopened.", "window title bars toggle description")
                     checked: SettingsData.windowTitleBars
                     onToggled: checked => SettingsData.windowTitleBars = checked
@@ -778,6 +985,7 @@ Item {
             SettingsGroup {
                 SettingsSliderRow {
                     text: I18n.tr("Duration", "animation duration slider label")
+                    keywords: I18n.tr("animation speed motion", "settings search keywords, space separated, add synonyms in your language")
                     minimumLabel: I18n.tr("Off", "animation duration slider label at zero")
                     minimum: 0
                     maximum: 1000
@@ -788,6 +996,7 @@ Item {
 
                 SettingsButtonGroupRow {
                     text: I18n.tr("Spring", "spring bounce setting label")
+                    keywords: I18n.tr("bounce animation motion", "settings search keywords, space separated, add synonyms in your language")
                     model: [I18n.tr("Smooth", "spring bounce option"), I18n.tr("Balanced", "spring bounce option"), I18n.tr("Playful", "spring bounce option")]
                     currentIndex: SettingsData.springBounce
                     onSelectionChanged: (index, selected) => {
@@ -798,12 +1007,14 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Ripple effects", "ripple effects toggle label")
+                    keywords: I18n.tr("animation click feedback", "settings search keywords, space separated, add synonyms in your language")
                     checked: SettingsData.enableRippleEffects
                     onToggled: checked => SettingsData.enableRippleEffects = checked
                 }
 
                 SettingsToggleRow {
                     text: I18n.tr("Reduce motion", "reduce motion toggle label")
+                    keywords: I18n.tr("accessibility animation disable", "settings search keywords, space separated, add synonyms in your language")
                     checked: SettingsData.reduceMotion
                     onToggled: checked => SettingsData.reduceMotion = checked
                 }
@@ -816,6 +1027,7 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Focus ring", "focus ring toggle label")
+                    keywords: I18n.tr("keyboard outline accessibility", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Outline the control that has keyboard focus.", "focus ring toggle description")
                     checked: SettingsData.focusRingEnabled
                     onToggled: checked => SettingsData.focusRingEnabled = checked
@@ -823,6 +1035,7 @@ Item {
 
                 SettingsSliderRow {
                     text: I18n.tr("Thickness", "focus ring thickness slider label")
+                    keywords: I18n.tr("focus ring width outline", "settings search keywords, space separated, add synonyms in your language")
                     enabled: SettingsData.focusRingEnabled
                     value: Math.round(SettingsData.focusRingWidth * 10)
                     minimum: 10
@@ -862,6 +1075,7 @@ Item {
             SettingsGroup {
                 OptionDropdownRow {
                     text: I18n.tr("Terminal", "setting label for the terminal emulator")
+                    keywords: I18n.tr("console emulator shell command line", "settings search keywords, space separated, add synonyms in your language")
                     description: SandboxService.sandboxed ? I18n.tr("The sandbox cannot see the host's terminals; name the one to launch.", "terminal setting description inside flatpak") : I18n.tr("Automatic follows $TERMINAL, then the first installed emulator.", "terminal setting description")
                     optionList: root.terminalOptions
                     current: SettingsData.terminal
@@ -876,6 +1090,7 @@ Item {
             SettingsGroup {
                 OptionDropdownRow {
                     text: I18n.tr("Dropping without a modifier", "drag default action setting label")
+                    keywords: I18n.tr("drag drop copy move ask default action", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Ctrl copies and Alt asks regardless.", "drag default action setting description")
                     optionList: root.dragOptions
                     current: SettingsData.dragAction
@@ -890,6 +1105,7 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Show thumbnails", "thumbnails toggle label")
+                    keywords: I18n.tr("previews images video pdf", "settings search keywords, space separated, add synonyms in your language")
                     description: SandboxService.degraded("thumbnails") ? FilesFormat.featureUnavailable(SandboxService.reason("thumbnails")) : I18n.tr("Previews for images, videos and PDFs, cached under the shared thumbnail folder.", "thumbnails toggle description")
                     checked: SettingsData.thumbnails
                     onToggled: checked => SettingsData.thumbnails = checked
@@ -897,6 +1113,7 @@ Item {
 
                 SettingsSliderRow {
                     text: I18n.tr("Skip images larger than", "thumbnail size cap slider label")
+                    keywords: I18n.tr("thumbnail size limit cap megabytes", "settings search keywords, space separated, add synonyms in your language")
                     minimumLabel: I18n.tr("No limit", "thumbnail size cap slider label at zero")
                     enabled: SettingsData.thumbnails
                     minimum: 0
@@ -909,6 +1126,7 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Thumbnails on network locations", "network thumbnails toggle label")
+                    keywords: I18n.tr("remote sftp smb previews", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Reads every file over the connection to draw its preview.", "network thumbnails toggle description")
                     enabled: SettingsData.thumbnails
                     checked: SettingsData.networkThumbnails
@@ -923,6 +1141,7 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Include hidden files", "search hidden files toggle label")
+                    keywords: I18n.tr("search dotfiles recursive", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Recursive searches also descend into dot folders.", "search hidden files toggle description")
                     checked: SettingsData.searchHidden
                     onToggled: checked => SettingsData.searchHidden = checked
@@ -930,6 +1149,7 @@ Item {
 
                 SettingsRow {
                     title: I18n.tr("Folders to skip", "search exclusions setting label")
+                    keywords: I18n.tr("search exclude ignore", "settings search keywords, space separated, add synonyms in your language")
                     subtitle: I18n.tr("Folder names or paths, separated by commas. Build and cache folders are always skipped unless Include ignored is on.", "search exclusions setting description")
 
                     body: DTextField {
@@ -959,6 +1179,7 @@ Item {
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Show system partitions", "devices setting label")
+                    keywords: I18n.tr("internal drives udisks home boot", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Internal partitions udisks marks as part of the system, such as a separate /home.", "devices setting description")
                     checked: SettingsData.showSystemPartitions
                     onToggled: checked => SettingsData.showSystemPartitions = checked
@@ -966,6 +1187,7 @@ Item {
 
                 SettingsToggleRow {
                     text: I18n.tr("Open unmounted drives on click", "devices setting label")
+                    keywords: I18n.tr("mount usb removable sidebar", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Mount and open the drive together. Off mounts it and leaves you where you are.", "devices setting description")
                     checked: SettingsData.mountOnClick
                     onToggled: checked => SettingsData.mountOnClick = checked

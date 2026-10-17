@@ -5,6 +5,8 @@ import qs.DCommon.Widgets
 Item {
     id: root
 
+    readonly property bool isSettingsSectionLabel: true
+
     property string text: ""
     property alias actions: actionsRow.data
 

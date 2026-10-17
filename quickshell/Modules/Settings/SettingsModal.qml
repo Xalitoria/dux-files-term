@@ -10,6 +10,7 @@ FloatingWindow {
     property int currentTabIndex: 0
     property bool isCompactMode: width < SettingsMetrics.compactBreakpoint
     property bool menuVisible: false
+    readonly property bool compactSearch: isCompactMode && menuVisible && content.searching
 
     function show() {
         visible = true;
@@ -17,6 +18,15 @@ FloatingWindow {
 
     function hide() {
         visible = false;
+        sidebar.clearSearch();
+    }
+
+    function reveal(page, row) {
+        currentTabIndex = page;
+        sidebar.clearSearch();
+        if (isCompactMode)
+            menuVisible = false;
+        content.revealRow(row);
     }
 
     onClosed: hide()
@@ -41,7 +51,7 @@ FloatingWindow {
 
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
-                if (!sidebar.clearHighlight())
+                if (!sidebar.clearSearch() && !sidebar.clearHighlight())
                     settingsModal.hide();
                 event.accepted = true;
                 return;
@@ -98,29 +108,38 @@ FloatingWindow {
                     id: sidebar
                     anchors.left: parent.left
                     anchors.top: parent.top
-                    anchors.bottom: parent.bottom
+                    anchors.bottom: settingsModal.compactSearch ? undefined : parent.bottom
+                    height: settingsModal.compactSearch ? implicitHeight : undefined
                     width: settingsModal.isCompactMode ? parent.width : implicitWidth
                     visible: settingsModal.isCompactMode ? settingsModal.menuVisible : true
+                    fieldOnly: settingsModal.compactSearch
                     currentIndex: settingsModal.currentTabIndex
+                    matchCounts: content.matchCounts
                     onTabSelected: index => {
                         settingsModal.currentTabIndex = index;
+                        sidebar.clearSearch();
                         if (settingsModal.isCompactMode)
                             settingsModal.menuVisible = false;
                     }
+                    onSearchAccepted: content.pickFirst()
                 }
 
                 FocusScope {
                     id: contentScope
-                    anchors.left: settingsModal.isCompactMode ? (settingsModal.menuVisible ? sidebar.right : parent.left) : sidebar.right
+                    anchors.left: settingsModal.isCompactMode ? (settingsModal.menuVisible && !settingsModal.compactSearch ? sidebar.right : parent.left) : sidebar.right
                     anchors.right: parent.right
-                    anchors.top: parent.top
+                    anchors.top: settingsModal.compactSearch ? sidebar.bottom : parent.top
                     anchors.bottom: parent.bottom
                     clip: true
 
                     SettingsContent {
+                        id: content
+
                         anchors.fill: parent
                         currentIndex: settingsModal.currentTabIndex
                         hostWindow: settingsModal
+                        searchQuery: sidebar.query
+                        onResultPicked: (page, row) => settingsModal.reveal(page, row)
                     }
                 }
             }
