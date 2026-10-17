@@ -1,4 +1,4 @@
-package mimeglobs
+package mimeapps
 
 import (
 	"os"
@@ -11,15 +11,15 @@ import (
 
 func writeMime(t *testing.T, dir, name, content string) {
 	t.Helper()
-	require.NoError(t, os.MkdirAll(filepath.Join(dir, "mime"), 0o755))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "mime", name), []byte(content), 0o644))
+	require.NoError(t, os.MkdirAll(dir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644))
 }
 
-func loadFixture(t *testing.T) *DB {
+func globsFixture(t *testing.T) *DB {
 	t.Helper()
 	root := t.TempDir()
-	home := filepath.Join(root, "home")
-	sys := filepath.Join(root, "sys")
+	home := filepath.Join(root, "home", "mime")
+	sys := filepath.Join(root, "sys", "mime")
 	writeMime(t, home, "globs2", `# comment line
 50:image/png:*.png
 50:image/jpeg:*.jpg
@@ -52,58 +52,58 @@ cycle/b cycle/a
 50:image/webp:*.webp
 50:text/x-python:*.pyw
 `)
-	return Load(home, []string{sys, filepath.Join(root, "missing")})
+	return LoadDB([]string{home, sys, filepath.Join(root, "missing", "mime")})
 }
 
-func TestDirectLookup(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsDirectLookup(t *testing.T) {
+	db := globsFixture(t)
 	assert.Equal(t, []string{"*.jpeg", "*.jpg"}, db.Globs("image/jpeg"))
 	assert.Equal(t, []string{"*.gz"}, db.Globs(" Application/GZIP "))
 }
 
-func TestAlias(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsFollowAliases(t *testing.T) {
+	db := globsFixture(t)
 	assert.Equal(t, []string{"*.png"}, db.Globs("image/x-png"))
 	assert.Equal(t, []string{"*.gz"}, db.Globs("application/x-gzip"))
 }
 
-func TestWildcard(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsWildcardCoversTheMediaType(t *testing.T) {
+	db := globsFixture(t)
 	assert.Equal(t, []string{"*.jpeg", "*.jpg", "*.png", "*.webp"}, db.Globs("image/*"))
 }
 
-func TestTransitiveSubclass(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsIncludeTransitiveSubclasses(t *testing.T) {
+	db := globsFixture(t)
 	assert.Equal(t, []string{"*.[ch]", "*.py", "*.pyw", "*.sh", "*.txt", "makefile"}, db.Globs("text/plain"))
 }
 
-func TestUnknown(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsUnknownTypesAreNil(t *testing.T) {
+	db := globsFixture(t)
 	assert.Nil(t, db.Globs("application/x-unknown"))
 	assert.Nil(t, db.Globs("nope/*"))
 	assert.Nil(t, db.Globs(""))
 }
 
-func TestDedupeAcrossDirs(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsDedupeAcrossDirs(t *testing.T) {
+	db := globsFixture(t)
 	assert.Equal(t, []string{"*.png"}, db.Globs("image/png"))
 }
 
-func TestMalformedLinesIgnored(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsIgnoreMalformedLines(t *testing.T) {
+	db := globsFixture(t)
 	assert.Nil(t, db.Globs("garbage line"))
 	assert.Nil(t, db.Globs("nocolon"))
 	assert.Nil(t, db.Globs("broken"))
-	assert.Equal(t, []string{"*.txt"}, db.globs["text/plain"])
+	assert.Equal(t, []string{"*.txt"}, db.globs.byMime["text/plain"])
 }
 
-func TestSubclassCycleTerminates(t *testing.T) {
-	db := loadFixture(t)
+func TestGlobsSubclassCycleTerminates(t *testing.T) {
+	db := globsFixture(t)
 	assert.Equal(t, []string{"*.ca", "*.cb"}, db.Globs("cycle/a"))
 	assert.Equal(t, []string{"*.ca", "*.cb"}, db.Globs("cycle/*"))
 }
 
-func TestEmptyTree(t *testing.T) {
-	db := Load(t.TempDir(), nil)
+func TestGlobsOnAnEmptyTree(t *testing.T) {
+	db := LoadDB([]string{filepath.Join(t.TempDir(), "mime")})
 	assert.Nil(t, db.Globs("image/png"))
 }

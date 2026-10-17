@@ -31,11 +31,7 @@ type Deps struct {
 	Bookmarks   *bookmarks.Store
 	Settings    func() settings.UISettings
 	Sandbox     sandbox.Capabilities
-	FileManager FileManager
+	FileManager *filemanager1.Service
 	Portal      *portal.Controller
-}
-
-type FileManager interface {
-	Status() filemanager1.Status
-	SetEnabled(enabled bool) filemanager1.Status
+	Quit        func()
 }

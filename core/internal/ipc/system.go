@@ -6,6 +6,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/filemanager1"
 	"github.com/AvengeMedia/dankfiles/core/internal/portal"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
+	"github.com/AvengeMedia/dankgo/ipc/params"
 )
 
 func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
@@ -35,7 +36,7 @@ func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			w.RespondError(req.ID, "only the window process registers as the file manager")
 			return
 		}
-		w.Respond(req.ID, deps.FileManager.SetEnabled(ParamBool(req.Params, "enabled")))
+		w.Respond(req.ID, deps.FileManager.SetEnabled(params.BoolLoose(req.Params, "enabled")))
 	case "system.portal.get":
 		if deps.Portal == nil {
 			w.Respond(req.ID, map[string]any{"available": false, "reason": portal.ReasonNoWindow})
@@ -72,7 +73,7 @@ func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			w.RespondError(req.ID, "uri opener unavailable")
 			return
 		}
-		uri := ParamString(req.Params, "uri")
+		uri := params.StringOpt(req.Params, "uri", "")
 		if uri == "" {
 			w.RespondError(req.ID, "uri is required")
 			return

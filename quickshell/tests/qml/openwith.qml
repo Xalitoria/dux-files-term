@@ -36,6 +36,9 @@ ShellRoot {
         }
         function unsubscribeTopic(topic, cb) {
         }
+        function call(method, params, callback) {
+            sendRequest(method, params, response => callback?.(DankFilesService.unwrap(response)));
+        }
         function sendRequest(method, params, callback) {
             fixture.sent = fixture.sent.concat([
                 {

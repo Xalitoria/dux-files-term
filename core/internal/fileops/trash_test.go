@@ -231,3 +231,45 @@ func TestRestorePath(t *testing.T) {
 		})
 	}
 }
+
+func TestRestoreReplacesAndMergesDirectories(t *testing.T) {
+	trashDir := trashHome(t)
+	root := t.TempDir()
+	dir := filepath.Join(root, "docs")
+	write(t, filepath.Join(dir, "trashed.txt"), "trashed")
+
+	manager, bus := newHarness(t)
+	run(t, manager, bus, spec{kind: KindTrash, sources: []string{dir}})
+	write(t, filepath.Join(dir, "recreated.txt"), "recreated")
+
+	var offered []Action
+	bus.onConflict = func(c Conflict) Answer {
+		offered = c.Actions
+		return Answer{ID: c.ID, Action: ActionMerge}
+	}
+	view := run(t, manager, bus, spec{kind: KindRestore, sources: []string{"docs"}, trashDir: trashDir})
+
+	require.Equal(t, StateDone, view.State)
+	require.Contains(t, offered, ActionMerge, "two directories must be offered a merge")
+	require.Equal(t, "trashed", read(t, filepath.Join(dir, "trashed.txt")))
+	require.Equal(t, "recreated", read(t, filepath.Join(dir, "recreated.txt")))
+	require.NoFileExists(t, filepath.Join(trashDir, "info", "docs.trashinfo"))
+}
+
+func TestDirectorySizeIsLeftOutWhenTheScanDidNotFinish(t *testing.T) {
+	previous := scanBudget
+	scanBudget = 0
+	t.Cleanup(func() { scanBudget = previous })
+
+	trashDir := trashHome(t)
+	root := t.TempDir()
+	dir := filepath.Join(root, "docs")
+	write(t, filepath.Join(dir, "a.txt"), "12345")
+
+	manager, bus := newHarness(t)
+	view := run(t, manager, bus, spec{kind: KindTrash, sources: []string{dir}})
+
+	require.Equal(t, StateDone, view.State)
+	require.DirExists(t, filepath.Join(trashDir, "files", "docs"))
+	require.NoFileExists(t, filepath.Join(trashDir, "directorysizes"), "a guessed size is worse than none")
+}

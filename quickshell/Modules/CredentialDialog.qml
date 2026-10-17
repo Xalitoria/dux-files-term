@@ -73,6 +73,7 @@ OverlayDialog {
             outlined: true
             enabled: !anonymousToggle.checked
             labelText: I18n.tr("Username", "label for a user name input")
+            onAccepted: root.submit()
         }
 
         DTextField {
@@ -83,6 +84,7 @@ OverlayDialog {
             outlined: true
             enabled: !anonymousToggle.checked
             labelText: I18n.tr("Domain", "label for a network domain input")
+            onAccepted: root.submit()
         }
 
         DTextField {
@@ -97,8 +99,6 @@ OverlayDialog {
             showPasswordToggle: true
             labelText: I18n.tr("Password", "label for a password input")
             onAccepted: root.submit()
-            Keys.onReturnPressed: event => event.accepted = true
-            Keys.onEnterPressed: event => event.accepted = true
         }
 
         DToggle {

@@ -72,17 +72,6 @@ Singleton {
     }
 
     function _send(method, params, callback) {
-        transport.sendRequest(method, params, response => {
-            if (!callback)
-                return;
-            if (response.error) {
-                callback({
-                    "error": response.error,
-                    "code": response.code || ""
-                });
-                return;
-            }
-            callback(response.result || {});
-        });
+        transport.call(method, params, callback);
     }
 }

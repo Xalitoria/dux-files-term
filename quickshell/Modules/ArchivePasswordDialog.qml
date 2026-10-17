@@ -2,15 +2,19 @@ import QtQuick
 import qs.Common
 import qs.Services
 import qs.DCommon.Widgets
+import qs.DCommon.FileBrowser
 
 OverlayDialog {
     id: root
 
-    readonly property var paused: FileOpsService.jobs.filter(job => job.state === "paused-password")
+    property string opScope: ""
+    property bool catchUnscoped: false
+
+    readonly property var paused: FileOpsService.jobs.filter(job => job.state === "paused-password" && (job.scope === opScope || (catchUnscoped && job.scope === "")))
     readonly property var current: paused.length > 0 ? paused[0] : null
     readonly property var prompt: current ? current.passwordPrompt : null
     readonly property bool wrong: prompt ? prompt.wrong === true : false
-    readonly property string archiveName: prompt ? prompt.path.substring(prompt.path.lastIndexOf("/") + 1) : ""
+    readonly property string archiveName: prompt ? FilePaths.baseName(prompt.path) : ""
 
     function answer(action) {
         if (!current || !prompt)
@@ -54,8 +58,6 @@ OverlayDialog {
         supportingText: root.wrong ? I18n.tr("Wrong password", "archive password dialog error after a failed attempt") : ""
         labelText: I18n.tr("Password", "label for a password input")
         onAccepted: root.submit()
-        Keys.onReturnPressed: event => event.accepted = true
-        Keys.onEnterPressed: event => event.accepted = true
     }
 
     actions: [

@@ -120,14 +120,13 @@ type wireChoiceValue struct {
 }
 
 type parser struct {
-	options   map[string]dbus.Variant
-	loadGlobs func() func(mime string) []string
-	globs     func(mime string) []string
-	err       error
+	options map[string]dbus.Variant
+	globs   func(mime string) []string
+	err     error
 }
 
-func parseRequest(method, id, appID, parent, title string, options map[string]dbus.Variant, loadGlobs func() func(string) []string) (*Request, *dbus.Error) {
-	p := &parser{options: options, loadGlobs: loadGlobs}
+func parseRequest(method, id, appID, parent, title string, options map[string]dbus.Variant, globs func(string) []string) (*Request, *dbus.Error) {
+	p := &parser{options: options, globs: globs}
 	req := &Request{
 		ID:            id,
 		Method:        method,
@@ -350,9 +349,6 @@ func (p *parser) filter(w wireFilter) (Filter, bool) {
 }
 
 func (p *parser) mimeGlobs(mime string) []string {
-	if p.globs == nil && p.loadGlobs != nil {
-		p.globs = p.loadGlobs()
-	}
 	if p.globs == nil {
 		return nil
 	}

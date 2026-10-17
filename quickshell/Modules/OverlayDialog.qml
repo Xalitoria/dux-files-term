@@ -15,6 +15,8 @@ Popup {
     default property alias content: dialog.content
     property alias actions: dialog.actions
 
+    readonly property bool fieldFocused: dialog.Window.activeFocusItem instanceof TextInput
+
     signal accepted
     signal rejected
 
@@ -43,7 +45,11 @@ Popup {
         embedded: false
         opened: false
         focus: root.takesFocus
-        onAccepted: root.accepted()
+        onAccepted: {
+            if (root.fieldFocused)
+                return;
+            root.accepted();
+        }
         onRejected: root.rejected()
     }
 }

@@ -41,9 +41,6 @@ func parseTerms(query string) []term {
 	return out
 }
 
-// score ranks an entry whose lowercased name and root-relative path are
-// given. The tier is the weakest match among the terms; tierNone means a
-// term did not match at all.
 func score(nameLower, relLower string, depth int, terms []term, fuzzy bool) (int, int) {
 	total := 0
 	weakest := tierExact
@@ -92,7 +89,6 @@ func scoreTerm(name, parent string, t term, fuzzy bool) (int, int) {
 	return 0, tierNone
 }
 
-// boundaryIndex prefers an occurrence that starts a word over the first one.
 func boundaryIndex(hay, needle string) (int, bool) {
 	first := strings.Index(hay, needle)
 	if first < 0 {
@@ -126,8 +122,6 @@ func atBoundary(hay string, at int) bool {
 	return !unicode.IsLetter(prev) && !unicode.IsDigit(prev)
 }
 
-// subsequence matches needle's characters in order and reports the longest
-// contiguous run it found and where the match starts.
 func subsequence(hay, needle string) (run, start int, ok bool) {
 	if needle == "" {
 		return 0, 0, true

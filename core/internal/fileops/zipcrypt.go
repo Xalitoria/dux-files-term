@@ -88,8 +88,7 @@ func (a winZipAES) keys(password string, salt []byte) (encKey, macKey, verifier 
 	return derived[:a.keyLen()], derived[a.keyLen() : 2*a.keyLen()], derived[2*a.keyLen():], nil
 }
 
-// WinZip counts the AES-CTR nonce as a little-endian integer starting at 1,
-// so the standard big-endian cipher.NewCTR cannot be used.
+// WinZip counts the CTR nonce little-endian from 1, so cipher.NewCTR cannot be used
 type winZipCTR struct {
 	block   cipher.Block
 	counter [aes.BlockSize]byte
@@ -122,10 +121,6 @@ func (c *winZipCTR) refill() {
 	c.used = 0
 }
 
-// openEncryptedZipEntry decrypts and decompresses one entry flagged as
-// encrypted, covering WinZip AES (method 99) and the legacy ZipCrypto
-// scheme. Errors from the entry's own bytes are badPasswordError so the
-// caller can ask again; anything else is reported as is.
 func openEncryptedZipEntry(f *zip.File, password string) (io.ReadCloser, error) {
 	raw, err := f.OpenRaw()
 	if err != nil {
@@ -300,9 +295,7 @@ func (r *crcReader) Read(p []byte) (int, error) {
 
 func (r *crcReader) Close() error { return r.inner.Close() }
 
-// passwordFailureReader turns every decode failure of an encrypted entry into
-// a badPasswordError; a garbled key stream surfaces as corrupt deflate data
-// or a checksum mismatch rather than as a clean "wrong password".
+// a wrong ZipCrypto key shows up as corrupt deflate data or a CRC mismatch, never as a clean error
 type passwordFailureReader struct{ inner io.ReadCloser }
 
 func (r *passwordFailureReader) Read(p []byte) (int, error) {
@@ -315,10 +308,6 @@ func (r *passwordFailureReader) Read(p []byte) (int, error) {
 
 func (r *passwordFailureReader) Close() error { return r.inner.Close() }
 
-// aesCompressor is a zip.Compressor for method 99 that deflates, then
-// encrypts with WinZip AES-256 (AE-1, so the CRC stays in the header).
-// archive/zip builds the compressor before it writes the local header, so
-// the salt has to wait for the first byte of output.
 func aesCompressor(password string) zip.Compressor {
 	params := winZipAES{vendorVersion: 1, strength: 3, method: zip.Deflate}
 	return func(w io.Writer) (io.WriteCloser, error) {
@@ -398,9 +387,6 @@ func (w *encryptedEntryWriter) Close() error {
 	return w.enc.finish()
 }
 
-// encryptedZipHeader switches an entry to method 99; the registered
-// compressor always deflates, so the inner method says so whatever the
-// caller picked.
 func encryptedZipHeader(header *zip.FileHeader) {
 	params := winZipAES{vendorVersion: 1, strength: 3, method: zip.Deflate}
 	header.Method = zipMethodAES

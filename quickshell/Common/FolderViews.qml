@@ -10,7 +10,7 @@ Singleton {
     id: root
 
     readonly property var log: Log.scoped("FolderViews")
-    readonly property string filePath: Paths.strip(SessionData.stateDir) + "/folder-views.json"
+    readonly property string filePath: Paths.strip(Paths.stateDir) + "/folder-views.json"
     readonly property int cap: 1000
     readonly property int touchGranularityMs: 3600000
     readonly property var valueKeys: ["sortKey", "sortDescending", "viewMode"]
@@ -189,10 +189,7 @@ Singleton {
         }
     }
 
-    Component.onCompleted: {
-        Paths.mkdir(SessionData.stateDir);
-        _apply(file.text() ?? "");
-    }
+    Component.onCompleted: _apply(file.text() ?? "")
 
     Connections {
         target: FileOpsService
@@ -208,6 +205,10 @@ Singleton {
     function _write() {
         if (!_loaded)
             return;
+        if (!Paths.ready) {
+            writeDebounce.restart();
+            return;
+        }
         touchDebounce.stop();
         file.setText(JSON.stringify(entries, null, 1));
     }

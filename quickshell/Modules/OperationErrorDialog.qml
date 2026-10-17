@@ -8,7 +8,10 @@ import qs.DCommon.FileBrowser
 OverlayDialog {
     id: root
 
-    readonly property var paused: FileOpsService.jobs.filter(job => job.state === "paused-error")
+    property string opScope: ""
+    property bool catchUnscoped: false
+
+    readonly property var paused: FileOpsService.jobs.filter(job => job.state === "paused-error" && (job.scope === opScope || (catchUnscoped && job.scope === "")))
     readonly property var current: paused.length > 0 ? paused[0] : null
     readonly property var failure: current ? current.failure : null
     readonly property bool elevationOffered: offers("retryElevated")

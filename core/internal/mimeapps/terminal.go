@@ -12,8 +12,6 @@ type terminalSpec struct {
 	exec    []string
 }
 
-// knownTerminals is ordered by preference; exec holds the flags that make the
-// terminal run the rest of the argv as a command.
 var knownTerminals = []terminalSpec{
 	{command: "ptyxis", exec: []string{"--"}},
 	{command: "kgx", exec: []string{"--"}},
@@ -33,8 +31,6 @@ var knownTerminals = []terminalSpec{
 	{command: "x-terminal-emulator", exec: []string{"-e"}},
 }
 
-// terminal resolves the terminal to use: an explicit preference, then
-// $TERMINAL, then the first known emulator on PATH.
 func (s *Service) terminal(preferred string) (terminalSpec, error) {
 	for _, candidate := range []string{preferred, os.Getenv("TERMINAL")} {
 		if candidate == "" {
@@ -70,7 +66,6 @@ func lookupTerminal(command string) (terminalSpec, bool) {
 	return terminalSpec{command: command, exec: []string{"-e"}}, true
 }
 
-// Terminals lists the emulators actually installed, for a settings picker.
 func Terminals() []string {
 	var out []string
 	for _, spec := range knownTerminals {

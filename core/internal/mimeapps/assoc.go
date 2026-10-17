@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strings"
 	"sync"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
 )
 
 const (
@@ -23,9 +25,6 @@ type assocFile struct {
 	removed  map[string][]string
 }
 
-// assocPaths is the mime-apps lookup order, highest precedence first. Each
-// directory contributes one $desktop-mimeapps.list per $XDG_CURRENT_DESKTOP
-// entry before its plain mimeapps.list.
 func assocPaths() []string {
 	desktops := currentDesktops()
 	var paths []string
@@ -106,8 +105,6 @@ func loadMimeinfoCaches() map[string][]string {
 	return out
 }
 
-// Default resolves the preferred desktop id for a mime type, skipping entries
-// whose desktop file is missing or not launchable here.
 func (s *Service) Default(mimeType string) string {
 	candidates := s.Associations(mimeType)
 	if len(candidates) == 0 {
@@ -125,10 +122,6 @@ func removedBefore(files []assocFile, mimeType, id string) bool {
 	return false
 }
 
-// Associations lists every launchable handler for a mime type, most preferred
-// first. The type is resolved before its ancestors, and within a type every
-// file's defaults come before any file's added associations, which is the
-// order gio produces.
 func (s *Service) Associations(mimeType string) []*Entry {
 	files := loadAssocFiles()
 	cache := loadMimeinfoCaches()
@@ -183,8 +176,6 @@ func claimsMime(entry *Entry, mimeType string, db *DB) bool {
 
 var writeMu sync.Mutex
 
-// SetDefault makes desktopID the default for a mime type, rewriting only the
-// Default Applications group of the user's mimeapps.list.
 func (s *Service) SetDefault(mimeType, desktopID string) error {
 	if !safeIniField(mimeType) || !safeIniField(desktopID) {
 		return fmt.Errorf("invalid mime type or desktop id")
@@ -202,15 +193,13 @@ func (s *Service) SetDefault(mimeType, desktopID string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	return atomicWrite(path, updated)
+	return atomicfile.WriteFile(path, updated, 0o644)
 }
 
 func safeIniField(s string) bool {
 	return s != "" && !strings.ContainsAny(s, "\n\r[]=")
 }
 
-// setGroupLine replaces one key inside a group, leaving every other line of
-// the file byte for byte as it was.
 func setGroupLine(original []byte, group, key, value string) []byte {
 	line := key + "=" + value
 	lines := strings.Split(strings.TrimRight(string(original), "\n"), "\n")
@@ -261,28 +250,6 @@ func joinLines(lines []string) []byte {
 	return []byte(strings.Join(lines, "\n") + "\n")
 }
 
-func atomicWrite(path string, data []byte) error {
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".mimeapps-*")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmp.Name())
-
-	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		return err
-	}
-	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp.Name(), path)
-}
-
-// writableConfig probes whether mimeapps.list can be written here, which a
-// sandbox without a config grant cannot do.
 func writableConfig() bool {
 	path := writePath()
 	if f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0o644); err == nil {

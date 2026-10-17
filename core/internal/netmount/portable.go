@@ -1,6 +1,7 @@
 package netmount
 
 import (
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/log"
 	"github.com/godbus/dbus/v5"
 )
@@ -28,7 +29,6 @@ type wireVolume struct {
 	Expansion       map[string]dbus.Variant
 }
 
-// A Portable turns into an ordinary gvfs mount once it is mounted.
 type Portable struct {
 	ID       string `json:"id"`
 	Monitor  string `json:"monitor"`
@@ -66,10 +66,10 @@ func (s *Service) Portables() []Portable {
 func (s *Service) MountPortable(monitor, id string) error {
 	conn := s.connection()
 	if conn == nil {
-		return fail("NOTSUPPORTED", "gvfs is not running")
+		return fail(files.CodeNotSupported, "gvfs is not running")
 	}
 	if !knownMonitor(monitor) {
-		return fail("EINVAL", "unknown volume monitor: %s", monitor)
+		return fail(files.CodeInvalid, "unknown volume monitor: %s", monitor)
 	}
 
 	call := conn.Object(monitor, MonitorPath).Call(MonitorIface+".VolumeMount", 0, id, "", uint32(0), "")
@@ -86,12 +86,27 @@ func listVolumes(conn *dbus.Conn, monitor string) []wireVolume {
 	var volumes []wireVolume
 	var mounts []dbus.Variant
 
-	err := conn.Object(monitor, MonitorPath).Call(MonitorIface+".List", 0).Store(&drives, &volumes, &mounts)
-	if err != nil {
-		log.Debugf("network: %s List failed: %v", monitor, err)
+	err := conn.Object(monitor, MonitorPath).Call(MonitorIface+".List", dbus.FlagNoAutoStart).Store(&drives, &volumes, &mounts)
+	switch {
+	case err == nil:
+		return volumes
+	case monitorNotRunning(err):
 		return nil
 	}
-	return volumes
+	log.Debugf("network: %s List failed: %v", monitor, err)
+	return nil
+}
+
+func monitorNotRunning(err error) bool {
+	call, ok := err.(dbus.Error)
+	if !ok {
+		return false
+	}
+	switch call.Name {
+	case "org.freedesktop.DBus.Error.NameHasNoOwner", "org.freedesktop.DBus.Error.ServiceUnknown":
+		return true
+	}
+	return false
 }
 
 func knownMonitor(name string) bool {

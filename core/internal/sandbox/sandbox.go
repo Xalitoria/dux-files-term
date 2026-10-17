@@ -143,8 +143,6 @@ func portalVersions(p Probe) map[string]uint32 {
 	return out
 }
 
-func (c Capabilities) PortalVersion(iface string) uint32 { return c.Portals[iface] }
-
 // WithFeature returns a copy carrying one overridden feature, for callers
 // that overlay live service state onto the boot-time table.
 func (c Capabilities) WithFeature(name string, f Feature) Capabilities {

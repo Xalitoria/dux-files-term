@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"unicode/utf8"
+
+	"github.com/AvengeMedia/dankgo/ipc/params"
 )
 
 const (
@@ -37,12 +39,12 @@ type imageSizeResult struct {
 }
 
 func HandlePreview(_ context.Context, w *ConnWriter, req Request) {
-	path := ParamString(req.Params, "path")
+	path := params.StringOpt(req.Params, "path", "")
 	if !filepath.IsAbs(path) {
 		w.RespondError(req.ID, "path is not an absolute path")
 		return
 	}
-	limit := ParamInt(req.Params, "maxBytes")
+	limit := params.IntOpt(req.Params, "maxBytes", 0)
 	switch {
 	case limit <= 0:
 		limit = previewDefaultBytes
@@ -58,7 +60,7 @@ func HandlePreview(_ context.Context, w *ConnWriter, req Request) {
 }
 
 func HandleImageSize(_ context.Context, w *ConnWriter, req Request) {
-	path := ParamString(req.Params, "path")
+	path := params.StringOpt(req.Params, "path", "")
 	if !filepath.IsAbs(path) {
 		w.RespondError(req.ID, "path is not an absolute path")
 		return

@@ -20,7 +20,6 @@ SettingsRow {
     readonly property int stepAmount: Math.max(1, step)
 
     signal sliderValueChanged(int newValue)
-    signal sliderDragFinished(int finalValue)
 
     function nudge(direction) {
         const next = Math.max(minimum, Math.min(maximum, slider.value + direction * stepAmount));
@@ -28,7 +27,6 @@ SettingsRow {
             return;
         slider.value = next;
         sliderValueChanged(next);
-        sliderDragFinished(next);
     }
 
     title: text
@@ -70,7 +68,6 @@ SettingsRow {
             showValue: !root.atMinimum
             Component.onCompleted: value = Math.round(root.value)
             onSliderValueChanged: newValue => root.sliderValueChanged(newValue)
-            onSliderDragFinished: finalValue => root.sliderDragFinished(finalValue)
         }
 
         DActionButton {

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -94,10 +95,10 @@ func TestOpenReportsMissingHandler(t *testing.T) {
 	target := writeFile(t, filepath.Join(root, "files", "disc.iso"), []byte("nothing handles this"))
 	err := svc.Open(context.Background(), []string{target}, LaunchOptions{})
 	require.Error(t, err)
-	assert.Equal(t, "NOTSUPPORTED", CodeOf(err))
+	assert.Equal(t, files.CodeNotSupported, files.CodeOf(err))
 
 	err = svc.Open(context.Background(), nil, LaunchOptions{})
-	assert.Equal(t, "EINVAL", CodeOf(err))
+	assert.Equal(t, files.CodeInvalid, files.CodeOf(err))
 }
 
 func TestOpenGroupsPathsByTheirDefaultApp(t *testing.T) {
@@ -130,7 +131,7 @@ func TestOpenStillLaunchesTheHandledPaths(t *testing.T) {
 
 	err := svc.Open(context.Background(), []string{disc, shot}, LaunchOptions{})
 	require.Error(t, err)
-	assert.Equal(t, "NOTSUPPORTED", CodeOf(err))
+	assert.Equal(t, files.CodeNotSupported, files.CodeOf(err))
 	require.Eventually(t, func() bool {
 		data, err := os.ReadFile(marker)
 		return err == nil && strings.TrimSpace(string(data)) == shot
@@ -143,7 +144,7 @@ func TestOpenWithRejectsUnknownEntry(t *testing.T) {
 	target := writeFile(t, filepath.Join(root, "files", "note.txt"), []byte("hello"))
 	err := svc.OpenWith(context.Background(), "nope.desktop", []string{target}, LaunchOptions{})
 	require.Error(t, err)
-	assert.Equal(t, "ENOENT", CodeOf(err))
+	assert.Equal(t, files.CodeNotFound, files.CodeOf(err))
 }
 
 func TestRunRequiresTheExecuteBit(t *testing.T) {
@@ -154,7 +155,7 @@ func TestRunRequiresTheExecuteBit(t *testing.T) {
 
 	err := svc.Run(script, LaunchOptions{})
 	require.Error(t, err)
-	assert.Equal(t, "EACCES", CodeOf(err))
+	assert.Equal(t, files.CodeAccess, files.CodeOf(err))
 
 	require.NoError(t, os.Chmod(script, 0o755))
 	require.NoError(t, svc.Run(script, LaunchOptions{}))
@@ -163,8 +164,8 @@ func TestRunRequiresTheExecuteBit(t *testing.T) {
 		return err == nil
 	}, waitFor, waitTick)
 
-	assert.Equal(t, "EINVAL", CodeOf(svc.Run(root, LaunchOptions{})))
-	assert.Equal(t, "ENOENT", CodeOf(svc.Run(filepath.Join(root, "gone"), LaunchOptions{})))
+	assert.Equal(t, files.CodeInvalid, files.CodeOf(svc.Run(root, LaunchOptions{})))
+	assert.Equal(t, files.CodeNotFound, files.CodeOf(svc.Run(filepath.Join(root, "gone"), LaunchOptions{})))
 }
 
 func TestRunLaunchesATrustedDesktopFile(t *testing.T) {
@@ -176,7 +177,7 @@ func TestRunLaunchesATrustedDesktopFile(t *testing.T) {
 
 	err := svc.Run(entry, LaunchOptions{})
 	require.Error(t, err)
-	assert.Equal(t, "EACCES", CodeOf(err), "an untrusted desktop file is never run")
+	assert.Equal(t, files.CodeAccess, files.CodeOf(err), "an untrusted desktop file is never run")
 
 	require.NoError(t, os.Chmod(entry, 0o755))
 	require.NoError(t, svc.Run(entry, LaunchOptions{}))

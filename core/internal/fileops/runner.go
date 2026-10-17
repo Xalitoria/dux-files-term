@@ -88,8 +88,6 @@ func (r *runner) remember(kind Kind, from, to string) {
 	r.rememberPair(kind, p, g)
 }
 
-// rememberPair keeps the first kind a job records, so a composite job owns
-// its inverse even where the steps it reuses would record their own.
 func (r *runner) rememberPair(kind Kind, p pair, g guard) {
 	r.job.mu.Lock()
 	defer r.job.mu.Unlock()
@@ -116,15 +114,10 @@ func (g guard) matches(path string) bool {
 	return current.mtimeMs == g.mtimeMs && current.size == g.size
 }
 
-// retry runs step until it succeeds, the user skips it, or the job is
-// cancelled; errSkipped tells the caller to move on to the next item. A
-// denied step may be retried through the elevated route when one exists.
 func (r *runner) retry(path string, step func(FS) error) error {
 	return r.attempt(path, step, true)
 }
 
-// retryLocal is for steps that have no elevated form, so the prompt never
-// offers one.
 func (r *runner) retryLocal(path string, step func() error) error {
 	return r.attempt(path, func(FS) error { return step() }, false)
 }
@@ -159,8 +152,11 @@ func (r *runner) attempt(path string, step func(FS) error, mayElevate bool) erro
 }
 
 func (r *runner) fs(elevated bool) FS {
-	if elevated && r.job.mgr.elevator != nil {
-		return r.job.mgr.elevator
+	if !elevated {
+		return local
+	}
+	if elevator := r.job.mgr.currentElevator(); elevator != nil {
+		return elevator
 	}
 	return local
 }
@@ -172,9 +168,6 @@ func (r *runner) canElevate(err error) bool {
 	return r.job.mgr.elevationAvailable()
 }
 
-// answerError applies a sticky answer or asks. Choosing "retry elevated"
-// once holds for the rest of the job, but only for the first, unelevated
-// failure of a step, so an elevated failure is shown instead of looping.
 func (r *runner) answerError(path string, err error, offer, firstTry bool) Action {
 	switch {
 	case r.errorAll != "":

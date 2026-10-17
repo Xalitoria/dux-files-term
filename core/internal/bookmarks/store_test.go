@@ -167,10 +167,14 @@ func TestParseGTK(t *testing.T) {
 }
 
 func TestGTKImportIsOfferedOnceAndDedupes(t *testing.T) {
-	store, bus, dir := newStore(t)
+	dir := filepath.Join(t.TempDir(), "dfiles")
 	gtk := filepath.Join(filepath.Dir(dir), "gtk-3.0", "bookmarks")
 	require.NoError(t, os.MkdirAll(filepath.Dir(gtk), 0o755))
 	require.NoError(t, os.WriteFile(gtk, []byte("file:///a/b Bee\nfile:///c\n"), 0o644))
+	bus := newBus()
+	store := New(bus, dir, gtk)
+	require.NoError(t, store.Start())
+	t.Cleanup(store.Close)
 	assert.True(t, store.GTKImportAvailable())
 
 	items, added, err := store.ImportGTK()

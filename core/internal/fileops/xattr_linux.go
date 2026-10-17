@@ -6,8 +6,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// copyXattrs carries the user namespace only; security and system attributes
-// need privileges the app process must not have.
 func copyXattrs(src, dst string) error {
 	size, err := unix.Llistxattr(src, nil)
 	if err != nil || size == 0 {

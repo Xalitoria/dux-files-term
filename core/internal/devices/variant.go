@@ -1,8 +1,7 @@
 package devices
 
 import (
-	"bytes"
-
+	"github.com/AvengeMedia/dankfiles/core/internal/dbusutil"
 	"github.com/godbus/dbus/v5"
 )
 
@@ -36,10 +35,5 @@ func objectOf(v dbus.Variant) string {
 
 func byteStringOf(v dbus.Variant) string {
 	raw, _ := v.Value().([]byte)
-	return byteString(raw)
-}
-
-// byteString drops the trailing NUL udisks and gvfs put on every ay value.
-func byteString(raw []byte) string {
-	return string(bytes.TrimRight(raw, "\x00"))
+	return dbusutil.ByteString(raw)
 }

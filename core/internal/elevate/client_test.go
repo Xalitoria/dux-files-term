@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -20,11 +21,18 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/helper"
 )
 
-const fakeEnv = "DFILES_ELEVATE_FAKE_HELPER"
+const (
+	fakeEnv     = "DFILES_ELEVATE_FAKE_HELPER"
+	fakeExitEnv = "DFILES_ELEVATE_FAKE_EXIT"
+)
 
 // TestMain lets the test binary stand in for pkexec: invoked as
 // "<binary> <exe> helper <op> ..." it runs the helper operation unprivileged.
 func TestMain(m *testing.M) {
+	if code := os.Getenv(fakeExitEnv); code != "" {
+		n, _ := strconv.Atoi(code)
+		os.Exit(n)
+	}
 	if os.Getenv(fakeEnv) == "" {
 		os.Exit(m.Run())
 	}
@@ -68,12 +76,15 @@ func TestPolicyCoversOnlyThisBinary(t *testing.T) {
 }
 
 func TestFailureMapsExitCodesAndHelperReports(t *testing.T) {
+	self, err := os.Executable()
+	require.NoError(t, err)
 	exitWith := func(code int) error {
-		cmd := exec.Command("sh", "-c", fmt.Sprintf("exit %d", code))
+		cmd := exec.Command(self)
+		cmd.Env = append(os.Environ(), fakeExitEnv+"="+strconv.Itoa(code))
 		return cmd.Run()
 	}
 
-	err := failure(exitWith(126), nil)
+	err = failure(exitWith(126), nil)
 	assert.Equal(t, files.CodeAccess, files.CodeOf(err))
 	assert.Contains(t, err.Error(), "not granted")
 
@@ -92,10 +103,18 @@ func TestFailureMapsExitCodesAndHelperReports(t *testing.T) {
 	assert.Equal(t, files.CodeIO, files.CodeOf(err))
 }
 
-func TestOctalKeepsSpecialBits(t *testing.T) {
-	assert.Equal(t, "644", octal(0o644))
-	assert.Equal(t, "4755", octal(0o755|os.ModeSetuid))
-	assert.Equal(t, "1777", octal(0o777|os.ModeSticky))
+func TestClientSendsPermissionBitsOnly(t *testing.T) {
+	root := t.TempDir()
+	client := fakeClient(t)
+
+	dir := filepath.Join(root, "shared")
+	require.NoError(t, client.Mkdir(dir, 0o2775))
+	require.NoError(t, client.Chmod(dir, 0o755|os.ModeSetgid|os.ModeSticky, false))
+	info, err := os.Lstat(dir)
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0o755), info.Mode().Perm())
+	assert.Zero(t, info.Mode()&(os.ModeSetuid|os.ModeSetgid|os.ModeSticky))
+	assert.Equal(t, "755", octal(0o755|os.ModeSetuid))
 }
 
 func TestClientRoundTripsThroughTheHelper(t *testing.T) {

@@ -22,14 +22,17 @@ Singleton {
     }
 
     function refresh() {
-        DankFilesService.sendRequest("system.colorScheme.get", null, response => {
-            if (response.error)
+        DankFilesService.call("system.colorScheme.get", null, result => {
+            if (result.error)
                 return;
-            root._apply(response.result);
+            root._apply(result);
         });
     }
 
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        if (DankFilesService.connected)
+            refresh();
+    }
 
     Connections {
         target: DankFilesService
@@ -38,8 +41,9 @@ Singleton {
             root._apply(data);
         }
 
-        function onConnectionStateChanged() {
-            root.refresh();
+        function onConnectedChanged() {
+            if (DankFilesService.connected)
+                root.refresh();
         }
     }
 }

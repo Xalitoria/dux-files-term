@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/location"
+	"github.com/AvengeMedia/dankfiles/core/internal/wire"
+	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/AvengeMedia/dankgo/paths"
 )
 
@@ -17,26 +19,20 @@ var networkFsTypes = []string{"nfs", "nfs4", "cifs", "smb3", "smbfs", "9p", "afs
 
 var mountEscapes = strings.NewReplacer(`\040`, " ", `\011`, "\t", `\012`, "\n", `\134`, `\`)
 
-type codedError struct {
-	ID    int    `json:"id,omitempty"`
-	Error string `json:"error"`
-	Code  string `json:"code"`
-}
-
 func HandleLocation(_ context.Context, w *ConnWriter, req Request) {
 	switch req.Method {
 	case "location.resolve":
 		home, _ := os.UserHomeDir()
 		env := location.HostEnv(paths.XDGDataHome(), nil)
-		loc, err := location.Typed(ParamString(req.Params, "text"), ParamString(req.Params, "cwd"), home, env)
+		loc, err := location.Typed(params.StringOpt(req.Params, "text", ""), params.StringOpt(req.Params, "cwd", ""), home, env)
 		if err != nil {
-			_ = w.WriteResponse(codedError{ID: req.ID, Error: err.Error(), Code: location.CodeOf(err)})
+			wire.RespondError(w, req.ID, err)
 			return
 		}
 		w.Respond(req.ID, map[string]any{"location": loc})
 	case "location.missing":
 		mountinfo, _ := os.ReadFile("/proc/self/mountinfo")
-		w.Respond(req.ID, map[string]any{"missing": missingFolders(stringList(req.Params, "paths"), networkMounts(string(mountinfo)))})
+		w.Respond(req.ID, map[string]any{"missing": missingFolders(wire.StringList(req.Params, "paths"), networkMounts(string(mountinfo)))})
 	default:
 		w.RespondError(req.ID, "unknown location method: "+req.Method)
 	}

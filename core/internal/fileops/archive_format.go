@@ -138,8 +138,6 @@ func looksLikeTar(head []byte) bool {
 	return len(head) >= end && bytes.Equal(head[tarMagicOffset:end], tarMagic)
 }
 
-// detectFormat trusts the name first, then the magic bytes, so an archive
-// saved without an extension still opens.
 func detectFormat(path string) (archiveFormat, error) {
 	if format, ok := formatByName(path); ok {
 		return format, nil
@@ -157,35 +155,7 @@ func detectFormat(path string) (archiveFormat, error) {
 	return archiveFormat{}, errUnsupportedArchive
 }
 
-// IsArchive reports whether a path names an archive this package can unpack.
 func IsArchive(path string) bool {
 	_, err := detectFormat(path)
 	return err == nil
 }
-
-var extractableMimes = map[string]bool{
-	"application/zip":                    true,
-	"application/x-tar":                  true,
-	"application/gzip":                   true,
-	"application/x-gzip":                 true,
-	"application/x-compressed-tar":       true,
-	"application/x-bzip":                 true,
-	"application/x-bzip2":                true,
-	"application/bzip2":                  true,
-	"application/x-bzip-compressed-tar":  true,
-	"application/x-bzip2-compressed-tar": true,
-	"application/x-xz":                   true,
-	"application/x-xz-compressed-tar":    true,
-	"application/zstd":                   true,
-	"application/x-zstd-compressed-tar":  true,
-	"application/x-lzma":                 true,
-	"application/x-lzma-compressed-tar":  true,
-	"application/x-7z-compressed":        true,
-	"application/vnd.rar":                true,
-	"application/x-rar":                  true,
-	"application/x-cpio":                 true,
-}
-
-// Extractable reports whether a mime type names an archive this package can
-// unpack itself; anything else is opened with the default application.
-func Extractable(mime string) bool { return extractableMimes[mime] }

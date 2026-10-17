@@ -4,8 +4,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/godbus/dbus/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWrapDBusMapsUdisksErrorsToCodes(t *testing.T) {
@@ -24,17 +26,19 @@ func TestWrapDBusMapsUdisksErrorsToCodes(t *testing.T) {
 
 	for name, code := range cases {
 		err := wrapDBus(dbus.Error{Name: name, Body: []any{"boom"}})
-		assert.Equal(t, code, CodeOf(err), name)
-		assert.Equal(t, "boom", err.Error(), name)
+		assert.Equal(t, code, string(files.CodeOf(err)), name)
+		var coded *files.Error
+		require.ErrorAs(t, err, &coded, name)
+		assert.Equal(t, "boom", coded.Err.Error(), name)
 	}
 }
 
 func TestWrapDBusFallsBackToTheErrorName(t *testing.T) {
 	err := wrapDBus(dbus.Error{Name: BusName + ".Error.Failed"})
-	assert.Equal(t, BusName+".Error.Failed", err.Error())
+	assert.ErrorContains(t, err, BusName+".Error.Failed")
 }
 
 func TestCodeOfPlainErrorsIsIO(t *testing.T) {
-	assert.Equal(t, "EIO", CodeOf(errors.New("broken")))
+	assert.Equal(t, files.CodeIO, files.CodeOf(wrapDBus(errors.New("broken"))))
 	assert.Nil(t, wrapDBus(nil))
 }

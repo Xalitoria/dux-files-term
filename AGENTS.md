@@ -13,8 +13,6 @@ Go backend, daemon, and CLI (`cmd/dfiles`). Runs the unix socket server the UI t
 - cmd/dfiles/ - CLI commands and the daemon entrypoint
 - internal/ipc/ - unix socket handlers the UI calls, plus the method registry that drives `dfiles ipc list` and shell completion
 - internal/colorscheme/ - desktop portal color-scheme watcher
-- internal/uriopen/ - opens URIs with the default handler
-- internal/paths/ - xdg dirs and socket path
 - internal/shellembed/ - the QML tree embedded into the binary at build time (`make sync-shell`)
 
 ### 2- quickshell

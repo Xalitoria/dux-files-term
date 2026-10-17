@@ -1159,7 +1159,8 @@ Item {
                         placeholderText: I18n.tr("Steam, ~/VirtualBox VMs", "example list in the search exclusions field, folder names or paths separated by commas")
                         onEditingFinished: {
                             const names = text.split(",").map(entry => entry.trim()).filter(entry => entry !== "");
-                            if (JSON.stringify(names) !== JSON.stringify(SettingsData.searchExcludes))
+                            const current = SettingsData.searchExcludes;
+                            if (names.length !== current.length || names.some((name, index) => name !== current[index]))
                                 SettingsData.searchExcludes = names;
                         }
                     }

@@ -3,6 +3,7 @@ package fileops
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -131,18 +132,23 @@ func tempsIn(t *testing.T, dir string) []string {
 	return leftovers
 }
 
-// otherDevice returns a directory on a different filesystem, for the
-// cross-device paths; there is no portable way to fake st_dev.
 func otherDevice(t *testing.T, reference string) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("/dev/shm", "dfiles-xdev-")
-	if err != nil {
-		t.Skip("no second filesystem available")
+	for _, parent := range []string{"/dev/shm", "/run/user/" + strconv.Itoa(os.Getuid()), os.TempDir()} {
+		dir, err := os.MkdirTemp(parent, "dfiles-xdev-")
+		if err != nil {
+			continue
+		}
+		if sameDevice(reference, dir) {
+			os.RemoveAll(dir)
+			continue
+		}
+		t.Cleanup(func() { os.RemoveAll(dir) })
+		return dir
 	}
-	t.Cleanup(func() { os.RemoveAll(dir) })
-
-	if sameDevice(reference, dir) {
-		t.Skip("scratch dirs share a filesystem")
+	if os.Getenv("CI") != "" {
+		t.Fatal("no second filesystem for the cross-device tests")
 	}
-	return dir
+	t.Skip("no second filesystem available")
+	return ""
 }

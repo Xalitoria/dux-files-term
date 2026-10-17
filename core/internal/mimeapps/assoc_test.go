@@ -3,6 +3,7 @@ package mimeapps
 import (
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -95,21 +96,22 @@ func TestEntryFields(t *testing.T) {
 }
 
 func TestLocalizedNames(t *testing.T) {
+	t.Cleanup(func() { localeCandidates = sync.OnceValue(sessionLocaleCandidates) })
 	svc, _ := fixture(t)
 	assert.Equal(t, "Editor", svc.EntryByID("editor.desktop").Name)
 
 	t.Setenv("LC_ALL", "de_AT.UTF-8")
-	localeCache.Clear()
+	localeCandidates = sync.OnceValue(sessionLocaleCandidates)
 	svc2, _ := fixture(t)
 	t.Setenv("LC_ALL", "de_AT.UTF-8")
-	localeCache.Clear()
+	localeCandidates = sync.OnceValue(sessionLocaleCandidates)
 	assert.Equal(t, "Schreibtisch", svc2.EntryByID("editor.desktop").Name)
 
 	t.Setenv("LC_ALL", "de_CH.UTF-8")
-	localeCache.Clear()
+	localeCandidates = sync.OnceValue(sessionLocaleCandidates)
 	svc3, _ := fixture(t)
 	t.Setenv("LC_ALL", "de_CH.UTF-8")
-	localeCache.Clear()
+	localeCandidates = sync.OnceValue(sessionLocaleCandidates)
 	assert.Equal(t, "Bearbeiter", svc3.EntryByID("editor.desktop").Name, "de_CH falls back to the de translation")
 }
 

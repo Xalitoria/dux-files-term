@@ -16,9 +16,6 @@ type scanResult struct {
 
 var errScanBudget = errors.New("scan budget exceeded")
 
-// scan walks the sources for a progress estimate. It gives up after
-// scanBudget so a huge tree still starts copying; the caller then keeps the
-// job in estimating mode and grows the totals as it walks.
 func (r *runner) scan(paths []string) (int, int64, bool) {
 	deadline := time.Now().Add(scanBudget)
 	total := scanResult{}

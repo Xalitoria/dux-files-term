@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/dbusutil"
 	"github.com/godbus/dbus/v5"
 )
 
@@ -27,7 +28,6 @@ const (
 	KindLoop      = "loop"
 )
 
-// Objects is the shape org.freedesktop.DBus.ObjectManager returns.
 type Objects map[dbus.ObjectPath]map[string]map[string]dbus.Variant
 
 type Device struct {
@@ -55,8 +55,6 @@ type Device struct {
 	Hidden      bool     `json:"hidden,omitempty"`
 }
 
-// List folds cleartext devices into the LUKS container they unlock and drops
-// what the desktop is not meant to see.
 func List(objects Objects, uid uint32) []Device {
 	cleartext := cleartextByBacking(objects)
 	out := make([]Device, 0, len(objects))
@@ -204,9 +202,6 @@ func iconOf(device Device, drive map[string]dbus.Variant) string {
 	}
 }
 
-// visible drops what no desktop lists: loop devices set up by someone else and
-// empty non-encrypted blocks. System-internal partitions stay, flagged Hidden,
-// so the UI can offer them behind a setting.
 func visible(device Device, ifaces map[string]map[string]dbus.Variant, uid uint32) bool {
 	switch {
 	case device.System:
@@ -267,7 +262,7 @@ func allMountPoints(fs map[string]dbus.Variant) []string {
 	}
 	out := make([]string, 0, len(points))
 	for _, point := range points {
-		if path := byteString(point); path != "" {
+		if path := dbusutil.ByteString(point); path != "" {
 			out = append(out, path)
 		}
 	}

@@ -23,12 +23,12 @@ ShellRoot {
     }
 
     readonly property QtObject fakeTransport: QtObject {
-        signal connectionStateChanged
+        property bool connected: false
 
-        function sendRequest(method, params, callback) {
+        function call(method, params, callback) {
             fixture.requests++;
             fixture.check("method " + fixture.requests, method, "system.capabilities");
-            callback(fixture.response);
+            callback(DankFilesService.unwrap(fixture.response));
         }
     }
 
@@ -69,8 +69,8 @@ ShellRoot {
                 "thumbnailers": ["video"]
             }
         };
-        fakeTransport.connectionStateChanged();
-        check("reconnect refetches", requests, 2);
+        fakeTransport.connected = true;
+        check("connect refetches", requests, 2);
         check("loaded", SandboxService.loaded, true);
         check("sandboxed", SandboxService.sandboxed, true);
         check("app id", SandboxService.appId, "com.danklinux.dankfiles");
@@ -88,10 +88,12 @@ ShellRoot {
         response = {
             "error": "not connected"
         };
-        fakeTransport.connectionStateChanged();
-        check("disconnect refetches", requests, 3);
-        check("disconnect keeps the last table", SandboxService.available("terminal"), false);
-        check("disconnect keeps loaded", SandboxService.loaded, true);
+        fakeTransport.connected = false;
+        check("disconnect does not refetch", requests, 2);
+        fakeTransport.connected = true;
+        check("reconnect refetches", requests, 3);
+        check("failed refetch keeps the last table", SandboxService.available("terminal"), false);
+        check("failed refetch keeps loaded", SandboxService.loaded, true);
 
         if (failures === 0)
             log.info("FIXTURE PASS");

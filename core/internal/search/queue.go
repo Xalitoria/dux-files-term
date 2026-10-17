@@ -10,8 +10,6 @@ type dirItem struct {
 	patterns []ignorePattern
 }
 
-// dirQueue hands directories to a bounded set of workers without ever
-// blocking the worker that discovered them.
 type dirQueue struct {
 	mu      sync.Mutex
 	cond    *sync.Cond

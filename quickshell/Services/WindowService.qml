@@ -26,13 +26,6 @@ Singleton {
         return -1;
     }
 
-    function ids() {
-        const out = [];
-        for (let i = 0; i < windows.count; i++)
-            out.push(windows.get(i).windowId);
-        return out;
-    }
-
     function target() {
         if (indexOf(lastActiveId) >= 0)
             return lastActiveId;

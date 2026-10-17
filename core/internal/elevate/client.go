@@ -1,6 +1,3 @@
-// Package elevate is the daemon side of "retry as administrator": it runs
-// one `dfiles helper` operation per call through pkexec, so polkit sees the
-// daemon as the subject and auth_admin_keep covers the following calls.
 package elevate
 
 import (
@@ -53,8 +50,6 @@ func NewClient() *Client {
 
 func (c *Client) Route() string { return "pkexec" }
 
-// Available reports why the route cannot be used, checked fresh each time
-// because the policy file can be installed while the daemon runs.
 func (c *Client) Available() error {
 	if portal.InFlatpak() {
 		return &fileops.Unavailable{Reason: ReasonSandboxed}
@@ -107,8 +102,6 @@ func actionDirs() []string {
 	return dirs
 }
 
-// policyCovers accepts only a policy whose exec.path annotation names this
-// binary; anything else would make pkexec fall back to its generic action.
 func policyCovers(exe string, dirs []string) bool {
 	for _, dir := range dirs {
 		body, err := os.ReadFile(filepath.Join(dir, PolicyName))
@@ -169,8 +162,6 @@ func (c *Client) call(op string, args ...string) ([]byte, error) {
 	return stdout.Bytes(), nil
 }
 
-// failure turns the helper's stderr line, or pkexec's own exit status, into
-// the coded error the job engine reports.
 func failure(err error, stderr []byte) error {
 	var exit *exec.ExitError
 	if !errors.As(err, &exit) {
@@ -201,9 +192,6 @@ func firstLine(out []byte) string {
 	return string(line)
 }
 
-// canonical resolves symlinks in the parent so a merged-usr path like
-// /lib/firmware reaches the helper as /usr/lib/firmware; the helper still
-// refuses whatever is left, which is the TOCTOU guard.
 func canonical(path string) string {
 	dir, base := filepath.Split(path)
 	resolved, err := filepath.EvalSymlinks(filepath.Clean(dir))
@@ -255,9 +243,6 @@ func (c *Client) Readlink(path string) (string, error) {
 	return reply.Target, nil
 }
 
-// Open returns only once the helper produced its first byte or exited, so a
-// refused open (or a dismissed prompt) is reported here, inside the step
-// that can be retried as administrator.
 func (c *Client) Open(path string) (io.ReadCloser, error) {
 	cmd, err := c.command(helper.OpRead, canonical(path))
 	if err != nil {
@@ -281,8 +266,6 @@ func (c *Client) Open(path string) (io.ReadCloser, error) {
 	return r, nil
 }
 
-// Create returns once the helper has created the file (it prints a ready
-// line) or exited with its error.
 func (c *Client) Create(path string, perm os.FileMode) (fileops.Writer, error) {
 	cmd, err := c.command(helper.OpWrite, canonical(path), octal(perm))
 	if err != nil {
@@ -358,21 +341,7 @@ func (c *Client) Chtimes(path string, mtime time.Time) error {
 }
 
 func octal(mode os.FileMode) string {
-	return strconv.FormatUint(uint64(mode&os.ModePerm|modeBits(mode)), 8)
-}
-
-func modeBits(mode os.FileMode) os.FileMode {
-	var bits os.FileMode
-	if mode&os.ModeSetuid != 0 {
-		bits |= 0o4000
-	}
-	if mode&os.ModeSetgid != 0 {
-		bits |= 0o2000
-	}
-	if mode&os.ModeSticky != 0 {
-		bits |= 0o1000
-	}
-	return bits
+	return strconv.FormatUint(uint64(mode.Perm()), 8)
 }
 
 func flag(set bool, name string) []string {
@@ -382,8 +351,6 @@ func flag(set bool, name string) []string {
 	return []string{name}
 }
 
-// reader hands out the helper's stdout and, at EOF, swaps in the helper's
-// error so a file that failed half way is never taken as complete.
 type reader struct {
 	cmd      *exec.Cmd
 	pipe     io.ReadCloser
@@ -393,8 +360,7 @@ type reader struct {
 	waited   bool
 }
 
-// Read treats any end of the pipe as the helper's verdict: Wait closes the
-// pipe, so after it a read error is the end of file, not a failure.
+// Wait closes the pipe, so a read error after it is EOF, not a failure
 func (r *reader) Read(p []byte) (int, error) {
 	n, err := r.buffered.Read(p)
 	if err == nil {
@@ -420,9 +386,7 @@ func (r *reader) wait() error {
 	return r.done
 }
 
-// waitBounded reaps the helper but gives up after a while: the daemon cannot
-// signal a process whose real uid is root, so a helper stuck on a dead mount
-// must not hang the job with it.
+// the daemon cannot signal a root helper, so a stuck one must not hang the job
 func waitBounded(cmd *exec.Cmd, stderr *bytes.Buffer) error {
 	result := make(chan error, 1)
 	go func() { result <- cmd.Wait() }()
@@ -469,8 +433,6 @@ func (w *writer) Close() error {
 	return w.finish()
 }
 
-// Abort closes stdin without the commit frame; the helper's resulting
-// "aborted" error is the expected outcome, not a failure to report.
 func (w *writer) Abort() error {
 	if w.closed {
 		return nil

@@ -3,13 +3,12 @@ package ipc
 import (
 	"context"
 	"errors"
-	"os"
 	"strings"
-	"syscall"
-	"time"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/location"
+	"github.com/AvengeMedia/dankfiles/core/internal/wire"
+	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/AvengeMedia/dankgo/paths"
 )
 
@@ -63,35 +62,27 @@ func HandleUI(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 		deps.Bus.Publish("ui", map[string]any{"action": action})
 		w.Respond(req.ID, map[string]any{"ok": true})
 	case "ui.open":
-		open := stringList(req.Params, "paths")
-		if path := ParamString(req.Params, "path"); path != "" {
+		open := wire.StringList(req.Params, "paths")
+		if path := params.StringOpt(req.Params, "path", ""); path != "" {
 			open = append([]string{path}, open...)
 		}
-		if err := OpenLocations(deps, open, stringList(req.Params, "select"), ParamBool(req.Params, "newWindow")); err != nil {
+		if err := OpenLocations(deps, open, wire.StringList(req.Params, "select"), params.BoolLoose(req.Params, "newWindow")); err != nil {
 			w.RespondError(req.ID, "ui.open: "+err.Error())
 			return
 		}
 		w.Respond(req.ID, map[string]any{"ok": true})
 	case "ui.properties":
-		if err := ShowProperties(deps, stringList(req.Params, "paths")); err != nil {
+		if err := ShowProperties(deps, wire.StringList(req.Params, "paths")); err != nil {
 			w.RespondError(req.ID, "ui.properties: "+err.Error())
 			return
 		}
 		w.Respond(req.ID, map[string]any{"ok": true})
 	case "ui.quit":
 		w.Respond(req.ID, map[string]any{"ok": true})
-		go func() {
-			time.Sleep(100 * time.Millisecond)
-			_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
-		}()
+		if deps.Quit != nil {
+			deps.Quit()
+		}
 	default:
 		w.RespondError(req.ID, "unknown ui method: "+req.Method)
 	}
-}
-
-func stringList(p map[string]any, key string) []string {
-	if value := ParamString(p, key); value != "" {
-		return []string{value}
-	}
-	return ParamStringSlice(p, key)
 }

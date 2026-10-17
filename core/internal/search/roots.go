@@ -8,9 +8,6 @@ import (
 	"strings"
 )
 
-// roots resolves the scope to the directories a search walks: the folder
-// itself, the home directory, or home plus every mounted local drive, with
-// nested roots folded into their parent.
 func roots(scope, root string, mounts func() []string) []string {
 	switch scope {
 	case ScopeHome:

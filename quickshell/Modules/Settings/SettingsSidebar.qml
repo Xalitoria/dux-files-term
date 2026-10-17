@@ -14,10 +14,6 @@ Item {
     signal tabSelected(int index)
     signal searchAccepted
 
-    function focusSearch() {
-        searchField.forceActiveFocus();
-    }
-
     function clearSearch() {
         if (searchField.text === "")
             return false;

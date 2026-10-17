@@ -1,10 +1,11 @@
-// Package mimeapps resolves mime types, default applications and launching.
 package mimeapps
 
 import (
 	"bufio"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -14,11 +15,11 @@ type DB struct {
 	maxExtent    int
 	aliases      map[string]string
 	subclasses   map[string][]string
+	children     map[string][]string
 	genericIcons map[string]string
 	icons        map[string]string
 }
 
-// MimeDirs is the shared-mime-info search path, most specific first.
 func MimeDirs() []string {
 	return appendXDG(nil, "mime")
 }
@@ -95,6 +96,7 @@ func LoadDB(dirs []string) *DB {
 		globs:        newGlobSet(),
 		aliases:      map[string]string{},
 		subclasses:   map[string][]string{},
+		children:     map[string][]string{},
 		genericIcons: map[string]string{},
 		icons:        map[string]string{},
 	}
@@ -109,6 +111,7 @@ func LoadDB(dirs []string) *DB {
 		})
 		readPairs(filepath.Join(dir, "subclasses"), " ", func(child, parent string) {
 			db.subclasses[child] = append(db.subclasses[child], parent)
+			db.children[parent] = append(db.children[parent], child)
 		})
 		readPairs(filepath.Join(dir, "generic-icons"), ":", func(mimeType, icon string) {
 			if _, ok := db.genericIcons[mimeType]; !ok {
@@ -147,7 +150,6 @@ func readPairs(path, sep string, fn func(key, value string)) {
 	}
 }
 
-// Canonical folds an alias onto the type it stands for.
 func (db *DB) Canonical(mimeType string) string {
 	mimeType = StripParams(mimeType)
 	if target, ok := db.aliases[mimeType]; ok {
@@ -156,7 +158,6 @@ func (db *DB) Canonical(mimeType string) string {
 	return mimeType
 }
 
-// Chain is the type itself followed by its ancestors, breadth first.
 func (db *DB) Chain(mimeType string) []string {
 	root := db.Canonical(mimeType)
 	if root == "" {
@@ -188,10 +189,65 @@ func (db *DB) IsSubclassOf(mimeType, ancestor string) bool {
 	return false
 }
 
-// MimeIcon returns the database's specific icon name and generic icon name.
 func (db *DB) MimeIcon(mimeType string) (specific, generic string) {
 	canonical := db.Canonical(mimeType)
 	return db.icons[canonical], db.genericIcons[canonical]
+}
+
+func (db *DB) Globs(mimeType string) []string {
+	mimeType = db.Canonical(strings.ToLower(mimeType))
+	patterns := map[string]bool{}
+	visited := map[string]bool{}
+	switch {
+	case strings.HasSuffix(mimeType, "/*"):
+		for _, t := range db.typesWithPrefix(strings.TrimSuffix(mimeType, "*")) {
+			db.collectGlobs(t, patterns, visited)
+		}
+	default:
+		db.collectGlobs(mimeType, patterns, visited)
+	}
+	if len(patterns) == 0 {
+		return nil
+	}
+	return slices.Sorted(maps.Keys(patterns))
+}
+
+func (db *DB) collectGlobs(mimeType string, patterns, visited map[string]bool) {
+	if visited[mimeType] {
+		return
+	}
+	visited[mimeType] = true
+	for _, pattern := range db.globs.byMime[mimeType] {
+		patterns[pattern] = true
+	}
+	for _, child := range db.children[mimeType] {
+		db.collectGlobs(child, patterns, visited)
+	}
+}
+
+func (db *DB) typesWithPrefix(prefix string) []string {
+	set := map[string]bool{}
+	for mimeType := range db.globs.byMime {
+		if strings.HasPrefix(mimeType, prefix) {
+			set[mimeType] = true
+		}
+	}
+	for alias, canonical := range db.aliases {
+		if strings.HasPrefix(alias, prefix) {
+			set[canonical] = true
+		}
+	}
+	for child, parents := range db.subclasses {
+		if strings.HasPrefix(child, prefix) {
+			set[child] = true
+		}
+		for _, parent := range parents {
+			if strings.HasPrefix(parent, prefix) {
+				set[parent] = true
+			}
+		}
+	}
+	return slices.Sorted(maps.Keys(set))
 }
 
 func StripParams(mimeType string) string {

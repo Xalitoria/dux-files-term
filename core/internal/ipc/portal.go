@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/filechooser"
+	"github.com/AvengeMedia/dankgo/ipc/params"
 )
 
 type ChooserUI struct{ Deps Deps }
@@ -33,7 +34,7 @@ func HandlePortal(_ context.Context, w *ConnWriter, req Request, deps Deps) {
 			w.RespondError(req.ID, "portal backend unavailable")
 			return
 		}
-		id := ParamString(req.Params, "id")
+		id := params.StringOpt(req.Params, "id", "")
 		answer, err := answerFrom(req.Params)
 		switch {
 		case id == "":

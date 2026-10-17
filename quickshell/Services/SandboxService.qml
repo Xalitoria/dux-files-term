@@ -8,7 +8,7 @@ import qs.Services
 Singleton {
     id: root
 
-    property QtObject transport: DankFilesService
+    property var transport: DankFilesService
 
     property bool loaded: false
     property bool sandboxed: false
@@ -36,10 +36,10 @@ Singleton {
     }
 
     function refresh() {
-        transport.sendRequest("system.capabilities", null, response => {
-            if (response.error)
+        transport.call("system.capabilities", null, result => {
+            if (result.error)
                 return;
-            root._apply(response.result || {});
+            root._apply(result);
         });
     }
 
@@ -54,13 +54,22 @@ Singleton {
         loaded = true;
     }
 
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        if (transport.connected)
+            refresh();
+    }
+
+    onTransportChanged: {
+        if (transport.connected)
+            refresh();
+    }
 
     Connections {
         target: root.transport
 
-        function onConnectionStateChanged() {
-            root.refresh();
+        function onConnectedChanged() {
+            if (root.transport.connected)
+                root.refresh();
         }
     }
 }

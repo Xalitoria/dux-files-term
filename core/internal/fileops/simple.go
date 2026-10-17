@@ -105,8 +105,6 @@ func (r *runner) noteCreated(path string, dir bool) {
 	r.job.mu.Unlock()
 }
 
-// newFolderWith makes the folder and moves the selection into it as one job,
-// so one undo takes the items back out and removes it again.
 func (r *runner) newFolderWith() error {
 	if r.job.spec.replay == replayUndo {
 		return r.dissolveFolder()
@@ -199,6 +197,8 @@ func imageExt(mime string) string {
 		return ".svg"
 	case "image/tiff":
 		return ".tiff"
+	case "image/x-icon", "image/vnd.microsoft.icon":
+		return ".ico"
 	}
 	subtype := strings.TrimPrefix(mime, "image/")
 	subtype, _, _ = strings.Cut(subtype, "+")
@@ -313,8 +313,6 @@ func (r *runner) deleteAll() error {
 	return nil
 }
 
-// guarded holds an undo back when the file it would remove or move is no
-// longer the one the original operation produced.
 func (r *runner) guarded(path string) bool {
 	if r.job.spec.replay == replayNone {
 		return true

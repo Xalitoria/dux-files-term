@@ -26,12 +26,14 @@ Item {
         opacity: showing ? 1 : 0
 
         Behavior on opacity {
+            enabled: Theme.animationsEnabled
             NumberAnimation {
                 duration: Theme.shortDuration
                 easing.type: Theme.standardEasing
             }
         }
         Behavior on anchors.bottomMargin {
+            enabled: Theme.animationsEnabled
             NumberAnimation {
                 duration: Theme.shortDuration
                 easing.type: Theme.standardEasing

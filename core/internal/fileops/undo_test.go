@@ -257,3 +257,21 @@ func TestUniqueNameMovesOnWhenAnotherJobTookIt(t *testing.T) {
 	require.Equal(t, filepath.Join(root, "Untitled folder 2"), path)
 	require.DirExists(t, path)
 }
+
+func TestUndoIsNotOfferedAfterReplacing(t *testing.T) {
+	root := t.TempDir()
+	src := write(t, filepath.Join(root, "src", "a.txt"), "new")
+	dest := filepath.Join(root, "dest")
+	write(t, filepath.Join(dest, "a.txt"), "irreplaceable")
+
+	manager, bus := newHarness(t)
+	bus.onConflict = func(c Conflict) Answer { return Answer{ID: c.ID, Action: ActionReplace} }
+	view := run(t, manager, bus, spec{kind: KindCopy, scope: "w1", sources: []string{src}, dest: dest})
+
+	require.Equal(t, StateDone, view.State)
+	require.False(t, view.Undoable)
+	require.Equal(t, "new", read(t, filepath.Join(dest, "a.txt")))
+
+	_, err := manager.Undo("w1")
+	require.Error(t, err, "undoing would delete the copy and the replaced file is already gone")
+}

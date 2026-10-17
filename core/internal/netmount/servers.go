@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
 )
 
 const recentServers = 12
@@ -17,8 +19,6 @@ type Server struct {
 	LastUsed int64  `json:"lastUsedMs"`
 }
 
-// serverStore keeps the Connect to Server history. Credentials never land
-// here; gvfs owns those through the keyring.
 type serverStore struct {
 	path string
 	now  func() time.Time
@@ -39,7 +39,7 @@ func (s *serverStore) list() []Server {
 	return append([]Server(nil), s.items...)
 }
 
-func (s *serverStore) remember(server Server) {
+func (s *serverStore) remember(server Server) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.load()
@@ -53,10 +53,10 @@ func (s *serverStore) remember(server Server) {
 		kept = append(kept, existing)
 	}
 	s.items = kept
-	s.save()
+	return s.save()
 }
 
-func (s *serverStore) forget(uri string) {
+func (s *serverStore) forget(uri string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.load()
@@ -69,7 +69,7 @@ func (s *serverStore) forget(uri string) {
 		kept = append(kept, existing)
 	}
 	s.items = kept
-	s.save()
+	return s.save()
 }
 
 func (s *serverStore) load() {
@@ -85,18 +85,13 @@ func (s *serverStore) load() {
 	_ = json.Unmarshal(raw, &s.items)
 }
 
-func (s *serverStore) save() {
+func (s *serverStore) save() error {
 	if err := os.MkdirAll(filepath.Dir(s.path), 0o755); err != nil {
-		return
+		return err
 	}
 	raw, err := json.MarshalIndent(s.items, "", "  ")
 	if err != nil {
-		return
+		return err
 	}
-
-	temp := s.path + ".tmp"
-	if err := os.WriteFile(temp, raw, 0o600); err != nil {
-		return
-	}
-	_ = os.Rename(temp, s.path)
+	return atomicfile.WriteFile(s.path, raw, 0o600)
 }

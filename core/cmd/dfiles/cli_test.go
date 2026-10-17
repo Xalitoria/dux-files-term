@@ -60,6 +60,7 @@ func TestTrashRoundTripWithoutADaemon(t *testing.T) {
 
 	entries, err := trashEntries()
 	require.NoError(t, err)
+	entries = inTrashHome(entries, root)
 	require.Len(t, entries, 1)
 	assert.Equal(t, target, entries[0].OriginalPath)
 
@@ -84,7 +85,18 @@ func TestTrashRoundTripWithoutADaemon(t *testing.T) {
 
 	left, err := trash.List()
 	require.NoError(t, err)
-	assert.Empty(t, left)
+	assert.Empty(t, inTrashHome(left, root))
+}
+
+func inTrashHome(entries []trash.Entry, root string) []trash.Entry {
+	home := filepath.Join(root, "data", "Trash")
+	var out []trash.Entry
+	for _, entry := range entries {
+		if entry.TrashDir == home {
+			out = append(out, entry)
+		}
+	}
+	return out
 }
 
 func TestTrashFailuresAreReportedPerItem(t *testing.T) {

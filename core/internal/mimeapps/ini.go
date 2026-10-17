@@ -19,7 +19,6 @@ func (g *iniGroup) value(key string) string {
 	return unescapeValue(g.keys[key])
 }
 
-// localized picks the best translation of key for the session locale.
 func (g *iniGroup) localized(key string) string {
 	if g == nil {
 		return ""
@@ -112,18 +111,10 @@ func unescapeValue(value string) string {
 	return b.String()
 }
 
-var localeCache sync.Map
+var localeCandidates = sync.OnceValue(sessionLocaleCandidates)
 
-// localeCandidates expands the session locale into the desktop entry spec's
-// lookup order, most specific first.
-func localeCandidates() []string {
-	locale := sessionLocale()
-	if cached, ok := localeCache.Load(locale); ok {
-		return cached.([]string)
-	}
-	tags := expandLocale(locale)
-	localeCache.Store(locale, tags)
-	return tags
+func sessionLocaleCandidates() []string {
+	return expandLocale(sessionLocale())
 }
 
 func sessionLocale() string {

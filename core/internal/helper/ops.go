@@ -22,8 +22,6 @@ func validPath(path string) bool {
 	return filepath.IsAbs(path) && filepath.Clean(path) == path && path != "/" && !strings.ContainsRune(path, 0)
 }
 
-// openParent resolves the directory holding path without following any
-// symlink and hands back the leaf name for a dirfd-relative call.
 func openParent(path string) (int, string, error) {
 	if !validPath(path) {
 		return -1, "", invalid("not an absolute, clean path: " + path)
@@ -72,7 +70,6 @@ func infoOf(name string, st *unix.Stat_t) Info {
 	}
 }
 
-// modeOf mirrors what os.Lstat reports so both sides of the pipe agree.
 func modeOf(raw uint32) fs.FileMode {
 	mode := fs.FileMode(raw & 0o777)
 	switch raw & syscall.S_IFMT {
@@ -152,9 +149,6 @@ func readlink(path string, out io.Writer) error {
 	}
 }
 
-// read streams a regular file to stdout. The leaf is first taken as an
-// O_PATH handle, which has no side effects, and only reopened for reading
-// once it is known to be a regular file, so a device or fifo is never opened.
 func read(path string, out io.Writer) error {
 	parent, name, err := openParent(path)
 	if err != nil {
@@ -186,9 +180,6 @@ func read(path string, out io.Writer) error {
 	return err
 }
 
-// write creates the file exclusively and fills it from length-prefixed frames
-// on stdin. A zero-length frame commits; EOF before it means the sender gave
-// up and the partial file is removed.
 func write(path string, mode uint32, in io.Reader, ready io.Writer) error {
 	parent, name, err := openParent(path)
 	if err != nil {
@@ -384,9 +375,6 @@ func removeChildren(dir *os.File) error {
 	})
 }
 
-// walk visits every entry below dir through dirfd-relative opens that never
-// follow symlinks: visit runs for each entry before descending, after for
-// each directory once its children are done.
 func walk(dir *os.File, visit, after func(dirfd int, child os.DirEntry) error) error {
 	children, err := dir.ReadDir(-1)
 	if err != nil {
@@ -452,8 +440,7 @@ func chmod(path string, mode uint32, recursive bool) error {
 	}, nil)
 }
 
-// chmodAt goes through an O_PATH fd and /proc so a symlink swapped in after
-// the lookup is never followed; fchmodat has no AT_SYMLINK_NOFOLLOW on Linux.
+// fchmodat has no AT_SYMLINK_NOFOLLOW on Linux, hence the O_PATH fd and /proc
 func chmodAt(dirfd int, name string, mode uint32) error {
 	fd, err := openNoSymlinks(dirfd, name, unix.O_PATH, 0)
 	if err != nil {

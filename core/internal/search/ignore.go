@@ -11,8 +11,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 )
 
-// builtinSkips mirrors danksearch's DefaultExcludeDirs so both backends skip
-// the same folders.
+// Mirrors danksearch's DefaultExcludeDirs so both backends skip the same folders.
 var builtinSkips = []string{
 	".git", ".hg", ".svn",
 	"node_modules", "bower_components", ".npm", ".yarn",
@@ -29,10 +28,6 @@ var builtinSkips = []string{
 
 var ignoreFiles = []string{".gitignore", ".ignore"}
 
-// ignorePattern remembers whether a pattern names a path, which needs the
-// entry's full path, or just a name, which the walk can match against the
-// base name alone because every ancestor was already vetted when it was
-// queued.
 type ignorePattern struct {
 	pattern  gitignore.Pattern
 	nameOnly bool
@@ -45,12 +40,16 @@ type ignoreRules struct {
 	global    []ignorePattern
 }
 
-// newIgnoreRules builds the walk's skip set: the built-in folders, the user's
-// exclusions (names, or paths starting with / or ~/) and the global gitignore.
 func newIgnoreRules(excludes []string, includeIgnored bool) ignoreRules {
 	if includeIgnored {
 		return ignoreRules{}
 	}
+	rules := newSkipRules(excludes)
+	rules.global = globalPatterns()
+	return rules
+}
+
+func newSkipRules(excludes []string) ignoreRules {
 	rules := ignoreRules{enabled: true, skipNames: make(map[string]bool, len(builtinSkips)+len(excludes))}
 	for _, name := range builtinSkips {
 		rules.skipNames[name] = true
@@ -68,11 +67,10 @@ func newIgnoreRules(excludes []string, includeIgnored bool) ignoreRules {
 			rules.skipNames[entry] = true
 		}
 	}
-	rules.global = globalPatterns(home)
 	return rules
 }
 
-func globalPatterns(home string) []ignorePattern {
+func globalPatterns() []ignorePattern {
 	loaded, _ := gitignore.LoadGlobalPatterns(osfs.New("/"))
 	if len(loaded) > 0 {
 		patterns := make([]ignorePattern, 0, len(loaded))
@@ -82,7 +80,7 @@ func globalPatterns(home string) []ignorePattern {
 		return patterns
 	}
 	config := os.Getenv("XDG_CONFIG_HOME")
-	if config == "" && home != "" {
+	if home, _ := os.UserHomeDir(); config == "" && home != "" {
 		config = filepath.Join(home, ".config")
 	}
 	if config == "" {
@@ -106,8 +104,6 @@ func (r ignoreRules) skipsDir(name, full string) bool {
 	return false
 }
 
-// skipsPath reports whether any folder between root and path is one the
-// walk would have skipped, so index results honour the same exclusions.
 func (r ignoreRules) skipsPath(path, root string) bool {
 	if !r.enabled {
 		return false
@@ -122,9 +118,6 @@ func (r ignoreRules) skipsPath(path, root string) bool {
 	return false
 }
 
-// rootPatterns collects the ignore files above the root so a search started
-// inside a repository still honours the repository's rules; the root's own
-// files are read when the root itself is walked.
 func (r ignoreRules) rootPatterns(root string) []ignorePattern {
 	if !r.enabled {
 		return nil
@@ -143,7 +136,6 @@ func (r ignoreRules) rootPatterns(root string) []ignorePattern {
 	return patterns
 }
 
-// loadIf reads dir's ignore files only when the listing shows one exists.
 func (r ignoreRules) loadIf(dir string, children []os.DirEntry, inherited []ignorePattern) []ignorePattern {
 	if !r.enabled {
 		return nil
@@ -156,8 +148,6 @@ func (r ignoreRules) loadIf(dir string, children []os.DirEntry, inherited []igno
 	return inherited
 }
 
-// load appends the ignore files found in dir to the inherited patterns; it
-// returns the inherited slice untouched when dir has none.
 func (r ignoreRules) load(dir string, inherited []ignorePattern) []ignorePattern {
 	if !r.enabled {
 		return nil
@@ -202,8 +192,6 @@ func readPatterns(path string, domain []string) []ignorePattern {
 	return out
 }
 
-// ignored applies the patterns last-match-wins like git; name patterns see
-// only the base name, so the cost is one match per pattern, not per level.
 func ignored(patterns []ignorePattern, full string, isDir bool) bool {
 	if len(patterns) == 0 {
 		return false

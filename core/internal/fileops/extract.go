@@ -113,8 +113,6 @@ func (r *runner) progress() Progress {
 	return r.job.progress
 }
 
-// restoreProgress forgets a failed attempt, so asking for the password and
-// unpacking again does not count the entries twice.
 func (r *runner) restoreProgress(p Progress) {
 	r.job.mu.Lock()
 	r.job.progress.FilesDone, r.job.progress.FilesTotal = p.FilesDone, p.FilesTotal
@@ -216,8 +214,6 @@ func (r *runner) unpackFile(archive string, stream io.Reader) (string, error) {
 	return target, nil
 }
 
-// Extraction goes through os.Root so an entry can never land outside the
-// target, not even through a symlink an earlier entry planted.
 func (r *runner) unzip(in *os.File, root *os.Root, password string) error {
 	info, err := in.Stat()
 	if err != nil {
@@ -339,10 +335,7 @@ func (r *runner) un7z(in *os.File, root *os.Root, password string) error {
 	return nil
 }
 
-// sevenZipPasswordError maps the library's "encryption involved" hint onto
-// the prompt: no password yet means ask, a password means it was wrong. The
-// library derives a key even from an empty password, so a protected entry
-// may also decode to silent garbage, which only the CRC catches.
+// an empty password still derives a key, so a protected entry can decode to garbage only the CRC catches
 func sevenZipPasswordError(err error, password string) error {
 	var readErr *sevenzip.ReadError
 	encrypted := errors.As(err, &readErr) && readErr.Encrypted
@@ -385,8 +378,7 @@ func (e *sevenZipEntry) fail(err error) error {
 
 func (e *sevenZipEntry) Close() error { return e.inner.Close() }
 
-// 7-Zip keeps the unix mode in the high attribute bits; the library maps
-// permissions and directories but not links.
+// the unix mode sits in the high attribute bits; the library maps everything but links
 func sevenZipMode(f *sevenzip.File) fs.FileMode {
 	mode := f.Mode()
 	if f.Attributes&0x8000 != 0 && (f.Attributes>>16)&0xF000 == unixSymlinkAttribute {
@@ -464,9 +456,7 @@ func rarPasswordError(err error, password string) error {
 	return err
 }
 
-// rarEntry marks decode failures inside an encrypted entry as a wrong
-// password; RAR3 has no password check value, so a bad key only shows up
-// as corrupt data.
+// RAR3 has no password check value, so a wrong key shows up as corrupt data
 type rarEntry struct{ inner io.Reader }
 
 func (e *rarEntry) Read(p []byte) (int, error) {
@@ -623,8 +613,6 @@ func (r *runner) writeEntry(root *os.Root, name string, body io.Reader, perm fs.
 	return out.Close()
 }
 
-// entryName rejects entries that would land outside the extraction folder
-// by name; os.Root catches the symlink routes.
 func entryName(name string) (string, error) {
 	clean := filepath.Clean(filepath.FromSlash(name))
 	if clean == "." || !filepath.IsLocal(clean) {

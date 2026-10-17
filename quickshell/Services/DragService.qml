@@ -12,7 +12,6 @@ Singleton {
 
     property var transport: DankFilesService
     property var paths: []
-    property string sourceDir: ""
     property bool active: false
     property int generation: 0
     property var plainDrops: ({})
@@ -43,9 +42,8 @@ Singleton {
         });
     }
 
-    function begin(selection, dir) {
+    function begin(selection) {
         paths = selection.slice();
-        sourceDir = dir;
         plainDrops = ({});
         generation++;
         active = true;
@@ -53,7 +51,6 @@ Singleton {
 
     function end() {
         paths = [];
-        sourceDir = "";
         plainDrops = ({});
         generation++;
         active = false;
@@ -61,8 +58,8 @@ Singleton {
 
     function mimeData() {
         return {
-            "text/uri-list": paths.map(path => Paths.toFileUrl(encodeURI(path))).join("\r\n") + "\r\n",
-            "x-special/gnome-copied-files": "copy\n" + paths.map(path => Paths.toFileUrl(encodeURI(path))).join("\n") + "\n",
+            "text/uri-list": paths.map(path => FilePaths.toFileUrl(path)).join("\r\n") + "\r\n",
+            "x-special/gnome-copied-files": "copy\n" + paths.map(path => FilePaths.toFileUrl(path)).join("\n") + "\n",
             "text/plain;charset=utf-8": paths.join("\n")
         };
     }
@@ -74,15 +71,9 @@ Singleton {
     }
 
     function localPaths(drop) {
-        const urls = drop.hasUrls ? drop.urls : [];
-        const out = [];
-        for (const url of urls) {
-            const text = url.toString();
-            if (!text.startsWith("file://"))
-                continue;
-            out.push(decodeURIComponent(text.substring(7)));
-        }
-        return out;
+        if (!drop.hasUrls)
+            return [];
+        return drop.urls.map(url => url.toString()).filter(text => text.startsWith("file://")).map(text => FilePaths.fromUrl(text));
     }
 
     function allInside(sources, dir) {

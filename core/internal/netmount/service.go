@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/location"
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/log"
 	"github.com/godbus/dbus/v5"
 )
@@ -54,7 +55,6 @@ func NewService(bus Publisher, configDir string) *Service {
 	}
 }
 
-// A missing gvfs is reported, not retried: the UI explains the empty section.
 func (s *Service) Start() error {
 	conn, err := dbus.ConnectSessionBus()
 	if err != nil {
@@ -73,7 +73,7 @@ func (s *Service) Start() error {
 	conn.Signal(signals)
 
 	s.reload(conn)
-	go s.loop(signals)
+	go s.loop(conn, signals)
 	return nil
 }
 
@@ -81,7 +81,8 @@ func (s *Service) Close() {
 	s.stopped.Do(func() { close(s.stop) })
 }
 
-func (s *Service) loop(signals chan *dbus.Signal) {
+func (s *Service) loop(conn *dbus.Conn, signals chan *dbus.Signal) {
+	defer conn.Close()
 	var flush <-chan time.Time
 
 	for {
@@ -112,8 +113,8 @@ func (s *Service) reload(conn *dbus.Conn) {
 	}
 	tracker := conn.Object(VfsBus, TrackerPath)
 
-	var rawMountables []wireMountable
-	if err := tracker.Call(TrackerIface+".ListMountableInfo", 0).Store(&rawMountables); err != nil {
+	var mountables []Mountable
+	if err := tracker.Call(TrackerIface+".ListMountableInfo", 0).Store(&mountables); err != nil {
 		s.setReason(reasonFor(err))
 		log.Debugf("network: ListMountableInfo failed: %v", err)
 		return
@@ -124,11 +125,6 @@ func (s *Service) reload(conn *dbus.Conn) {
 		s.setReason(reasonFor(err))
 		log.Debugf("network: ListMounts failed: %v", err)
 		return
-	}
-
-	mountables := make([]Mountable, 0, len(rawMountables))
-	for _, raw := range rawMountables {
-		mountables = append(mountables, Mountable(raw))
 	}
 
 	mounts := make([]Mount, 0, len(rawMounts))
@@ -153,24 +149,33 @@ func (s *Service) Snapshot() Snapshot {
 	return Snapshot{Kind: "mounts", Available: s.available, Reason: s.reason, Schemes: availableSchemes(s.mountables), Mounts: s.mounts}
 }
 
-// Connect blocks until gvfs finishes, including credential round trips the UI
-// answers through network.answer.
-func (s *Service) Connect(uri, password string) (Mount, error) {
+type Connected struct {
+	Mount    Mount  `json:"mount"`
+	Location string `json:"location"`
+}
+
+func (s *Service) Connect(uri, password string) (Connected, error) {
 	conn := s.connection()
 	if conn == nil {
-		return Mount{}, fail("NOTSUPPORTED", "gvfs is not running")
+		return Connected{}, fail(files.CodeNotSupported, "gvfs is not running")
 	}
 
 	remote := location.SplitPassword(strings.TrimSpace(uri))
-	uri = remote.URI
 	if password == "" {
 		password = remote.Password
 	}
-
-	spec, err := ParseURI(uri, s.mountableList())
+	spec, err := ParseURI(remote.URI, s.mountableList())
 	if err != nil {
-		return Mount{}, err
+		return Connected{}, err
 	}
+	mount, err := s.mount(conn, remote.URI, password, spec)
+	if err != nil {
+		return Connected{}, err
+	}
+	return Connected{Mount: mount, Location: LocationIn(mount, URIOf(spec, s.mountableList()))}, nil
+}
+
+func (s *Service) mount(conn *dbus.Conn, uri, password string, spec Spec) (Mount, error) {
 	if mount, found := s.mountedAt(spec); found {
 		return mount, nil
 	}
@@ -178,7 +183,7 @@ func (s *Service) Connect(uri, password string) (Mount, error) {
 	op := s.newOp(uri)
 	op.password = password
 	if err := op.export(conn); err != nil {
-		return Mount{}, fail("EIO", "%s", err)
+		return Mount{}, &files.Error{Code: files.CodeIO, Err: err}
 	}
 	s.trackOp(op)
 	defer s.releaseOp(op, conn)
@@ -191,9 +196,11 @@ func (s *Service) Connect(uri, password string) (Mount, error) {
 	s.reload(conn)
 	mount, found := s.findBySpec(spec)
 	if !found {
-		return Mount{}, fail("EIO", "%s mounted but gvfs did not report it", uri)
+		return Mount{}, fail(files.CodeIO, "%s mounted but gvfs did not report it", uri)
 	}
-	s.servers.remember(Server{URI: mount.URI, Name: mount.Name, Scheme: mount.Scheme})
+	if err := s.servers.remember(Server{URI: mount.URI, Name: mount.Name, Scheme: mount.Scheme}); err != nil {
+		log.Warnf("network: saving recent servers: %v", err)
+	}
 	s.publish(s.Snapshot())
 	return mount, nil
 }
@@ -201,17 +208,17 @@ func (s *Service) Connect(uri, password string) (Mount, error) {
 func (s *Service) Disconnect(id string) error {
 	conn := s.connection()
 	if conn == nil {
-		return fail("NOTSUPPORTED", "gvfs is not running")
+		return fail(files.CodeNotSupported, "gvfs is not running")
 	}
 
 	mount, found := s.find(id)
 	if !found {
-		return fail("ENOENT", "unknown mount: %s", id)
+		return fail(files.CodeNotFound, "unknown mount: %s", id)
 	}
 
 	op := s.newOp(mount.URI)
 	if err := op.export(conn); err != nil {
-		return fail("EIO", "%s", err)
+		return &files.Error{Code: files.CodeIO, Err: err}
 	}
 	s.trackOp(op)
 	defer s.releaseOp(op, conn)
@@ -228,7 +235,7 @@ func (s *Service) Disconnect(id string) error {
 func (s *Service) Answer(id string, answer Answer) error {
 	path, _, ok := cutLast(id, "/")
 	if !ok {
-		return fail("EINVAL", "unknown question: %s", id)
+		return fail(files.CodeInvalid, "unknown question: %s", id)
 	}
 
 	s.mu.RLock()
@@ -236,14 +243,18 @@ func (s *Service) Answer(id string, answer Answer) error {
 	s.mu.RUnlock()
 
 	if op == nil || !op.answer(id, answer) {
-		return fail("EINVAL", "question %s is no longer waiting", id)
+		return fail(files.CodeInvalid, "question %s is no longer waiting", id)
 	}
 	return nil
 }
 
 func (s *Service) Servers() []Server { return s.servers.list() }
 
-func (s *Service) Forget(uri string) { s.servers.forget(uri) }
+func (s *Service) Forget(uri string) {
+	if err := s.servers.forget(uri); err != nil {
+		log.Warnf("network: saving recent servers: %v", err)
+	}
+}
 
 func (s *Service) find(id string) (Mount, bool) {
 	s.mu.RLock()

@@ -1,75 +1,54 @@
 package devices
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/dbusutil"
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/godbus/dbus/v5"
 )
 
-type Error struct {
-	Code    string
-	Message string
+const CodePerm files.Code = "EPERM"
+
+func fail(code files.Code, format string, args ...any) error {
+	return &files.Error{Code: code, Err: fmt.Errorf(format, args...)}
 }
 
-func (e *Error) Error() string { return e.Message }
-
-func fail(code, format string, args ...any) error {
-	return &Error{Code: code, Message: fmt.Sprintf(format, args...)}
-}
-
-func CodeOf(err error) string {
-	if coded, ok := err.(*Error); ok {
-		return coded.Code
-	}
-	return "EIO"
-}
-
-// wrapDBus maps the udisks error names onto the codes the UI already knows.
 func wrapDBus(err error) error {
 	if err == nil {
 		return nil
 	}
 	call, ok := err.(dbus.Error)
 	if !ok {
-		return fail("EIO", "%s", err)
+		return &files.Error{Code: files.CodeIO, Err: err}
 	}
-	return &Error{Code: codeForName(call.Name), Message: message(call)}
+	return &files.Error{Code: codeForName(call.Name), Err: errors.New(dbusutil.ErrorMessage(call))}
 }
 
-func codeForName(name string) string {
+func codeForName(name string) files.Code {
 	switch strings.TrimPrefix(name, BusName+".Error.") {
 	case "NotAuthorized", "NotAuthorizedCanObtain", "NotAuthorizedDismissed":
-		return "EACCES"
+		return files.CodeAccess
 	case "DeviceBusy":
-		return "EBUSY"
+		return files.CodeBusy
 	case "AlreadyMounted", "AlreadyUnmounting":
-		return "EEXIST"
+		return files.CodeExists
 	case "NotMounted", "OptionNotPermitted", "MountedByOtherUser":
-		return "EINVAL"
+		return files.CodeInvalid
 	case "NotSupported":
-		return "NOTSUPPORTED"
+		return files.CodeNotSupported
 	}
 	switch name {
 	case "org.freedesktop.DBus.Error.ServiceUnknown", "org.freedesktop.DBus.Error.NameHasNoOwner":
-		return "NOTSUPPORTED"
+		return files.CodeNotSupported
 	case "org.freedesktop.DBus.Error.AccessDenied":
-		return "EACCES"
+		return files.CodeAccess
 	case "org.freedesktop.DBus.Error.UnknownMethod", "org.freedesktop.DBus.Error.UnknownInterface":
-		return "NOTSUPPORTED"
+		return files.CodeNotSupported
 	case "org.freedesktop.DBus.Error.UnknownObject":
-		return "ENOENT"
+		return files.CodeNotFound
 	}
-	return "EIO"
-}
-
-func message(call dbus.Error) string {
-	if len(call.Body) == 0 {
-		return call.Name
-	}
-	text, ok := call.Body[0].(string)
-	if !ok || text == "" {
-		return call.Name
-	}
-	return text
+	return files.CodeIO
 }

@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
 )
 
 func Install(env Env) (Status, error) {
@@ -36,7 +38,7 @@ func Install(env Env) (Status, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return Status{}, err
 	}
-	if err := writeAtomic(path, []byte(updated), mode); err != nil {
+	if err := atomicfile.WriteFile(path, []byte(updated), mode); err != nil {
 		return Status{}, err
 	}
 	written, _ := preferredLine(updated)
@@ -128,7 +130,7 @@ func ensureServiceFile(env Env) (bool, error) {
 	if current == serviceExec(env) {
 		return false, nil
 	}
-	return false, writeAtomic(service.Path, []byte(content), 0o644)
+	return false, atomicfile.WriteFile(service.Path, []byte(content), 0o644)
 }
 
 func serviceExec(env Env) string {
@@ -205,7 +207,7 @@ func stripUnmanaged(env Env) error {
 	if len(rest) > 0 {
 		updated = setPreferred(content, strings.Join(rest, ";")+";")
 	}
-	return writeAtomic(path, []byte(updated), mode)
+	return atomicfile.WriteFile(path, []byte(updated), mode)
 }
 
 func restoreConfig(state installState) (bool, error) {
@@ -227,7 +229,7 @@ func restoreConfig(state installState) (bool, error) {
 	if !state.ConfigExisted && onlyPreferredHeader(updated) {
 		return false, removeFile(state.ConfigPath)
 	}
-	return false, writeAtomic(state.ConfigPath, []byte(updated), mode)
+	return false, atomicfile.WriteFile(state.ConfigPath, []byte(updated), mode)
 }
 
 func onlyPreferredHeader(content string) bool {
@@ -245,7 +247,7 @@ func writeNew(path, content string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	return writeAtomic(path, []byte(content), 0o644)
+	return atomicfile.WriteFile(path, []byte(content), 0o644)
 }
 
 func removeFile(path string) error {

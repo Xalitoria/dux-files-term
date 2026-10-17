@@ -95,9 +95,9 @@ func (r *runner) transfer(src, dst string, move bool) (outcome, error) {
 	case info.IsDir():
 		return outcome{dst: dst, undoable: undoable, dir: true}, r.transferDir(src, dst, move, res.merge)
 	case info.Mode()&fs.ModeSymlink != 0:
-		return outcome{dst: dst, undoable: undoable}, r.transferLink(src, dst, move, res.unknown)
+		return outcome{dst: dst, undoable: undoable}, r.transferLink(src, dst, move, res.unverified)
 	case info.Mode().IsRegular():
-		return outcome{dst: dst, undoable: undoable}, r.transferFile(src, dst, info, move, res.unknown)
+		return outcome{dst: dst, undoable: undoable}, r.transferFile(src, dst, info, move, res.unverified)
 	default:
 		r.skip()
 		return outcome{}, errSkipped
@@ -202,8 +202,11 @@ func (r *runner) transferDir(src, dst string, move, merge bool) error {
 
 	r.preserve(src, dst, info, dstFS)
 	r.advance(dst, 1, 0)
-	if move {
-		_ = srcFS.Remove(src)
+	if !move {
+		return nil
+	}
+	if err := srcFS.Remove(src); err != nil {
+		r.warn(src, err)
 	}
 	return nil
 }
@@ -258,8 +261,6 @@ func (r *runner) transferFile(src, dst string, info os.FileInfo, move, noReplace
 	return r.dropSource(src, move)
 }
 
-// commit refuses to replace a target whose existence could not be checked,
-// which is what turns a silent overwrite into an EEXIST prompt.
 func (r *runner) commit(tmp, dst string, made *creation, noReplace bool) error {
 	if err := r.retry(dst, func(fs FS) error { return fs.Rename(tmp, dst, noReplace) }); err != nil {
 		made.discard()
@@ -268,8 +269,6 @@ func (r *runner) commit(tmp, dst string, made *creation, noReplace bool) error {
 	return nil
 }
 
-// dropSource removes a source file once its bytes landed, so cancelling a
-// cross-device move leaves a clean split instead of a half-moved tree.
 func (r *runner) dropSource(src string, move bool) error {
 	if !move {
 		return nil
@@ -277,9 +276,6 @@ func (r *runner) dropSource(src string, move bool) error {
 	return r.retry(src, func(fs FS) error { return fs.Remove(src) })
 }
 
-// copyBytes opens each side through its own retry, so an unreadable source
-// and an unwritable target are elevated independently and a file read as
-// administrator into the user's folder still ends up owned by the user.
 func (r *runner) copyBytes(src, tmp string, info os.FileInfo, made *creation) error {
 	var in io.ReadCloser
 	if err := r.retry(src, func(fs FS) error {
@@ -332,8 +328,6 @@ func (r *runner) copyBytes(src, tmp string, info os.FileInfo, made *creation) er
 	}
 }
 
-// preserve goes through the route that created dst; xattrs are copied only
-// for a local target, the helper has no op for them.
 func (r *runner) preserve(src, dst string, info os.FileInfo, through FS) {
 	if through == nil {
 		through = local

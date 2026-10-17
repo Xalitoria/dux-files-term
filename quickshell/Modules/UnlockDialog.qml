@@ -51,8 +51,6 @@ OverlayDialog {
         supportingText: root.errorText
         labelText: I18n.tr("Passphrase", "label for an encrypted device passphrase input")
         onAccepted: root.submit()
-        Keys.onReturnPressed: event => event.accepted = true
-        Keys.onEnterPressed: event => event.accepted = true
     }
 
     actions: [

@@ -3,6 +3,7 @@ package netmount
 import (
 	"strings"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/dbusutil"
 	"github.com/godbus/dbus/v5"
 )
 
@@ -41,14 +42,6 @@ type wireMount struct {
 	DefaultLocation  []byte
 }
 
-type wireMountable struct {
-	Type        string
-	Scheme      string
-	Aliases     []string
-	DefaultPort int32
-	HostIsInet  bool
-}
-
 type wireSource struct {
 	DBusID string
 	Path   dbus.ObjectPath
@@ -74,7 +67,7 @@ func decodeMount(raw wireMount, mountables []Mountable) Mount {
 		ID:       raw.StableName,
 		Name:     raw.DisplayName,
 		URI:      URIOf(spec, mountables),
-		Path:     byteString(raw.FuseMountpoint),
+		Path:     dbusutil.ByteString(raw.FuseMountpoint),
 		Scheme:   scheme,
 		Kind:     kindOf(spec.Type()),
 		IconName: themedIcon(raw.Icon),
@@ -84,13 +77,13 @@ func decodeMount(raw wireMount, mountables []Mountable) Mount {
 }
 
 func decodeSpec(raw wireSpec) Spec {
-	spec := Spec{Prefix: byteString(raw.Prefix), Items: map[string]string{}}
+	spec := Spec{Prefix: dbusutil.ByteString(raw.Prefix), Items: map[string]string{}}
 	for key, value := range raw.Items {
 		bytes, ok := value.Value().([]byte)
 		if !ok {
 			continue
 		}
-		spec.Items[key] = byteString(bytes)
+		spec.Items[key] = dbusutil.ByteString(bytes)
 	}
 	return spec
 }
@@ -114,18 +107,13 @@ func kindOf(mountType string) string {
 	return KindOther
 }
 
-// themedIcon picks the first name out of a serialised GThemedIcon, which reads
-// ". GThemedIcon folder-remote folder folder-remote-symbolic".
+// A serialised GThemedIcon reads ". GThemedIcon folder-remote folder folder-remote-symbolic".
 func themedIcon(serialised string) string {
 	fields := strings.Fields(serialised)
 	if len(fields) < 3 || fields[1] != "GThemedIcon" {
 		return "folder-remote"
 	}
 	return fields[2]
-}
-
-func byteString(raw []byte) string {
-	return strings.TrimRight(string(raw), "\x00")
 }
 
 func byteStringOf(value string) []byte {

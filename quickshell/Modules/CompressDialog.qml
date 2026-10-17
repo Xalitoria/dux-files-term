@@ -37,8 +37,7 @@ OverlayDialog {
         paths = targets;
         protect = false;
         passwordField.text = "";
-        const first = targets[0] ?? "";
-        const base = first.substring(first.lastIndexOf("/") + 1);
+        const base = FilePaths.baseName(targets[0] ?? "");
         nameField.text = targets.length === 1 ? base.replace(/(\.tar)?\.[^.]+$/, "") || base : I18n.tr("Archive", "default name for a new archive");
         open();
         nameField.forceActiveFocus();
@@ -57,7 +56,7 @@ OverlayDialog {
     }
 
     title: I18n.tr("Compress", "compress dialog header")
-    supportingText: paths.length === 1 ? paths[0].substring(paths[0].lastIndexOf("/") + 1) : FileFormat.count(paths.length)
+    supportingText: paths.length === 1 ? FilePaths.baseName(paths[0]) : FileFormat.count(paths.length)
     onAccepted: submit()
 
     DTextField {
@@ -67,8 +66,6 @@ OverlayDialog {
         outlined: true
         labelText: I18n.tr("Name", "label for a file name input")
         onAccepted: root.submit()
-        Keys.onReturnPressed: event => event.accepted = true
-        Keys.onEnterPressed: event => event.accepted = true
     }
 
     DFilterChips {
@@ -101,8 +98,6 @@ OverlayDialog {
         showPasswordToggle: true
         labelText: I18n.tr("Password", "label for a password input")
         onAccepted: root.submit()
-        Keys.onReturnPressed: event => event.accepted = true
-        Keys.onEnterPressed: event => event.accepted = true
     }
 
     actions: [

@@ -30,15 +30,15 @@ Singleton {
     readonly property string templatesDir: userDirs.find(dir => dir.key === "templates")?.path ?? ""
 
     function refreshUserDirs() {
-        _send("files.userDirs", {}, response => {
-            if (response.error)
+        DankFilesService.call("files.userDirs", {}, result => {
+            if (result.error)
                 return;
-            root.userDirs = response.dirs || [];
+            root.userDirs = result.dirs || [];
         });
     }
 
     function watch(path, options, callback) {
-        _send("files.watch", Object.assign({
+        DankFilesService.call("files.watch", Object.assign({
             "path": path
         }, _options(options)), result => {
             if (result.topic) {
@@ -61,64 +61,64 @@ Singleton {
             _watchTopics = topics;
             DankFilesService.unsubscribeTopic(topic, _eventHandler);
         }
-        _send("files.unwatch", {
+        DankFilesService.call("files.unwatch", {
             "watchId": watchId
         }, null);
     }
 
     function list(path, options, callback) {
-        _send("files.list", Object.assign({
+        DankFilesService.call("files.list", Object.assign({
             "path": path
         }, _options(options)), callback);
     }
 
     function resolveLocation(text, cwd, callback) {
-        _send("location.resolve", {
+        DankFilesService.call("location.resolve", {
             "text": text,
             "cwd": cwd
         }, callback);
     }
 
     function missingPaths(paths, callback) {
-        _send("location.missing", {
+        DankFilesService.call("location.missing", {
             "paths": paths
         }, result => callback(result.missing ?? []));
     }
 
     function page(watchId, options, callback) {
-        _send("files.list", Object.assign({
+        DankFilesService.call("files.list", Object.assign({
             "watchId": watchId
         }, _options(options)), callback);
     }
 
     function stat(path, callback) {
-        _send("files.stat", {
+        DankFilesService.call("files.stat", {
             "path": path
         }, callback);
     }
 
     function preview(path, maxBytes, callback) {
-        _send("files.preview", {
+        DankFilesService.call("files.preview", {
             "path": path,
             "maxBytes": maxBytes
         }, callback);
     }
 
     function imageSize(path, callback) {
-        _send("files.imageSize", {
+        DankFilesService.call("files.imageSize", {
             "path": path
         }, callback);
     }
 
     function count(paths, includeHidden, callback) {
-        _send("files.count", {
+        DankFilesService.call("files.count", {
             "paths": paths,
             "includeHidden": includeHidden === true
         }, callback);
     }
 
     function scanSize(paths, callback) {
-        _send("files.size", {
+        DankFilesService.call("files.size", {
             "paths": paths
         }, callback);
     }
@@ -126,7 +126,7 @@ Singleton {
     function cancelScan(scanId) {
         if (!scanId)
             return;
-        _send("files.sizeCancel", {
+        DankFilesService.call("files.sizeCancel", {
             "scanId": scanId
         }, null);
     }
@@ -138,13 +138,7 @@ Singleton {
         };
         if (watchId)
             params.watchId = watchId;
-        _send("files.thumbnail", params, callback);
-    }
-
-    function icons(paths, callback) {
-        _send("files.icon", {
-            "paths": paths
-        }, callback);
+        DankFilesService.call("files.thumbnail", params, callback);
     }
 
     function search(rootPath, query, options, callback) {
@@ -152,7 +146,7 @@ Singleton {
             "root": rootPath,
             "query": query
         }, options || {});
-        _send("search.start", params, result => {
+        DankFilesService.call("search.start", params, result => {
             if (result.topic) {
                 const topics = Object.assign({}, root._searchTopics);
                 topics[result.searchId] = result.topic;
@@ -167,7 +161,7 @@ Singleton {
         if (!searchId)
             return;
         _forgetSearch(searchId);
-        _send("search.cancel", {
+        DankFilesService.call("search.cancel", {
             "searchId": searchId
         }, null);
     }
@@ -189,20 +183,20 @@ Singleton {
     }
 
     function mkdir(path, callback) {
-        _send("files.mkdir", {
+        DankFilesService.call("files.mkdir", {
             "path": path
         }, callback);
     }
 
     function rename(path, name, callback) {
-        _send("files.rename", {
+        DankFilesService.call("files.rename", {
             "path": path,
             "name": name
         }, callback);
     }
 
     function trash(paths, callback) {
-        _send("files.trash", {
+        DankFilesService.call("files.trash", {
             "paths": paths
         }, callback);
     }
@@ -235,7 +229,7 @@ Singleton {
     Connections {
         target: DankFilesService
 
-        function onConnectionStateChanged() {
+        function onConnectedChanged() {
             for (const watchId in root._watchTopics)
                 DankFilesService.unsubscribeTopic(root._watchTopics[watchId], root._eventHandler);
             root._watchTopics = ({});
@@ -245,20 +239,5 @@ Singleton {
             if (DankFilesService.connected)
                 root.refreshUserDirs();
         }
-    }
-
-    function _send(method, params, callback) {
-        DankFilesService.sendRequest(method, params, response => {
-            if (!callback)
-                return;
-            if (response.error) {
-                callback({
-                    "error": response.error,
-                    "code": response.code || ""
-                });
-                return;
-            }
-            callback(response.result || {});
-        });
     }
 }

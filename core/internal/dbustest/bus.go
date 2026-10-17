@@ -30,7 +30,10 @@ const busConfig = `<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Con
 func Bus(t *testing.T) string {
 	t.Helper()
 	bin, err := exec.LookPath("dbus-daemon")
-	if err != nil {
+	switch {
+	case err != nil && os.Getenv("CI") != "":
+		t.Fatal("dbus-daemon not installed")
+	case err != nil:
 		t.Skip("dbus-daemon not installed")
 	}
 	dir := t.TempDir()

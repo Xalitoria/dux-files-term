@@ -37,6 +37,7 @@ type Service struct {
 	mounts       func() []string
 	excludes     func() []string
 
+	running  sync.WaitGroup
 	mu       sync.Mutex
 	searches map[string]*search
 	nextID   int
@@ -52,16 +53,12 @@ func NewService(bus Publisher, stater Stater) *Service {
 	}
 }
 
-// SetIndexEnabled allows searches to be answered by a running danksearch.
 func (s *Service) SetIndexEnabled(enabled bool) { s.index.enabled.Store(enabled) }
 
-// SetMounts supplies the mounted local drives scope Everywhere adds to home.
 func (s *Service) SetMounts(mounts func() []string) { s.mounts = mounts }
 
-// SetExcludes supplies the user's folder exclusions, read at every search.
 func (s *Service) SetExcludes(excludes func() []string) { s.excludes = excludes }
 
-// Attach flushes what a search buffered before its topic had a subscriber.
 func (s *Service) Attach(topics []string) {
 	for _, topic := range topics {
 		id, ok := strings.CutPrefix(topic, topicPrefix)
@@ -74,7 +71,6 @@ func (s *Service) Attach(topics []string) {
 	}
 }
 
-// AttachOnOpen is for hosts without per-topic subscribe; searches never buffer.
 func (s *Service) AttachOnOpen() { s.attachOnOpen.Store(true) }
 
 func (s *Service) Close() {
@@ -86,13 +82,10 @@ func (s *Service) Close() {
 	s.mu.Unlock()
 	for _, sc := range all {
 		sc.cancel()
-		<-sc.finished
 	}
+	s.running.Wait()
 }
 
-// Start searches root (or the scope's roots) for entries matching query and
-// opts, streaming batches on the returned topic. The search ends with the
-// connection context.
 func (s *Service) Start(ctx context.Context, root, query string, opts Options) (id, topic string, err error) {
 	if err := validate(root, query, opts); err != nil {
 		return "", "", err
@@ -104,7 +97,11 @@ func (s *Service) Start(ctx context.Context, root, query string, opts Options) (
 		return "", "", err
 	}
 	sc.follow(ctx)
-	go sc.run(root, query, opts)
+	s.running.Add(1)
+	go func() {
+		defer s.running.Done()
+		sc.run(root, query, opts)
+	}()
 	return sc.id, sc.topic, nil
 }
 

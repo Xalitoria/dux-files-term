@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import qs.DCommon.Common
 import qs.Services
+import qs.DCommon.FileBrowser
 import "StockTheme.js" as StockTheme
 import "../DCommon/Common/Shape.js" as Shape
 import "../DCommon/Common/Surface.js" as Surface
@@ -19,6 +20,7 @@ Singleton {
     readonly property string defaultFontFamily: Fonts.sans
     readonly property string defaultMonoFontFamily: Fonts.mono
     readonly property string defaultDisplayFontFamily: Fonts.display
+    readonly property var log: Log.scoped("Theme")
 
     // "auto" follows the desktop portal color-scheme; no preference falls back to dark
     readonly property bool isLightMode: {
@@ -277,38 +279,27 @@ Singleton {
     property color primaryHoverLight: Qt.rgba(primary.r, primary.g, primary.b, 0.08)
     property color primaryPressed: Qt.rgba(primary.r, primary.g, primary.b, 0.16)
     property color primarySelected: Qt.rgba(primary.r, primary.g, primary.b, 0.3)
-    property color primaryBackground: Qt.rgba(primary.r, primary.g, primary.b, 0.04)
-
-    property color secondaryHover: Qt.rgba(secondary.r, secondary.g, secondary.b, 0.08)
 
     property color surfaceHover: Qt.rgba(surfaceVariant.r, surfaceVariant.g, surfaceVariant.b, 0.08)
-    property color surfaceVariantHover: Qt.lighter(surfaceVariant, 1.2)
     property color surfacePressed: Qt.rgba(surfaceVariant.r, surfaceVariant.g, surfaceVariant.b, 0.12)
-    property color surfaceSelected: Qt.rgba(surfaceVariant.r, surfaceVariant.g, surfaceVariant.b, 0.15)
     property color surfaceLight: Qt.rgba(surfaceVariant.r, surfaceVariant.g, surfaceVariant.b, 0.1)
     property color surfaceVariantAlpha: Qt.rgba(surfaceVariant.r, surfaceVariant.g, surfaceVariant.b, 0.2)
 
     property color surfaceTextHover: Qt.rgba(surfaceText.r, surfaceText.g, surfaceText.b, 0.08)
-    property color surfaceTextAlpha: Qt.rgba(surfaceText.r, surfaceText.g, surfaceText.b, 0.3)
-    property color surfaceTextLight: Qt.rgba(surfaceText.r, surfaceText.g, surfaceText.b, 0.06)
     property color surfaceTextMedium: Qt.rgba(surfaceText.r, surfaceText.g, surfaceText.b, 0.7)
 
     property color outlineButton: Qt.rgba(outline.r, outline.g, outline.b, 0.5)
-    property color outlineLight: Qt.rgba(outline.r, outline.g, outline.b, 0.05)
     readonly property real layerOutlineOpacity: Math.max(0, Math.min(1, SettingsData.blurLayerOutlineOpacity))
     readonly property int layerOutlineWidth: layerOutlineOpacity > 0 ? 1 : 0
     property color outlineMedium: withAlpha(outline, layerOutlineOpacity)
     property color outlineStrong: withAlpha(outline, Math.min(1, layerOutlineOpacity * 1.5))
     property color outlineHeavy: Qt.rgba(outline.r, outline.g, outline.b, 0.2)
-    property color gridLine: Qt.rgba(outline.r, outline.g, outline.b, 0.25)
 
     property color surfaceTextSecondary: Qt.rgba(surfaceText.r, surfaceText.g, surfaceText.b, 0.6)
 
     property color errorHover: Qt.rgba(error.r, error.g, error.b, 0.12)
-    property color errorPressed: Qt.rgba(error.r, error.g, error.b, 0.16)
     property color errorSelected: Qt.rgba(error.r, error.g, error.b, 0.3)
 
-    property color shadowMedium: Qt.rgba(0, 0, 0, 0.08)
     property color shadowStrong: Qt.rgba(0, 0, 0, 0.3)
 
     property color buttonBg: primary
@@ -320,6 +311,7 @@ Singleton {
     property real spacingXS: 4
     property real spacingS: 8
     property real spacingM: 12
+    readonly property real windowInset: spacingM
     property real spacingL: 16
     property real spacingXL: 24
 
@@ -381,9 +373,6 @@ Singleton {
     readonly property real sliderTrackHeight: 16
     readonly property real sliderHandleWidth: 4
     readonly property real sliderHandleWidthPressed: 2
-    readonly property real sliderHandleWidthDesktop: 6
-    readonly property real sliderHandleWidthDesktopPressed: 4
-    readonly property real sliderHandleHeightDesktop: 32
     readonly property real sliderHandleHeight: 44
     readonly property real sliderHandleGap: 6
     readonly property real sliderTrackHeightS: 24
@@ -472,6 +461,9 @@ Singleton {
     readonly property real textEditHeight: Math.round(fontSizeMedium * 8)
     readonly property real tooltipMaxWidth: 500
     readonly property int tooltipDelay: 400
+    readonly property real scrollbarThickness: 6
+    readonly property real scrollbarGap: spacingXS
+    readonly property int scrollbarHideDelay: 1200
     readonly property real menuMaxHeight: 400
     readonly property real clockFaceSize: 250
     readonly property real clockOuterRingRatio: 0.34
@@ -488,7 +480,6 @@ Singleton {
     property string displayFontFamily: defaultDisplayFontFamily
     readonly property int fontWeight: SettingsData.fontWeight
     readonly property int fontWeightMedium: shiftedFontWeight(Font.Medium)
-    readonly property int fontWeightBold: shiftedFontWeight(Font.Bold)
 
     function shiftedFontWeight(weight) {
         return Math.max(Font.Thin, Math.min(Font.Black, weight + fontWeight - Font.Normal));
@@ -538,7 +529,6 @@ Singleton {
     readonly property int shorterDuration: Math.round(currentAnimationBaseDuration * 0.2)
     readonly property int shortDuration: Math.round(currentAnimationBaseDuration * 0.3)
     readonly property int mediumDuration: Math.round(currentAnimationBaseDuration * 0.6)
-    readonly property int longDuration: currentAnimationBaseDuration
     readonly property int standardEasing: Easing.OutCubic
     readonly property int emphasizedEasing: Easing.OutQuart
     readonly property bool elevationEnabled: true
@@ -662,7 +652,7 @@ Singleton {
 
     FileView {
         id: dmsColorsView
-        path: root.dmsColorsPath
+        path: SettingsData.colorSource === "auto" ? root.dmsColorsPath : ""
         blockLoading: false
         watchChanges: true
 
@@ -674,6 +664,7 @@ Singleton {
                 root.matugenColors = JSON.parse(text);
                 root.colorsLoaded = true;
             } catch (e) {
+                root.log.warn(`ignoring unreadable dms colors: ${e}`);
                 root.colorsLoaded = false;
             }
         }
@@ -687,14 +678,7 @@ Singleton {
 
     FileView {
         id: customThemeView
-        path: {
-            const f = SettingsData.customThemeFile;
-            if (!f || f === "")
-                return "";
-            if (f.startsWith("~/"))
-                return Quickshell.env("HOME") + f.substring(1);
-            return f;
-        }
+        path: FilePaths.expandTilde(SettingsData.customThemeFile)
         blockLoading: false
         watchChanges: true
         printErrors: false
@@ -710,6 +694,7 @@ Singleton {
                 root.customThemeRaw = JSON.parse(text);
                 root.customThemeLoaded = true;
             } catch (e) {
+                root.log.warn(`ignoring unreadable custom theme: ${e}`);
                 root.customThemeRaw = null;
                 root.customThemeLoaded = false;
             }

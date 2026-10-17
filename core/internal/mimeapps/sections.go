@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
 )
 
 const (
@@ -63,7 +65,7 @@ func (s *Service) RecordUse(mimeType, desktopID string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	return atomicWrite(path, updated)
+	return atomicfile.WriteFile(path, updated, 0o644)
 }
 
 func (s *Service) RecordUseForPaths(paths []string, desktopID string) error {

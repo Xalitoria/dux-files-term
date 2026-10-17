@@ -5,6 +5,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+
+	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
 )
 
 type installState struct {
@@ -45,7 +47,7 @@ func writeState(env Env, state installState) error {
 	if err := os.MkdirAll(stateDir(env), 0o755); err != nil {
 		return err
 	}
-	return writeAtomic(statePath(env), append(data, '\n'), 0o644)
+	return atomicfile.WriteFile(statePath(env), append(data, '\n'), 0o644)
 }
 
 func removeState(env Env) error {
@@ -53,31 +55,5 @@ func removeState(env Env) error {
 		return err
 	}
 	os.Remove(stateDir(env))
-	return nil
-}
-
-func writeAtomic(path string, data []byte, mode os.FileMode) error {
-	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*")
-	if err != nil {
-		return err
-	}
-	tmpPath := tmp.Name()
-	cleanup := func(err error) error {
-		tmp.Close()
-		os.Remove(tmpPath)
-		return err
-	}
-	if _, err := tmp.Write(data); err != nil {
-		return cleanup(err)
-	}
-	if err := tmp.Chmod(mode); err != nil {
-		return cleanup(err)
-	}
-	if err := tmp.Close(); err != nil {
-		return cleanup(err)
-	}
-	if err := os.Rename(tmpPath, path); err != nil {
-		return cleanup(err)
-	}
 	return nil
 }

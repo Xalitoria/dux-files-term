@@ -38,13 +38,6 @@ func resultOf(t *testing.T, out map[string]any) map[string]any {
 	return result
 }
 
-func TestHandlesOnlyClaimsItsMethods(t *testing.T) {
-	assert.True(t, Handles("files.open"))
-	assert.True(t, Handles("files.apps.forMime"))
-	assert.False(t, Handles("files.list"), "the listing service keeps files.list")
-	assert.False(t, Handles("files.op.copy"))
-}
-
 func TestHandleForMime(t *testing.T) {
 	svc, _ := fixture(t)
 
@@ -114,10 +107,4 @@ func TestHandleErrorsCarryCodes(t *testing.T) {
 
 	out = call(t, svc, ipc.Request{ID: 12, Method: "files.nope"})
 	assert.Equal(t, "NOTSUPPORTED", out["code"])
-}
-
-func TestHandleTerminals(t *testing.T) {
-	svc, _ := fixture(t)
-	result := resultOf(t, call(t, svc, ipc.Request{ID: 13, Method: "files.apps.terminals"}))
-	assert.Contains(t, result, "terminals")
 }

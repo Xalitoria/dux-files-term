@@ -1,16 +1,12 @@
 package devices
 
 import (
+	"github.com/AvengeMedia/dankfiles/core/internal/wire"
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/godbus/dbus/v5"
 )
-
-type errorResponse struct {
-	ID    int    `json:"id,omitempty"`
-	Error string `json:"error"`
-	Code  string `json:"code"`
-}
 
 func Handles(method string) bool {
 	switch method {
@@ -40,7 +36,7 @@ func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {
 	case "devices.lock":
 		s.handleLock(w, req)
 	default:
-		respondCode(w, req.ID, "NOTSUPPORTED", "unknown devices method: "+req.Method)
+		wire.RespondError(w, req.ID, fail(files.CodeNotSupported, "unknown devices method: %s", req.Method))
 	}
 }
 
@@ -51,7 +47,7 @@ func (s *Service) handleMount(w *ipc.ConnWriter, req ipc.Request) {
 	}
 	mountPoint, err := s.Mount(id)
 	if err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"id": id, "mountPoint": mountPoint})
@@ -63,7 +59,7 @@ func (s *Service) handleUnmount(w *ipc.ConnWriter, req ipc.Request) {
 		return
 	}
 	if err := s.Unmount(id, params.BoolLoose(req.Params, "force")); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"id": id, "mounted": false})
@@ -75,7 +71,7 @@ func (s *Service) handleEject(w *ipc.ConnWriter, req ipc.Request) {
 		return
 	}
 	if err := s.Eject(id); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"id": id, "ejected": true})
@@ -87,7 +83,7 @@ func (s *Service) handlePowerOff(w *ipc.ConnWriter, req ipc.Request) {
 		return
 	}
 	if err := s.PowerOff(id); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"id": id, "poweredOff": true})
@@ -100,13 +96,13 @@ func (s *Service) handleUnlock(w *ipc.ConnWriter, req ipc.Request) {
 	}
 	passphrase := params.StringOpt(req.Params, "passphrase", "")
 	if passphrase == "" {
-		respondCode(w, req.ID, "EINVAL", "devices.unlock requires a passphrase")
+		wire.RespondError(w, req.ID, wire.Invalid("devices.unlock requires a passphrase"))
 		return
 	}
 
 	cleartext, err := s.Unlock(id, passphrase)
 	if err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 
@@ -118,7 +114,7 @@ func (s *Service) handleUnlock(w *ipc.ConnWriter, req ipc.Request) {
 			result["mountPoint"] = mountPoint
 		default:
 			result["mountError"] = err.Error()
-			result["mountCode"] = CodeOf(err)
+			result["mountCode"] = files.CodeOf(err)
 		}
 	}
 	w.Respond(req.ID, result)
@@ -130,7 +126,7 @@ func (s *Service) handleLock(w *ipc.ConnWriter, req ipc.Request) {
 		return
 	}
 	if err := s.Lock(id); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"id": id, "unlocked": false})
@@ -149,16 +145,8 @@ func (s *Service) mountPath(path dbus.ObjectPath) (string, error) {
 func deviceID(w *ipc.ConnWriter, req ipc.Request) (string, bool) {
 	id := params.StringOpt(req.Params, "id", "")
 	if id == "" {
-		respondCode(w, req.ID, "EINVAL", req.Method+" requires a device id")
+		wire.RespondError(w, req.ID, wire.Invalid(req.Method+" requires a device id"))
 		return "", false
 	}
 	return id, true
-}
-
-func respondErr(w *ipc.ConnWriter, id int, err error) {
-	respondCode(w, id, CodeOf(err), err.Error())
-}
-
-func respondCode(w *ipc.ConnWriter, id int, code, msg string) {
-	_ = w.WriteResponse(errorResponse{ID: id, Error: msg, Code: code})
 }

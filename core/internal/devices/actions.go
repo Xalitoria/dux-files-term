@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/godbus/dbus/v5"
 )
 
@@ -51,13 +52,13 @@ func (s *Service) Unmount(id string, force bool) error {
 func (s *Service) Eject(id string) error {
 	device, found := s.find(id)
 	if !found {
-		return fail("ENOENT", "unknown device: %s", id)
+		return fail(files.CodeNotFound, "unknown device: %s", id)
 	}
 	if err := s.checkDetach(device, true); err != nil {
 		return err
 	}
 	if device.Drive == "" {
-		return fail("NOTSUPPORTED", "%s has no drive to eject", device.Name)
+		return fail(files.CodeNotSupported, "%s has no drive to eject", device.Name)
 	}
 	if device.Mounted {
 		if err := s.Unmount(id, false); err != nil {
@@ -77,25 +78,24 @@ func (s *Service) Eject(id string) error {
 func (s *Service) PowerOff(id string) error {
 	device, found := s.find(id)
 	if !found {
-		return fail("ENOENT", "unknown device: %s", id)
+		return fail(files.CodeNotFound, "unknown device: %s", id)
 	}
 	if err := s.checkDetach(device, true); err != nil {
 		return err
 	}
 	if device.Drive == "" || !device.CanPowerOff {
-		return fail("NOTSUPPORTED", "%s cannot be powered off", device.Name)
+		return fail(files.CodeNotSupported, "%s cannot be powered off", device.Name)
 	}
 	return wrapDBus(s.call(dbus.ObjectPath(device.Drive), DriveIface+".PowerOff", noOptions).Store())
 }
 
-// Unlock hands the passphrase straight to udisks and keeps no copy.
 func (s *Service) Unlock(id, passphrase string) (string, error) {
 	device, found := s.find(id)
 	if !found {
-		return "", fail("ENOENT", "unknown device: %s", id)
+		return "", fail(files.CodeNotFound, "unknown device: %s", id)
 	}
 	if !device.Encrypted {
-		return "", fail("EINVAL", "%s is not encrypted", device.Name)
+		return "", fail(files.CodeInvalid, "%s is not encrypted", device.Name)
 	}
 	if device.Unlocked {
 		return device.Cleartext, nil
@@ -111,13 +111,13 @@ func (s *Service) Unlock(id, passphrase string) (string, error) {
 func (s *Service) Lock(id string) error {
 	device, found := s.find(id)
 	if !found {
-		return fail("ENOENT", "unknown device: %s", id)
+		return fail(files.CodeNotFound, "unknown device: %s", id)
 	}
 	if err := s.checkDetach(device, false); err != nil {
 		return err
 	}
 	if !device.Encrypted {
-		return fail("EINVAL", "%s is not encrypted", device.Name)
+		return fail(files.CodeInvalid, "%s is not encrypted", device.Name)
 	}
 	if !device.Unlocked {
 		return nil
@@ -145,16 +145,16 @@ func (s *Service) mountable(id string) (Device, error) {
 	device, found := s.find(id)
 	switch {
 	case !found:
-		return Device{}, fail("ENOENT", "unknown device: %s", id)
+		return Device{}, fail(files.CodeNotFound, "unknown device: %s", id)
 	case device.Encrypted && !device.Unlocked:
-		return Device{}, fail("EINVAL", "%s is locked", device.Name)
+		return Device{}, fail(files.CodeInvalid, "%s is locked", device.Name)
 	}
 	return device, nil
 }
 
 func (s *Service) checkDetach(device Device, wholeDrive bool) error {
 	if device.Protected {
-		return fail("EPERM", "%s contains a protected system mount", device.Device)
+		return fail(CodePerm, "%s contains a protected system mount", device.Device)
 	}
 	if !wholeDrive || device.Drive == "" {
 		return nil
@@ -168,7 +168,7 @@ func (s *Service) checkDetach(device Device, wholeDrive bool) error {
 			continue
 		}
 		if build(s.objects, path, ifaces, cleartext[path]).Protected {
-			return fail("EPERM", "%s contains a protected system mount", device.Drive)
+			return fail(CodePerm, "%s contains a protected system mount", device.Drive)
 		}
 	}
 	return nil

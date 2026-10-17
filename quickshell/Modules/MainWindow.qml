@@ -6,10 +6,8 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Common
 import qs.Services
-import qs.DCommon.Common as DC
 import qs.DCommon.Widgets
 import qs.DCommon.FileBrowser
-import qs.Modules.Settings
 
 FloatingWindow {
     id: window
@@ -21,21 +19,11 @@ FloatingWindow {
     readonly property bool primary: WindowService.primaryId === windowId
     property var toplevel: null
 
-    property var tabs: []
-    property int currentTab: 0
     property int activePaneIndex: 0
     property bool splitView: false
     property real splitRatio: 0.5
     property bool showHidden: SessionData.lastUsed("showHidden", SettingsData.showHidden)
     property bool previewOpen: SessionData.lastUsed("previewOpen", true)
-    property bool sidebarOverlayOpen: false
-    property string pendingTrust: ""
-    property bool applyingTab: false
-    property int propertiesRequest: 0
-    property var closedTabs: []
-    property string vimPrefix: ""
-    property bool sidebarFocusPending: false
-    property var pendingExtracts: ({})
 
     readonly property string opScope: "window" + windowId
     readonly property var cutSet: {
@@ -46,21 +34,28 @@ FloatingWindow {
             set[path] = true;
         return set;
     }
-    readonly property bool shiftHeld: (window.activeModifiers & Qt.ShiftModifier) !== 0
-    property int activeModifiers: Qt.NoModifier
     readonly property var secondPane: splitLoader.item
+    readonly property var panes: [primaryPane, secondPane]
+    readonly property TabManager tabManager: tabManager
+    readonly property WindowDialogs dialogs: dialogs
+    readonly property WindowMenus menus: menus
+    readonly property DragController drag: drag
+    readonly property FileOpenFlow openFlow: openFlow
+    readonly property WindowActions actions: actions
+    readonly property WindowSidebarHost sidebar: sidebarHost
+    readonly property FilesTopbar topbar: topbar
     readonly property var activePane: splitView && activePaneIndex === 1 && secondPane ? secondPane : primaryPane
     readonly property string currentPath: activePane.path
-    readonly property bool compact: width < FilesMetrics.sidebarOverlayBreakpoint
-    readonly property bool sidebarDocked: !SettingsData.sidebarCollapsed && !compact
-    readonly property bool dialogOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || openConfirmDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible || emptyTrashDialog.visible
+    readonly property bool dialogOpen: dialogs.anyOpen
     readonly property bool textEditing: surface.focusItem instanceof TextInput || surface.focusItem instanceof TextEdit
-    readonly property bool sidebarFocused: isInside(surface.focusItem, dockedSidebar) || isInside(surface.focusItem, overlaySidebar)
+    readonly property bool sidebarFocused: sidebarHost.focused
+    readonly property bool tabRowFocused: ItemTree.isInside(surface.focusItem, tabRow)
     readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
+    readonly property bool lastActive: WindowService.lastActiveId === windowId
 
     Component.onDestruction: FileOpsService.forget(opScope)
 
-    title: folderTitle(currentPath)
+    title: tabManager.folderTitle(currentPath)
     implicitWidth: SessionData.windowWidth
     implicitHeight: SessionData.windowHeight
     minimumSize: Qt.size(FilesMetrics.windowMinWidth, FilesMetrics.windowMinHeight)
@@ -80,18 +75,17 @@ FloatingWindow {
             SessionData.windowHeight = height;
     }
 
-    onCompactChanged: {
-        if (!compact)
-            sidebarOverlayOpen = false;
-    }
-
     Component.onCompleted: {
         keepOwnBrowsing();
         const initial = WindowService.takePendingLocations(windowId);
-        if (primary)
-            restoreSession();
-        else
-            startFresh();
+        if (primary) {
+            splitView = SessionData.splitView;
+            splitRatio = SessionData.splitRatio;
+            tabManager.restoreSession();
+        } else {
+            splitRatio = SessionData.splitRatio;
+            tabManager.startFresh();
+        }
         maximized = SessionData.maximized;
         if (primary)
             offerGtkImport();
@@ -106,11 +100,6 @@ FloatingWindow {
         const active = ToplevelManager.activeToplevel;
         if (active && active.appId === "com.danklinux.dankfiles")
             toplevel = active;
-    }
-
-    function openSettings() {
-        settingsLoader.active = true;
-        settingsLoader.item.show();
     }
 
     function offerGtkImport() {
@@ -128,53 +117,6 @@ FloatingWindow {
         closeRequested();
     }
 
-    function toggleSidebar() {
-        if (compact) {
-            sidebarOverlayOpen = !sidebarOverlayOpen;
-            return;
-        }
-        SettingsData.sidebarCollapsed = !SettingsData.sidebarCollapsed;
-    }
-
-    function isInside(item, ancestor) {
-        for (let current = item; current; current = current.parent) {
-            if (current === ancestor)
-                return true;
-        }
-        return false;
-    }
-
-    function focusSidebar() {
-        if (compact)
-            sidebarOverlayOpen = true;
-        else
-            SettingsData.sidebarCollapsed = false;
-        const sidebar = compact ? overlaySidebar : dockedSidebar;
-        const shown = compact ? sidebarOverlay.visible : dockedSidebar.visible;
-        if (!shown) {
-            sidebarFocusPending = true;
-            return;
-        }
-        sidebar.focusCurrent();
-    }
-
-    function sidebarShown(sidebar) {
-        if (!sidebarFocusPending)
-            return;
-        sidebarFocusPending = false;
-        sidebar.focusCurrent();
-    }
-
-    function leaveSidebar() {
-        sidebarOverlayOpen = false;
-        activePane.focusBody();
-    }
-
-    function renameBookmark(path) {
-        renameBookmarkDialog.path = path;
-        renameBookmarkDialog.ask(BookmarksService.labelFor(path));
-    }
-
     function setSplitRatio(value) {
         splitRatio = Math.max(FilesMetrics.minimumPaneFraction, Math.min(1 - FilesMetrics.minimumPaneFraction, value));
         if (primary)
@@ -185,236 +127,11 @@ FloatingWindow {
         setSplitRatio(splitRatio + fraction);
     }
 
-    function tabState(index) {
-        return tabs[index] ?? null;
-    }
-
-    function paneStates() {
-        const stored = tabState(currentTab)?.panes ?? [];
-        return [primaryPane.saveState(), secondPane ? secondPane.saveState() : (stored[1] ?? null)];
-    }
-
-    function captureTabs() {
-        if (applyingTab || tabs.length === 0)
-            return;
-        const next = tabs.slice();
-        next[currentTab] = {
-            "panes": paneStates(),
-            "active": activePaneIndex
-        };
-        tabs = next;
-        persistTabs();
-    }
-
-    function applyTab(index) {
-        const state = tabState(index);
-        if (!state)
-            return;
-        applyingTab = true;
-        primaryPane.restoreState(state.panes?.[0] ?? {
-            "path": Paths.strip(Paths.home)
-        });
-        if (secondPane)
-            secondPane.restoreState(state.panes?.[1] ?? {
-                "path": primaryPane.path
-            });
-        activePaneIndex = secondPane ? (state.active ?? 0) : 0;
-        applyingTab = false;
-    }
-
-    function selectTab(index) {
-        if (index === currentTab || index < 0 || index >= tabs.length)
-            return;
-        captureTabs();
-        currentTab = index;
-        applyTab(index);
-        persistTabs();
-    }
-
-    function newTab(path, background) {
-        captureTabs();
-        const next = tabs.slice();
-        next.push({
-            "panes": [
-                {
-                    "path": path === "" ? currentPath : path
-                },
-                null],
-            "active": 0
-        });
-        tabs = next;
-        if (background) {
-            persistTabs();
-            return;
-        }
-        currentTab = next.length - 1;
-        applyTab(currentTab);
-        persistTabs();
-        if (path !== "")
-            FolderHistory.visit(primaryPane.path);
-    }
-
-    function closeTab(index) {
-        closeTabsAt([index], index);
-    }
-
-    function cycleTab(step) {
-        if (tabs.length < 2)
-            return;
-        selectTab((currentTab + step + tabs.length) % tabs.length);
-    }
-
-    function reopenTab() {
-        if (closedTabs.length === 0)
-            return;
-        const stack = closedTabs.slice();
-        const closed = stack.pop();
-        closedTabs = stack;
-        captureTabs();
-        const next = tabs.slice();
-        const index = Math.min(closed.index, next.length);
-        next.splice(index, 0, closed.state);
-        tabs = next;
-        currentTab = index;
-        applyTab(index);
-        persistTabs();
-    }
-
-    function moveTab(from, to) {
-        if (from === to || from < 0 || to < 0 || from >= tabs.length || to >= tabs.length)
-            return;
-        captureTabs();
-        const current = tabs[currentTab];
-        const next = tabs.slice();
-        const moved = next.splice(from, 1)[0];
-        next.splice(to, 0, moved);
-        tabs = next;
-        currentTab = next.indexOf(current);
-        persistTabs();
-    }
-
-    function closeTabsAt(indices, fallback) {
-        const closing = indices.filter(index => index >= 0 && index < tabs.length);
-        if (closing.length === 0 || closing.length >= tabs.length)
-            return;
-        captureTabs();
-        const current = tabs[currentTab];
-        closedTabs = closedTabs.concat(closing.slice().sort((a, b) => b - a).map(index => ({
-                    "index": index,
-                    "state": tabs[index]
-                }))).slice(-FilesMetrics.closedTabHistory);
-        const kept = tabs.filter((_, index) => !closing.includes(index));
-        tabs = kept;
-        const index = kept.indexOf(current);
-        if (index >= 0) {
-            currentTab = index;
-            persistTabs();
-            return;
-        }
-        currentTab = Math.max(0, Math.min(fallback, kept.length - 1));
-        applyTab(currentTab);
-        persistTabs();
-    }
-
-    function closeOtherTabs(index) {
-        closeTabsAt(tabs.map((_, other) => other).filter(other => other !== index), 0);
-    }
-
-    function closeTabsToRight(index) {
-        closeTabsAt(tabs.map((_, other) => other).filter(other => other > index), index);
-    }
-
-    function duplicateTab(index) {
-        if (!tabState(index))
-            return;
-        captureTabs();
-        const next = tabs.slice();
-        next.splice(index + 1, 0, JSON.parse(JSON.stringify(tabs[index])));
-        tabs = next;
-        currentTab = index + 1;
-        applyTab(currentTab);
-        persistTabs();
-    }
-
-    function dropOnTab(index, drop) {
-        const state = tabState(index);
-        const dest = index === currentTab ? activePane.path : (state?.panes?.[state.active ?? 0]?.path || state?.panes?.[0]?.path || "");
-        const paths = DragService.pathsFrom(drop);
-        if (dest === "" || paths.length === 0 || paths.includes(dest))
-            return;
-        applyDrop(paths, dest, DragService.overrideFor(drop.proposedAction));
-    }
-
-    function enterFilterResults() {
-        activePane.focusBody();
-        activePane.body.jumpTo(0, Qt.NoModifier);
-    }
-
-    function folderTitle(path) {
-        if (path === "")
-            return I18n.tr("Files", "main window title");
-        if (path === TrashService.filesPath)
-            return I18n.tr("Trash", "trash view header and sidebar entry");
-        if (path === Paths.strip(Paths.home))
-            return I18n.tr("Home", "sidebar entry for the user's home folder");
-        if (path === "/")
-            return "/";
-        return FilePaths.baseName(path);
-    }
-
-    function tabLabel(state) {
-        return folderTitle(state?.panes?.[0]?.path || Paths.strip(Paths.home));
-    }
-
-    function persistTabs() {
-        if (!primary)
-            return;
-        SessionData.tabs = tabs;
-        SessionData.currentTab = currentTab;
-    }
-
-    function homeTabs() {
-        return [
-            {
-                "panes": [
-                    {
-                        "path": Paths.strip(Paths.home)
-                    },
-                    null],
-                "active": 0
-            }
-        ];
-    }
-
-    function restoreSession() {
-        splitView = SessionData.splitView;
-        splitRatio = SessionData.splitRatio;
-        const stored = SessionData.tabs;
-        tabs = Array.isArray(stored) && stored.length > 0 ? stored : homeTabs();
-        currentTab = Math.max(0, Math.min(SessionData.currentTab, tabs.length - 1));
-        applyTab(currentTab);
-    }
-
-    function startFresh() {
-        splitRatio = SessionData.splitRatio;
-        tabs = homeTabs();
-        currentTab = 0;
-        applyTab(0);
-    }
-
-    function folderLocation(path) {
-        return {
-            "kind": "folder",
-            "path": path,
-            "select": []
-        };
-    }
-
     function openPath(path, inNewTab) {
         if (path === "")
             return;
         if (inNewTab) {
-            newTab(path, false);
+            tabManager.newTab(path, false);
             return;
         }
         activePane.navigate(path);
@@ -427,21 +144,21 @@ FloatingWindow {
     function openLocation(location, inNewTab) {
         switch (location.kind) {
         case "servers":
-            connectDialog.ask();
+            dialogs.askServer();
             return;
         case "remote":
-            connectRemote(location.uri, location.password);
+            dialogs.connectRemote(location.uri, location.password);
             return;
         case "archive":
             openArchive(location.path, inNewTab);
             return;
         }
-        if (location.select.length === 0) {
+        if ((location.select ?? []).length === 0) {
             openPath(location.path, inNewTab);
             return;
         }
         if (inNewTab)
-            newTab(location.path, false);
+            tabManager.newTab(location.path, false);
         activePane.reveal(location.select);
     }
 
@@ -451,54 +168,23 @@ FloatingWindow {
             activePane.reveal([path]);
             return;
         }
-        extractBeside(path, "enter");
-    }
-
-    function focusPane(index) {
-        activePaneIndex = splitView && secondPane ? index : 0;
-        activePane.focusBody();
-    }
-
-    function swapPaneFocus() {
-        if (!splitView || !secondPane)
-            return;
-        focusPane(activePaneIndex === 0 ? 1 : 0);
+        openFlow.extractBeside(path, "enter");
     }
 
     function toggleSplit() {
-        captureTabs();
+        tabManager.captureTabs();
         splitView = !splitView;
         if (primary)
             SessionData.splitView = splitView;
-        if (!splitView) {
-            activePaneIndex = 0;
-            primaryPane.focusBody();
+        if (splitView)
             return;
-        }
-        Qt.callLater(() => {
-            if (!window.secondPane)
-                return;
-            const stored = window.tabState(window.currentTab)?.panes?.[1];
-            window.secondPane.restoreState(stored ?? {
-                "path": primaryPane.path
-            });
-        });
+        activePaneIndex = 0;
+        primaryPane.focusBody();
     }
 
     function keepOwnBrowsing() {
         showHidden = showHidden;
         previewOpen = previewOpen;
-    }
-
-    function setPreviewOpen(open) {
-        previewOpen = open;
-        SessionData.remember({
-            "previewOpen": open
-        });
-    }
-
-    function setViewMode(mode) {
-        activePane.setViewMode(mode);
     }
 
     function resolvePanes() {
@@ -528,462 +214,15 @@ FloatingWindow {
         });
     }
 
-    function setSortOrder(key, descending) {
-        activePane.setSortOrder(key, descending);
-    }
-
-    function setSort(key) {
-        if (key === "")
-            return;
-        activePane.toggleSort(key);
-    }
-
-    function selectSortKey(key) {
-        if (activePane.resultsActive) {
-            const model = activePane.searchModel;
-            if (key !== model.sortKey)
-                model.setSort(key);
-            return;
-        }
-        if (key === "")
-            return;
-        const trash = activePane.trashView;
-        if (trash) {
-            trash.model.setSort(key, trash.model.sortDescending);
-            return;
-        }
-        setSortOrder(key, activePane.sortDescending);
-    }
-
-    function toggleSortDirection() {
-        if (activePane.resultsActive) {
-            activePane.searchModel.sortDescending = !activePane.searchModel.sortDescending;
-            return;
-        }
-        const trash = activePane.trashView;
-        if (trash) {
-            trash.model.setSort(trash.model.sortKey, !trash.model.sortDescending);
-            return;
-        }
-        setSortOrder(activePane.sortKey, !activePane.sortDescending);
-    }
-
-    function cycleSortKey() {
-        const keys = topbar.resultsActive ? topbar.resultSortKeys : topbar.trashActive ? topbar.trashSortKeys : topbar.sortKeys;
-        const index = keys.findIndex(entry => entry.key === topbar.sortKey);
-        selectSortKey(keys[(index + 1) % keys.length].key);
-    }
-
-    function trashAction(id) {
-        switch (id) {
-        case "trash":
-            return "deletePermanently";
-        case "openWith":
-        case "openWithMenu":
-        case "openFolderWith":
-        case "openContainingFolder":
-        case "openInNewTab":
-        case "openInNewWindow":
-        case "openInPane":
-        case "openTerminal":
-        case "cut":
-        case "copy":
-        case "paste":
-        case "pasteInto":
-        case "pasteLink":
-        case "rename":
-        case "duplicate":
-        case "moveTo":
-        case "copyTo":
-        case "newFolder":
-        case "newFolderWith":
-        case "newDocument":
-        case "compress":
-        case "extract":
-        case "extractTo":
-        case "properties":
-        case "copyPath":
-        case "bookmark":
-        case "bookmarkSelected":
-            return "";
-        default:
-            return id;
-        }
-    }
-
-    function runAction(id) {
-        switch (activePane.trashActive ? trashAction(id) : id) {
-        case "restore":
-            restoreEntries(selectedEntries());
-            return;
-        case "emptyTrash":
-            confirmEmptyTrash();
-            return;
-        case "open":
-            openEntries(selectedEntries());
-            return;
-        case "openContainingFolder":
-            openContainingFolder();
-            return;
-        case "openWith":
-            openWithCurrent();
-            return;
-        case "openWithMenu":
-            showOpenWithMenu([], selectedPaths(), itemMenu);
-            return;
-        case "openFolderWith":
-            showOpenWithMenu(["inode/directory"], [currentPath], backgroundMenu);
-            return;
-        case "openTerminal":
-            openTerminalHere();
-            return;
-        case "newTab":
-            newTab("", false);
-            return;
-        case "newWindow":
-            newWindowRequested([folderLocation(currentPath)]);
-            return;
-        case "openInNewWindow":
-            openSelectionInNewWindow();
-            return;
-        case "openInNewTab":
-            openSelectionInNewTab();
-            return;
-        case "reopenTab":
-            reopenTab();
-            return;
-        case "moveTabLeft":
-            moveTab(currentTab, currentTab - 1);
-            return;
-        case "moveTabRight":
-            moveTab(currentTab, currentTab + 1);
-            return;
-        case "home":
-            openPath(Paths.strip(Paths.home), false);
-            return;
-        case "splitView":
-            toggleSplit();
-            return;
-        case "toggleSidebar":
-            toggleSidebar();
-            return;
-        case "focusSidebar":
-            focusSidebar();
-            return;
-        case "bookmark":
-            BookmarksService.toggle(currentPath);
-            return;
-        case "bookmarkSelected":
-            {
-                const folder = selectedEntries().find(entry => entry.isDir);
-                if (folder)
-                    BookmarksService.toggle(folder.path);
-                return;
-            }
-        case "zoomReset":
-            activePane.setZoom(activePane.viewMode, FilesMetrics.defaultZoom(activePane.viewMode));
-            return;
-        case "openInPane":
-            openInOtherPane(firstSelected()?.path ?? "");
-            return;
-        case "closeTab":
-            closeTab(currentTab);
-            return;
-        case "nextTab":
-            cycleTab(1);
-            return;
-        case "previousTab":
-            cycleTab(-1);
-            return;
-        case "back":
-            activePane.back();
-            return;
-        case "forward":
-            activePane.forward();
-            return;
-        case "editPath":
-            activePane.editPath();
-            return;
-        case "jump":
-            activePane.startJump();
-            return;
-        case "search":
-            topbar.focusSearch();
-            return;
-        case "sortKey":
-            cycleSortKey();
-            return;
-        case "sortDirection":
-            toggleSortDirection();
-            return;
-        case "searchFilters":
-            activePane.focusSearchChips();
-            return;
-        case "searchHome":
-            activePane.setSearchScope("home");
-            if (activePane.nameFilter.trim() !== "") {
-                activePane.startSearch(activePane.nameFilter.trim(), null);
-                return;
-            }
-            topbar.focusSearch();
-            return;
-        case "settings":
-            openSettings();
-            return;
-        case "compress":
-            compressDialog.ask(selectedPaths());
-            return;
-        case "extract":
-            extractTo(selectedPaths(), currentPath, "reveal");
-            return;
-        case "extractTo":
-            askExtractTo(selectedPaths());
-            return;
-        case "newDocument":
-            showNewDocumentMenu();
-            return;
-        case "swapPane":
-            swapPaneFocus();
-            return;
-        case "listView":
-            setViewMode("list");
-            return;
-        case "gridView":
-            setViewMode("grid");
-            return;
-        case "columnsView":
-            setViewMode("columns");
-            return;
-        case "togglePreview":
-            setPreviewOpen(!previewOpen);
-            return;
-        case "zoomIn":
-            activePane.body.zoomBy(1);
-            return;
-        case "zoomOut":
-            activePane.body.zoomBy(-1);
-            return;
-        case "showHidden":
-            setShowHidden(!showHidden);
-            return;
-        case "reload":
-            activePane.refresh();
-            return;
-        case "shortcuts":
-            if (shortcutsOverlay.visible) {
-                shortcutsOverlay.close();
-                return;
-            }
-            shortcutsOverlay.open();
-            return;
-        case "selectAll":
-            activePane.selection.selectAll(activePane.body.directory.entries);
-            return;
-        case "invertSelection":
-            activePane.selection.invert(activePane.body.directory.entries);
-            return;
-        case "copy":
-            ClipboardService.copy(selectedPaths());
-            return;
-        case "cut":
-            ClipboardService.cutPaths(selectedPaths());
-            return;
-        case "paste":
-            pasteInto(currentPath, false);
-            return;
-        case "pasteInto":
-            pasteInto(firstSelected()?.path ?? currentPath, false);
-            return;
-        case "pasteLink":
-            pasteInto(currentPath, true);
-            return;
-        case "rename":
-            renameSelection();
-            return;
-        case "trash":
-            trashSelection();
-            return;
-        case "deletePermanently":
-            deleteSelection();
-            return;
-        case "undo":
-            FileOpsService.undo(opScope);
-            return;
-        case "redo":
-            FileOpsService.redo(opScope);
-            return;
-        case "duplicate":
-            duplicateSelection();
-            return;
-        case "moveTo":
-            askTransferTo(selectedPaths(), true);
-            return;
-        case "copyTo":
-            askTransferTo(selectedPaths(), false);
-            return;
-        case "newFolder":
-            FileOpsService.newFolder(currentPath, I18n.tr("Untitled folder", "default name for a new folder"), opScope, true);
-            return;
-        case "newFolderWith":
-            newFolderWithSelection();
-            return;
-        case "properties":
-            showProperties();
-            return;
-        case "copyPath":
-            copyText((selectedPaths().length > 0 ? selectedPaths() : [currentPath]).join("\n"));
-            return;
-        case "copyName":
-            copyText(selectedEntries().map(entry => entry.name).join("\n"));
-            return;
-        case "contextMenu":
-            showContextMenuAtCursor();
-            return;
-        }
-    }
-
-    function copyText(text) {
-        Paths.copyPathToClipboard(text);
-        ClipboardService.clear();
-    }
-
-    function openSelectionInNewTab() {
-        const entry = firstSelected();
-        if (entry?.isDir)
-            newTab(entry.path, false);
-    }
-
-    function openSelectionInNewWindow() {
-        const entry = firstSelected();
-        if (entry?.isDir)
-            newWindowRequested([folderLocation(entry.path)]);
-    }
-
-    function showContextMenuAtCursor() {
-        if (selectedPaths().length === 0) {
-            showBackgroundMenu(activePane.width / 2, activePane.height / 2);
-            return;
-        }
-        const rect = activePane.cursorRect();
-        if (rect.width === 0) {
-            showItemMenu(activePane.width / 2, activePane.height / 2, Qt.NoModifier);
-            return;
-        }
-        showItemMenu(rect.x + Math.min(rect.width, rect.height), rect.y + rect.height, Qt.NoModifier);
-    }
-
     function escapeBack() {
-        if (sidebarOverlayOpen) {
-            leaveSidebar();
+        if (sidebarHost.overlayOpen) {
+            sidebarHost.leave();
             return true;
         }
         if (!activePane.resultsActive && activePane.nameFilter === "")
             return false;
         topbar.clearSearch();
         return true;
-    }
-
-    function handleVimKey(event) {
-        if (!SettingsData.vimKeys || (event.modifiers & ~(Qt.ShiftModifier | Qt.KeypadModifier)) !== 0)
-            return false;
-        const shift = (event.modifiers & Qt.ShiftModifier) !== 0;
-        const prefix = vimPrefix;
-        vimPrefix = "";
-        if (prefix === "g")
-            return runPrefixedVimKey(event.key, shift);
-        const body = activePane.body;
-        const columns = body.view?.columnsPerRow ?? 1;
-        switch (event.key) {
-        case Qt.Key_J:
-            body.moveCursor(columns, event.modifiers);
-            return true;
-        case Qt.Key_K:
-            body.moveCursor(-columns, event.modifiers);
-            return true;
-        case Qt.Key_H:
-            if (shift)
-                activePane.back();
-            else
-                activePane.up();
-            return true;
-        case Qt.Key_L:
-            if (shift)
-                activePane.forward();
-            else
-                activePane.openSelection();
-            return true;
-        case Qt.Key_G:
-            if (shift) {
-                body.jumpTo(body.directory.count - 1, Qt.NoModifier);
-                return true;
-            }
-            vimPrefix = "g";
-            vimPrefixTimer.restart();
-            return true;
-        case Qt.Key_V:
-            body.toggleAtCursor();
-            return true;
-        case Qt.Key_Y:
-            return runOnSelection("copy");
-        case Qt.Key_X:
-            return runOnSelection("cut");
-        case Qt.Key_P:
-            runAction("paste");
-            return true;
-        case Qt.Key_D:
-            return runOnSelection(shift ? "deletePermanently" : "trash");
-        case Qt.Key_R:
-            return runOnSelection("rename");
-        case Qt.Key_U:
-            runAction("undo");
-            return true;
-        case Qt.Key_Period:
-            runAction("showHidden");
-            return true;
-        case Qt.Key_T:
-            runAction("newTab");
-            return true;
-        case Qt.Key_S:
-            runAction("focusSidebar");
-            return true;
-        }
-        return false;
-    }
-
-    function runPrefixedVimKey(key, shift) {
-        switch (key) {
-        case Qt.Key_G:
-            if (shift)
-                return false;
-            activePane.body.jumpTo(0, Qt.NoModifier);
-            return true;
-        case Qt.Key_T:
-            cycleTab(shift ? -1 : 1);
-            return true;
-        case Qt.Key_H:
-            if (shift)
-                return false;
-            runAction("home");
-            return true;
-        }
-        return false;
-    }
-
-    function runOnSelection(id) {
-        if (selectedPaths().length > 0)
-            runAction(id);
-        return true;
-    }
-
-    function openInOtherPane(path) {
-        if (path === "")
-            return;
-        if (!splitView)
-            toggleSplit();
-        Qt.callLater(() => {
-            const target = window.activePaneIndex === 0 ? window.secondPane : primaryPane;
-            target?.navigate(path);
-        });
     }
 
     function selectedPaths() {
@@ -994,460 +233,8 @@ FloatingWindow {
         return activePane.selectedEntries;
     }
 
-    function selectionIsDirectory() {
-        const entries = selectedEntries();
-        return entries.length > 0 && entries.every(entry => entry.isDir);
-    }
-
-    function selectionIsFile() {
-        const entries = selectedEntries();
-        return entries.length > 0 && entries.every(entry => !entry.isDir);
-    }
-
     function firstSelected() {
         return selectedEntries()[0] ?? null;
-    }
-
-    function reportError(response) {
-        if (response.error)
-            ToastService.info(FileFormat.operationError(response.code, response.error));
-    }
-
-    function activate(entry) {
-        if (!entry)
-            return;
-        if (activePane.trashActive) {
-            offerRestore([entry]);
-            return;
-        }
-        if (entry.isDir) {
-            activePane.navigate(entry.path);
-            return;
-        }
-        const canRun = SandboxService.available("run");
-        if (entry.untrusted && canRun) {
-            trustDialog.subject = entry.name;
-            trustDialog.pending = entry.path;
-            trustDialog.open();
-            return;
-        }
-        if (canRun && FilesFormat.isRunnable(entry.mime, entry.isExecutable)) {
-            executableDialog.ask(entry.path, entry.name);
-            return;
-        }
-        if (SettingsData.extractOnOpen && FilesFormat.extractable(entry.mime)) {
-            extractBeside(entry.path, "enter");
-            return;
-        }
-        AppsService.open([entry.path], response => window.reportError(response));
-    }
-
-    function openPlan(entries, extractArchives) {
-        const folders = entries.filter(entry => entry.isDir).map(entry => entry.path);
-        const files = entries.filter(entry => !entry.isDir);
-        const unpacks = entry => extractArchives && FilesFormat.extractable(entry.mime);
-        return {
-            "folder": folders[0] ?? "",
-            "tabs": folders.slice(1),
-            "files": files.filter(entry => !unpacks(entry)).map(entry => entry.path),
-            "archives": files.filter(entry => unpacks(entry)).map(entry => entry.path)
-        };
-    }
-
-    function openCount(plan) {
-        return plan.tabs.length + plan.files.length + plan.archives.length;
-    }
-
-    function openEntries(entries) {
-        if (entries.length === 0)
-            return;
-        if (activePane.trashActive) {
-            offerRestore(entries);
-            return;
-        }
-        if (entries.length === 1) {
-            activate(entries[0]);
-            return;
-        }
-        const plan = openPlan(entries, SettingsData.extractOnOpen);
-        if (openCount(plan) <= FilesMetrics.openConfirmLimit) {
-            runOpenPlan(plan);
-            return;
-        }
-        openConfirmDialog.pending = plan;
-        openConfirmDialog.subject = String(entries.length);
-        openConfirmDialog.open();
-    }
-
-    function runOpenPlan(plan) {
-        for (const path of plan.tabs)
-            newTab(path, true);
-        if (plan.files.length > 0)
-            AppsService.open(plan.files, response => window.reportError(response));
-        for (const path of plan.archives)
-            extractBeside(path, "reveal");
-        if (plan.folder !== "")
-            activePane.navigate(plan.folder);
-    }
-
-    function extractBeside(path, follow) {
-        extractTo([path], FilePaths.parentOf(path), follow);
-    }
-
-    function extractTo(paths, dest, follow) {
-        const pending = pendingExtracts;
-        for (const path of paths)
-            pending[path] = follow;
-        pendingExtracts = pending;
-        FileOpsService.extract(paths, dest, opScope);
-    }
-
-    function askExtractTo(paths) {
-        if (paths.length === 0)
-            return;
-        extractPickerLoader.active = true;
-        extractPickerLoader.item.archives = paths;
-        extractPickerLoader.item.open();
-    }
-
-    function takeExtractFollow(sources) {
-        const pending = pendingExtracts;
-        let follow = "reveal";
-        for (const source of sources) {
-            if (pending[source])
-                follow = pending[source];
-            delete pending[source];
-        }
-        pendingExtracts = pending;
-        return follow;
-    }
-
-    function handleExtracted(job) {
-        const follow = takeExtractFollow(job.sources);
-        const created = job.created ?? [];
-        if (job.cancelled || created.length === 0)
-            return;
-        const paths = created.map(entry => entry.path);
-        const dest = FilePaths.parentOf(paths[0]);
-        const stillHere = dest === activePane.path && !activePane.resultsActive;
-        if (stillHere && follow === "enter" && created.length === 1 && created[0].dir) {
-            activePane.navigate(paths[0]);
-            undoToast(I18n.tr("Extracted", "toast after unpacking an archive"));
-            return;
-        }
-        if (stillHere) {
-            activePane.reveal(paths);
-            undoToast(I18n.tr("Extracted", "toast after unpacking an archive"));
-            return;
-        }
-        ToastService.show(I18n.tr("Extracted to %1", "toast after unpacking into another folder, %1 is the folder name").arg(FilePaths.baseName(dest)), {
-            "actionLabel": I18n.tr("Show", "toast action revealing the extracted files"),
-            "action": () => activePane.reveal(paths)
-        });
-    }
-
-    function undoToast(message) {
-        ToastService.show(message, {
-            "actionLabel": I18n.tr("Undo", "toast action reversing the last operation"),
-            "action": () => FileOpsService.undo(opScope)
-        });
-    }
-
-    function handleReplayed(job) {
-        if (job.cancelled)
-            return;
-        if (job.replay === "redo") {
-            if (job.undoable)
-                undoToast(I18n.tr("Redone", "toast after repeating an undone operation"));
-            return;
-        }
-        const message = I18n.tr("Undone", "toast after reversing an operation");
-        if (!job.redoable) {
-            ToastService.info(message);
-            return;
-        }
-        ToastService.show(message, {
-            "actionLabel": I18n.tr("Redo", "toast action repeating the operation that was just undone"),
-            "action": () => FileOpsService.redo(opScope)
-        });
-    }
-
-    function duplicateSelection() {
-        const paths = selectedPaths();
-        if (paths.length === 0 || activePane.resultsActive)
-            return;
-        FileOpsService.duplicate(paths, opScope);
-    }
-
-    function newFolderWithSelection() {
-        const paths = selectedPaths();
-        if (paths.length === 0 || activePane.resultsActive)
-            return;
-        FileOpsService.newFolderWith(paths, currentPath, I18n.tr("Untitled folder", "default name for a new folder"), opScope, true);
-    }
-
-    function askTransferTo(paths, move) {
-        if (paths.length === 0)
-            return;
-        transferPickerLoader.active = true;
-        transferPickerLoader.item.paths = paths;
-        transferPickerLoader.item.move = move;
-        transferPickerLoader.item.open();
-    }
-
-    function transferTo(dest) {
-        const picker = transferPickerLoader.item;
-        FileOpsService.lastDestination = dest;
-        if (picker.move) {
-            FileOpsService.move(picker.paths, dest, opScope);
-            return;
-        }
-        FileOpsService.copy(picker.paths, dest, opScope);
-    }
-
-    function revealNew(job) {
-        const paths = (job.created ?? []).map(entry => entry.path);
-        if (paths.length === 0)
-            return;
-        const dir = FilePaths.parentOf(paths[0]);
-        const pane = [activePane, primaryPane, secondPane].find(candidate => candidate?.path === dir && !candidate.resultsActive);
-        pane?.reveal(paths);
-    }
-
-    function openWithCurrent() {
-        const paths = selectedPaths();
-        if (paths.length === 0)
-            return;
-        openWithDialog.ask([], paths);
-    }
-
-    function openContainingFolder() {
-        const entry = firstSelected();
-        if (!entry)
-            return;
-        activePane.reveal(entry.path);
-    }
-
-    function selectionIsExtractable() {
-        const entries = selectedEntries();
-        return entries.length > 0 && entries.every(entry => !entry.isDir && FilesFormat.extractable(entry.mime));
-    }
-
-    function showNewDocumentMenu() {
-        newDocumentMenu.templates = [];
-        const dir = DirectoryService.templatesDir;
-        if (dir !== "") {
-            DirectoryService.list(dir, {
-                "limit": 100
-            }, result => {
-                if (result.error)
-                    return;
-                newDocumentMenu.templates = (result.entries || []).filter(entry => !entry.isDir);
-            });
-        }
-        openWithMenu.close();
-        itemMenu.close();
-        newDocumentMenu.openAt(backgroundMenu.x, backgroundMenu.y);
-    }
-
-    function createDocument(template) {
-        const name = template ? template.name : I18n.tr("Untitled document", "default name for a new empty file");
-        FileOpsService.newFile(currentPath, name, template?.path ?? "", opScope, true);
-    }
-
-    function revealCreated(job) {
-        const created = job.created?.[0]?.path ?? "";
-        if (created === "")
-            return;
-        const dir = FilePaths.parentOf(created);
-        const pane = [activePane, primaryPane, secondPane].find(candidate => candidate?.path === dir);
-        pane?.revealAndRename(created);
-    }
-
-    function showBookmarkMenu(path, source, pointX, pointY) {
-        bookmarkMenu.path = path;
-        const point = source.mapToItem(surface, pointX, pointY);
-        bookmarkMenu.openAt(point.x, point.y);
-    }
-
-    function openTerminalHere() {
-        AppsService.openTerminal(currentPath, response => window.reportError(response));
-    }
-
-    function showItemMenu(pointX, pointY, modifiers) {
-        activeModifiers = modifiers ?? Qt.NoModifier;
-        openWithMenu.close();
-        backgroundMenu.close();
-        const point = activePane.mapToItem(surface, pointX, pointY);
-        itemMenu.openAt(point.x, point.y);
-    }
-
-    function showColumnsMenu(pointX, pointY) {
-        itemMenu.close();
-        backgroundMenu.close();
-        const point = activePane.mapToItem(surface, pointX, pointY);
-        columnsMenu.openAt(point.x, point.y);
-    }
-
-    function toggleColumn(id) {
-        const shown = SessionData.listColumns;
-        SessionData.listColumns = shown.includes(id) ? shown.filter(entry => entry !== id) : shown.concat([id]);
-    }
-
-    function showBackgroundMenu(pointX, pointY) {
-        openWithMenu.close();
-        itemMenu.close();
-        const point = activePane.mapToItem(surface, pointX, pointY);
-        backgroundMenu.openAt(point.x, point.y);
-    }
-
-    function showOpenWithMenu(mimes, paths, source) {
-        if (paths.length === 0)
-            return;
-        openWithMenu.mimes = mimes;
-        openWithMenu.paths = paths;
-        openWithMenu.apps = [];
-        itemMenu.close();
-        backgroundMenu.close();
-        openWithMenu.openAt(source.x, source.y);
-        const token = ++openWithMenu.requestSerial;
-        AppsService.sections(mimes, paths, response => {
-            if (response.error || token !== openWithMenu.requestSerial || !openWithMenu.visible)
-                return;
-            openWithMenu.mimes = response.mimeTypes || [];
-            const recommended = response.recommended || [];
-            const preferred = recommended.find(app => app.isDefault === true);
-            const rest = recommended.filter(app => app !== preferred);
-            openWithMenu.apps = (preferred ? [preferred] : []).concat(response.recent || [], rest).slice(0, 5);
-        });
-    }
-
-    function trashSelection() {
-        const paths = selectedPaths();
-        trashPaths(paths, paths.length === 1 ? firstSelected().name : FileFormat.count(paths.length));
-    }
-
-    function trashPaths(paths, subject) {
-        if (paths.length === 0)
-            return;
-        if (!SettingsData.confirmTrash) {
-            FileOpsService.trash(paths, opScope);
-            return;
-        }
-        trashConfirmDialog.pending = paths;
-        trashConfirmDialog.subject = subject;
-        trashConfirmDialog.open();
-    }
-
-    function trashDropped(paths) {
-        const outside = paths.filter(path => !TrashService.holds(path));
-        trashPaths(outside, outside.length === 1 ? FilePaths.baseName(outside[0]) : FileFormat.count(outside.length));
-    }
-
-    function restoreEntries(entries) {
-        const byDir = ({});
-        for (const entry of entries) {
-            if (!entry.trashDir)
-                continue;
-            byDir[entry.trashDir] = (byDir[entry.trashDir] ?? []).concat([entry.trashName]);
-        }
-        for (const dir in byDir)
-            FileOpsService.restore(byDir[dir], dir, opScope);
-    }
-
-    function offerRestore(entries) {
-        const items = entries.map(entry => ({
-                    "trashDir": entry.trashDir,
-                    "trashName": entry.trashName
-                }));
-        ToastService.show(I18n.tr("Items in the trash cannot be opened", "toast when opening an item inside the trash"), {
-            "actionLabel": I18n.tr("Restore", "trash action returning items to where they were deleted from"),
-            "action": () => window.restoreEntries(items)
-        });
-    }
-
-    function confirmEmptyTrash() {
-        if (TrashService.count === 0)
-            return;
-        emptyTrashDialog.subject = FileFormat.count(TrashService.count);
-        emptyTrashDialog.open();
-    }
-
-    function showTrashMenu(source, pointX, pointY) {
-        const point = source.mapToItem(surface, pointX, pointY);
-        trashMenu.openAt(point.x, point.y);
-    }
-
-    function deleteSelection() {
-        const paths = selectedPaths();
-        if (paths.length === 0)
-            return;
-        confirmDialog.pending = paths;
-        confirmDialog.subject = paths.length === 1 ? firstSelected().name : FileFormat.count(paths.length);
-        confirmDialog.open();
-    }
-
-    function renameSelection() {
-        const entry = firstSelected();
-        if (!entry)
-            return;
-        activePane.beginRename(entry.path);
-    }
-
-    function pasteInto(dest, asLink) {
-        ClipboardService.read(result => {
-            if (result.paths.length === 0) {
-                if (!asLink)
-                    FileOpsService.pasteImage(dest, I18n.tr("Pasted image", "file name for an image pasted from the clipboard"), window.opScope);
-                return;
-            }
-            if (asLink) {
-                FileOpsService.link(result.paths, dest, window.opScope);
-                return;
-            }
-            if (result.cut) {
-                FileOpsService.move(result.paths, dest, window.opScope);
-                ClipboardService.clear();
-                return;
-            }
-            FileOpsService.copy(result.paths, dest, window.opScope);
-        });
-    }
-
-    function showProperties() {
-        const entries = selectedEntries();
-        if (entries.length > 0) {
-            propertiesDialog.show(entries);
-            return;
-        }
-        showPropertiesFor([currentPath]);
-    }
-
-    function connectRemote(uri, password) {
-        NetworkService.connectTo(uri, result => {
-            const path = connectDialog.localPath(result);
-            if (path === "") {
-                connectDialog.showFailure(uri, result);
-                return;
-            }
-            window.openPath(path, true);
-        }, password);
-    }
-
-    function openTypedLocation(pane, location) {
-        if (location.kind !== "remote") {
-            connectDialog.ask();
-            return;
-        }
-        const request = ++pane.connectRequest;
-        NetworkService.connectTo(location.uri, result => {
-            if (!pane || request !== pane.connectRequest)
-                return;
-            const path = connectDialog.localPath(result);
-            pane.settleLocation(path);
-            if (path === "" && !result.error)
-                connectDialog.showFailure(location.uri, result);
-        }, location.password);
     }
 
     function dismissEditors(position) {
@@ -1462,109 +249,6 @@ FloatingWindow {
         const local = topbar.mapFromItem(surface, position.x, position.y);
         if (!topbar.searchContains(local.x, local.y))
             activePane.focusBody();
-    }
-
-    function openRecentFolder(path) {
-        DirectoryService.resolveLocation(path, currentPath, result => {
-            if (result.error) {
-                if (result.code === "ENOENT")
-                    FolderHistory.forget(path);
-                ToastService.info(FileFormat.operationError(result.code, result.error));
-                return;
-            }
-            window.openLocation(result.location, false);
-            window.activePane.focusBody();
-        });
-    }
-
-    function showPropertiesFor(paths) {
-        const request = ++propertiesRequest;
-        const entries = [];
-        let pending = paths.length;
-        paths.forEach((path, index) => DankFilesService.sendRequest("files.stat", {
-                "path": path
-            }, response => {
-                if (request !== window.propertiesRequest)
-                    return;
-                pending--;
-                if (response.error)
-                    ToastService.info(FileFormat.operationError(response.code, response.error));
-                entries[index] = (response.result || {}).entry ?? null;
-                if (pending > 0)
-                    return;
-                const found = entries.filter(entry => entry);
-                if (found.length > 0)
-                    propertiesDialog.show(found);
-            }));
-    }
-
-    function applyDrop(paths, dest, action) {
-        if (dest === TrashService.filesPath) {
-            trashDropped(paths);
-            return;
-        }
-        switch (action) {
-        case "copy":
-            FileOpsService.copy(paths, dest, opScope);
-            return;
-        case "move":
-            if (DragService.allInside(paths, dest))
-                return;
-            FileOpsService.move(paths, dest, opScope);
-            return;
-        case "ask":
-            dropMenu.present(paths, dest);
-            return;
-        }
-        if (SettingsData.dragAction !== "auto") {
-            applyDrop(paths, dest, SettingsData.dragAction);
-            return;
-        }
-        DragService.plainDrop(paths, dest, resolved => window.applyDrop(paths, dest, resolved));
-    }
-
-    function beginDrag(paths) {
-        if (paths.length === 0)
-            return;
-        const entry = window.firstSelected();
-        DragService.begin(paths, currentPath);
-        dragGhost.count = paths.length;
-        dragGhost.iconName = entry?.iconName ?? "";
-        dragGhost.thumbnail = entry?.thumbnail ?? "";
-        dragGhost.mime = entry?.mime ?? "";
-        dragGhost.path = entry?.path ?? "";
-        dragGhost.isDir = entry?.isDir ?? false;
-        dragSource.Drag.mimeData = DragService.mimeData();
-        dragGhost.grabToImage(result => {
-            dragSource.Drag.imageSource = result.url;
-            dragSource.Drag.active = true;
-            dragSource.Drag.startDrag();
-            dragSource.Drag.active = false;
-            DragService.end();
-        });
-    }
-
-    function toastFor(job) {
-        switch (job.kind) {
-        case "trash":
-            return I18n.tr("Moved to trash", "toast after trashing files");
-        case "restore":
-            return I18n.tr("Restored", "toast after restoring items from the trash");
-        case "move":
-            return I18n.tr("Moved", "toast after moving files");
-        case "copy":
-            return I18n.tr("Copied", "toast after copying files");
-        case "rename":
-            return I18n.tr("Renamed", "toast after renaming a file");
-        case "compress":
-            return I18n.tr("Archive created", "toast after compressing files");
-        case "duplicate":
-            return I18n.tr("Duplicated", "toast after copying files beside themselves");
-        case "pasteImage":
-            return I18n.tr("Image pasted", "toast after writing a clipboard image into the folder");
-        default:
-            return "";
-        }
     }
 
     Connections {
@@ -1610,10 +294,6 @@ FloatingWindow {
         function onRequestFailed(message, code) {
             ToastService.info(FileFormat.operationError(code, message));
         }
-
-        function onAskRequested(ask) {
-            credentialDialog.present(ask);
-        }
     }
 
     Connections {
@@ -1634,55 +314,17 @@ FloatingWindow {
         function onRequestFailed(message) {
             ToastService.info(message);
         }
-
-        function onJobFinished(job) {
-            if (job.kind === "setPermissions" && window.pendingTrust !== "") {
-                const target = window.pendingTrust;
-                window.pendingTrust = "";
-                if (job.state !== "failed")
-                    AppsService.run(target, response => window.reportError(response));
-            }
-            if (job.state === "failed") {
-                if (job.kind === "extract")
-                    window.takeExtractFollow(job.sources);
-                ToastService.info(FileFormat.operationError(job.code, job.error));
-                return;
-            }
-            DevicesService.refreshUsage(true);
-            if (job.scope !== window.opScope)
-                return;
-            if (job.replay) {
-                window.handleReplayed(job);
-                return;
-            }
-            switch (job.kind) {
-            case "extract":
-                window.handleExtracted(job);
-                return;
-            case "newFolder":
-            case "newFile":
-            case "newFolderWith":
-                window.revealCreated(job);
-                return;
-            case "duplicate":
-            case "pasteImage":
-                window.revealNew(job);
-                break;
-            }
-            if (job.cancelled || !job.undoable)
-                return;
-            const message = window.toastFor(job);
-            if (message === "")
-                return;
-            window.undoToast(message);
-        }
     }
 
-    Timer {
-        id: vimPrefixTimer
+    TabManager {
+        id: tabManager
 
-        interval: FileBrowserMetrics.typeAheadInterval
-        onTriggered: window.vimPrefix = ""
+        panes: window.panes
+        activePane: window.activePane
+        activePaneIndex: window.activePaneIndex
+        primary: window.primary
+        onActivePaneRequested: index => window.activePaneIndex = index
+        onDropRequested: (paths, dest, action) => window.drag.applyDrop(paths, dest, action)
     }
 
     FloatingWindowControls {
@@ -1691,40 +333,39 @@ FloatingWindow {
         targetWindow: window
     }
 
-    Component {
-        id: secondPaneComponent
+    component WindowPane: FilesPane {
+        id: pane
 
-        FilesPane {
-            id: splitPane
+        property int paneIndex: 0
 
-            active: window.activePaneIndex === 1
-            showHidden: window.showHidden
-            previewOpen: window.previewOpen
-            showActiveOutline: window.splitView
-            cutSet: window.cutSet
-            onActivateRequested: entry => window.activate(entry)
-            onOpenRequested: entries => window.openEntries(entries)
-            onTabRequested: path => window.newTab(path, true)
-            onPathMenuRequested: (path, pointX, pointY) => pathMenu.present(path, splitPane, pointX, pointY)
-            onItemMenuRequested: (index, pointX, pointY, modifiers) => window.showItemMenu(pointX, pointY, modifiers)
-            onBackgroundMenuRequested: (pointX, pointY) => window.showBackgroundMenu(pointX, pointY)
-            onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
-            onDragRequested: paths => window.beginDrag(paths)
-            onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
-            onSortRequested: key => splitPane.toggleSort(key)
-            onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
-            onFocusRequested: window.activePaneIndex = 1
-            onPreviewToggleRequested: window.runAction("togglePreview")
-            onLocationRequested: location => window.openTypedLocation(splitPane, location)
-            onRestoreRequested: window.runAction("restore")
-            onEmptyTrashRequested: window.runAction("emptyTrash")
-            onFilterRequested: text => topbar.openFilter(text)
-            onFilterFocusRequested: topbar.focusFilter()
-            onPathChanged: {
-                window.captureTabs();
-                if (!window.applyingTab)
-                    FolderHistory.visit(path);
-            }
+        active: window.activePaneIndex === paneIndex
+        showHidden: window.showHidden
+        previewOpen: window.previewOpen
+        showActiveOutline: window.splitView
+        cutSet: window.cutSet
+        onActivateRequested: entry => window.openFlow.activate(entry)
+        onOpenRequested: entries => window.openFlow.openEntries(entries)
+        onTabRequested: path => window.tabManager.newTab(path, true)
+        onPathMenuRequested: (path, pointX, pointY) => window.menus.presentPlaceMenu("folder", path, pane, pointX, pointY)
+        onItemMenuRequested: (index, pointX, pointY, modifiers) => window.menus.showItemMenu(pointX, pointY, modifiers)
+        onBackgroundMenuRequested: (pointX, pointY) => window.menus.showBackgroundMenu(pointX, pointY)
+        onDropRequested: (paths, dest, action) => window.drag.applyDrop(paths, dest, action)
+        onDragRequested: paths => window.drag.beginDrag(paths, window.firstSelected())
+        onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
+        onSortRequested: key => pane.toggleSort(key)
+        onColumnsMenuRequested: (pointX, pointY) => window.menus.showColumnsMenu(pointX, pointY)
+        onFocusRequested: window.activePaneIndex = paneIndex
+        onPreviewToggleRequested: window.actions.runAction("togglePreview")
+        onServerDialogRequested: window.dialogs.askServer()
+        onConnectFailed: (uri, result) => window.dialogs.showServerFailure(uri, result)
+        onRestoreRequested: window.actions.runAction("restore")
+        onEmptyTrashRequested: window.actions.runAction("emptyTrash")
+        onFilterRequested: text => topbar.openFilter(text)
+        onFilterFocusRequested: topbar.focusFilter()
+        onPathChanged: {
+            window.tabManager.captureTabs();
+            if (!window.tabManager.applyingTab)
+                FolderHistory.visit(path);
         }
     }
 
@@ -1746,9 +387,7 @@ FloatingWindow {
             acceptedModifiers: Qt.NoModifier
             enabled: !window.dialogOpen
             onWheel: event => {
-                const point = sidebarSlot.mapFromItem(surface, event.x, event.y);
-                const overSidebar = window.sidebarDocked && point.x >= 0 && point.x <= sidebarSlot.width && point.y >= 0;
-                forwardedScroller = overSidebar ? dockedSidebar : window.activePane.scroller;
+                forwardedScroller = sidebarHost.dockedScrollerAt(surface, event.x, event.y) ?? window.activePane.scroller;
                 if (!forwardedScroller?.forwardWheel) {
                     event.accepted = false;
                     return;
@@ -1777,24 +416,18 @@ FloatingWindow {
         Keys.onPressed: event => {
             if (window.textEditing)
                 return;
-            if (!window.sidebarFocused && !window.isInside(surface.focusItem, window.activePane)) {
+            if (!window.sidebarFocused && !ItemTree.isInside(surface.focusItem, window.activePane)) {
                 window.activePane.handleStrayKey(event);
                 if (event.accepted)
                     return;
             }
             switch (event.key) {
-            case Qt.Key_Question:
-                window.runAction("shortcuts");
-                break;
-            case Qt.Key_Slash:
-                window.runAction("search");
-                break;
             case Qt.Key_Escape:
                 if (!window.escapeBack())
                     return;
                 break;
             default:
-                if (!window.handleVimKey(event))
+                if (!window.actions.handleVimKey(event))
                     return;
             }
             event.accepted = true;
@@ -1810,127 +443,8 @@ FloatingWindow {
             title: window.title
             onCloseRequested: window.requestClose()
 
-            DActionButton {
-                id: jobsButton
-
+            JobsButton {
                 anchors.verticalCenter: parent.verticalCenter
-                visible: FileOpsService.jobs.length > 0
-                iconName: FileOpsService.activeCount > 0 ? "sync" : "check_circle"
-                buttonSize: Theme.buttonHeightXXS
-                iconSize: Theme.iconSizeSmall
-                iconColor: Theme.surfaceText
-                tooltipText: I18n.tr("File operations", "jobs popover header")
-                onClicked: jobsPopover.visible ? jobsPopover.close() : jobsPopover.open()
-
-                JobsPopover {
-                    id: jobsPopover
-
-                    y: jobsButton.height + Theme.spacingXS
-                    x: jobsButton.width - width
-                }
-            }
-        }
-
-        Item {
-            id: sidebarSlot
-
-            readonly property real maximumWidth: Math.max(FilesMetrics.sidebarMinWidth, surface.width - FilesMetrics.windowMinWidth)
-            property real preferredWidth: CacheData.sidebarWidth
-
-            anchors.top: header.bottom
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            width: window.sidebarDocked ? Math.max(FilesMetrics.sidebarMinWidth, Math.min(maximumWidth, preferredWidth)) : 0
-            clip: true
-
-            Connections {
-                target: CacheData
-
-                function onSidebarWidthChanged() {
-                    if (!sidebarResizeArea.pressed)
-                        sidebarSlot.preferredWidth = CacheData.sidebarWidth;
-                }
-            }
-
-            Behavior on width {
-                enabled: Theme.animationsEnabled && !sidebarResizeArea.pressed
-                NumberAnimation {
-                    duration: Theme.expressiveDurations.expressiveFastSpatial
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Theme.expressiveCurves.standard
-                }
-            }
-
-            Sidebar {
-                id: dockedSidebar
-
-                anchors.fill: parent
-                anchors.margins: FilesMetrics.sidebarPadding
-                visible: parent.width > 0
-                currentPath: window.currentPath
-                onVisibleChanged: {
-                    if (visible)
-                        window.sidebarShown(dockedSidebar);
-                }
-                onNavigateRequested: path => window.openPath(path, false)
-                onTabRequested: path => window.newTab(path, true)
-                onUnlockRequested: device => unlockDialog.ask(device)
-                onConnectRequested: connectDialog.ask()
-                onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, dockedSidebar, pointX, pointY)
-                onTrashMenuRequested: (pointX, pointY) => window.showTrashMenu(dockedSidebar, pointX, pointY)
-                onBookmarkRenameRequested: path => window.renameBookmark(path)
-                onLeaveRequested: window.leaveSidebar()
-                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.overrideFor(drop.proposedAction))
-            }
-        }
-
-        Item {
-            id: sidebarResizer
-
-            anchors.left: sidebarSlot.right
-            anchors.leftMargin: -width / 2
-            anchors.top: header.bottom
-            anchors.bottom: parent.bottom
-            width: FilesMetrics.splitterWidth
-            visible: window.sidebarDocked
-            z: 1
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: Theme.outlineWidthFocused
-                height: FilesMetrics.splitterHandleHeight
-                radius: Theme.cornerRadiusFull
-                color: Theme.primary
-                visible: sidebarResizeArea.containsMouse || sidebarResizeArea.pressed
-            }
-
-            MouseArea {
-                id: sidebarResizeArea
-
-                property real pressX: 0
-                property real startWidth: 0
-
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.SplitHCursor
-                acceptedButtons: Qt.LeftButton
-                onPressed: mouse => {
-                    pressX = mapToItem(surface, mouse.x, 0).x;
-                    startWidth = sidebarSlot.width;
-                }
-                onPositionChanged: mouse => {
-                    if (!pressed)
-                        return;
-                    const delta = mapToItem(surface, mouse.x, 0).x - pressX;
-                    const width = startWidth + (I18n.isRtl ? -delta : delta);
-                    sidebarSlot.preferredWidth = Math.max(FilesMetrics.sidebarMinWidth, Math.min(sidebarSlot.maximumWidth, width));
-                }
-                onReleased: CacheData.sidebarWidth = Math.round(sidebarSlot.preferredWidth)
-                onCanceled: sidebarSlot.preferredWidth = CacheData.sidebarWidth
-                onDoubleClicked: {
-                    sidebarSlot.preferredWidth = FilesMetrics.sidebarWidth;
-                    CacheData.sidebarWidth = Math.round(FilesMetrics.sidebarWidth);
-                }
             }
         }
 
@@ -1939,11 +453,11 @@ FloatingWindow {
 
             anchors.top: header.bottom
             anchors.bottom: parent.bottom
-            anchors.left: sidebarSlot.right
+            anchors.left: parent.left
             anchors.right: parent.right
             anchors.topMargin: FilesMetrics.contentMarginV
             anchors.bottomMargin: FilesMetrics.contentMarginV
-            anchors.leftMargin: FilesMetrics.contentMarginH
+            anchors.leftMargin: FilesMetrics.contentMarginH + sidebarHost.dockedWidth
             anchors.rightMargin: FilesMetrics.contentMarginH
 
             TabRow {
@@ -1952,17 +466,17 @@ FloatingWindow {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                visible: window.tabs.length > 1
+                visible: window.tabManager.tabs.length > 1
                 height: visible ? implicitHeight : 0
-                tabs: window.tabs.map(state => window.tabLabel(state))
-                currentIndex: window.currentTab
-                onTabSelected: index => window.selectTab(index)
-                onTabClosed: index => window.closeTab(index)
-                onTabAdded: window.newTab("", false)
-                onTabDropHovered: index => window.selectTab(index)
-                onTabDropped: (index, drop) => window.dropOnTab(index, drop)
-                onTabMoved: (from, to) => window.moveTab(from, to)
-                onTabMenuRequested: (index, pointX, pointY) => tabMenu.present(index, tabRow, pointX, pointY)
+                tabs: window.tabManager.tabs.map(state => window.tabManager.tabLabel(state))
+                currentIndex: window.tabManager.currentTab
+                onTabSelected: index => window.tabManager.selectTab(index)
+                onTabClosed: index => window.tabManager.closeTab(index)
+                onTabAdded: window.tabManager.newTab("", false)
+                onTabDropHovered: index => window.tabManager.selectTab(index)
+                onTabDropped: (index, drop) => window.tabManager.dropOnTab(index, drop)
+                onTabMoved: (from, to) => window.tabManager.moveTab(from, to)
+                onTabMenuRequested: (index, pointX, pointY) => window.menus.presentTabMenu(index, tabRow, pointX, pointY)
             }
 
             FilesTopbar {
@@ -1976,10 +490,10 @@ FloatingWindow {
                 bookmarked: BookmarksService.has(window.currentPath)
                 backEnabled: window.activePane.canGoBack
                 forwardEnabled: window.activePane.canGoForward
-                sortKey: window.activePane.resultsActive ? window.activePane.searchModel.sortKey : window.activePane.trashView?.model.sortKey ?? window.activePane.sortKey
-                sortDescending: window.activePane.resultsActive ? window.activePane.searchModel.sortDescending : window.activePane.trashView?.model.sortDescending ?? window.activePane.sortDescending
+                sortKey: window.activePane.effectiveSortKey
+                sortDescending: window.activePane.effectiveSortDescending
                 resultsActive: window.activePane.resultsActive
-                compact: window.compact
+                compact: sidebarHost.compact
                 viewMode: window.activePane.viewMode
                 folderRemembered: window.activePane.folderRemembered
                 folderHasSettings: window.activePane.hasFolderSettings
@@ -1993,26 +507,32 @@ FloatingWindow {
                     window.activePane.closeSearch();
                     window.activePane.focusBody();
                 }
-                onNavigateRequested: path => window.openRecentFolder(path)
-                onResultsRequested: window.enterFilterResults()
-                onSettingsRequested: window.openSettings()
-                onShortcutsRequested: window.runAction("shortcuts")
-                onSidebarToggled: window.toggleSidebar()
+                onLocationRequested: location => {
+                    window.openLocation(location, false);
+                    window.activePane.focusBody();
+                }
+                onResultsRequested: {
+                    window.activePane.focusBody();
+                    window.activePane.body.jumpTo(0, Qt.NoModifier);
+                }
+                onSettingsRequested: window.dialogs.openSettings()
+                onShortcutsRequested: window.actions.runAction("shortcuts")
+                onSidebarToggled: sidebarHost.toggle()
                 onBackRequested: window.activePane.back()
                 onForwardRequested: window.activePane.forward()
                 onSplitToggled: window.toggleSplit()
-                onBookmarkToggled: window.runAction("bookmark")
-                onSortKeySelected: key => window.selectSortKey(key)
-                onSortDirectionToggled: window.toggleSortDirection()
-                onCopyPathRequested: window.copyText(window.currentPath)
-                onViewModeSelected: mode => window.setViewMode(mode)
+                onBookmarkToggled: window.actions.runAction("bookmark")
+                onSortKeySelected: key => window.activePane.sortBy(key)
+                onSortDirectionToggled: window.activePane.flipSort()
+                onCopyPathRequested: window.actions.copyText(window.currentPath)
+                onViewModeSelected: mode => window.activePane.setViewMode(mode)
                 onUseForAllFoldersRequested: window.useForAllFolders()
                 onResetFolderRequested: window.activePane.resetFolder()
-                onPreviewToggled: window.runAction("togglePreview")
-                onReloadRequested: window.runAction("reload")
-                onTerminalRequested: window.runAction("openTerminal")
-                onPropertiesRequested: window.runAction("properties")
-                onNewWindowRequested: window.runAction("newWindow")
+                onPreviewToggled: window.actions.runAction("togglePreview")
+                onReloadRequested: window.actions.runAction("reload")
+                onTerminalRequested: window.actions.runAction("openTerminal")
+                onPropertiesRequested: window.actions.runAction("properties")
+                onNewWindowRequested: window.actions.runAction("newWindow")
             }
 
             Item {
@@ -2026,41 +546,13 @@ FloatingWindow {
 
                 readonly property real usableWidth: width - (window.splitView ? FilesMetrics.splitterWidth : 0)
 
-                FilesPane {
+                WindowPane {
                     id: primaryPane
 
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     anchors.left: parent.left
                     width: window.splitView ? panesRow.usableWidth * window.splitRatio : panesRow.width
-                    active: window.activePaneIndex === 0
-                    showHidden: window.showHidden
-                    previewOpen: window.previewOpen
-                    showActiveOutline: window.splitView
-                    cutSet: window.cutSet
-                    onActivateRequested: entry => window.activate(entry)
-                    onOpenRequested: entries => window.openEntries(entries)
-                    onTabRequested: path => window.newTab(path, true)
-                    onPathMenuRequested: (path, pointX, pointY) => pathMenu.present(path, primaryPane, pointX, pointY)
-                    onItemMenuRequested: (index, pointX, pointY, modifiers) => window.showItemMenu(pointX, pointY, modifiers)
-                    onBackgroundMenuRequested: (pointX, pointY) => window.showBackgroundMenu(pointX, pointY)
-                    onDropRequested: (paths, dest, action) => window.applyDrop(paths, dest, action)
-                    onDragRequested: paths => window.beginDrag(paths)
-                    onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
-                    onSortRequested: key => primaryPane.toggleSort(key)
-                    onColumnsMenuRequested: (pointX, pointY) => window.showColumnsMenu(pointX, pointY)
-                    onFocusRequested: window.activePaneIndex = 0
-                    onPreviewToggleRequested: window.runAction("togglePreview")
-                    onLocationRequested: location => window.openTypedLocation(primaryPane, location)
-                    onRestoreRequested: window.runAction("restore")
-                    onEmptyTrashRequested: window.runAction("emptyTrash")
-                    onFilterRequested: text => topbar.openFilter(text)
-                    onFilterFocusRequested: topbar.focusFilter()
-                    onPathChanged: {
-                        window.captureTabs();
-                        if (!window.applyingTab)
-                            FolderHistory.visit(path);
-                    }
                 }
 
                 PaneSplitter {
@@ -2082,96 +574,40 @@ FloatingWindow {
                     anchors.left: splitter.right
                     anchors.right: parent.right
                     active: window.splitView
-                    sourceComponent: secondPaneComponent
+                    sourceComponent: WindowPane {
+                        paneIndex: 1
+                    }
+                    onLoaded: {
+                        if (window.tabManager.tabs.length === 0)
+                            return;
+                        const stored = window.tabManager.tabState(window.tabManager.currentTab)?.panes?.[1];
+                        item.restoreState(stored ?? {
+                            "path": primaryPane.path
+                        });
+                    }
                 }
             }
         }
 
-        Rectangle {
+        WindowSidebarHost {
+            id: sidebarHost
+
             anchors.top: header.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            visible: opacity > 0
-            opacity: window.sidebarOverlayOpen ? 1 : 0
-            color: Theme.withAlpha(Theme.scrimColor, Theme.scrimAlpha)
-
-            Behavior on opacity {
-                enabled: Theme.animationsEnabled
-                NumberAnimation {
-                    duration: Theme.shortDuration
-                    easing.type: Theme.standardEasing
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: window.sidebarOverlayOpen = false
-            }
+            mainWindow: window
+            focusItem: surface.focusItem
         }
 
-        Rectangle {
-            id: sidebarOverlay
+        DragController {
+            id: drag
 
-            anchors.top: header.bottom
-            anchors.bottom: parent.bottom
-            width: Math.max(FilesMetrics.sidebarMinWidth, Math.min(window.width - FilesMetrics.contentMarginH * 2, CacheData.sidebarWidth))
-            visible: x > -width
-            x: window.sidebarOverlayOpen ? 0 : -width
-            color: Theme.surfaceContainerLow
-            onVisibleChanged: {
-                if (visible)
-                    window.sidebarShown(overlaySidebar);
-            }
-            topRightRadius: Theme.windowRadius
-            bottomRightRadius: Theme.windowRadius
-
-            DC.ElevationShadow {
-                anchors.fill: parent
-                z: -1
-                level: Theme.elevationLevel1
-                targetRadius: Theme.windowRadius
-                targetColor: sidebarOverlay.color
-                shadowEnabled: Theme.elevationEnabled
-            }
-
-            Behavior on x {
-                enabled: Theme.animationsEnabled
-                NumberAnimation {
-                    duration: Theme.expressiveDurations.expressiveDefaultSpatial
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Theme.expressiveCurves.expressiveDefaultSpatial
-                }
-            }
-
-            Sidebar {
-                id: overlaySidebar
-
-                anchors.fill: parent
-                anchors.margins: FilesMetrics.sidebarPadding
-                currentPath: window.currentPath
-                onNavigateRequested: path => {
-                    window.sidebarOverlayOpen = false;
-                    window.openPath(path, false);
-                }
-                onTabRequested: path => window.newTab(path, true)
-                onUnlockRequested: device => unlockDialog.ask(device)
-                onConnectRequested: connectDialog.ask()
-                onBookmarkMenuRequested: (path, pointX, pointY) => window.showBookmarkMenu(path, overlaySidebar, pointX, pointY)
-                onTrashMenuRequested: (pointX, pointY) => window.showTrashMenu(overlaySidebar, pointX, pointY)
-                onBookmarkRenameRequested: path => window.renameBookmark(path)
-                onLeaveRequested: window.leaveSidebar()
-                onDropRequested: (path, drop) => window.applyDrop(DragService.pathsFrom(drop), path, DragService.overrideFor(drop.proposedAction))
-            }
-        }
-
-        DragActionChip {
-            readonly property point pointer: FileDragHover.point
-
-            x: Math.max(0, Math.min(surface.width - width, pointer.x + dragGhost.width + Theme.spacingXS))
-            y: Math.max(0, Math.min(surface.height - height, pointer.y + (dragGhost.height - height) / 2))
-            visible: DragService.action !== "" && window.isInside(FileDragHover.area, surface)
-            action: DragService.action
+            anchors.fill: parent
+            anchorItem: surface
+            opScope: window.opScope
+            currentPath: window.currentPath
+            onTrashRequested: (paths, subject) => window.actions.trashPaths(paths, subject)
         }
 
         Item {
@@ -2195,9 +631,9 @@ FloatingWindow {
         Shortcut {
             required property var modelData
 
-            enabled: window.shortcutsEnabled
+            enabled: window.shortcutsEnabled && (modelData.id !== "contextMenu" || !(window.sidebarFocused || window.tabRowFocused))
             sequences: modelData.keys
-            onActivated: window.runAction(modelData.id)
+            onActivated: window.actions.runAction(modelData.id)
         }
     }
 
@@ -2209,7 +645,7 @@ FloatingWindow {
 
             enabled: window.shortcutsEnabled && !window.sidebarFocused && window.selectedPaths().length > 0
             sequences: modelData.keys
-            onActivated: window.runAction(modelData.id)
+            onActivated: window.actions.runAction(modelData.id)
         }
     }
 
@@ -2221,7 +657,7 @@ FloatingWindow {
 
             enabled: window.shortcutsEnabled
             sequence: "Alt+" + (index + 1)
-            onActivated: window.selectTab(index)
+            onActivated: window.tabManager.selectTab(index)
         }
     }
 
@@ -2233,566 +669,34 @@ FloatingWindow {
 
             enabled: !window.dialogOpen
             sequences: modelData.keys
-            onActivated: window.runAction(modelData.id)
+            onActivated: window.actions.runAction(modelData.id)
         }
     }
 
-    FileContextMenu {
-        id: itemMenu
+    WindowMenus {
+        id: menus
 
+        anchors.fill: parent
+        mainWindow: window
         anchorItem: surface
-        selectionCount: window.selectedPaths().length
-        hasDirectory: window.selectionIsDirectory()
-        hasFile: window.selectionIsFile()
-        hasClipboard: ClipboardService.hasFiles
-        shiftHeld: window.shiftHeld
-        extractable: window.selectionIsExtractable()
-        inResults: window.activePane.resultsActive
-        inTrash: window.activePane.trashActive
-        selectedBookmarked: window.selectionIsDirectory() && BookmarksService.has(window.selectedPaths()[0] ?? "")
-        selectedPlace: window.selectionIsDirectory() && BookmarksService.isPlace(window.selectedPaths()[0] ?? "")
-        onActionTriggered: id => window.runAction(id)
     }
 
-    FileMenu {
-        id: newDocumentMenu
+    WindowDialogs {
+        id: dialogs
 
-        property var templates: []
-
-        anchorItem: surface
-
-        FileMenuItem {
-            text: I18n.tr("Empty file", "new document menu entry creating a blank file")
-            iconName: "draft"
-            onClicked: {
-                newDocumentMenu.close();
-                window.createDocument(null);
-            }
-        }
-
-        Repeater {
-            model: newDocumentMenu.templates
-
-            FileMenuItem {
-                required property var modelData
-
-                text: modelData.displayName !== "" ? modelData.displayName : modelData.name
-                iconName: "description"
-                onClicked: {
-                    newDocumentMenu.close();
-                    window.createDocument(modelData);
-                }
-            }
-        }
+        mainWindow: window
     }
 
-    FileMenu {
-        id: bookmarkMenu
+    FileOpenFlow {
+        id: openFlow
 
-        property string path: ""
-
-        anchorItem: surface
-
-        FileMenuItem {
-            text: I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
-            iconName: "tab"
-            onClicked: {
-                bookmarkMenu.close();
-                window.newTab(bookmarkMenu.path, false);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Open in new window", "context menu entry opening a folder in another window")
-            iconName: "open_in_new"
-            onClicked: {
-                bookmarkMenu.close();
-                window.newWindowRequested([window.folderLocation(bookmarkMenu.path)]);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Rename", "rename dialog header")
-            iconName: "edit"
-            onClicked: {
-                bookmarkMenu.close();
-                window.renameBookmark(bookmarkMenu.path);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Remove bookmark", "tooltip on the bookmark button")
-            iconName: "bookmark_remove"
-            onClicked: {
-                bookmarkMenu.close();
-                BookmarksService.remove(bookmarkMenu.path);
-            }
-        }
+        mainWindow: window
     }
 
-    FileMenu {
-        id: tabMenu
+    WindowActions {
+        id: actions
 
-        property int index: -1
-
-        anchorItem: surface
-
-        function present(target, source, pointX, pointY) {
-            index = target;
-            const point = source.mapToItem(surface, pointX, pointY);
-            openAt(point.x, point.y);
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Duplicate tab", "tab context menu entry opening a copy of this tab beside it")
-            iconName: "tab_duplicate"
-            onClicked: {
-                tabMenu.close();
-                window.duplicateTab(tabMenu.index);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Reopen the closed tab", "keyboard shortcut")
-            iconName: "history"
-            enabled: window.closedTabs.length > 0
-            onClicked: {
-                tabMenu.close();
-                window.reopenTab();
-            }
-        }
-
-        FileMenuDivider {}
-
-        FileMenuItem {
-            text: I18n.tr("Close tab", "tooltip on the button closing a tab")
-            iconName: "close"
-            enabled: window.tabs.length > 1
-            onClicked: {
-                tabMenu.close();
-                window.closeTab(tabMenu.index);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Close other tabs", "tab context menu entry closing every tab but this one")
-            iconName: "tab_close"
-            enabled: window.tabs.length > 1
-            onClicked: {
-                tabMenu.close();
-                window.closeOtherTabs(tabMenu.index);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Close tabs to the right", "tab context menu entry closing the tabs after this one")
-            iconName: "tab_close_right"
-            enabled: tabMenu.index < window.tabs.length - 1
-            onClicked: {
-                tabMenu.close();
-                window.closeTabsToRight(tabMenu.index);
-            }
-        }
-    }
-
-    FileMenu {
-        id: pathMenu
-
-        property string path: ""
-
-        anchorItem: surface
-
-        function present(target, source, pointX, pointY) {
-            path = target;
-            const point = source.mapToItem(surface, pointX, pointY);
-            openAt(point.x, point.y);
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
-            iconName: "tab"
-            onClicked: {
-                pathMenu.close();
-                window.newTab(pathMenu.path, false);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Open in new window", "context menu entry opening a folder in another window")
-            iconName: "open_in_new"
-            onClicked: {
-                pathMenu.close();
-                window.newWindowRequested([window.folderLocation(pathMenu.path)]);
-            }
-        }
-
-        FileMenuDivider {}
-
-        FileMenuItem {
-            text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
-            iconName: "link"
-            onClicked: {
-                pathMenu.close();
-                window.copyText(pathMenu.path);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Properties", "menu entry showing details about the current folder")
-            iconName: "info"
-            onClicked: {
-                pathMenu.close();
-                window.showPropertiesFor([pathMenu.path]);
-            }
-        }
-    }
-
-    FileMenu {
-        id: columnsMenu
-
-        anchorItem: surface
-
-        Repeater {
-            model: FileColumns.optional
-
-            FileMenuItem {
-                required property var modelData
-
-                text: FileColumns.label(modelData.id)
-                checked: SessionData.listColumns.includes(modelData.id)
-                onClicked: {
-                    columnsMenu.close();
-                    window.toggleColumn(modelData.id);
-                }
-            }
-        }
-    }
-
-    FileContextMenu {
-        id: backgroundMenu
-
-        anchorItem: surface
-        forFolder: true
-        hasClipboard: ClipboardService.hasFiles
-        inTrash: window.activePane.trashActive
-        trashCount: TrashService.count
-        onActionTriggered: id => window.runAction(id)
-    }
-
-    FileMenu {
-        id: trashMenu
-
-        anchorItem: surface
-
-        FileMenuItem {
-            text: I18n.tr("Open in new tab", "context menu entry opening a folder in a new tab")
-            iconName: "tab"
-            onClicked: {
-                trashMenu.close();
-                window.newTab(TrashService.filesPath, false);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Open in new window", "context menu entry opening a folder in another window")
-            iconName: "open_in_new"
-            onClicked: {
-                trashMenu.close();
-                window.newWindowRequested([window.folderLocation(TrashService.filesPath)]);
-            }
-        }
-
-        FileMenuDivider {}
-
-        FileMenuItem {
-            text: I18n.tr("Empty Trash", "action deleting everything in the trash")
-            iconName: "delete_forever"
-            danger: true
-            enabled: TrashService.count > 0
-            onClicked: {
-                trashMenu.close();
-                window.confirmEmptyTrash();
-            }
-        }
-    }
-
-    FileMenu {
-        id: openWithMenu
-
-        property var apps: []
-        property var mimes: []
-        property var paths: []
-        property int requestSerial: 0
-
-        anchorItem: surface
-        onClosed: apps = []
-
-        Repeater {
-            model: openWithMenu.apps
-
-            FileMenuItem {
-                required property var modelData
-
-                text: modelData.name
-                checked: modelData.isDefault === true
-                onClicked: {
-                    openWithMenu.close();
-                    AppsService.openWith(openWithMenu.paths, modelData.id, response => window.reportError(response));
-                }
-            }
-        }
-
-        FileMenuDivider {
-            visible: openWithMenu.apps.length > 0
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Other application…", "open with menu entry opening the full application picker")
-            iconName: "more_horiz"
-            onClicked: {
-                openWithMenu.close();
-                openWithDialog.ask(openWithMenu.mimes, openWithMenu.paths);
-            }
-        }
-    }
-
-    Item {
-        id: dragSource
-
-        Drag.dragType: Drag.None
-        Drag.supportedActions: Qt.CopyAction | Qt.MoveAction | Qt.LinkAction
-    }
-
-    DragGhost {
-        id: dragGhost
-
-        x: -width * 2
-        y: -height * 2
-    }
-
-    PropertiesDialog {
-        id: propertiesDialog
-
-        onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
-    }
-
-    ShortcutsOverlay {
-        id: shortcutsOverlay
-    }
-
-    FileMenu {
-        id: dropMenu
-
-        property var pending: []
-        property string dest: ""
-
-        anchorItem: surface
-
-        function present(paths, target) {
-            pending = paths;
-            dest = target;
-            openAt(surface.width / 2 - width / 2, surface.height / 2 - height / 2);
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Copy", "context menu entry copying the selection")
-            iconName: "content_copy"
-            onClicked: {
-                dropMenu.close();
-                FileOpsService.copy(dropMenu.pending, dropMenu.dest, window.opScope);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Move", "drag label for moving files")
-            iconName: "drive_file_move"
-            onClicked: {
-                dropMenu.close();
-                FileOpsService.move(dropMenu.pending, dropMenu.dest, window.opScope);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Link", "drag label for creating a symlink")
-            iconName: "add_link"
-            onClicked: {
-                dropMenu.close();
-                FileOpsService.link(dropMenu.pending, dropMenu.dest, window.opScope);
-            }
-        }
-
-        FileMenuItem {
-            text: I18n.tr("Cancel", "dialog button to cancel")
-            iconName: "close"
-            onClicked: dropMenu.close()
-        }
-    }
-
-    OpenWithDialog {
-        id: openWithDialog
-    }
-
-    ExecutableDialog {
-        id: executableDialog
-
-        onRunRequested: AppsService.run(path, response => window.reportError(response))
-        onEditRequested: openWithDialog.ask("text/plain", [path])
-    }
-
-    ConfirmDialog {
-        id: trustDialog
-
-        property string pending: ""
-
-        title: I18n.tr("Run this desktop file?", "untrusted desktop file dialog header")
-        message: I18n.tr("%1 has not been marked as trusted. Running it allows it to start any program.", "untrusted desktop file dialog explanation").arg(subject)
-        confirmText: I18n.tr("Trust and run", "untrusted desktop file dialog action")
-        danger: false
-        onConfirmed: {
-            window.pendingTrust = pending;
-            FileOpsService.setPermissions([pending], "755", false);
-            pending = "";
-        }
-    }
-
-    ConflictDialog {
-        id: conflictDialog
-    }
-
-    OperationErrorDialog {
-        id: errorDialog
-    }
-
-    ArchivePasswordDialog {
-        id: archivePasswordDialog
-    }
-
-    NameDialog {
-        id: renameBookmarkDialog
-
-        property string path: ""
-
-        title: I18n.tr("Rename", "rename dialog header")
-        acceptText: I18n.tr("Rename", "rename dialog header")
-        onSubmitted: name => BookmarksService.rename(path, name)
-    }
-
-    CompressDialog {
-        id: compressDialog
-
-        onSubmitted: (paths, name, format, password) => FileOpsService.compress(paths, window.currentPath, name, format, password, window.opScope)
-    }
-
-    ConfirmDialog {
-        id: openConfirmDialog
-
-        property var pending: null
-
-        title: I18n.tr("Open %1 items?", "confirmation before opening many selected items at once").arg(subject)
-        message: (pending?.archives?.length ?? 0) > 0 ? I18n.tr("Folders open in new tabs, archives are extracted and other files open in their applications.", "explanation in the confirmation before opening many items, some of them archives") : I18n.tr("Folders open in new tabs and files open in their applications.", "explanation in the confirmation before opening many items")
-        confirmText: I18n.tr("Open", "context menu entry opening a file")
-        danger: false
-        onConfirmed: window.runOpenPlan(pending)
-    }
-
-    ConfirmDialog {
-        id: trashConfirmDialog
-
-        property var pending: []
-
-        title: I18n.tr("Move to Trash", "context menu entry trashing the selection")
-        message: I18n.tr("%1 will be moved to the trash.", "trash confirmation explanation").arg(subject)
-        confirmText: I18n.tr("Move to Trash", "context menu entry trashing the selection")
-        danger: false
-        onConfirmed: {
-            FileOpsService.trash(pending, window.opScope);
-            pending = [];
-        }
-    }
-
-    LazyLoader {
-        id: extractPickerLoader
-
-        active: false
-
-        FileBrowserModal {
-            property var archives: []
-
-            parentModal: window
-            browserTitle: I18n.tr("Extract to", "folder picker title for unpacking archives")
-            bucket: "extract"
-            mode: "openFolder"
-            revealPath: window.currentPath
-            onAccepted: paths => window.extractTo(archives, paths[0], "reveal")
-        }
-    }
-
-    LazyLoader {
-        id: transferPickerLoader
-
-        active: false
-
-        FileBrowserModal {
-            property var paths: []
-            property bool move: false
-
-            parentModal: window
-            browserTitle: move ? I18n.tr("Move to", "folder picker title for moving the selection") : I18n.tr("Copy to", "folder picker title for copying the selection")
-            bucket: "transfer"
-            mode: "openFolder"
-            revealPath: FileOpsService.lastDestination !== "" ? FileOpsService.lastDestination : window.currentPath
-            onAccepted: picked => window.transferTo(picked[0])
-        }
-    }
-
-    Loader {
-        id: settingsLoader
-
-        active: false
-        sourceComponent: SettingsModal {
-            parentWindow: window
-        }
-    }
-
-    ConfirmDialog {
-        id: emptyTrashDialog
-
-        title: I18n.tr("Empty the trash?", "confirmation header before deleting everything in the trash")
-        message: I18n.tr("%1 will be deleted permanently. This cannot be undone.", "permanent delete confirmation explanation").arg(subject)
-        confirmText: I18n.tr("Empty Trash", "action deleting everything in the trash")
-        onConfirmed: FileOpsService.emptyTrash()
-    }
-
-    ConfirmDialog {
-        id: confirmDialog
-
-        property var pending: []
-
-        title: I18n.tr("Delete permanently?", "permanent delete confirmation header")
-        message: I18n.tr("%1 will be deleted permanently. This cannot be undone.", "permanent delete confirmation explanation").arg(subject)
-        onConfirmed: {
-            FileOpsService.deletePermanently(pending);
-            pending = [];
-        }
-    }
-
-    UnlockDialog {
-        id: unlockDialog
-
-        onUnlocked: mountPoint => {
-            if (mountPoint !== "")
-                window.openPath(mountPoint, false);
-        }
-    }
-
-    ConnectServerDialog {
-        id: connectDialog
-
-        onConnected: path => window.openPath(path, false)
-    }
-
-    CredentialDialog {
-        id: credentialDialog
+        mainWindow: window
     }
 
     Connections {
@@ -2804,6 +708,6 @@ FloatingWindow {
 
     Toast {
         anchors.fill: surface
-        shown: WindowService.lastActiveId === window.windowId
+        shown: window.lastActive
     }
 }

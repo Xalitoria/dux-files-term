@@ -65,9 +65,6 @@ type indexResult struct {
 	TotalHits     uint64     `json:"total_hits"`
 }
 
-// indexBackend serves searches from a running danksearch when its index
-// covers the whole search. It holds no connection between searches and
-// remembers where the socket was only briefly.
 type indexBackend struct {
 	enabled    atomic.Bool
 	logged     atomic.Bool
@@ -112,8 +109,6 @@ func (b *indexBackend) fallback(err error) string {
 	return reasonError
 }
 
-// serve answers the search from the index and returns "" on success, or the
-// reason the walk has to take over.
 func (b *indexBackend) serve(sc *search, em *emitter, targets []string, query string, terms []term, opts Options) string {
 	if opts.Direct {
 		return reasonDirect
@@ -148,7 +143,7 @@ func (b *indexBackend) serve(sc *search, em *emitter, targets []string, query st
 	if sc.svc.excludes != nil {
 		excludes = sc.svc.excludes()
 	}
-	ranked := rankHits(result, targets, terms, opts, newIgnoreRules(excludes, false))
+	ranked := rankHits(result, targets, terms, opts, newSkipRules(excludes))
 	for _, c := range ranked {
 		if sc.ctx.Err() != nil {
 			break
@@ -165,8 +160,6 @@ func (b *indexBackend) serve(sc *search, em *emitter, targets []string, query st
 	return ""
 }
 
-// failed decides what a transport error means: a search cancelled mid
-// round trip just ends, anything else marks the index unavailable and walks.
 func (b *indexBackend) failed(sc *search, em *emitter, err error) string {
 	if sc.ctx.Err() != nil {
 		em.finish(false, 0)
@@ -237,10 +230,7 @@ func (b *indexBackend) call(ctx context.Context, socket, method string, params m
 	return resp.Result, nil
 }
 
-// indexParams asks bleve for name matches only (the body is searched only
-// behind the Contents chip). bleve treats a query holding * or ? as one
-// wildcard over the whole name, so a glob term goes alone and the scorer
-// enforces the other terms afterwards.
+// bleve treats a query holding * or ? as one wildcard over the whole name, so a glob term goes alone.
 func indexParams(targets []string, query string, terms []term, opts Options, info indexInfo) map[string]any {
 	params := map[string]any{"query": query, "limit": opts.limit(), "type": "all", "field": "filename"}
 	for _, t := range terms {
@@ -270,8 +260,6 @@ func indexParams(targets []string, query string, terms []term, opts Options, inf
 	return params
 }
 
-// partial reports whether bleve cut the candidate set, so matches inside the
-// search root may be missing.
 func (r indexResult) partial(limit int) bool {
 	return r.TotalHits > uint64(len(r.Hits)) || len(r.DirectoryHits) >= limit
 }
@@ -335,9 +323,6 @@ func rootOf(path string, targets []string) (string, bool) {
 	return "", false
 }
 
-// coverage decides whether the index can answer for every root: the root
-// sits under an index path within its depth, outside its excluded and hidden
-// folders, and hidden entries are only asked for when the index keeps them.
 // depthLeft is how many levels below the root the index reaches, 0 for all.
 func coverage(targets []string, includeHidden bool, info indexInfo) (depthLeft int, reason string) {
 	if info.Schema < minSchema {

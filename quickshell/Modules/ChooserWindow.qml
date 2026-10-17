@@ -346,22 +346,6 @@ FloatingWindow {
         finish([target]);
     }
 
-    function openTypedLocation(location) {
-        if (location.kind !== "remote") {
-            connectDialog.ask();
-            return;
-        }
-        const requestNo = ++pane.connectRequest;
-        NetworkService.connectTo(location.uri, result => {
-            if (requestNo !== pane.connectRequest)
-                return;
-            const path = connectDialog.localPath(result);
-            pane.settleLocation(path);
-            if (path === "" && !result.error)
-                connectDialog.showFailure(location.uri, result);
-        }, location.password);
-    }
-
     function clearSearch() {
         search.text = "";
         pane.closeSearch();
@@ -369,7 +353,7 @@ FloatingWindow {
     }
 
     function escapeBack() {
-        if (!pane.resultsActive && pane.nameFilter === "" && search.text === "")
+        if (!pane.resultsActive && pane.nameFilter === "")
             return false;
         clearSearch();
         return true;
@@ -385,14 +369,6 @@ FloatingWindow {
         choiceValues = Object.assign({}, choiceValues, {
             [id]: value
         });
-    }
-
-    function isInside(item, ancestor) {
-        for (let current = item; current; current = current.parent) {
-            if (current === ancestor)
-                return true;
-        }
-        return false;
     }
 
     FocusScope {
@@ -447,7 +423,7 @@ FloatingWindow {
                 window.acceptCurrent();
                 break;
             default:
-                if (window.textEditing || window.isInside(surface.focusItem, pane))
+                if (window.textEditing || ItemTree.isInside(surface.focusItem, pane))
                     return;
                 pane.handleStrayKey(event);
                 return;
@@ -615,8 +591,6 @@ FloatingWindow {
                         if (text.trim() !== "")
                             pane.startSearch(text.trim(), null);
                     }
-                    Keys.onReturnPressed: event => event.accepted = true
-                    Keys.onEnterPressed: event => event.accepted = true
                     Keys.onEscapePressed: event => {
                         event.accepted = true;
                         window.clearSearch();
@@ -646,13 +620,21 @@ FloatingWindow {
                 multiSelect: window.multiple
                 escapeClearsSelection: false
                 typeAhead: true
+                dragEnabled: false
+                dropEnabled: false
+                menusEnabled: false
                 onActivateRequested: entry => window.activate(entry)
                 onOpenRequested: entries => window.openEntries(entries)
                 onTabRequested: path => pane.navigate(path)
                 onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
                 onSortRequested: key => window.setSort(key)
                 onPreviewToggleRequested: window.previewOpen = !window.previewOpen
-                onLocationRequested: location => window.openTypedLocation(location)
+                onServerDialogRequested: connectDialog.ask()
+                onConnectFailed: (uri, result) => connectDialog.showFailure(uri, result)
+                onNameFilterChanged: {
+                    if (search.text !== nameFilter)
+                        search.text = nameFilter;
+                }
                 onFilterRequested: text => {
                     search.text = pane.nameFilter + text;
                     search.forceActiveFocus();
@@ -776,8 +758,6 @@ FloatingWindow {
                     placeholderText: I18n.tr("Enter filename...", "file browser save filename input placeholder")
                     isError: text.trim() !== "" && !window.canAccept
                     onAccepted: window.acceptCurrent()
-                    Keys.onReturnPressed: event => event.accepted = true
-                    Keys.onEnterPressed: event => event.accepted = true
                     Keys.onEscapePressed: event => {
                         event.accepted = true;
                         if (!window.escapeBack())
@@ -804,6 +784,23 @@ FloatingWindow {
                         onClicked: window.acceptCurrent()
                     }
                 }
+            }
+        }
+
+        Connections {
+            target: FileOpsService
+
+            function onJobFinished(job) {
+                if (job.scope !== window.opScope)
+                    return;
+                if (job.state === "failed") {
+                    ToastService.info(FileFormat.operationError(job.code, job.error));
+                    return;
+                }
+                const created = job.created?.[0]?.path ?? "";
+                if (job.kind !== "newFolder" || created === "" || FilePaths.parentOf(created) !== pane.path)
+                    return;
+                pane.revealAndRename(created);
             }
         }
 
@@ -847,17 +844,18 @@ FloatingWindow {
             }
         }
 
+        ConflictDialog {
+            opScope: window.opScope
+        }
+
+        OperationErrorDialog {
+            opScope: window.opScope
+        }
+
         Toast {
             anchors.fill: parent
             shown: surface.Window.active
         }
-    }
-
-    component FlatButton: DActionButton {
-        focusPolicy: Qt.TabFocus
-        buttonSize: FilesMetrics.topbarControlSize
-        iconSize: Theme.iconSizeMedium
-        iconColor: Theme.surfaceText
     }
 
     FloatingWindowControls {

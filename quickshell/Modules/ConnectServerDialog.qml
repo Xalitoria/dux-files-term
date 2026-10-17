@@ -78,8 +78,6 @@ OverlayDialog {
             labelText: I18n.tr("Address", "label for a server address input")
             placeholderText: "sftp://host/path"
             onAccepted: root.submit("")
-            Keys.onReturnPressed: event => event.accepted = true
-            Keys.onEnterPressed: event => event.accepted = true
         }
 
         StyledText {

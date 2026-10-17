@@ -3,6 +3,7 @@ package netmount
 import (
 	"testing"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/godbus/dbus/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -73,13 +74,13 @@ func TestParseURIBrowsesAnSMBServerWithoutAShare(t *testing.T) {
 
 func TestParseURIRejectsWhatGvfsCannotMount(t *testing.T) {
 	_, err := ParseURI("wat://host/", mountables)
-	assert.Equal(t, "NOTSUPPORTED", CodeOf(err))
+	assert.Equal(t, files.CodeNotSupported, files.CodeOf(err))
 
 	_, err = ParseURI("host/share", mountables)
-	assert.Equal(t, "EINVAL", CodeOf(err))
+	assert.Equal(t, files.CodeInvalid, files.CodeOf(err))
 
 	_, err = ParseURI("", mountables)
-	assert.Equal(t, "EINVAL", CodeOf(err))
+	assert.Equal(t, files.CodeInvalid, files.CodeOf(err))
 }
 
 func TestURIOfRebuildsWhatWasMounted(t *testing.T) {

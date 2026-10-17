@@ -10,7 +10,7 @@ import "FolderJump.js" as FolderJump
 Singleton {
     id: root
 
-    readonly property string historyPath: Paths.strip(SessionData.stateDir) + "/folders.json"
+    readonly property string historyPath: Paths.strip(Paths.stateDir) + "/folders.json"
     readonly property string home: Paths.strip(Paths.home)
 
     property bool loaded: false

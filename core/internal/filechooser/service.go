@@ -63,17 +63,16 @@ type UI interface {
 }
 
 type Status struct {
-	Available bool   `json:"available"`
-	Enabled   bool   `json:"enabled"`
-	Owned     bool   `json:"owned"`
-	Reason    string `json:"reason,omitempty"`
+	Enabled bool   `json:"enabled"`
+	Owned   bool   `json:"owned"`
+	Reason  string `json:"reason,omitempty"`
 }
 
 type Service struct {
 	mu      sync.Mutex
 	conn    *dbus.Conn
 	ui      UI
-	globs   func() func(mime string) []string
+	globs   func(mime string) []string
 	enabled bool
 	reason  string
 	pending map[string]*pending
@@ -112,11 +111,11 @@ type requestObject struct {
 }
 
 func (r requestObject) Close() *dbus.Error {
-	r.service.cancel(r.id, true)
+	r.service.cancel(r.id)
 	return nil
 }
 
-func New(conn *dbus.Conn, ui UI, globs func() func(mime string) []string) (*Service, error) {
+func New(conn *dbus.Conn, ui UI, globs func(mime string) []string) (*Service, error) {
 	if conn == nil {
 		return nil, errors.New("no session bus")
 	}
@@ -193,14 +192,10 @@ func (s *Service) Answer(id string, answer Answer) bool {
 	return true
 }
 
-func (s *Service) cancel(id string, closeUI bool) bool {
-	if !s.Answer(id, Answer{Response: ResponseCancelled}) {
-		return false
-	}
-	if closeUI {
+func (s *Service) cancel(id string) {
+	if s.Answer(id, Answer{Response: ResponseCancelled}) {
 		s.ui.CloseChooser(id)
 	}
-	return true
 }
 
 func (s *Service) Pending() []Request {
@@ -258,7 +253,7 @@ func (s *Service) watchOwners() {
 			continue
 		}
 		for _, id := range s.pendingFrom(name) {
-			s.cancel(id, true)
+			s.cancel(id)
 		}
 	}
 }
@@ -356,7 +351,7 @@ func (s *Service) Status() Status {
 }
 
 func (s *Service) statusLocked() Status {
-	return Status{Available: true, Enabled: s.enabled, Owned: s.ownedLocked(), Reason: s.reason}
+	return Status{Enabled: s.enabled, Owned: s.ownedLocked(), Reason: s.reason}
 }
 
 func (s *Service) ownedLocked() bool {

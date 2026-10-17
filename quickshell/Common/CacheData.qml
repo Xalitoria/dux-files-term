@@ -9,18 +9,27 @@ Singleton {
     id: root
 
     property alias fileBrowserSettings: adapter.fileBrowserSettings
-    property alias wallpaperLastPath: adapter.wallpaperLastPath
-    property alias profileLastPath: adapter.profileLastPath
     property alias sidebarWidth: adapter.sidebarWidth
     property alias previewWidth: adapter.previewWidth
 
     function saveCache() {
         if (!cacheFile.loaded)
             return;
-        cacheFile.writeAdapter();
+        writeDebounce.restart();
     }
 
-    Component.onCompleted: Paths.mkdir(Paths.cache)
+    Timer {
+        id: writeDebounce
+
+        interval: 400
+        onTriggered: {
+            if (!Paths.ready) {
+                restart();
+                return;
+            }
+            cacheFile.writeAdapter();
+        }
+    }
 
     FileView {
         id: cacheFile
@@ -29,7 +38,6 @@ Singleton {
 
         path: Paths.strip(Paths.cache) + "/cache.json"
         blockLoading: true
-        blockWrites: true
         atomicWrites: true
         printErrors: false
         onLoaded: loaded = true
@@ -40,8 +48,6 @@ Singleton {
             id: adapter
 
             property var fileBrowserSettings: ({})
-            property string wallpaperLastPath: ""
-            property string profileLastPath: ""
             property int sidebarWidth: FilesMetrics.sidebarWidth
             property int previewWidth: 0
         }

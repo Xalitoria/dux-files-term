@@ -1,9 +1,6 @@
 package ipc
 
-import (
-	dankipc "github.com/AvengeMedia/dankgo/ipc"
-	"github.com/AvengeMedia/dankgo/ipc/params"
-)
+import dankipc "github.com/AvengeMedia/dankgo/ipc"
 
 const APIVersion = 1
 
@@ -23,11 +20,3 @@ var (
 )
 
 func FindRunningSocket() (string, error) { return dankipc.FindRunningSocket("dfiles") }
-
-func ParamString(p map[string]any, key string) string { return params.StringOpt(p, key, "") }
-
-func ParamInt(p map[string]any, key string) int { return params.IntOpt(p, key, 0) }
-
-func ParamBool(p map[string]any, key string) bool { return params.BoolLoose(p, key) }
-
-func ParamStringSlice(p map[string]any, key string) []string { return params.StringSlice(p, key) }

@@ -21,6 +21,7 @@ Rectangle {
     property var cutSet: ({})
     property bool singleClickActivates: false
     property bool typeAheadEnabled: true
+    property bool dragEnabled: true
     property bool countFolders: true
 
     readonly property alias selection: selectionModel
@@ -196,7 +197,7 @@ Rectangle {
                 "location": "location"
             })
         showHidden: chips.includeHidden
-        dragEnabled: true
+        dragEnabled: results.dragEnabled
         dropEnabled: false
         showSelectionFooter: true
         emptyText: ""

@@ -32,8 +32,6 @@ OverlayDialog {
         outlined: true
         labelText: I18n.tr("Name", "label for a file name input")
         onAccepted: root.submit()
-        Keys.onReturnPressed: event => event.accepted = true
-        Keys.onEnterPressed: event => event.accepted = true
     }
 
     actions: [

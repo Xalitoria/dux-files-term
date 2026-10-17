@@ -13,15 +13,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// keptCaps is what gvfsd-admin keeps as well: enough to read, write, rename
-// and chown anything, nothing that reaches beyond the filesystem.
 const keptCaps = 1<<unix.CAP_CHOWN | 1<<unix.CAP_DAC_OVERRIDE | 1<<unix.CAP_DAC_READ_SEARCH | 1<<unix.CAP_FOWNER
 
-// confine drops the effective uid to the caller while keeping fsuid 0 and
-// the four DAC capabilities: file access still works, but signalling root
-// processes, ptrace, mount, module loading and the rest are gone. The saved
-// uid stays 0 as in gvfsd-admin; the helper never execs and exits after one
-// operation. It fails closed: a state that does not match is an error.
 func confine(uid int) error {
 	if err := allThreads(unix.SYS_PRCTL, unix.PR_SET_KEEPCAPS, 1, 0); err != nil {
 		return fmt.Errorf("keepcaps: %w", err)

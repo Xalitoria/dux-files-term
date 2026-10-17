@@ -22,6 +22,7 @@ type fakeIndex struct {
 	total    uint64
 	delay    time.Duration
 	searches []map[string]any
+	started  chan struct{}
 }
 
 func (f *fakeIndex) handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request, _ *ipc.Subscriber) {
@@ -36,6 +37,9 @@ func (f *fakeIndex) handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request
 		w.Respond(req.ID, f.info)
 	case "search":
 		f.searches = append(f.searches, req.Params)
+		if f.started != nil {
+			f.started <- struct{}{}
+		}
 		time.Sleep(f.delay)
 		w.Respond(req.ID, map[string]any{"hits": f.hits, "directory_hits": f.dirHits, "total_hits": f.total})
 	default:
@@ -408,7 +412,7 @@ func TestWalkGlobTerms(t *testing.T) {
 
 func TestIndexCancelledMidRoundTripKeepsTheSocket(t *testing.T) {
 	root := tree(t)
-	fake := &fakeIndex{info: homeInfo(root, 4), delay: 400 * time.Millisecond}
+	fake := &fakeIndex{info: homeInfo(root, 4), delay: 400 * time.Millisecond, started: make(chan struct{}, 1)}
 	startFakeIndex(t, fake)
 	bus := newBus()
 	svc := indexedService(t, bus)
@@ -416,7 +420,11 @@ func TestIndexCancelledMidRoundTripKeepsTheSocket(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	_, topic, err := svc.Start(ctx, root, "report", Options{})
 	require.NoError(t, err)
-	time.Sleep(100 * time.Millisecond)
+	select {
+	case <-fake.started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the index never saw the search")
+	}
 	cancel()
 	done := bus.waitDone(t)
 

@@ -20,30 +20,11 @@ Singleton {
 
     signal requestFailed(string message)
 
-    property var _handler: data => root._onEvent(data)
-    property var _subscribed: null
-
-    Component.onCompleted: _attach()
-    onTransportChanged: _attach()
-
-    readonly property Connections _daemonLink: Connections {
-        target: root.transport
-
-        function onConnectedChanged() {
-            if (root.transport.connected)
-                root.refresh();
-        }
-    }
-
-    function _attach() {
-        if (_subscribed === transport)
-            return;
-        if (_subscribed)
-            _subscribed.unsubscribeTopic("bookmarks", _handler);
-        _subscribed = transport;
-        transport.subscribeTopic("bookmarks", _handler);
-        if (transport.connected)
-            refresh();
+    readonly property DaemonTopic _bookmarks: DaemonTopic {
+        transport: root.transport
+        topic: "bookmarks"
+        handler: data => root._onEvent(data)
+        onConnected: root.refresh()
     }
 
     function has(path) {

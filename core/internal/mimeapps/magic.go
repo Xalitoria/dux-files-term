@@ -181,7 +181,6 @@ func (p *magicParser) digits() int {
 	return value
 }
 
-// hostOrder converts a big-endian stored word sequence to native order.
 func hostOrder(value []byte, wordSize int) []byte {
 	if len(value) == 0 || wordSize < 2 || len(value)%wordSize != 0 || !littleEndian() {
 		return value

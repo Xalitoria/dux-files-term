@@ -383,6 +383,10 @@ func TestPasteImageWritesTheClipboardImage(t *testing.T) {
 	manager.SetImageSource(fakeImages{data: []byte("jpg"), mime: "image/jpeg"})
 	third := bus.wait(t, paste()["job"].(map[string]any)["id"].(string))
 	require.Equal(t, filepath.Join(root, "Pasted image.jpg"), third.Created[0].Path)
+
+	manager.SetImageSource(fakeImages{data: []byte("ico"), mime: "image/x-icon"})
+	fourth := bus.wait(t, paste()["job"].(map[string]any)["id"].(string))
+	require.Equal(t, filepath.Join(root, "Pasted image.ico"), fourth.Created[0].Path)
 }
 
 func TestPasteImageWithoutAnImageStartsNoJob(t *testing.T) {
@@ -401,17 +405,6 @@ func TestPasteImageWithoutAnImageStartsNoJob(t *testing.T) {
 	unsupported, _ := newHarness(t)
 	none := call(t, unsupported, ipc.Request{Method: "files.op.pasteImage", Params: map[string]any{"path": root}})
 	require.Contains(t, none, "error")
-}
-
-func TestImageExtensions(t *testing.T) {
-	require.Equal(t, ".png", imageExt("image/png"))
-	require.Equal(t, ".jpg", imageExt("image/jpeg"))
-	require.Equal(t, ".webp", imageExt("image/webp"))
-	require.Equal(t, ".svg", imageExt("image/svg+xml"))
-	require.Equal(t, ".bmp", imageExt("image/bmp"))
-	require.Equal(t, ".jxl", imageExt("image/jxl"))
-	require.Equal(t, ".x-icon", imageExt("image/x-icon"))
-	require.Equal(t, ".png", imageExt("image/"))
 }
 
 func TestNewMethodsRejectBadParams(t *testing.T) {

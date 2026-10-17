@@ -6,8 +6,7 @@ import (
 	"strings"
 )
 
-// ParseGTK reads the GTK file chooser's sidebar file: one `file:///path Label`
-// per line, the label optional, the path percent-encoded.
+// One `file:///path Label` per line, the label optional, the path percent-encoded.
 func ParseGTK(data []byte) []Bookmark {
 	var out []Bookmark
 	for line := range strings.SplitSeq(string(data), "\n") {
@@ -25,9 +24,13 @@ func ParseGTK(data []byte) []Bookmark {
 	return out
 }
 
-// GTKImportAvailable is the one-time offer: no bookmarks.json yet and the GTK
-// file lists something.
 func (s *Store) GTKImportAvailable() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.gtkImport
+}
+
+func (s *Store) gtkImportAvailable() bool {
 	if s.gtkFile == "" || s.Exists() {
 		return false
 	}

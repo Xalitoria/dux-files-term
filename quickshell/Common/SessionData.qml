@@ -1,7 +1,6 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
-import QtCore
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -12,8 +11,7 @@ Singleton {
 
     readonly property var log: Log.scoped("SessionData")
 
-    readonly property url stateDir: `${StandardPaths.writableLocation(StandardPaths.GenericStateLocation)}/dfiles`
-    readonly property string sessionPath: Paths.strip(stateDir) + "/session.json"
+    readonly property string sessionPath: Paths.strip(Paths.stateDir) + "/session.json"
 
     property real windowWidth: 960
     property real windowHeight: 640
@@ -46,6 +44,7 @@ Singleton {
     property var legacyRecentDirs: []
 
     property bool _loaded: false
+    property bool _applying: false
     property bool _selfWrite: false
 
     function lastUsed(key, fallback) {
@@ -53,14 +52,13 @@ Singleton {
     }
 
     function remember(values) {
-        const next = Object.assign({}, browsing, values);
-        if (JSON.stringify(next) === JSON.stringify(browsing))
+        if (Object.keys(values).every(key => browsing[key] === values[key]))
             return;
-        browsing = next;
+        browsing = Object.assign({}, browsing, values);
     }
 
     onPersistedStateChanged: {
-        if (!_loaded)
+        if (!_loaded || _applying)
             return;
         writeDebounce.restart();
     }
@@ -80,24 +78,28 @@ Singleton {
 
         if (Array.isArray(data?.recentDirs))
             legacyRecentDirs = data.recentDirs;
+        _applying = true;
         for (const key in persistedState) {
             if (!data || data[key] === undefined)
                 continue;
             root[key] = data[key];
         }
+        _applying = false;
         _loaded = true;
     }
 
-    Component.onCompleted: {
-        Paths.mkdir(stateDir);
-        _apply(sessionFile.text() ?? "");
-    }
+    // blocking read so the first window opens with the saved state
+    Component.onCompleted: sessionFile.text()
 
     Timer {
         id: writeDebounce
 
         interval: 400
         onTriggered: {
+            if (!Paths.ready) {
+                restart();
+                return;
+            }
             root._selfWrite = true;
             sessionFile.setText(JSON.stringify(root.persistedState, null, 1));
         }
@@ -113,6 +115,7 @@ Singleton {
         printErrors: false
 
         onLoaded: root._apply(text())
+        onLoadFailed: root._loaded = true
         onFileChanged: {
             if (root._selfWrite) {
                 root._selfWrite = false;

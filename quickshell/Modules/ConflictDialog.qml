@@ -7,7 +7,10 @@ import qs.DCommon.Widgets
 OverlayDialog {
     id: root
 
-    readonly property var paused: FileOpsService.jobs.filter(job => job.state === "paused-conflict")
+    property string opScope: ""
+    property bool catchUnscoped: false
+
+    readonly property var paused: FileOpsService.jobs.filter(job => job.state === "paused-conflict" && (job.scope === opScope || (catchUnscoped && job.scope === "")))
     readonly property var current: paused.length > 0 ? paused[0] : null
     readonly property var conflict: current ? current.conflict : null
     property bool applyToAll: false

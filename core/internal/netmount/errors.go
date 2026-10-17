@@ -1,66 +1,49 @@
 package netmount
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/dbusutil"
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/godbus/dbus/v5"
 )
 
-type Error struct {
-	Code    string
-	Message string
+const CodeCanceled files.Code = "ECANCELED"
+
+func fail(code files.Code, format string, args ...any) error {
+	return &files.Error{Code: code, Err: fmt.Errorf(format, args...)}
 }
 
-func (e *Error) Error() string { return e.Message }
-
-func fail(code, format string, args ...any) error {
-	return &Error{Code: code, Message: fmt.Sprintf(format, args...)}
-}
-
-func CodeOf(err error) string {
-	if coded, ok := err.(*Error); ok {
-		return coded.Code
-	}
-	return "EIO"
-}
-
-// gvfs answers with unmapped GError names, so the message text decides what
-// the error name cannot.
+// gvfs answers with unmapped GError names, so the message text decides.
 func wrapDBus(err error) error {
 	if err == nil {
 		return nil
 	}
 	call, ok := err.(dbus.Error)
 	if !ok {
-		return fail("EIO", "%s", err)
+		return &files.Error{Code: files.CodeIO, Err: err}
 	}
-
-	text := message(call)
-	switch {
-	case strings.Contains(call.Name, "PermissionDenied"), strings.Contains(text, "Permission denied"):
-		return &Error{Code: "EACCES", Message: text}
-	case strings.Contains(text, "dialog cancelled"), strings.Contains(text, "cancelled"):
-		return &Error{Code: "ECANCELED", Message: text}
-	case strings.Contains(text, "already mounted"):
-		return &Error{Code: "EEXIST", Message: text}
-	case strings.Contains(text, "not mounted"):
-		return &Error{Code: "EINVAL", Message: text}
-	case strings.Contains(text, "busy"):
-		return &Error{Code: "EBUSY", Message: text}
-	case call.Name == "org.freedesktop.DBus.Error.ServiceUnknown":
-		return &Error{Code: "NOTSUPPORTED", Message: "gvfs is not running"}
+	if call.Name == "org.freedesktop.DBus.Error.ServiceUnknown" {
+		return fail(files.CodeNotSupported, "gvfs is not running")
 	}
-	return &Error{Code: "EIO", Message: text}
+	text := dbusutil.ErrorMessage(call)
+	return &files.Error{Code: codeForText(call.Name, text), Err: errors.New(text)}
 }
 
-func message(call dbus.Error) string {
-	if len(call.Body) == 0 {
-		return call.Name
+func codeForText(name, text string) files.Code {
+	switch {
+	case strings.Contains(name, "PermissionDenied"), strings.Contains(text, "Permission denied"):
+		return files.CodeAccess
+	case strings.Contains(text, "cancelled"):
+		return CodeCanceled
+	case strings.Contains(text, "already mounted"):
+		return files.CodeExists
+	case strings.Contains(text, "not mounted"):
+		return files.CodeInvalid
+	case strings.Contains(text, "busy"):
+		return files.CodeBusy
 	}
-	text, ok := call.Body[0].(string)
-	if !ok || text == "" {
-		return call.Name
-	}
-	return text
+	return files.CodeIO
 }

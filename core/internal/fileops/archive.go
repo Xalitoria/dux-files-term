@@ -65,7 +65,7 @@ func (r *runner) compress() error {
 		_ = os.Remove(tmp)
 		return err
 	}
-	if err := os.Rename(tmp, target); err != nil {
+	if err := renameNoReplace(tmp, target); err != nil {
 		_ = os.Remove(tmp)
 		return err
 	}
@@ -99,8 +99,6 @@ func newTarWriter(compressor io.WriteCloser) *tarWriter {
 	return &tarWriter{inner: tar.NewWriter(compressor), compressor: compressor}
 }
 
-// pack adds one source tree under its own base name, so extracting the
-// archive reproduces what was selected.
 func (r *runner) pack(w archiveWriter, src string) error {
 	base := filepath.Dir(src)
 	return filepath.WalkDir(src, func(path string, entry fs.DirEntry, walkErr error) error {
@@ -213,8 +211,6 @@ func (z *zipWriter) header(name string, info fs.FileInfo) *zip.FileHeader {
 	return header
 }
 
-// protected swaps the method for WinZip AES; the listing stays readable,
-// as in every zip, only the bodies are encrypted.
 func (z *zipWriter) protected(header *zip.FileHeader) *zip.FileHeader {
 	if z.password != "" {
 		encryptedZipHeader(header)

@@ -104,6 +104,7 @@ Item {
             "label": FileColumns.label("size")
         }
     ]
+    readonly property var activeSortKeys: resultsActive ? resultSortKeys : trashActive ? trashSortKeys : sortKeys
     readonly property var recentSuggestions: searchFocused && search.text === "" ? FolderHistory.top(FileBrowserMetrics.suggestionRows, currentPath).map(match => PathCompletion.row(match, "visited")) : []
 
     signal sidebarToggled
@@ -127,7 +128,7 @@ Item {
     signal filterChanged(string text)
     signal searchRequested(string query)
     signal searchCleared
-    signal navigateRequested(string path)
+    signal locationRequested(var location)
     signal resultsRequested
 
     function focusSearch() {
@@ -154,6 +155,24 @@ Item {
         searchCleared();
     }
 
+    function openRecent(path) {
+        DirectoryService.resolveLocation(path, currentPath, result => {
+            if (result.error) {
+                if (result.code === "ENOENT")
+                    FolderHistory.forget(path);
+                ToastService.info(FileFormat.operationError(result.code, result.error));
+                return;
+            }
+            topbar.locationRequested(result.location);
+        });
+    }
+
+    function cycleSortKey() {
+        const keys = activeSortKeys;
+        const index = keys.findIndex(entry => entry.key === sortKey);
+        sortKeySelected(keys[(index + 1) % keys.length].key);
+    }
+
     onRecentSuggestionsChanged: {
         if (recentSuggestions.length > 0)
             FolderHistory.verify(recentSuggestions.map(row => row.path));
@@ -167,13 +186,6 @@ Item {
     implicitHeight: FilesMetrics.topbarControlSize
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
-
-    component FlatButton: DActionButton {
-        focusPolicy: Qt.TabFocus
-        buttonSize: FilesMetrics.topbarControlSize
-        iconSize: Theme.iconSizeMedium
-        iconColor: Theme.surfaceText
-    }
 
     Row {
         id: leftActions
@@ -225,67 +237,7 @@ Item {
             iconName: topbar.currentViewMode.icon
             backgroundColor: Theme.chipSurface
             tooltipText: I18n.tr("View", "keyboard shortcut group")
-            onClicked: viewMenu.visible ? viewMenu.close() : viewMenu.open()
-
-            FileMenu {
-                id: viewMenu
-
-                y: viewButton.height + Theme.spacingXS
-                x: viewButton.width - width
-
-                Repeater {
-                    model: topbar.viewModes
-
-                    FileMenuItem {
-                        required property var modelData
-
-                        text: modelData.label
-                        iconName: modelData.icon
-                        checked: topbar.viewMode === modelData.value
-                        onClicked: {
-                            viewMenu.close();
-                            topbar.viewModeSelected(modelData.value);
-                        }
-                    }
-                }
-
-                FileMenuDivider {}
-
-                FileMenuItem {
-                    text: topbar.previewLabel
-                    iconName: "view_sidebar"
-                    checked: topbar.previewOpen
-                    onClicked: {
-                        viewMenu.close();
-                        topbar.previewToggled();
-                    }
-                }
-
-                FileMenuDivider {
-                    visible: topbar.folderRemembered
-                }
-
-                FileMenuItem {
-                    visible: topbar.folderRemembered
-                    text: topbar.useForAllLabel
-                    iconName: "done_all"
-                    onClicked: {
-                        viewMenu.close();
-                        topbar.useForAllFoldersRequested();
-                    }
-                }
-
-                FileMenuItem {
-                    visible: topbar.folderRemembered
-                    enabled: topbar.folderHasSettings
-                    text: topbar.resetFolderLabel
-                    iconName: "restart_alt"
-                    onClicked: {
-                        viewMenu.close();
-                        topbar.resetFolderRequested();
-                    }
-                }
-            }
+            onClicked: menu.toggle(viewButton, "view")
         }
 
         FlatButton {
@@ -312,7 +264,7 @@ Item {
             id: sortButton
 
             anchors.verticalCenter: parent.verticalCenter
-            keys: topbar.resultsActive ? topbar.resultSortKeys : topbar.trashActive ? topbar.trashSortKeys : defaultKeys
+            keys: topbar.activeSortKeys
             sortKey: topbar.sortKey
             descending: topbar.sortDescending
             showLabel: !topbar.compact
@@ -327,151 +279,150 @@ Item {
             iconName: "more_vert"
             backgroundColor: Theme.chipSurface
             tooltipText: I18n.tr("More actions", "tooltip on the overflow menu button")
-            onClicked: overflowMenu.visible ? overflowMenu.close() : overflowMenu.open()
+            onClicked: menu.toggle(overflowButton, "more")
+        }
 
-            FileMenu {
-                id: overflowMenu
+        FileMenu {
+            id: menu
 
-                y: overflowButton.height + Theme.spacingXS
-                x: overflowButton.width - width
+            property Item anchor: overflowButton
+            property string section: "more"
+
+            readonly property bool viewOnly: section === "view"
+            readonly property bool viewRows: viewOnly || topbar.compact
+            readonly property bool moreRows: section === "more"
+            readonly property bool compactRows: moreRows && topbar.compact
+            readonly property bool folderRows: viewRows && topbar.folderRemembered
+
+            x: anchor.x + anchor.width - width
+            y: anchor.y + anchor.height + Theme.spacingXS
+
+            function toggle(button, which) {
+                if (visible && section === which) {
+                    close();
+                    return;
+                }
+                anchor = button;
+                section = which;
+                open();
+            }
+
+            function pick(action) {
+                close();
+                action();
+            }
+
+            FileMenuItem {
+                visible: menu.compactRows
+                enabled: !topbar.trashActive && !topbar.bookmarkPlace
+                text: topbar.bookmarkLabel
+                iconName: topbar.bookmarked ? "bookmark_remove" : "bookmark"
+                onClicked: menu.pick(() => topbar.bookmarkToggled())
+            }
+
+            Repeater {
+                model: topbar.viewModes
 
                 FileMenuItem {
-                    visible: topbar.compact
-                    enabled: !topbar.trashActive && !topbar.bookmarkPlace
-                    text: topbar.bookmarkLabel
-                    iconName: topbar.bookmarked ? "bookmark_remove" : "bookmark"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.bookmarkToggled();
-                    }
+                    required property var modelData
+
+                    visible: menu.viewRows
+                    text: modelData.label
+                    iconName: modelData.icon
+                    checked: topbar.viewMode === modelData.value
+                    onClicked: menu.pick(() => topbar.viewModeSelected(modelData.value))
                 }
+            }
 
-                Repeater {
-                    model: topbar.viewModes
+            FileMenuDivider {
+                visible: menu.viewOnly
+            }
 
-                    FileMenuItem {
-                        required property var modelData
+            FileMenuItem {
+                visible: menu.viewRows
+                text: topbar.previewLabel
+                iconName: "view_sidebar"
+                checked: topbar.previewOpen
+                onClicked: menu.pick(() => topbar.previewToggled())
+            }
 
-                        visible: topbar.compact
-                        text: modelData.label
-                        iconName: modelData.icon
-                        checked: topbar.viewMode === modelData.value
-                        onClicked: {
-                            overflowMenu.close();
-                            topbar.viewModeSelected(modelData.value);
-                        }
-                    }
-                }
+            FileMenuItem {
+                visible: menu.compactRows
+                text: I18n.tr("Split view", "tooltip on the button showing a second pane")
+                iconName: "splitscreen_vertical_add"
+                checked: topbar.splitView
+                onClicked: menu.pick(() => topbar.splitToggled())
+            }
 
-                FileMenuItem {
-                    visible: topbar.compact
-                    text: topbar.previewLabel
-                    iconName: "view_sidebar"
-                    checked: topbar.previewOpen
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.previewToggled();
-                    }
-                }
+            FileMenuDivider {
+                visible: menu.viewOnly && topbar.folderRemembered
+            }
 
-                FileMenuItem {
-                    visible: topbar.compact
-                    text: I18n.tr("Split view", "tooltip on the button showing a second pane")
-                    iconName: "splitscreen_vertical_add"
-                    checked: topbar.splitView
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.splitToggled();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.folderRows
+                text: topbar.useForAllLabel
+                iconName: "done_all"
+                onClicked: menu.pick(() => topbar.useForAllFoldersRequested())
+            }
 
-                FileMenuItem {
-                    visible: topbar.compact && topbar.folderRemembered
-                    text: topbar.useForAllLabel
-                    iconName: "done_all"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.useForAllFoldersRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.folderRows
+                enabled: topbar.folderHasSettings
+                text: topbar.resetFolderLabel
+                iconName: "restart_alt"
+                onClicked: menu.pick(() => topbar.resetFolderRequested())
+            }
 
-                FileMenuItem {
-                    visible: topbar.compact && topbar.folderRemembered
-                    enabled: topbar.folderHasSettings
-                    text: topbar.resetFolderLabel
-                    iconName: "restart_alt"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.resetFolderRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.moreRows
+                text: I18n.tr("New window", "menu entry opening another file manager window")
+                iconName: "open_in_new"
+                onClicked: menu.pick(() => topbar.newWindowRequested())
+            }
 
-                FileMenuItem {
-                    text: I18n.tr("New window", "menu entry opening another file manager window")
-                    iconName: "open_in_new"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.newWindowRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.moreRows
+                enabled: !topbar.trashActive
+                text: I18n.tr("Properties", "menu entry showing details about the current folder")
+                iconName: "info"
+                onClicked: menu.pick(() => topbar.propertiesRequested())
+            }
 
-                FileMenuItem {
-                    enabled: !topbar.trashActive
-                    text: I18n.tr("Properties", "menu entry showing details about the current folder")
-                    iconName: "info"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.propertiesRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.moreRows
+                enabled: !topbar.trashActive
+                text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
+                iconName: "content_copy"
+                onClicked: menu.pick(() => topbar.copyPathRequested())
+            }
 
-                FileMenuItem {
-                    enabled: !topbar.trashActive
-                    text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
-                    iconName: "content_copy"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.copyPathRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.moreRows
+                text: I18n.tr("Reload", "menu entry re-reading the current folder")
+                iconName: "refresh"
+                onClicked: menu.pick(() => topbar.reloadRequested())
+            }
 
-                FileMenuItem {
-                    text: I18n.tr("Reload", "menu entry re-reading the current folder")
-                    iconName: "refresh"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.reloadRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.moreRows && SandboxService.available("terminal")
+                enabled: !topbar.trashActive
+                text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
+                iconName: "terminal"
+                onClicked: menu.pick(() => topbar.terminalRequested())
+            }
 
-                FileMenuItem {
-                    visible: SandboxService.available("terminal")
-                    enabled: !topbar.trashActive
-                    text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
-                    iconName: "terminal"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.terminalRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.moreRows
+                text: I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
+                iconName: "keyboard"
+                onClicked: menu.pick(() => topbar.shortcutsRequested())
+            }
 
-                FileMenuItem {
-                    text: I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
-                    iconName: "keyboard"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.shortcutsRequested();
-                    }
-                }
-
-                FileMenuItem {
-                    text: I18n.tr("Settings", "settings window header title")
-                    iconName: "settings"
-                    onClicked: {
-                        overflowMenu.close();
-                        topbar.settingsRequested();
-                    }
-                }
+            FileMenuItem {
+                visible: menu.moreRows
+                text: I18n.tr("Settings", "settings window header title")
+                iconName: "settings"
+                onClicked: menu.pick(() => topbar.settingsRequested())
             }
         }
     }
@@ -498,14 +449,12 @@ Item {
         onAccepted: {
             const picked = recentPopup.highlightedRow();
             if (picked) {
-                topbar.navigateRequested(picked.path);
+                topbar.openRecent(picked.path);
                 return;
             }
             if (text.trim() !== "")
                 topbar.searchRequested(text.trim());
         }
-        Keys.onReturnPressed: event => event.accepted = true
-        Keys.onEnterPressed: event => event.accepted = true
     }
 
     Keys.onPressed: event => {
@@ -539,6 +488,6 @@ Item {
         anchorItem: search
         rows: topbar.recentSuggestions
         visible: topbar.recentSuggestions.length > 0
-        onChosen: row => topbar.navigateRequested(row.path)
+        onChosen: row => topbar.openRecent(row.path)
     }
 }

@@ -3,15 +3,11 @@ package mimeapps
 import (
 	"context"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/wire"
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
 )
-
-type errorResponse struct {
-	ID    int    `json:"id,omitempty"`
-	Error string `json:"error"`
-	Code  string `json:"code"`
-}
 
 type appView struct {
 	ID          string `json:"id"`
@@ -38,7 +34,6 @@ type appsResult struct {
 	Apps      []appView `json:"apps"`
 }
 
-// Handles reports whether a method belongs to this service.
 func Handles(method string) bool {
 	switch method {
 	case "files.open", "files.openWith", "files.openTerminal", "files.run",
@@ -69,18 +64,18 @@ func (s *Service) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 	case "files.apps.terminals":
 		w.Respond(req.ID, map[string]any{"terminals": Terminals()})
 	default:
-		respondCode(w, req.ID, "NOTSUPPORTED", "unknown method: "+req.Method)
+		wire.RespondError(w, req.ID, fail(files.CodeNotSupported, "unknown method: %s", req.Method))
 	}
 }
 
 func (s *Service) handleOpen(ctx context.Context, w *ipc.ConnWriter, req ipc.Request) {
 	paths := params.StringSlice(req.Params, "paths")
 	if len(paths) == 0 {
-		respondCode(w, req.ID, "EINVAL", "files.open requires paths")
+		wire.RespondError(w, req.ID, wire.Invalid("files.open requires paths"))
 		return
 	}
 	if err := s.Open(ctx, paths, launchOptions(req)); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"opened": true})
@@ -90,11 +85,11 @@ func (s *Service) handleOpenWith(ctx context.Context, w *ipc.ConnWriter, req ipc
 	paths := params.StringSlice(req.Params, "paths")
 	desktopID := params.StringOpt(req.Params, "desktopId", "")
 	if len(paths) == 0 || desktopID == "" {
-		respondCode(w, req.ID, "EINVAL", "files.openWith requires paths and a desktopId")
+		wire.RespondError(w, req.ID, wire.Invalid("files.openWith requires paths and a desktopId"))
 		return
 	}
 	if err := s.OpenWith(ctx, desktopID, paths, launchOptions(req)); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	recorded := (!Sandboxed() || writableConfig()) && params.BoolOpt(req.Params, "record", true) && s.RecordUseForPaths(paths, desktopID) == nil
@@ -104,11 +99,11 @@ func (s *Service) handleOpenWith(ctx context.Context, w *ipc.ConnWriter, req ipc
 func (s *Service) handleRun(w *ipc.ConnWriter, req ipc.Request) {
 	path := params.StringOpt(req.Params, "path", "")
 	if path == "" {
-		respondCode(w, req.ID, "EINVAL", "files.run requires a path")
+		wire.RespondError(w, req.ID, wire.Invalid("files.run requires a path"))
 		return
 	}
 	if err := s.Run(path, launchOptions(req)); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"started": true})
@@ -117,11 +112,11 @@ func (s *Service) handleRun(w *ipc.ConnWriter, req ipc.Request) {
 func (s *Service) handleOpenTerminal(w *ipc.ConnWriter, req ipc.Request) {
 	path := params.StringOpt(req.Params, "path", "")
 	if path == "" {
-		respondCode(w, req.ID, "EINVAL", "files.openTerminal requires a path")
+		wire.RespondError(w, req.ID, wire.Invalid("files.openTerminal requires a path"))
 		return
 	}
 	if err := s.OpenTerminal(path, params.StringOpt(req.Params, "terminal", "")); err != nil {
-		respondErr(w, req.ID, err)
+		wire.RespondError(w, req.ID, err)
 		return
 	}
 	w.Respond(req.ID, map[string]any{"opened": true})
@@ -132,13 +127,13 @@ func (s *Service) handleForMime(w *ipc.ConnWriter, req ipc.Request) {
 	if path := params.StringOpt(req.Params, "path", ""); mimeType == "" && path != "" {
 		resolved, err := s.MimeOf(path)
 		if err != nil {
-			respondErr(w, req.ID, err)
+			wire.RespondError(w, req.ID, err)
 			return
 		}
 		mimeType = resolved
 	}
 	if mimeType == "" {
-		respondCode(w, req.ID, "EINVAL", "files.apps.forMime requires a mime or a path")
+		wire.RespondError(w, req.ID, wire.Invalid("files.apps.forMime requires a mime or a path"))
 		return
 	}
 
@@ -155,13 +150,13 @@ func (s *Service) handleSections(w *ipc.ConnWriter, req ipc.Request) {
 	for _, path := range params.StringSlice(req.Params, "paths") {
 		resolved, err := s.MimeOf(path)
 		if err != nil {
-			respondErr(w, req.ID, err)
+			wire.RespondError(w, req.ID, err)
 			return
 		}
 		mimeTypes = append(mimeTypes, resolved)
 	}
 	if len(mimeTypes) == 0 {
-		respondCode(w, req.ID, "EINVAL", "files.apps.sections requires mimes or paths")
+		wire.RespondError(w, req.ID, wire.Invalid("files.apps.sections requires mimes or paths"))
 		return
 	}
 
@@ -180,15 +175,15 @@ func (s *Service) handleSetDefault(w *ipc.ConnWriter, req ipc.Request) {
 	mimeType := params.StringOpt(req.Params, "mime", "")
 	desktopID := params.StringOpt(req.Params, "desktopId", "")
 	if mimeType == "" || desktopID == "" {
-		respondCode(w, req.ID, "EINVAL", "files.apps.setDefault requires a mime and a desktopId")
+		wire.RespondError(w, req.ID, wire.Invalid("files.apps.setDefault requires a mime and a desktopId"))
 		return
 	}
 	if Sandboxed() && !writableConfig() {
-		respondCode(w, req.ID, "SANDBOXED", "the sandbox cannot write mimeapps.list")
+		wire.RespondError(w, req.ID, fail(files.CodeSandboxed, "the sandbox cannot write mimeapps.list"))
 		return
 	}
 	if err := s.SetDefault(mimeType, desktopID); err != nil {
-		respondCode(w, req.ID, "EACCES", err.Error())
+		wire.RespondError(w, req.ID, &files.Error{Code: files.CodeAccess, Err: err})
 		return
 	}
 	w.Respond(req.ID, map[string]any{"mimeType": mimeType, "desktopId": desktopID})
@@ -216,12 +211,4 @@ func viewsOf(entries []*Entry, defaultID string) []appView {
 		})
 	}
 	return out
-}
-
-func respondErr(w *ipc.ConnWriter, id int, err error) {
-	respondCode(w, id, CodeOf(err), err.Error())
-}
-
-func respondCode(w *ipc.ConnWriter, id int, code, msg string) {
-	_ = w.WriteResponse(errorResponse{ID: id, Error: msg, Code: code})
 }

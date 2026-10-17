@@ -52,7 +52,6 @@ func NewService(bus Publisher, uid uint32) *Service {
 	}
 }
 
-// A missing udisks2 is not an error: the sidebar renders the reason instead.
 func (s *Service) Start() error {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {

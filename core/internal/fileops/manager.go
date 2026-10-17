@@ -69,13 +69,13 @@ type ImageSource interface {
 }
 
 type Manager struct {
-	bus      Publisher
-	stater   Stater
-	elevator Elevator
-	images   ImageSource
-	slots    chan struct{}
+	bus    Publisher
+	stater Stater
+	slots  chan struct{}
 
 	mu       sync.Mutex
+	elevator Elevator
+	images   ImageSource
 	nextID   int
 	active   map[string]*job
 	order    []string
@@ -97,7 +97,6 @@ func NewManager(bus Publisher, stater Stater) *Manager {
 	}
 }
 
-// Forget drops a scope's history, for a window that closed.
 func (m *Manager) Forget(scope string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -106,14 +105,28 @@ func (m *Manager) Forget(scope string) {
 	delete(m.epoch, scope)
 }
 
-// SetElevator installs the "retry as administrator" route; call it before
-// the first job.
 func (m *Manager) SetElevator(e Elevator) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.elevator = e
 }
 
+func (m *Manager) currentElevator() Elevator {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.elevator
+}
+
 func (m *Manager) SetImageSource(src ImageSource) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.images = src
+}
+
+func (m *Manager) imageSource() ImageSource {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.images
 }
 
 type Elevation struct {
@@ -123,22 +136,24 @@ type Elevation struct {
 }
 
 func (m *Manager) Elevation() Elevation {
-	if m.elevator == nil {
+	elevator := m.currentElevator()
+	if elevator == nil {
 		return Elevation{Reason: "NOROUTE"}
 	}
-	err := m.elevator.Available()
+	err := elevator.Available()
 	if err == nil {
-		return Elevation{Available: true, Route: m.elevator.Route()}
+		return Elevation{Available: true, Route: elevator.Route()}
 	}
 	var unavailable *Unavailable
 	if errors.As(err, &unavailable) {
-		return Elevation{Route: m.elevator.Route(), Reason: unavailable.Reason}
+		return Elevation{Route: elevator.Route(), Reason: unavailable.Reason}
 	}
-	return Elevation{Route: m.elevator.Route(), Reason: err.Error()}
+	return Elevation{Route: elevator.Route(), Reason: err.Error()}
 }
 
 func (m *Manager) elevationAvailable() bool {
-	return m.elevator != nil && m.elevator.Available() == nil
+	elevator := m.currentElevator()
+	return elevator != nil && elevator.Available() == nil
 }
 
 func (m *Manager) enqueue(s spec) *job {
@@ -220,11 +235,6 @@ func (j *job) finish(err error) {
 	j.mgr.publishJob(view)
 }
 
-// outcome decides where a finished job's reversal goes. A plain job and a
-// redo push their inverse onto the undo stack. An undo pushes its own
-// inverse where the runner produced one (move, rename, trash, restore) and
-// otherwise, when it fully ran, the request it reversed, so a deleted copy
-// is copied again.
 func (j *job) outcome() (*undoEntry, *spec) {
 	inverse := j.record.spec()
 	if j.spec.replay != replayUndo {
@@ -274,8 +284,6 @@ func (m *Manager) pushUndo(scope string, entry undoEntry) {
 	m.undo[scope] = capped(append(m.undo[scope], entry))
 }
 
-// pushRedo drops an undo's redo when a newer operation ran in the scope
-// while the undo was still working, so history stays linear.
 func (m *Manager) pushRedo(scope string, s spec) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()

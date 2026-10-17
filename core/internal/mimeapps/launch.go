@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+
+	"github.com/AvengeMedia/dankgo/files"
 )
 
 type LaunchOptions struct {
@@ -17,8 +19,6 @@ type LaunchOptions struct {
 	Terminal        string
 }
 
-// Launch starts a desktop entry. An Exec line with a singular field code runs
-// once per path; a plural one takes them all at once.
 func (s *Service) Launch(entry *Entry, opts LaunchOptions) error {
 	if !entry.Launchable() {
 		return fmt.Errorf("desktop entry is not launchable")
@@ -62,10 +62,6 @@ func workingDir(entry *Entry, opts LaunchOptions) string {
 	return opts.WorkingDir
 }
 
-// OpenTerminal starts the user's terminal with its working directory set,
-// which every terminal emulator inherits without a command line flag. Inside
-// the sandbox the terminal lives on the host, so it goes through
-// flatpak-spawn.
 func (s *Service) OpenTerminal(dir, preferred string) error {
 	if Sandboxed() {
 		term := preferred
@@ -73,14 +69,14 @@ func (s *Service) OpenTerminal(dir, preferred string) error {
 			term = os.Getenv("TERMINAL")
 		}
 		if term == "" {
-			return fail("SANDBOXED", "set a terminal in settings: the sandbox cannot see the host's")
+			return fail(files.CodeSandboxed, "set a terminal in settings: the sandbox cannot see the host's")
 		}
 		return hostSpawn([]string{term}, dir)
 	}
 
 	term, err := s.terminal(preferred)
 	if err != nil {
-		return fail("NOTSUPPORTED", "%s", err)
+		return fail(files.CodeNotSupported, "%s", err)
 	}
 	return spawn([]string{term.command}, dir, "", false)
 }
@@ -185,7 +181,6 @@ func expandInline(tok string, entry *Entry, paths []string) (string, bool) {
 	return b.String(), used
 }
 
-// PathURI turns an absolute path into a file:// URI, leaving URIs alone.
 func PathURI(path string) string { return pathURI(path) }
 
 func pathURI(path string) string {
@@ -235,7 +230,6 @@ func childEnv(activationToken string, startupNotify bool) []string {
 	return append(env, "XDG_ACTIVATION_TOKEN="+activationToken, "DESKTOP_STARTUP_ID="+activationToken)
 }
 
-// splitExec tokenizes an Exec value per the Desktop Entry spec.
 func splitExec(s string) ([]string, error) {
 	var args []string
 	var cur strings.Builder

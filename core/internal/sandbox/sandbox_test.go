@@ -104,8 +104,6 @@ func TestSandboxWithHostAccess(t *testing.T) {
 	assert.True(t, caps.Gvfs)
 	assert.True(t, caps.HostSpawn)
 	assert.Equal(t, map[string]uint32{"Trash": 1, "OpenURI": 5, "FileTransfer": 1}, caps.Portals)
-	assert.Equal(t, uint32(5), caps.PortalVersion("OpenURI"))
-	assert.Zero(t, caps.PortalVersion("Settings"))
 
 	assert.Equal(t, "/home/u/.cache", caps.Dirs.CacheHome, "the sandbox cache is not the host cache")
 	assert.Equal(t, "/home/u/.config", caps.Dirs.ConfigHome)

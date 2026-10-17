@@ -28,7 +28,6 @@ type Entry struct {
 	StartupNotify bool     `json:"-"`
 }
 
-// Launchable reports whether the entry can actually be started here.
 func (e *Entry) Launchable() bool {
 	if e == nil || e.Hidden || e.Exec == "" {
 		return false
@@ -44,8 +43,6 @@ func (e *Entry) Launchable() bool {
 	return err == nil
 }
 
-const entryCacheTTL = 10 * time.Second
-
 type parsedEntry struct {
 	entry   *Entry
 	modTime time.Time
@@ -58,14 +55,12 @@ type entryIndex struct {
 	byID     map[string]*Entry
 	ordered  []*Entry
 	dirStamp string
-	loadedAt time.Time
 }
 
 func newEntryIndex() *entryIndex {
 	return &entryIndex{parsed: map[string]parsedEntry{}, byID: map[string]*Entry{}}
 }
 
-// ApplicationDirs is the desktop entry search path, most specific first.
 func ApplicationDirs() []string {
 	return appendXDG(nil, "applications")
 }
@@ -84,12 +79,11 @@ func (x *entryIndex) byIdentifier(id string) *Entry {
 	return x.byID[id]
 }
 
-// refresh rescans only when an applications directory changed or the cache
-// went stale; nothing watches or polls while the app is idle.
+// An in-place edit of a .desktop file leaves the directory mtime alone and is not seen until the next rename there.
 func (x *entryIndex) refresh() {
 	dirs := ApplicationDirs()
 	stamp := dirStamp(dirs)
-	if stamp == x.dirStamp && time.Since(x.loadedAt) < entryCacheTTL {
+	if stamp == x.dirStamp {
 		return
 	}
 
@@ -113,7 +107,6 @@ func (x *entryIndex) refresh() {
 	x.byID = byID
 	x.ordered = ordered
 	x.dirStamp = stamp
-	x.loadedAt = time.Now()
 }
 
 func (x *entryIndex) parse(path, id string) *Entry {

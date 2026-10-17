@@ -10,7 +10,6 @@ FileMenu {
 
     property int selectionCount: 0
     property bool hasDirectory: false
-    property bool hasFile: false
     property bool hasClipboard: false
     property bool shiftHeld: false
     property bool forFolder: false

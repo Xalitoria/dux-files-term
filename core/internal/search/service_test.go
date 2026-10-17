@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -15,13 +14,14 @@ import (
 )
 
 type testBus struct {
-	mu     sync.Mutex
-	events map[string][]event
-	done   chan event
+	mu      sync.Mutex
+	events  map[string][]event
+	done    chan event
+	results chan event
 }
 
 func newBus() *testBus {
-	return &testBus{events: map[string][]event{}, done: make(chan event, 16)}
+	return &testBus{events: map[string][]event{}, done: make(chan event, 16), results: make(chan event, 1)}
 }
 
 func (b *testBus) Publish(topic string, data any) {
@@ -32,8 +32,23 @@ func (b *testBus) Publish(topic string, data any) {
 	b.mu.Lock()
 	b.events[topic] = append(b.events[topic], ev)
 	b.mu.Unlock()
-	if ev.Kind == "done" {
+	switch ev.Kind {
+	case "done":
 		b.done <- ev
+	case "results":
+		select {
+		case b.results <- ev:
+		default:
+		}
+	}
+}
+
+func (b *testBus) waitResults(t *testing.T) {
+	t.Helper()
+	select {
+	case <-b.results:
+	case <-time.After(10 * time.Second):
+		t.Fatal("no results arrived")
 	}
 }
 
@@ -207,7 +222,7 @@ func TestCancelStopsTheWalk(t *testing.T) {
 
 	id, _, err := svc.Start(context.Background(), root, "match", Options{})
 	require.NoError(t, err)
-	time.Sleep(30 * time.Millisecond)
+	bus.waitResults(t)
 	assert.True(t, svc.Cancel(id))
 
 	done := bus.waitDone(t)
@@ -278,22 +293,32 @@ func TestValidation(t *testing.T) {
 	}
 }
 
-func TestSearchesLeaveNoGoroutinesBehind(t *testing.T) {
+func TestCloseWaitsForEverySearch(t *testing.T) {
 	root := tree(t)
 	bus := newBus()
-	svc := newTestService(t, bus)
-	before := runtime.NumGoroutine()
-	for range 5 {
+	svc := NewService(bus, slowStater{files.NewService(nil, t.TempDir(), nil)})
+	svc.AttachOnOpen()
+	for range 3 {
 		_, _, err := svc.Start(context.Background(), root, "report", Options{})
 		require.NoError(t, err)
+	}
+
+	closed := make(chan struct{})
+	go func() {
+		svc.Close()
+		close(closed)
+	}()
+	select {
+	case <-closed:
+	case <-time.After(10 * time.Second):
+		t.Fatal("Close did not return")
+	}
+	for range 3 {
 		bus.waitDone(t)
 	}
-	svc.Close()
-	deadline := time.Now().Add(2 * time.Second)
-	for runtime.NumGoroutine() > before && time.Now().Before(deadline) {
-		time.Sleep(10 * time.Millisecond)
-	}
-	assert.LessOrEqual(t, runtime.NumGoroutine(), before)
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+	assert.Empty(t, svc.searches)
 }
 
 func TestUnattachedFinishedSearchIsDroppedByCancelOrDisconnect(t *testing.T) {

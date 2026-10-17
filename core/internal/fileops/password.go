@@ -18,9 +18,6 @@ func isBadPassword(err error) bool {
 	return errors.As(err, &bad)
 }
 
-// unlock runs attempt without a password, then with the one that opened the
-// previous archive, then with whatever the user types, until the archive
-// opens, the user skips it, or the job is cancelled.
 func (r *runner) unlock(archive string, attempt func(password string) error) error {
 	password := ""
 	typed := false

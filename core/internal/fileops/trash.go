@@ -244,8 +244,6 @@ func directorySizesPath(trashDir string) string {
 	return filepath.Join(trashDir, "directorysizes")
 }
 
-// writeDirectorySize maintains the optional cache other trash implementations
-// read instead of walking the tree: "<size> <info mtime> <encoded name>".
 func writeDirectorySize(entry trash.Entry, size int64) {
 	info, err := os.Lstat(entry.InfoPath)
 	if err != nil {

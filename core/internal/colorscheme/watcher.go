@@ -24,10 +24,9 @@ type State struct {
 	ColorScheme uint32 `json:"colorScheme"`
 }
 
-// Watcher tracks the freedesktop appearance color-scheme via the desktop
-// portal and publishes changes so clients never have to poll or shell out.
 type Watcher struct {
 	publish Publisher
+	conn    *dbus.Conn
 
 	mu        sync.RWMutex
 	available bool
@@ -73,8 +72,17 @@ func (w *Watcher) Start() error {
 
 	signals := make(chan *dbus.Signal, 16)
 	conn.Signal(signals)
+	w.conn = conn
 	go w.loop(signals)
 	return nil
+}
+
+func (w *Watcher) Close() {
+	if w.conn == nil {
+		return
+	}
+	w.conn.Close()
+	w.conn = nil
 }
 
 func (w *Watcher) loop(signals chan *dbus.Signal) {

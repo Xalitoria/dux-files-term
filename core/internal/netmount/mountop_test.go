@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -126,10 +127,10 @@ func TestAnswerRejectsQuestionsThatAreGone(t *testing.T) {
 	svc.trackOp(op)
 
 	err := svc.Answer(string(op.path)+"/7", Answer{})
-	assert.Equal(t, "EINVAL", CodeOf(err))
+	assert.Equal(t, files.CodeInvalid, files.CodeOf(err))
 
 	err = svc.Answer("nonsense", Answer{})
-	assert.Equal(t, "EINVAL", CodeOf(err))
+	assert.Equal(t, files.CodeInvalid, files.CodeOf(err))
 }
 
 func TestReleaseAbortsEverythingStillWaiting(t *testing.T) {

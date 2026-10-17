@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/portal"
 	"github.com/godbus/dbus/v5"
 )
@@ -19,8 +20,6 @@ const (
 
 func Sandboxed() bool { return portal.InFlatpak() }
 
-// openViaPortal hands the file to xdg-desktop-portal, which picks the handler
-// outside the sandbox. ask=true shows the portal's own app chooser.
 func openViaPortal(ctx context.Context, paths []string, ask bool) error {
 	conn, err := dbus.SessionBus()
 	if err != nil {
@@ -73,14 +72,13 @@ func openURIViaPortal(ctx context.Context, uri string) error {
 		Store(&handle)
 }
 
-// hostSpawn runs a command on the host from inside the sandbox; it needs
-// --talk-name=org.freedesktop.Flatpak.
+// Needs --talk-name=org.freedesktop.Flatpak in the manifest.
 func hostSpawn(argv []string, dir string) error {
 	if len(argv) == 0 {
 		return errors.New("nothing to run")
 	}
 	if _, err := exec.LookPath("flatpak-spawn"); err != nil {
-		return fail("SANDBOXED", "flatpak-spawn %s", sandboxedMsg)
+		return fail(files.CodeSandboxed, "flatpak-spawn %s", sandboxedMsg)
 	}
 	return spawn(append([]string{"flatpak-spawn", "--host", "--directory=" + dir}, argv...), dir, "", false)
 }

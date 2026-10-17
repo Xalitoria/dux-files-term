@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -238,25 +239,26 @@ func TestTypedRefuses(t *testing.T) {
 	docs := filepath.Join(root, "docs")
 
 	tests := []struct {
-		text, cwd, code string
+		text, cwd string
+		code      files.Code
 	}{
-		{"", docs, CodeInvalid},
-		{"   ", docs, CodeInvalid},
+		{"", docs, files.CodeInvalid},
+		{"   ", docs, files.CodeInvalid},
 		{"~bob", docs, CodeOtherHome},
 		{"~bob/projects", docs, CodeOtherHome},
-		{"nope", docs, CodeNotFound},
-		{"../nope/deeper", docs, CodeNotFound},
-		{"docs", "", CodeInvalid},
-		{"mtp://phone/", docs, CodeNotSupported},
-		{"http://example.com/", docs, CodeNotSupported},
-		{"file://otherhost/srv", docs, CodeNotSupported},
-		{"sftp:///nohost", docs, CodeInvalid},
+		{"nope", docs, files.CodeNotFound},
+		{"../nope/deeper", docs, files.CodeNotFound},
+		{"docs", "", files.CodeInvalid},
+		{"mtp://phone/", docs, files.CodeNotSupported},
+		{"http://example.com/", docs, files.CodeNotSupported},
+		{"file://otherhost/srv", docs, files.CodeNotSupported},
+		{"sftp:///nohost", docs, files.CodeInvalid},
 	}
 	for _, tt := range tests {
 		t.Run(tt.text, func(t *testing.T) {
 			_, err := Typed(tt.text, tt.cwd, filepath.Join(root, "with space"), env)
 			require.Error(t, err)
-			assert.Equal(t, tt.code, CodeOf(err))
+			assert.Equal(t, tt.code, files.CodeOf(err))
 		})
 	}
 }
@@ -318,5 +320,5 @@ func TestTrashOpensBeforeTheTrashExists(t *testing.T) {
 	assert.Equal(t, want, typed)
 
 	_, err = Typed("trash:///old", root, root, env)
-	assert.Equal(t, CodeNotFound, CodeOf(err))
+	assert.Equal(t, files.CodeNotFound, files.CodeOf(err))
 }

@@ -16,40 +16,21 @@ Singleton {
     property var usage: ({})
 
     readonly property var systemDevice: devices.find(device => device.system) ?? null
-    readonly property bool hasDevices: devices.length > 0
 
     signal requestFailed(string message, string code)
 
-    property var _handler: data => root._onEvent(data)
-    property var _subscribed: null
-
-    Component.onCompleted: _attach()
-    onTransportChanged: _attach()
-
-    readonly property Connections _daemonLink: Connections {
-        target: root.transport
-        function onConnectedChanged() {
-            if (root.transport.connected)
-                root.refresh();
-        }
-    }
-
-    function _attach() {
-        if (_subscribed === transport)
-            return;
-        if (_subscribed)
-            _subscribed.unsubscribeTopic("devices", _handler);
-        _subscribed = transport;
-        transport.subscribeTopic("devices", _handler);
-        if (transport.connected)
-            refresh();
+    readonly property DaemonTopic _devices: DaemonTopic {
+        transport: root.transport
+        topic: "devices"
+        handler: data => root._onEvent(data)
+        onConnected: root.refresh()
     }
 
     function refresh() {
-        transport.sendRequest("devices.list", null, response => {
-            if (response.error)
+        transport.call("devices.list", null, result => {
+            if (result.error)
                 return;
-            root._onEvent(response.result || {});
+            root._onEvent(result);
         });
     }
 
@@ -64,14 +45,14 @@ Singleton {
         }
         if (!paths.includes("/"))
             paths.unshift("/");
-        transport.sendRequest("devices.usage", {
+        transport.call("devices.usage", {
             "paths": paths,
             "force": force === true
-        }, response => {
-            if (response.error)
+        }, result => {
+            if (result.error)
                 return;
             const next = ({});
-            for (const entry of (response.result || {}).usage || [])
+            for (const entry of result.usage || [])
                 next[entry.mountPoint] = entry;
             root.usage = next;
         });
@@ -131,18 +112,10 @@ Singleton {
     }
 
     function _send(method, params, callback) {
-        transport.sendRequest(method, params, response => {
-            if (response.error) {
-                root.requestFailed(response.error, response.code || "");
-                if (callback)
-                    callback({
-                        "error": response.error,
-                        "code": response.code || ""
-                    });
-                return;
-            }
-            if (callback)
-                callback(response.result || {});
+        transport.call(method, params, result => {
+            if (result.error)
+                root.requestFailed(result.error, result.code);
+            callback?.(result);
         });
     }
 }

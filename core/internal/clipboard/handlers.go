@@ -1,8 +1,7 @@
 package clipboard
 
 import (
-	"strings"
-
+	"github.com/AvengeMedia/dankfiles/core/internal/wire"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
 )
@@ -22,7 +21,7 @@ func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {
 }
 
 func (s *Service) handleCopy(w *ipc.ConnWriter, req ipc.Request) {
-	paths := pathsParam(req.Params)
+	paths := wire.StringList(req.Params, "paths")
 	if len(paths) == 0 {
 		w.RespondError(req.ID, "clipboard.copy requires paths")
 		return
@@ -38,15 +37,4 @@ func (s *Service) handleCopy(w *ipc.ConnWriter, req ipc.Request) {
 func (s *Service) handlePaths(w *ipc.ConnWriter, req ipc.Request) {
 	paths, cut, source := s.Paths()
 	w.Respond(req.ID, map[string]any{"paths": paths, "cut": cut, "source": source})
-}
-
-func pathsParam(p map[string]any) []string {
-	if values := params.StringSlice(p, "paths"); len(values) > 0 {
-		return values
-	}
-	raw := strings.TrimSpace(params.StringOpt(p, "paths", ""))
-	if raw == "" {
-		return nil
-	}
-	return strings.Split(raw, ",")
 }

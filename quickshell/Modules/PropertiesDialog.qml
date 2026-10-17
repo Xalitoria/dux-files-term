@@ -113,21 +113,20 @@ OverlayDialog {
     maximumWidth: Theme.dialogMaxWidth
     onRejected: stopScan()
 
-    property var _sizeHandler: event => root._onSize(event)
+    Connections {
+        target: DirectoryService
 
-    function _onSize(event) {
-        if (event.scanId !== scanId)
-            return;
-        scannedBytes = event.bytes;
-        scannedFiles = event.files;
-        if (!event.done)
-            return;
-        scanning = false;
-        scanId = "";
+        function onSizeEvent(event) {
+            if (event.scanId !== root.scanId)
+                return;
+            root.scannedBytes = event.bytes;
+            root.scannedFiles = event.files;
+            if (!event.done)
+                return;
+            root.scanning = false;
+            root.scanId = "";
+        }
     }
-
-    Component.onCompleted: DankFilesService.subscribeTopic("sizes", _sizeHandler)
-    Component.onDestruction: DankFilesService.unsubscribeTopic("sizes", _sizeHandler)
 
     DTabBar {
         width: parent.width

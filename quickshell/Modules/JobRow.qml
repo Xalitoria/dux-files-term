@@ -19,25 +19,6 @@ Item {
         return Math.min(1, done / total);
     }
 
-    function label() {
-        switch (job.kind) {
-        case "copy":
-            return I18n.tr("Copying", "file operation in progress");
-        case "move":
-            return I18n.tr("Moving", "file operation in progress");
-        case "trash":
-            return I18n.tr("Moving to trash", "file operation in progress");
-        case "restore":
-            return I18n.tr("Restoring", "file operation in progress");
-        case "delete":
-            return I18n.tr("Deleting", "file operation in progress");
-        case "emptyTrash":
-            return I18n.tr("Emptying the trash", "file operation in progress");
-        default:
-            return I18n.tr("Working", "file operation in progress");
-        }
-    }
-
     function detail() {
         if (job.state === "failed")
             return FileFormat.operationError(job.code, job.error);
@@ -66,7 +47,7 @@ Item {
             spacing: Theme.spacingS
 
             StyledText {
-                text: row.label()
+                text: JobLabels.active(row.job.kind)
                 color: Theme.surfaceText
                 font.pixelSize: Theme.fontSizeMedium
             }
@@ -105,6 +86,7 @@ Item {
                 color: Theme.primary
 
                 Behavior on width {
+                    enabled: Theme.animationsEnabled
                     NumberAnimation {
                         duration: Theme.shortDuration
                         easing.type: Theme.standardEasing

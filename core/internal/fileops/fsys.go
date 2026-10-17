@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-// FS is the set of filesystem steps a job can take; the local implementation
-// is plain os calls, the elevated one goes through the helper.
 type FS interface {
 	Lstat(path string) (os.FileInfo, error)
 	ReadDir(path string) ([]os.DirEntry, error)
@@ -27,7 +25,6 @@ type FS interface {
 	Chtimes(path string, mtime time.Time) error
 }
 
-// Writer commits on Close; Abort discards what was written instead.
 type Writer interface {
 	io.WriteCloser
 	Abort() error
@@ -39,8 +36,6 @@ type Elevator interface {
 	Available() error
 }
 
-// Unavailable says why no elevated route exists; Reason is a code the UI
-// translates (SANDBOXED, NOPKEXEC, NOPOLICY, NOBINARY).
 type Unavailable struct {
 	Reason string
 }
@@ -119,8 +114,6 @@ func (w *localWriter) Abort() error {
 	return os.Remove(w.path)
 }
 
-// creation remembers which FS produced a temp file so the cleanup after a
-// failure or a cancel goes through the same route.
 type creation struct {
 	fs   FS
 	path string

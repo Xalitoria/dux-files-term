@@ -12,6 +12,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
 	"github.com/AvengeMedia/dankgo/log"
 )
 
@@ -36,8 +37,6 @@ type changed struct {
 	Bookmarks []Bookmark `json:"bookmarks"`
 }
 
-// Store owns bookmarks.json: every change goes through it and lands on disk
-// atomically, and an edit made by anything else is picked up by the watch.
 type Store struct {
 	bus     Publisher
 	dir     string
@@ -47,6 +46,7 @@ type Store struct {
 	mu          sync.Mutex
 	items       []Bookmark
 	lastWritten []byte
+	gtkImport   bool
 
 	watcher *fsnotify.Watcher
 	done    chan struct{}
@@ -57,14 +57,14 @@ func New(bus Publisher, configDir, gtkFile string) *Store {
 	return &Store{bus: bus, dir: configDir, file: filepath.Join(configDir, FileName), gtkFile: gtkFile}
 }
 
-// Start loads the file and watches its directory, so a replace-by-rename
-// from another editor is seen even though the inode changes.
+// The directory is watched, not the file: other editors replace it by rename.
 func (s *Store) Start() error {
 	if err := os.MkdirAll(s.dir, 0o755); err != nil {
 		return err
 	}
 	s.mu.Lock()
 	s.items, s.lastWritten, _ = s.load()
+	s.gtkImport = s.gtkImportAvailable()
 	s.mu.Unlock()
 
 	watcher, err := fsnotify.NewWatcher()
@@ -143,8 +143,6 @@ func (s *Store) Rename(path, label string) ([]Bookmark, error) {
 	})
 }
 
-// Reorder takes the complete new order; a list that drops or invents a path
-// is refused so a stale client cannot lose bookmarks.
 func (s *Store) Reorder(paths []string) ([]Bookmark, error) {
 	return s.update(func(items []Bookmark) ([]Bookmark, error) {
 		if len(paths) != len(items) {
@@ -183,29 +181,11 @@ func (s *Store) write(items []Bookmark) error {
 		return err
 	}
 	data = append(data, '\n')
-	tmp, err := os.CreateTemp(s.dir, ".bookmarks-*.json")
-	if err != nil {
-		return err
-	}
-	if _, err := tmp.Write(data); err != nil {
-		_ = tmp.Close()
-		_ = os.Remove(tmp.Name())
-		return err
-	}
-	if err := tmp.Chmod(0o644); err != nil {
-		_ = tmp.Close()
-		_ = os.Remove(tmp.Name())
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		_ = os.Remove(tmp.Name())
-		return err
-	}
-	if err := os.Rename(tmp.Name(), s.file); err != nil {
-		_ = os.Remove(tmp.Name())
+	if err := atomicfile.WriteFile(s.file, data, 0o644); err != nil {
 		return err
 	}
 	s.lastWritten = data
+	s.gtkImport = false
 	return nil
 }
 
@@ -268,6 +248,7 @@ func (s *Store) reload() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	items, data, ok := s.load()
+	s.gtkImport = s.gtkImportAvailable()
 	if !ok || bytes.Equal(data, s.lastWritten) {
 		return
 	}

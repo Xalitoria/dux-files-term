@@ -58,15 +58,6 @@ Singleton {
         _emit(Log.Level.Fatal, "", arguments);
     }
 
-    function callStack() {
-        const trace = _captureStack(0).split("\n").map(l => l.trim()).filter(l => l.length > 0);
-        _emit(Log.Level.Info, "Debug", ["--------------------------"]);
-        _emit(Log.Level.Info, "Debug", ["Current call stack"]);
-        for (const line of trace)
-            _emit(Log.Level.Info, "Debug", ["- " + line]);
-        _emit(Log.Level.Info, "Debug", ["--------------------------"]);
-    }
-
     function _parseLevel(name) {
         switch ((name || "").toLowerCase()) {
         case "debug":

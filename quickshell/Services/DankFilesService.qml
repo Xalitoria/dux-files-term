@@ -14,20 +14,16 @@ Singleton {
 
     readonly property string socketPath: Quickshell.env("DFILES_SOCKET")
 
-    property bool socketReady: false
     property bool connected: false
-    property bool connecting: false
     property bool subscribed: false
     property int apiVersion: 0
     property string daemonVersion: ""
     property var capabilities: []
-    property string lastError: ""
 
     property var pendingRequests: ({})
     property var topicHandlers: ({})
     property int requestCounter: 0
 
-    signal connectionStateChanged
     signal windowActionRequested(string action)
     signal openRequested(var locations, bool newWindow)
     signal propertiesRequested(var paths)
@@ -38,26 +34,7 @@ Singleton {
     Component.onCompleted: {
         subscribeTopic("ui", _onUiEvent);
         subscribeTopic("colorScheme", data => root.colorSchemeUpdate(data));
-        if (socketPath && socketPath.length > 0)
-            socketProbe.running = true;
-    }
-
-    Process {
-        id: socketProbe
-        command: ["test", "-S", root.socketPath]
-        running: false
-        onExited: code => {
-            root.socketReady = code === 0;
-            if (root.socketReady)
-                root.connectSocket();
-        }
-    }
-
-    function connectSocket() {
-        if (!socketReady || connected || connecting)
-            return;
-        connecting = true;
-        requestSocket.connected = true;
+        requestSocket.connected = socketPath !== "";
     }
 
     DSocket {
@@ -66,15 +43,14 @@ Singleton {
         connected: false
 
         onConnectionStateChanged: {
-            root.connecting = false;
-            root.connected = connected;
-            root.connectionStateChanged();
-            if (connected) {
-                subscribeSocket.connected = true;
-                root.refreshVersion();
+            root.connected = linkUp;
+            subscribeSocket.connected = false;
+            if (!linkUp) {
+                root._failPendingRequests("disconnected from dfiles socket");
                 return;
             }
-            root._failPendingRequests("disconnected from dfiles socket");
+            subscribeSocket.connected = true;
+            root.refreshVersion();
         }
 
         parser: SplitParser {
@@ -99,8 +75,8 @@ Singleton {
         connected: false
 
         onConnectionStateChanged: {
-            root.subscribed = connected;
-            if (connected)
+            root.subscribed = linkUp;
+            if (linkUp)
                 root._sendSubscribe(Object.keys(root.topicHandlers));
         }
 
@@ -165,16 +141,10 @@ Singleton {
     }
 
     function _nextId() {
-        requestCounter++;
-        return Date.now() + requestCounter;
+        return ++requestCounter;
     }
 
     function _handleResponse(response) {
-        if (response.event) {
-            _handleEvent(response);
-            return;
-        }
-
         const id = response.id;
         if (!id) {
             if (response.apiVersion !== undefined) {
@@ -249,11 +219,23 @@ Singleton {
         requestSocket.send(req);
     }
 
+    function call(method, params, callback) {
+        sendRequest(method, params, callback ? response => callback(unwrap(response)) : null);
+    }
+
+    function unwrap(response) {
+        if (!response.error)
+            return response.result || {};
+        return {
+            "error": response.error,
+            "code": response.code || ""
+        };
+    }
+
     function refreshVersion() {
-        sendRequest("version", null, response => {
-            if (response.error)
+        call("version", null, info => {
+            if (info.error)
                 return;
-            const info = response.result || {};
             daemonVersion = info.version || "";
             if (info.apiVersion)
                 apiVersion = info.apiVersion;

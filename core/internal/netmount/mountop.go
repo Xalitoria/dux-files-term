@@ -45,8 +45,6 @@ type Answer struct {
 	Choice    uint32
 }
 
-// mountOp is the object gvfs calls back on while a mount is in flight. One is
-// exported per connect so a callback always maps to the request that caused it.
 type mountOp struct {
 	service  *Service
 	uri      string
@@ -76,6 +74,7 @@ func (o *mountOp) export(conn *dbus.Conn) error {
 func (o *mountOp) release(conn *dbus.Conn) {
 	o.mu.Lock()
 	o.done = true
+	o.password = ""
 	waiting := o.pending
 	o.pending = map[string]chan Answer{}
 	o.mu.Unlock()

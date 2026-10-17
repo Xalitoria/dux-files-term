@@ -74,7 +74,7 @@ FilePlaceSection {
     function actionTooltipFor(device) {
         switch (actionIconFor(device)) {
         case "lock_open":
-            return I18n.tr("Unlock", "Unlock");
+            return I18n.tr("Unlock", "unlock dialog header for an encrypted device");
         case "play_arrow":
             return I18n.tr("Mount", "device action");
         case "lock":

@@ -39,13 +39,9 @@ Singleton {
         _waiting.push(callback);
         if (_waiting.length > 1)
             return;
-        DankFilesService.sendRequest("trash.entries", {}, response => {
+        DankFilesService.call("trash.entries", {}, result => {
             const waiting = root._waiting;
             root._waiting = [];
-            const result = response.error ? {
-                "error": response.error,
-                "code": response.code || ""
-            } : (response.result || {});
             for (const pending of waiting)
                 pending(result);
         });
@@ -77,10 +73,9 @@ Singleton {
     function _check() {
         if (!DankFilesService.connected)
             return;
-        DankFilesService.sendRequest("trash.count", {}, response => {
-            if (response.error)
+        DankFilesService.call("trash.count", {}, result => {
+            if (result.error)
                 return;
-            const result = response.result || {};
             root.count = result.count ?? 0;
             if (result.stamp === root.stamp)
                 return;

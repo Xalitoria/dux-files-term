@@ -32,7 +32,6 @@ type Status struct {
 
 type portalInfo struct {
 	path       string
-	busName    string
 	interfaces []string
 	user       bool
 }
@@ -230,12 +229,11 @@ func readPortal(path string) (portalInfo, bool) {
 		return portalInfo{}, false
 	}
 	content := string(data)
-	busName, ok := lookupKey(content, "portal", "DBusName")
-	if !ok {
+	if _, ok := lookupKey(content, "portal", "DBusName"); !ok {
 		return portalInfo{}, false
 	}
 	interfaces, _ := lookupKey(content, "portal", "Interfaces")
-	return portalInfo{path: path, busName: busName, interfaces: backendList(interfaces)}, true
+	return portalInfo{path: path, interfaces: backendList(interfaces)}, true
 }
 
 func portalDirs(env Env) []string {

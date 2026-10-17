@@ -3,12 +3,12 @@ import test from "node:test";
 import vm from "node:vm";
 import { lift, source } from "./qml-script.mjs";
 
-const mainWindow = source("../Modules/MainWindow.qml");
+const openFlow = source("../Modules/FileOpenFlow.qml");
 
 function context() {
     const ctx = vm.createContext({ FilesFormat: { extractable: mime => mime === "application/zip" } });
     for (const name of ["openPlan", "openCount"])
-        lift(mainWindow, name, ctx);
+        lift(openFlow, name, ctx);
     return ctx;
 }
 

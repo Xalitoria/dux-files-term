@@ -33,6 +33,7 @@ Singleton {
 
     property int animationSpeed: SettingsData.AnimationSpeed.Short
     property bool popoutElevationEnabled: true
+    property bool scrollbarsEnabled: true
     property int textRenderType: SettingsData.TextRenderType.Qt
     property int textRenderQuality: SettingsData.TextRenderQuality.Default
     property bool blurBorderEnabled: true
@@ -46,48 +47,31 @@ Singleton {
     property string powerMenuDefaultAction: "logout"
     property bool powerMenuGridLayout: false
 
-    readonly property string configDir: {
-        const xdg = Quickshell.env("XDG_CONFIG_HOME");
-        const base = (xdg && xdg !== "") ? xdg : Quickshell.env("HOME") + "/.config";
-        return base + "/dfiles";
-    }
-    readonly property string settingsPath: configDir + "/ui-settings.json"
+    readonly property string settingsPath: Paths.configDir + "/ui-settings.json"
 
-    // "auto" | "light" | "dark"
     property alias themeMode: adapter.themeMode
-    // "auto" | "preset" | "custom"
     property alias colorSource: adapter.colorSource
     property alias presetTheme: adapter.presetTheme
     property alias customThemeFile: adapter.customThemeFile
-    // 0 (square) … 100; 50 keeps the Material shape scale
     property alias radiusStrength: adapter.radiusStrength
-    // base transition length in ms, 0 disables animations
     property alias animationDuration: adapter.animationDuration
     property alias reduceMotion: adapter.reduceMotion
-    // 0 smooth, 1 balanced, 2 playful
     property alias springBounce: adapter.springBounce
     property alias enableRippleEffects: adapter.enableRippleEffects
     property alias fontWeight: adapter.fontWeight
     property alias fontScale: adapter.fontScale
     property alias focusRingEnabled: adapter.focusRingEnabled
     property alias focusRingWidth: adapter.focusRingWidth
-    // "primary" | "secondary" | "outline" | "surfaceText"
     property alias focusRingColor: adapter.focusRingColor
     property alias windowTitleBars: adapter.windowTitleBars
-    // "" follows the system language, otherwise a bundled translation code such as "de"
     property alias language: adapter.language
-    // "" autodetects from $TERMINAL and the known emulators
     property alias terminal: adapter.terminal
-    // "hide" keeps the daemon warm, "quit" stops it with the last window
     property alias closeBehavior: adapter.closeBehavior
-    // "current" replaces the active pane, "tab" opens a new tab
     property alias openLocationIn: adapter.openLocationIn
     property alias extractOnOpen: adapter.extractOnOpen
     property alias registerFileManager: adapter.registerFileManager
     property alias sidebarCollapsed: adapter.sidebarCollapsed
-    // "list" | "grid", the view a new window starts in
     property alias defaultView: adapter.defaultView
-    // name | size | mtime | type
     property alias defaultSort: adapter.defaultSort
     property alias defaultSortDescending: adapter.defaultSortDescending
     property alias showHidden: adapter.showHidden
@@ -95,12 +79,9 @@ Singleton {
     property alias rememberFolderViews: adapter.rememberFolderViews
     property alias folderCounts: adapter.folderCounts
     property alias confirmTrash: adapter.confirmTrash
-    // "double" | "single"
     property alias clickToOpen: adapter.clickToOpen
-    // "auto" decides from the device, else "copy" | "move" | "ask"
     property alias dragAction: adapter.dragAction
     property alias thumbnails: adapter.thumbnails
-    // 0 means no cap
     property alias thumbnailSizeLimitMb: adapter.thumbnailSizeLimitMb
     property alias networkThumbnails: adapter.networkThumbnails
     property alias showSystemPartitions: adapter.showSystemPartitions
@@ -108,19 +89,36 @@ Singleton {
     property alias searchHidden: adapter.searchHidden
     property alias searchExcludes: adapter.searchExcludes
     property alias vimKeys: adapter.vimKeys
-    // "jump" moves to the first matching name, "filter" opens the pane filter
     property alias listTyping: adapter.listTyping
     property alias gtkBookmarksOffered: adapter.gtkBookmarksOffered
 
-    readonly property var locale: language !== "" ? Qt.locale(language) : Qt.locale()
+    function flush() {
+        if (!writeDebounce.running)
+            return;
+        writeDebounce.stop();
+        settingsFile.blockWrites = true;
+        settingsFile._write();
+    }
 
-    Component.onCompleted: Paths.mkdir(configDir)
+    Component.onDestruction: flush()
+
+    Timer {
+        id: writeDebounce
+
+        interval: 400
+        onTriggered: {
+            if (!Paths.ready) {
+                restart();
+                return;
+            }
+            settingsFile._write();
+        }
+    }
 
     FileView {
         id: settingsFile
         path: root.settingsPath
         blockLoading: true
-        blockWrites: true
         atomicWrites: true
         watchChanges: true
         printErrors: false
@@ -140,6 +138,10 @@ Singleton {
         onAdapterUpdated: {
             if (!_loaded)
                 return;
+            writeDebounce.restart();
+        }
+
+        function _write() {
             _selfWrite = true;
             writeAdapter();
         }

@@ -23,18 +23,21 @@ FocusScope {
     property bool multiSelect: true
     property bool escapeClearsSelection: true
     property bool typeAhead: !SettingsData.vimKeys
+    property bool dragEnabled: true
+    property bool dropEnabled: true
+    property bool menusEnabled: true
     property int connectRequest: 0
 
     readonly property alias path: browser.path
     readonly property alias canGoBack: browser.canGoBack
     readonly property alias canGoForward: browser.canGoForward
-    readonly property bool canGoUp: browser.canGoUp && !trashActive
     readonly property alias editingPath: browser.editingPath
-    readonly property alias renaming: browser.renaming
     readonly property alias searchModel: searchModel
     readonly property bool resultsActive: searchModel.active
     readonly property bool trashActive: !resultsActive && TrashService.filesPath !== "" && browser.path === TrashService.filesPath
     readonly property var trashView: trashActive ? trashLoader.item : null
+    readonly property string effectiveSortKey: resultsActive ? searchModel.sortKey : trashView?.model.sortKey ?? sortKey
+    readonly property bool effectiveSortDescending: resultsActive ? searchModel.sortDescending : trashView?.model.sortDescending ?? sortDescending
     readonly property var scroller: body.view?.activeList ?? body.view
     readonly property var selection: resultsActive ? results.selection : trashView ? trashView.selection : browser.selection
     readonly property var body: resultsActive ? results.body : trashView ? trashView.body : browser.body
@@ -42,6 +45,8 @@ FocusScope {
     readonly property var selectedEntries: resultsActive ? results.body.selectedEntries() : trashView ? trashView.body.selectedEntries() : browser.selectedEntries
     readonly property bool filtering: nameFilter !== "" && !resultsActive
     readonly property bool folderRemembered: SettingsData.rememberFolderViews && path !== "" && !trashActive && !resultsActive
+    readonly property bool singleClickActivates: SettingsData.clickToOpen === "single"
+    readonly property real thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
 
     signal activateRequested(var entry)
     signal openRequested(var entries)
@@ -56,7 +61,8 @@ FocusScope {
     signal columnsMenuRequested(real pointX, real pointY)
     signal previewToggleRequested
     signal focusRequested
-    signal locationRequested(var location)
+    signal serverDialogRequested
+    signal connectFailed(string uri, var result)
     signal restoreRequested
     signal emptyTrashRequested
     signal filterRequested(string text)
@@ -104,6 +110,33 @@ FocusScope {
             return;
         }
         SessionData.remember(values);
+    }
+
+    function sortBy(key) {
+        if (resultsActive) {
+            if (key !== searchModel.sortKey)
+                searchModel.setSort(key);
+            return;
+        }
+        if (key === "")
+            return;
+        if (trashView) {
+            trashView.model.setSort(key, trashView.model.sortDescending);
+            return;
+        }
+        setSortOrder(key, sortDescending);
+    }
+
+    function flipSort() {
+        if (resultsActive) {
+            searchModel.sortDescending = !searchModel.sortDescending;
+            return;
+        }
+        if (trashView) {
+            trashView.model.setSort(trashView.model.sortKey, !trashView.model.sortDescending);
+            return;
+        }
+        setSortOrder(sortKey, !sortDescending);
     }
 
     function setViewMode(mode) {
@@ -216,10 +249,6 @@ FocusScope {
         }));
     }
 
-    function marker() {
-        return browser.marker();
-    }
-
     function openSelection() {
         const entries = selectedEntries.length > 0 ? selectedEntries : [currentEntry].filter(entry => entry);
         if (entries.length === 0)
@@ -259,6 +288,32 @@ FocusScope {
             searchModel.clear();
         results.chips.resetScope();
         nameFilter = "";
+    }
+
+    function openTypedLocation(location) {
+        if (location.kind !== "remote") {
+            serverDialogRequested();
+            return;
+        }
+        const request = ++connectRequest;
+        NetworkService.connectTo(location.uri, result => {
+            if (request !== connectRequest)
+                return;
+            const path = result.error ? "" : (result.location || result.mount?.path || "");
+            settleLocation(path);
+            if (path === "" && !result.error)
+                connectFailed(location.uri, result);
+        }, location.password);
+    }
+
+    function requestItemMenu(index, pointX, pointY, modifiers) {
+        if (menusEnabled)
+            itemMenuRequested(index, pointX, pointY, modifiers);
+    }
+
+    function requestBackgroundMenu(pointX, pointY) {
+        if (menusEnabled)
+            backgroundMenuRequested(pointX, pointY);
     }
 
     function dropOn(dest, drop) {
@@ -396,7 +451,7 @@ FocusScope {
 
         backend: DirectoryService
         thumbnailsEnabled: SettingsData.thumbnails
-        thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
+        thumbnailSizeLimit: pane.thumbnailSizeLimit
     }
 
     FileBrowserView {
@@ -415,8 +470,8 @@ FocusScope {
         listZoom: SessionData.listZoom
         listColumns: SessionData.listColumns
         columnWidths: SessionData.columnWidths
-        dragEnabled: true
-        dropEnabled: true
+        dragEnabled: pane.dragEnabled
+        dropEnabled: pane.dropEnabled
         showSelectionFooter: true
         previewDrawer: true
         previewOpen: pane.previewOpen
@@ -427,13 +482,13 @@ FocusScope {
         filters: pane.filters
         multiSelect: pane.multiSelect
         escapeClearsSelection: pane.escapeClearsSelection
-        singleClickActivates: SettingsData.clickToOpen === "single"
+        singleClickActivates: pane.singleClickActivates
         typeAheadEnabled: pane.typeAhead
         typeAheadMode: SettingsData.listTyping
         countFolders: SettingsData.folderCounts
         dirsFirst: SettingsData.foldersFirst
         thumbnailsEnabled: SettingsData.thumbnails
-        thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
+        thumbnailSizeLimit: pane.thumbnailSizeLimit
         networkThumbnails: SettingsData.networkThumbnails
         folderJump: FolderHistory
         unlistedPath: TrashService.filesPath
@@ -453,9 +508,12 @@ FocusScope {
         paneBorderColor: Theme.primary
         onNavigating: target => pane.resolveFolder(target)
         onActivateRequested: entry => pane.activateRequested(entry)
-        onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.itemMenuRequested(index, pointX, pointY, modifiers)
-        onBackgroundMenuRequested: (pointX, pointY) => pane.backgroundMenuRequested(pointX, pointY)
-        onColumnsMenuRequested: (pointX, pointY) => pane.columnsMenuRequested(pointX, pointY)
+        onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.requestItemMenu(index, pointX, pointY, modifiers)
+        onBackgroundMenuRequested: (pointX, pointY) => pane.requestBackgroundMenu(pointX, pointY)
+        onColumnsMenuRequested: (pointX, pointY) => {
+            if (pane.menusEnabled)
+                pane.columnsMenuRequested(pointX, pointY);
+        }
         onItemsDropped: (dest, drop) => pane.dropOn(dest, drop)
         onDragRequested: paths => pane.dragRequested(paths)
         onRenameRequested: (target, name) => pane.renameRequested(target, name)
@@ -466,8 +524,11 @@ FocusScope {
         onPreviewResized: width => pane.setPreviewWidth(width)
         onFocusRequested: pane.focusRequested()
         onTabRequested: target => pane.tabRequested(target)
-        onPathMenuRequested: (target, pointX, pointY) => pane.pathMenuRequested(target, pointX, pointY)
-        onLocationRequested: location => pane.locationRequested(location)
+        onPathMenuRequested: (target, pointX, pointY) => {
+            if (pane.menusEnabled)
+                pane.pathMenuRequested(target, pointX, pointY);
+        }
+        onLocationRequested: location => pane.openTypedLocation(location)
         onLocationCancelled: pane.connectRequest++
         onFilterRequested: text => pane.filterRequested(text)
         onFilterFocusRequested: pane.filterFocusRequested()
@@ -487,13 +548,14 @@ FocusScope {
         previewOpen: pane.previewOpen
         previewWidth: CacheData.previewWidth
         cutSet: pane.cutSet
-        singleClickActivates: SettingsData.clickToOpen === "single"
+        dragEnabled: pane.dragEnabled
+        singleClickActivates: pane.singleClickActivates
         typeAheadEnabled: pane.typeAhead
         countFolders: SettingsData.folderCounts
         border.width: pane.showActiveOutline && pane.active ? Theme.outlineWidthFocused : 0
         border.color: Theme.primary
         onActivateRequested: entry => pane.activateRequested(entry)
-        onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.itemMenuRequested(index, pointX, pointY, modifiers)
+        onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.requestItemMenu(index, pointX, pointY, modifiers)
         onDragRequested: paths => pane.dragRequested(paths)
         onRenameRequested: (target, name) => pane.renameRequested(target, name)
         onZoomRequested: (mode, level) => pane.setZoom(mode, level)
@@ -523,18 +585,18 @@ FocusScope {
             previewOpen: pane.previewOpen
             previewWidth: CacheData.previewWidth
             nameFilter: pane.nameFilter
-            singleClickActivates: SettingsData.clickToOpen === "single"
-            typeAheadEnabled: !SettingsData.vimKeys
+            singleClickActivates: pane.singleClickActivates
+            typeAheadEnabled: pane.typeAhead
             typeAheadMode: SettingsData.listTyping
             countFolders: SettingsData.folderCounts
             thumbnailsEnabled: SettingsData.thumbnails
-            thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
+            thumbnailSizeLimit: pane.thumbnailSizeLimit
             outlined: pane.showActiveOutline && pane.active
             onFilterRequested: text => pane.filterRequested(text)
             onFilterFocusRequested: pane.filterFocusRequested()
             onActivateRequested: entry => pane.activateRequested(entry)
-            onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.itemMenuRequested(index, pointX, pointY, modifiers)
-            onBackgroundMenuRequested: (pointX, pointY) => pane.backgroundMenuRequested(pointX, pointY)
+            onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.requestItemMenu(index, pointX, pointY, modifiers)
+            onBackgroundMenuRequested: (pointX, pointY) => pane.requestBackgroundMenu(pointX, pointY)
             onRestoreRequested: pane.restoreRequested()
             onEmptyRequested: pane.emptyTrashRequested()
             onItemsDropped: drop => pane.dropOn(TrashService.filesPath, drop)

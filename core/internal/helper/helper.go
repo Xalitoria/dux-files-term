@@ -1,6 +1,3 @@
-// Package helper is the root side of "retry as administrator". pkexec starts
-// it, it performs exactly one filesystem operation and exits. Every path is
-// resolved with RESOLVE_NO_SYMLINKS and every syscall is dirfd-relative.
 package helper
 
 import (
@@ -37,9 +34,7 @@ const (
 const (
 	FlagRecursive = "recursive"
 	FlagNoReplace = "noreplace"
-	// Ready is printed on stdout once an elevated write has created its file,
-	// so the caller learns about a refused open before it sends any frame.
-	Ready = "ready"
+	Ready         = "ready"
 )
 
 type Info struct {
@@ -66,13 +61,9 @@ const (
 	ExitRefused = 2
 )
 
-// maxID keeps (uid_t)-1, the kernel's "leave unchanged" sentinel, out of the
-// explicit ids; -1 is the only way to say keep.
-const maxID = 1<<32 - 1
+// (uid_t)-1 is the kernel's keep-unchanged sentinel; -1 is the only way to say keep
+const MaxID = 1<<32 - 1
 
-// Main is the pkexec entrypoint: it refuses anything that is not a root
-// process started by pkexec, confines itself, runs one operation and reports
-// the outcome as a JSON line on stderr.
 func Main(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	callerUID, err := strconv.Atoi(os.Getenv("PKEXEC_UID"))
 	if err != nil {
@@ -98,8 +89,6 @@ func Main(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	return 0
 }
 
-// Run performs one operation. It is separate from Main so the operations can
-// be tested as an ordinary user on files that user owns.
 func Run(args []string, stdin io.Reader, stdout io.Writer) error {
 	if len(args) == 0 {
 		return invalid("missing operation")
@@ -211,7 +200,7 @@ func chownArgs(args []string) error {
 
 func parseMode(raw string) (uint32, error) {
 	mode, err := strconv.ParseUint(raw, 8, 32)
-	if err != nil || mode&^0o7777 != 0 {
+	if err != nil || mode&^0o777 != 0 {
 		return 0, invalid("not an octal mode: " + raw)
 	}
 	return uint32(mode), nil
@@ -219,7 +208,7 @@ func parseMode(raw string) (uint32, error) {
 
 func parseID(raw string) (int, error) {
 	id, err := strconv.Atoi(raw)
-	if err != nil || id < -1 || id >= maxID {
+	if err != nil || id < -1 || id >= MaxID {
 		return 0, invalid("not a uid or gid: " + raw)
 	}
 	return id, nil
@@ -245,8 +234,6 @@ func report(stderr io.Writer, err error) {
 	fmt.Fprintln(stderr, string(line))
 }
 
-// CodeOf maps a helper error to the shared code vocabulary, whether it was
-// already coded or came straight from a syscall.
 func CodeOf(err error) files.Code {
 	var coded *files.Error
 	if errors.As(err, &coded) {

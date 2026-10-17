@@ -25,45 +25,27 @@ Singleton {
     signal requestFailed(string message, string code)
     signal connected(var mount)
 
-    property var _handler: data => root._onEvent(data)
-    property var _subscribed: null
-
-    Component.onCompleted: _attach()
-    onTransportChanged: _attach()
-
-    readonly property Connections _daemonLink: Connections {
-        target: root.transport
-        function onConnectedChanged() {
-            if (root.transport.connected)
-                root.refresh();
-        }
-    }
-
-    function _attach() {
-        if (_subscribed === transport)
-            return;
-        if (_subscribed)
-            _subscribed.unsubscribeTopic("network", _handler);
-        _subscribed = transport;
-        transport.subscribeTopic("network", _handler);
-        if (transport.connected)
-            refresh();
+    readonly property DaemonTopic _network: DaemonTopic {
+        transport: root.transport
+        topic: "network"
+        handler: data => root._onEvent(data)
+        onConnected: root.refresh()
     }
 
     function refresh() {
-        transport.sendRequest("network.mounts", null, response => {
-            if (response.error)
+        transport.call("network.mounts", null, result => {
+            if (result.error)
                 return;
-            root._applyMounts(response.result || {});
+            root._applyMounts(result);
         });
         refreshRecent();
     }
 
     function refreshRecent() {
-        transport.sendRequest("network.recent", null, response => {
-            if (response.error)
+        transport.call("network.recent", null, result => {
+            if (result.error)
                 return;
-            root.servers = (response.result || {}).servers || [];
+            root.servers = result.servers || [];
         });
     }
 
@@ -109,12 +91,12 @@ Singleton {
     }
 
     function forget(uri) {
-        transport.sendRequest("network.forget", {
+        transport.call("network.forget", {
             "uri": uri
-        }, response => {
-            if (response.error)
+        }, result => {
+            if (result.error)
                 return;
-            root.servers = (response.result || {}).servers || [];
+            root.servers = result.servers || [];
         });
     }
 
@@ -146,18 +128,10 @@ Singleton {
     }
 
     function _send(method, params, callback) {
-        transport.sendRequest(method, params, response => {
-            if (response.error) {
-                root.requestFailed(response.error, response.code || "");
-                if (callback)
-                    callback({
-                        "error": response.error,
-                        "code": response.code || ""
-                    });
-                return;
-            }
-            if (callback)
-                callback(response.result || {});
+        transport.call(method, params, result => {
+            if (result.error)
+                root.requestFailed(result.error, result.code);
+            callback?.(result);
         });
     }
 }

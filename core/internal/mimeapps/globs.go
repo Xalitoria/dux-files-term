@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"path"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,6 +24,7 @@ type globSet struct {
 	suffixesCS map[string]globEntry
 	others     []globEntry
 	maxSuffix  int
+	byMime     map[string][]string
 }
 
 func newGlobSet() *globSet {
@@ -31,6 +33,7 @@ func newGlobSet() *globSet {
 		literalsCS: map[string]globEntry{},
 		suffixes:   map[string]globEntry{},
 		suffixesCS: map[string]globEntry{},
+		byMime:     map[string][]string{},
 	}
 }
 
@@ -96,6 +99,9 @@ func isFlagList(field string) bool {
 }
 
 func (g *globSet) add(e globEntry) {
+	if lower := strings.ToLower(e.pattern); !slices.Contains(g.byMime[e.mime], lower) {
+		g.byMime[e.mime] = append(g.byMime[e.mime], lower)
+	}
 	literals, suffixes := g.literals, g.suffixes
 	if e.cs {
 		literals, suffixes = g.literalsCS, g.suffixesCS
@@ -129,8 +135,6 @@ func (g *globSet) sort() {
 	})
 }
 
-// match follows the spec order: an exact filename beats the longest suffix,
-// which beats any other pattern.
 func (g *globSet) match(name string) string {
 	lower := strings.ToLower(name)
 	sameLength := len(lower) == len(name)

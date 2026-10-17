@@ -28,33 +28,15 @@ Singleton {
     signal jobFinished(var job)
 
     property var _byId: ({})
-    property var _handler: data => root._onEvent(data)
-    property var _subscribed: null
 
-    Component.onCompleted: _attach()
-    onTransportChanged: _attach()
-
-    readonly property Connections _daemonLink: Connections {
-        target: root.transport
-        function onConnectedChanged() {
-            if (!root.transport.connected)
-                return;
+    readonly property DaemonTopic _jobs: DaemonTopic {
+        transport: root.transport
+        topic: "jobs"
+        handler: data => root._onEvent(data)
+        onConnected: {
             root.refresh();
             root.refreshElevation();
         }
-    }
-
-    function _attach() {
-        if (_subscribed === transport)
-            return;
-        if (_subscribed)
-            _subscribed.unsubscribeTopic("jobs", _handler);
-        _subscribed = transport;
-        transport.subscribeTopic("jobs", _handler);
-        if (!transport.connected)
-            return;
-        refresh();
-        refreshElevation();
     }
 
     function copy(paths, dest, scope) {

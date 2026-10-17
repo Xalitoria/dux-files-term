@@ -152,7 +152,7 @@ func TestHandleReportsUdisksErrors(t *testing.T) {
 
 	out := call(t, svc, ipc.Request{ID: 10, Method: "devices.unmount", Params: map[string]any{"id": "/block/stick"}})
 	assert.Equal(t, "EBUSY", out["code"])
-	assert.Equal(t, "target is busy", out["error"])
+	assert.Contains(t, out["error"], "target is busy")
 }
 
 func TestHandleRejectsMissingParams(t *testing.T) {

@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/AvengeMedia/dankgo/files"
 )
 
 type Mountable struct {
@@ -15,8 +17,6 @@ type Mountable struct {
 	HostIsInet  bool
 }
 
-// Spec is a GMountSpec: a path prefix inside the share plus the keys the gvfs
-// backend was registered with.
 type Spec struct {
 	Prefix string
 	Items  map[string]string
@@ -51,20 +51,18 @@ func FindMountable(scheme string, mountables []Mountable) (Mountable, bool) {
 	return Mountable{}, false
 }
 
-// smb splits the first path segment into a share, which gvfs-smb expects and
-// which is unverified here because that backend is not installed.
 func ParseURI(raw string, mountables []Mountable) (Spec, error) {
 	parsed, err := url.Parse(strings.TrimSpace(raw))
 	if err != nil {
-		return Spec{}, fail("EINVAL", "%s is not a valid address", raw)
+		return Spec{}, fail(files.CodeInvalid, "%s is not a valid address", raw)
 	}
 	if parsed.Scheme == "" || parsed.Host == "" {
-		return Spec{}, fail("EINVAL", "%s needs a scheme and a host, for example sftp://host/path", raw)
+		return Spec{}, fail(files.CodeInvalid, "%s needs a scheme and a host, for example sftp://host/path", raw)
 	}
 
 	mountable, ok := FindMountable(parsed.Scheme, mountables)
 	if !ok {
-		return Spec{}, fail("NOTSUPPORTED", "no gvfs backend handles %s://", parsed.Scheme)
+		return Spec{}, fail(files.CodeNotSupported, "no gvfs backend handles %s://", parsed.Scheme)
 	}
 
 	spec := Spec{Prefix: "/", Items: map[string]string{"type": mountable.Type}}
@@ -109,7 +107,6 @@ func smbSpec(spec Spec, host string) Spec {
 	return spec
 }
 
-// URIOf rebuilds a displayable address from a mounted spec.
 func URIOf(spec Spec, mountables []Mountable) string {
 	scheme := spec.Type()
 	if mountable, ok := FindMountable(spec.Type(), mountables); ok {

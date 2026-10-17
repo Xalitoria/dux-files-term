@@ -33,8 +33,6 @@ func newUsageCache() *usageCache {
 	return &usageCache{now: time.Now, entries: map[string]usageEntry{}}
 }
 
-// get answers from the cache unless the entry aged out or the caller forces a
-// read, so a visible sidebar never turns into a statfs poll.
 func (c *usageCache) get(mountPoint string, force bool) Usage {
 	c.mu.Lock()
 	cached, ok := c.entries[mountPoint]

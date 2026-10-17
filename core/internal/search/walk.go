@@ -60,8 +60,6 @@ func newSearch(svc *Service) *search {
 	return &search{svc: svc, ctx: ctx, cancel: cancel, finished: make(chan struct{})}
 }
 
-// follow ends the search with the connection that started it; it runs after
-// register so the id is settled.
 func (sc *search) follow(parent context.Context) {
 	sc.stopWait = context.AfterFunc(parent, func() {
 		sc.cancel()
@@ -136,8 +134,6 @@ func (sc *search) publish(ev event) {
 	sc.svc.publish(sc.topic, ev)
 }
 
-// attach flushes the backlog under the lock so a batch the collector emits
-// meanwhile cannot overtake it.
 func (sc *search) attach() {
 	sc.mu.Lock()
 	sc.attached = true
@@ -152,10 +148,6 @@ func (sc *search) attach() {
 	}
 }
 
-// retire drops the search from the registry once nothing can still ask for
-// its buffered events: a search that finished before its topic had a
-// subscriber stays until Attach flushes it, Cancel drops it, or the client
-// goes away (the disconnect hook stays armed for that).
 func (sc *search) retire() {
 	sc.mu.Lock()
 	sc.done = true
@@ -270,8 +262,6 @@ func (w *walker) emit(path string, points int) bool {
 	return w.em.emit(hit{Entry: entry, Score: points})
 }
 
-// flushReservoir stats and emits the best fuzzy-only matches once the walk
-// is over, so they never crowd out stronger matches found later in the tree.
 func (w *walker) flushReservoir() {
 	for _, f := range w.reservoir.drain() {
 		if w.sc.ctx.Err() != nil {
@@ -323,8 +313,6 @@ func (r *reservoir) drain() []fuzzyHit {
 	return out
 }
 
-// emitter batches hits into events, flushing on size or after a short pause,
-// and stops the search at the cap.
 type emitter struct {
 	sc      *search
 	limit   int

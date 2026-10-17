@@ -12,14 +12,12 @@ import (
 )
 
 type resolution struct {
-	dst      string
-	skip     bool
-	merge    bool
-	replaced bool
-	abort    bool
-	// unknown: the target could not be stat'ed, so nothing may replace it
-	// silently later.
-	unknown bool
+	dst        string
+	skip       bool
+	merge      bool
+	replaced   bool
+	abort      bool
+	unverified bool
 }
 
 func (r *runner) resolve(src, dst string, info os.FileInfo, move bool) resolution {
@@ -28,7 +26,7 @@ func (r *runner) resolve(src, dst string, info os.FileInfo, move bool) resolutio
 	case errors.Is(err, fs.ErrNotExist):
 		return resolution{dst: dst}
 	case err != nil:
-		return resolution{dst: dst, unknown: true}
+		return resolution{dst: dst, unverified: true}
 	case os.SameFile(info, target) && move:
 		return resolution{skip: true}
 	case os.SameFile(info, target):
@@ -84,8 +82,6 @@ func (r *runner) describe(path string) files.Entry {
 	return entry
 }
 
-// uniquePath appends "(copy)", then "(copy 2)", "(copy 3)"... before the
-// extension until the name is free.
 func uniquePath(path string) string {
 	dir := filepath.Dir(path)
 	stem, ext := splitName(filepath.Base(path))

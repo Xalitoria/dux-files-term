@@ -169,8 +169,6 @@ type spec struct {
 	epoch     uint64
 }
 
-// asOrigin is what a redo replays after an undo: the request without its
-// replay state and without bytes that would otherwise sit in the stack.
 func (s spec) asOrigin() spec {
 	s.replay = replayNone
 	s.origin = nil

@@ -9,13 +9,7 @@ SettingsRow {
     property string description: ""
     property string currentValue: ""
     property alias options: dropdown.options
-    property alias optionIcons: dropdown.optionIcons
-    property alias optionIconMap: dropdown.optionIconMap
-    property alias optionColorMap: dropdown.optionColorMap
-    property alias enableFuzzySearch: dropdown.enableFuzzySearch
-    property alias maxPopupHeight: dropdown.maxPopupHeight
     property alias dropdownWidth: dropdown.dropdownWidth
-    property alias emptyText: dropdown.emptyText
 
     signal valueChanged(string value)
 

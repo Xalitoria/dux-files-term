@@ -15,8 +15,6 @@ const (
 	TypeExe       = "application/x-executable"
 )
 
-// magicWinsPriority is the shared-mime-info threshold above which a magic
-// match overrides a glob match, as gio does it.
 const magicWinsPriority = 80
 
 const minSniffExtent = 256
@@ -30,11 +28,8 @@ func NewDetector(db *DB) *Detector { return &Detector{db: db} }
 
 func (d *Detector) DB() *DB { return d.db }
 
-// FromName matches the glob database and never touches the disk.
 func (d *Detector) FromName(name string) string { return d.db.globs.match(name) }
 
-// Sniff reads the head of a file and returns its magic type, falling back to
-// text or binary.
 func (d *Detector) Sniff(path string) string {
 	buf := d.borrow()
 	defer d.release(buf)
@@ -52,8 +47,6 @@ func (d *Detector) Sniff(path string) string {
 	return TypeBinary
 }
 
-// Detect applies the full spec order for one path: a glob match stands unless
-// magic outranks it or there was no glob match at all.
 func (d *Detector) Detect(path string, isDir bool) string {
 	if isDir {
 		return TypeDirectory
@@ -145,8 +138,6 @@ func trimPartialRune(head []byte) []byte {
 	return head
 }
 
-// DesktopDisplay returns the name and icon a trusted desktop file should be
-// listed under. An untrusted file keeps its raw name.
 func (d *Detector) DesktopDisplay(path string, trusted bool) (name, icon string, ok bool) {
 	if !trusted {
 		return "", "", false

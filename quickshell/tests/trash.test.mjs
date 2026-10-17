@@ -4,7 +4,7 @@ import vm from "node:vm";
 import { lift, source } from "./qml-script.mjs";
 
 const trashModel = source("../Modules/TrashModel.qml");
-const mainWindow = source("../Modules/MainWindow.qml");
+const openFlow = source("../Modules/FileOpenFlow.qml");
 
 function modelContext() {
     const ctx = vm.createContext({ NameFilter: {} });
@@ -95,7 +95,7 @@ test("restore sends one job per trash directory", () => {
         opScope: "window1",
         FileOpsService: { restore: (names, dir, scope) => calls.push({ names: [...names], dir, scope }) }
     });
-    lift(mainWindow, "restoreEntries", ctx);
+    lift(openFlow, "restoreEntries", ctx);
     ctx.restoreEntries([
         { trashDir: "/home/me/.local/share/Trash", trashName: "a.txt" },
         { trashDir: "/media/disk/.Trash-1000", trashName: "photo.jpg" },

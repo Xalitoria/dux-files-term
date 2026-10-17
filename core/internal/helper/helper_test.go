@@ -49,6 +49,7 @@ func TestRunRefusesBadArguments(t *testing.T) {
 		"missing mode":     {OpMkdir, root + "/d"},
 		"bad mode":         {OpMkdir, root + "/d", "9x"},
 		"mode too wide":    {OpChmod, root, "17777"},
+		"special bits":     {OpChmod, root, "4755"},
 		"bad flag":         {OpChmod, root, "755", "deep"},
 		"bad uid":          {OpChown, root, "x", "0"},
 		"uid sentinel":     {OpChown, root, "4294967295", "0"},

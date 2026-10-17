@@ -62,7 +62,7 @@ func start(t *testing.T, address string, ui UI) *Service {
 	t.Helper()
 	conn, err := dbus.Connect(address)
 	require.NoError(t, err)
-	svc, err := New(conn, ui, func() func(string) []string { return globs })
+	svc, err := New(conn, ui, globs)
 	require.NoError(t, err)
 	t.Cleanup(svc.Close)
 	status := svc.SetEnabled(true)

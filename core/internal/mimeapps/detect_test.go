@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AvengeMedia/dankgo/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -111,5 +112,5 @@ func TestMimeOfReportsMissingPaths(t *testing.T) {
 
 	_, err := svc.MimeOf(filepath.Join(root, "gone"))
 	require.Error(t, err)
-	assert.Equal(t, "ENOENT", CodeOf(err))
+	assert.Equal(t, files.CodeNotFound, files.CodeOf(err))
 }

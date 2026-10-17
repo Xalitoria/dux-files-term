@@ -1,67 +1,17 @@
 package filemanager1
 
 import (
-	"bufio"
 	"errors"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"testing"
 
+	"github.com/AvengeMedia/dankfiles/core/internal/dbustest"
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-const busConfig = `<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
- "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-<busconfig>
-  <type>session</type>
-  <listen>unix:dir=%s</listen>
-  <auth>EXTERNAL</auth>
-  <policy context="default">
-    <allow send_destination="*" eavesdrop="true"/>
-    <allow eavesdrop="true"/>
-    <allow own="*"/>
-  </policy>
-</busconfig>`
-
-func privateBus(t *testing.T) string {
-	t.Helper()
-	bin, err := exec.LookPath("dbus-daemon")
-	if err != nil {
-		t.Skip("dbus-daemon not installed")
-	}
-	dir := t.TempDir()
-	config := filepath.Join(dir, "bus.conf")
-	require.NoError(t, os.WriteFile(config, []byte(strings.Replace(busConfig, "%s", dir, 1)), 0o600))
-
-	cmd := exec.Command(bin, "--config-file="+config, "--nofork", "--nopidfile", "--print-address")
-	cmd.SysProcAttr = &syscall.SysProcAttr{Pdeathsig: syscall.SIGKILL}
-	stdout, err := cmd.StdoutPipe()
-	require.NoError(t, err)
-	require.NoError(t, cmd.Start())
-	t.Cleanup(func() {
-		_ = cmd.Process.Kill()
-		_ = cmd.Wait()
-	})
-
-	address, err := bufio.NewReader(stdout).ReadString('\n')
-	require.NoError(t, err)
-	return strings.TrimSpace(address)
-}
-
-func connect(t *testing.T, address string) *dbus.Conn {
-	t.Helper()
-	conn, err := dbus.Connect(address)
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = conn.Close() })
-	return conn
-}
 
 type recorder struct {
 	mu    sync.Mutex
@@ -99,11 +49,11 @@ func start(t *testing.T, address string, handler Handler) *Service {
 }
 
 func TestIntrospectionMatchesTheInterface(t *testing.T) {
-	address := privateBus(t)
+	address := dbustest.Bus(t)
 	svc := start(t, address, &recorder{})
 	require.True(t, svc.SetEnabled(true).Owned)
 
-	node, err := introspect.Call(connect(t, address).Object(Name, Path))
+	node, err := introspect.Call(dbustest.Connect(t, address).Object(Name, Path))
 	require.NoError(t, err)
 
 	signatures := map[string]string{}
@@ -127,12 +77,12 @@ func TestIntrospectionMatchesTheInterface(t *testing.T) {
 }
 
 func TestMethodsReachTheHandler(t *testing.T) {
-	address := privateBus(t)
+	address := dbustest.Bus(t)
 	rec := &recorder{}
 	svc := start(t, address, rec)
 	require.True(t, svc.SetEnabled(true).Owned)
 
-	obj := connect(t, address).Object(Name, Path)
+	obj := dbustest.Connect(t, address).Object(Name, Path)
 	uris := []string{"file:///home/me/a.txt", "file:///home/me/b%20c.txt"}
 	require.NoError(t, obj.Call(Interface+".ShowFolders", 0, uris[:1], "").Err)
 	require.NoError(t, obj.Call(Interface+".ShowItems", 0, uris, "startup-token").Err)
@@ -146,11 +96,11 @@ func TestMethodsReachTheHandler(t *testing.T) {
 }
 
 func TestHandlerErrorsReachTheCaller(t *testing.T) {
-	address := privateBus(t)
+	address := dbustest.Bus(t)
 	svc := start(t, address, &recorder{err: errors.New("/nope does not exist")})
 	require.True(t, svc.SetEnabled(true).Owned)
 
-	err := connect(t, address).Object(Name, Path).Call(Interface+".ShowItems", 0, []string{"file:///nope"}, "").Err
+	err := dbustest.Connect(t, address).Object(Name, Path).Call(Interface+".ShowItems", 0, []string{"file:///nope"}, "").Err
 	var dbusErr dbus.Error
 	require.ErrorAs(t, err, &dbusErr)
 	assert.Equal(t, "org.freedesktop.DBus.Error.Failed", dbusErr.Name)
@@ -158,8 +108,8 @@ func TestHandlerErrorsReachTheCaller(t *testing.T) {
 }
 
 func TestAnotherOwnerIsNotReplaced(t *testing.T) {
-	address := privateBus(t)
-	other := connect(t, address)
+	address := dbustest.Bus(t)
+	other := dbustest.Connect(t, address)
 	reply, err := other.RequestName(Name, 0)
 	require.NoError(t, err)
 	require.Equal(t, dbus.RequestNameReplyPrimaryOwner, reply)
@@ -177,7 +127,7 @@ func TestAnotherOwnerIsNotReplaced(t *testing.T) {
 }
 
 func TestDisablingReleasesTheName(t *testing.T) {
-	address := privateBus(t)
+	address := dbustest.Bus(t)
 	svc := start(t, address, &recorder{})
 	require.True(t, svc.SetEnabled(true).Owned)
 
@@ -185,13 +135,13 @@ func TestDisablingReleasesTheName(t *testing.T) {
 	assert.False(t, status.Enabled)
 	assert.False(t, status.Owned)
 
-	reply, err := connect(t, address).RequestName(Name, dbus.NameFlagDoNotQueue)
+	reply, err := dbustest.Connect(t, address).RequestName(Name, dbus.NameFlagDoNotQueue)
 	require.NoError(t, err)
 	assert.Equal(t, dbus.RequestNameReplyPrimaryOwner, reply)
 }
 
 func TestDisabledServiceNeverRequestsTheName(t *testing.T) {
-	address := privateBus(t)
+	address := dbustest.Bus(t)
 	svc := start(t, address, &recorder{})
 
 	status := svc.Status()

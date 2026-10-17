@@ -10,6 +10,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
 	"github.com/AvengeMedia/dankfiles/core/internal/search"
+	"github.com/AvengeMedia/dankgo/ipc/params"
 )
 
 func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
@@ -93,7 +94,7 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 // withTerminalDefault fills the terminal the UI settings name when a caller
 // (the CLI, another client) did not pick one.
 func withTerminalDefault(req Request, deps Deps) Request {
-	if deps.Settings == nil || ParamString(req.Params, "terminal") != "" {
+	if deps.Settings == nil || params.StringOpt(req.Params, "terminal", "") != "" {
 		return req
 	}
 	terminal := deps.Settings().Terminal

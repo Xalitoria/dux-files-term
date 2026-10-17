@@ -3,7 +3,9 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import QtCore
+import qs.Services
 
 Singleton {
     id: root
@@ -12,6 +14,13 @@ Singleton {
     readonly property url xdgCache: StandardPaths.standardLocations(StandardPaths.GenericCacheLocation)[0]
     readonly property url cache: `${xdgCache}/dfiles`
     readonly property url imagecache: `${cache}/imagecache`
+    readonly property url stateDir: `${StandardPaths.writableLocation(StandardPaths.GenericStateLocation)}/dfiles`
+    readonly property string configDir: {
+        const xdg = Quickshell.env("XDG_CONFIG_HOME");
+        const base = (xdg && xdg !== "") ? xdg : Quickshell.env("HOME") + "/.config";
+        return base + "/dfiles";
+    }
+    property bool ready: false
 
     function stringify(path: url): string {
         return path.toString().replace(/%20/g, " ");
@@ -21,22 +30,8 @@ Singleton {
         return stringify(path).replace("file://", "");
     }
 
-    function expandTilde(path: string): string {
-        if (!path.startsWith("~"))
-            return path;
-        return strip(root.home) + path.substring(1);
-    }
-
     function shortenHome(path: string): string {
         return path.replace(strip(root.home), "~");
-    }
-
-    function toFileUrl(path: string): string {
-        return path.startsWith("file://") ? path : "file://" + path;
-    }
-
-    function mkdir(path: url): void {
-        Quickshell.execDetached(["mkdir", "-p", strip(path)]);
     }
 
     property var _iconPaths: ({})
@@ -77,5 +72,13 @@ Singleton {
         Quickshell.clipboardText = path;
     }
 
-    Component.onCompleted: mkdir(imagecache)
+    Process {
+        command: ["mkdir", "-p", root.strip(root.imagecache), root.configDir, root.strip(root.stateDir)]
+        running: true
+        onExited: code => {
+            if (code !== 0)
+                Log.warn(`mkdir of the app dirs exited with ${code}`);
+            root.ready = true;
+        }
+    }
 }

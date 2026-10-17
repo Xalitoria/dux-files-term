@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/AvengeMedia/dankfiles/core/internal/filechooser"
@@ -38,7 +39,7 @@ type Controller struct {
 	service     *filechooser.Service
 	unavailable string
 	resident    bool
-	changed     time.Time
+	changed     atomic.Pointer[time.Time]
 }
 
 func NewController(service *filechooser.Service, resident bool) *Controller {
@@ -99,9 +100,14 @@ func (c *Controller) Install() (Report, error) {
 	if err != nil {
 		return c.report(status), err
 	}
-	c.changed = time.Now()
+	c.markChanged()
 	c.reloadBus()
 	return c.report(status), nil
+}
+
+func (c *Controller) markChanged() {
+	now := time.Now()
+	c.changed.Store(&now)
 }
 
 func (c *Controller) reloadBus() {
@@ -124,7 +130,7 @@ func (c *Controller) Uninstall() (Report, error) {
 	if err != nil {
 		return c.report(status), err
 	}
-	c.changed = time.Now()
+	c.markChanged()
 	c.reloadBus()
 	return c.report(status), nil
 }
@@ -166,7 +172,10 @@ func (c *Controller) frontend(status portalsetup.Status) Frontend {
 }
 
 func (c *Controller) newestChange(status portalsetup.Status) time.Time {
-	newest := c.changed
+	var newest time.Time
+	if changed := c.changed.Load(); changed != nil {
+		newest = *changed
+	}
 	if !status.Managed && !status.Active {
 		return newest
 	}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -20,16 +21,14 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
 	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
-	"github.com/AvengeMedia/dankfiles/core/internal/mimeglobs"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
-	"github.com/AvengeMedia/dankfiles/core/internal/paths"
 	"github.com/AvengeMedia/dankfiles/core/internal/portal"
-	"github.com/AvengeMedia/dankfiles/core/internal/portalsetup"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 	"github.com/AvengeMedia/dankfiles/core/internal/search"
 	"github.com/AvengeMedia/dankfiles/core/internal/settings"
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/log"
+	dankpaths "github.com/AvengeMedia/dankgo/paths"
 	"github.com/godbus/dbus/v5"
 )
 
@@ -50,6 +49,7 @@ type daemonServices struct {
 	bookmarks *bookmarks.Store
 	fm1       *filemanager1.Service
 	chooser   *filechooser.Service
+	colors    *colorscheme.Watcher
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -86,6 +86,9 @@ func (s *daemonServices) Close() {
 	}
 	if s.bookmarks != nil {
 		s.bookmarks.Close()
+	}
+	if s.colors != nil {
+		s.colors.Close()
 	}
 	if s.ipc != nil {
 		s.ipc.Close()
@@ -156,6 +159,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 		Bookmarks:   bookmarkStore,
 		Settings:    func() settings.UISettings { return settings.Load(config) },
 		Sandbox:     caps,
+		Quit:        requestQuit,
 	}
 
 	var fm1 *filemanager1.Service
@@ -166,18 +170,15 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 		deps.FileManager = fm1
 	}
 
+	svc := &daemonServices{files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore, fm1: fm1, chooser: chooser, colors: colorSchemeWatcher}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {
-		if fm1 != nil {
-			fm1.Close()
-		}
-		if chooser != nil {
-			chooser.Close()
-		}
+		svc.Close()
 		return nil, err
 	}
-
-	return &daemonServices{ipc: ipcSrv, ipcErrCh: ipcErrCh, files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore, fm1: fm1, chooser: chooser}, nil
+	svc.ipc = ipcSrv
+	svc.ipcErrCh = ipcErrCh
+	return svc, nil
 }
 
 // localMounts lists where the mounted local drives sit, leaving out the
@@ -236,7 +237,7 @@ func startPortalChooser(deps ipc.Deps, caps sandbox.Capabilities) (*filechooser.
 		log.Warnf("portal file chooser unavailable: %v", err)
 		return nil, portal.NewController(nil, keepRunning)
 	}
-	svc, err := filechooser.New(conn, ipc.ChooserUI{Deps: deps}, mimeGlobs)
+	svc, err := filechooser.New(conn, ipc.ChooserUI{Deps: deps}, func(mime string) []string { return mimeDB().Globs(mime) })
 	if err != nil {
 		conn.Close()
 		log.Warnf("portal file chooser unavailable: %v", err)
@@ -246,13 +247,12 @@ func startPortalChooser(deps ipc.Deps, caps sandbox.Capabilities) (*filechooser.
 	return svc, portal.NewController(svc, keepRunning)
 }
 
-func mimeGlobs() func(string) []string {
-	env := portalsetup.FromProcess()
-	return mimeglobs.Load(env.DataHome, env.DataDirs).Globs
-}
+var mimeDB = sync.OnceValue(func() *mimeapps.DB { return mimeapps.LoadDB(mimeapps.MimeDirs()) })
+
+var appPaths = dankpaths.New("dfiles")
 
 func configHome() string {
-	dir, err := paths.ConfigDir()
+	dir, err := appPaths.ConfigDir()
 	if err != nil {
 		log.Warnf("config dir unavailable: %v", err)
 		return os.TempDir()
@@ -261,7 +261,7 @@ func configHome() string {
 }
 
 func cacheHome() string {
-	dir, err := paths.CacheDir()
+	dir, err := appPaths.CacheDir()
 	if err != nil {
 		log.Warnf("cache dir unavailable: %v", err)
 		return os.TempDir()
@@ -293,6 +293,10 @@ func runDaemon(_ *cobra.Command, _ []string) error {
 		}
 	}
 	return nil
+}
+
+func requestQuit() {
+	_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
 }
 
 func startIPC(ctx context.Context, deps ipc.Deps) (*ipc.Server, <-chan error, error) {
