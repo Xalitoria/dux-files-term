@@ -24,7 +24,7 @@ The entire UI, a quickshell app. Talks to core over two unix sockets: one for re
 - Modules/ - MainWindow
 - translations/ - POEditor-synced catalogs
 
-`shell.qml` injects the app singletons into DCommon at startup (`DC.Style.theme`, `DC.Style.settings`, `DC.I18n.backend`, `DC.Paths.backend`, `DC.Log.backend`, `DC.Host.session`, `DC.Host.cache`). The full list of properties the library reads is in `dank-qml-common/README.md` under "The contract"; the stubs in `dank-qml-common/Common/` and `dank-qml-common/Services/` are the executable version of it. When bumping the submodule, diff the stub singletons against ours and add anything new.
+`shell.qml` injects the app singletons into DCommon at startup (`DC.Style.theme`, `DC.Style.settings`, `DC.I18n.backend`, `DC.Paths.backend`, `DC.Log.backend`, `DC.Host.session`, `DC.Host.cache`). The stubs in `dank-qml-common/Common/` and `dank-qml-common/Services/` are the full list of properties the library reads. When bumping the submodule, diff the stub singletons against ours and add anything new.
 
 ### Other directories
 
