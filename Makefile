@@ -1,6 +1,6 @@
 BINARY_NAME=dfiles
 SHELL_NAME=dfiles
-ICON_NAME=com.danklinux.dankfiles
+ICON_NAME=dev.duxlabs.files
 CORE_DIR=core
 BUILD_DIR=$(CORE_DIR)/bin
 PREFIX ?= /usr/local
@@ -23,9 +23,9 @@ SYSTEMD_USER_DIR=$(USER_CONFIG_HOME)/systemd/user
 
 SHELL_DIR=quickshell
 ASSETS_DIR=assets
-DESKTOP_ID=com.danklinux.dankfiles
+DESKTOP_ID=dev.duxlabs.files
 
-.PHONY: all build dev run clean test fmt vet lint-qml test-qml flatpak-build flatpak-run flatpak-lint flatpak-modules update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-polkit install-dbus install-portal install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-polkit uninstall-dbus uninstall-portal uninstall-systemd help
+.PHONY: all build dev run clean test fmt vet lint-qml test-qml flatpak-build flatpak-run flatpak-lint flatpak-modules update-common i18n-extract i18n-local i18n-test i18n-push i18n-sync i18n-check install install-bin install-icon install-desktop install-metainfo install-polkit install-dbus install-portal install-systemd uninstall uninstall-bin uninstall-icon uninstall-desktop uninstall-metainfo uninstall-polkit uninstall-dbus uninstall-portal uninstall-systemd help
 
 FLATPAK_MANIFEST=distro/flatpak/$(DESKTOP_ID).yml
 
@@ -149,7 +149,7 @@ install-systemd:
 install: install-bin install-icon install-desktop install-metainfo install-polkit install-dbus install-portal
 	@echo ""
 	@echo "Installation complete."
-	@echo "Launch with 'dfiles show' or the Dank Files desktop entry."
+	@echo "Launch with 'dfiles show' or the Dux Files desktop entry."
 	@echo "Optional: 'make install-systemd' then 'systemctl --user enable --now dfiles'."
 	@echo "Optional: 'xdg-mime default $(DESKTOP_ID).desktop inode/directory' to open folders here."
 	@echo "Optional: 'dfiles portal install' to serve other apps' open and save dialogs."
@@ -165,6 +165,9 @@ uninstall-desktop:
 	@rm -f $(DESTDIR)$(APPLICATIONS_DIR)/$(DESKTOP_ID).desktop
 	@test -n "$(DESTDIR)" || update-desktop-database -q $(APPLICATIONS_DIR) 2>/dev/null || true
 
+uninstall-metainfo:
+	@rm -f $(DESTDIR)$(METAINFO_DIR)/$(DESKTOP_ID).metainfo.xml
+
 uninstall-polkit:
 	@rm -f $(DESTDIR)$(POLKIT_ACTIONS_DIR)/$(DESKTOP_ID).policy
 
@@ -178,7 +181,7 @@ uninstall-systemd:
 	@rm -f $(SYSTEMD_USER_DIR)/$(BINARY_NAME).service
 	@echo "Stop/disable the service manually if running: systemctl --user disable --now $(BINARY_NAME)"
 
-uninstall: uninstall-desktop uninstall-icon uninstall-bin uninstall-polkit uninstall-dbus uninstall-portal uninstall-systemd
+uninstall: uninstall-desktop uninstall-metainfo uninstall-icon uninstall-bin uninstall-polkit uninstall-dbus uninstall-portal uninstall-systemd
 	@echo "Uninstallation complete."
 
 help:

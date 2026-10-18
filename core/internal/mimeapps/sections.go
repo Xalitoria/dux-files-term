@@ -7,11 +7,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
+	"github.com/duxlabsdev/dux-files/core/internal/atomicfile"
 )
 
 const (
-	selfDesktopID = "com.danklinux.dankfiles.desktop"
+	selfDesktopID = "dev.duxlabs.files.desktop"
 	recentLimit   = 5
 )
 

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
 <policyconfig>
-  <vendor>Dank Files</vendor>
-  <vendor_url>https://github.com/AvengeMedia/dankfiles</vendor_url>
-  <icon_name>com.danklinux.dankfiles</icon_name>
-  <action id="com.danklinux.dankfiles.file-operations">
+  <vendor>Dux Files</vendor>
+  <vendor_url>https://github.com/duxlabsdev/dux-files</vendor_url>
+  <icon_name>dev.duxlabs.files</icon_name>
+  <action id="dev.duxlabs.files.file-operations">
     <description>Perform file operations as administrator</description>
     <message>Authentication is required to perform file operations as administrator</message>
     <defaults>

@@ -11,12 +11,12 @@ Item {
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
 
-    readonly property string githubUrl: "https://github.com/AvengeMedia/dankfiles"
+    readonly property string githubUrl: "https://github.com/duxlabsdev/dux-files"
     readonly property string docsUrl: "https://danklinux.com/docs"
     readonly property string kofiUrl: "https://ko-fi.com/danklinux"
     readonly property string licenseUrl: githubUrl + "/blob/master/LICENSE"
     // Only a release number belongs in the headline; dev builds keep their full string in the Backend rows
-    readonly property string version: DankFilesService.daemonVersion.match(/^v?(\d+\.\d+(\.\d+)?)$/)?.[1] ?? ""
+    readonly property string version: DuxFilesService.daemonVersion.match(/^v?(\d+\.\d+(\.\d+)?)$/)?.[1] ?? ""
 
     readonly property var featureRows: [
         {
@@ -96,7 +96,7 @@ Item {
         DHeroCard {
             brand: I18n.tr("Files", "main window title")
             accent: root.version
-            caption: I18n.tr("Part of the Dank Linux suite.", "app tagline on about page")
+            caption: I18n.tr("Part of the dux desktop.", "app tagline on about page")
 
             DButton {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -104,7 +104,7 @@ Item {
                 iconName: "favorite"
                 backgroundColor: Theme.primary
                 textColor: Theme.onPrimary
-                onClicked: DankFilesService.openUri(root.kofiUrl)
+                onClicked: DuxFilesService.openUri(root.kofiUrl)
             }
         }
 
@@ -134,29 +134,29 @@ Item {
             SettingsRow {
                 title: I18n.tr("Version", "about page daemon version column label")
                 keywords: I18n.tr("daemon release build", "settings search keywords, space separated, add synonyms in your language")
-                trailingBadge: DankFilesService.daemonVersion || "—"
+                trailingBadge: DuxFilesService.daemonVersion || "—"
             }
 
             SettingsRow {
                 title: I18n.tr("API", "about page daemon api version column label")
                 keywords: I18n.tr("daemon protocol", "settings search keywords, space separated, add synonyms in your language")
-                trailingBadge: DankFilesService.apiVersion > 0 ? `v${DankFilesService.apiVersion}` : "—"
+                trailingBadge: DuxFilesService.apiVersion > 0 ? `v${DuxFilesService.apiVersion}` : "—"
             }
 
             SettingsRow {
                 title: I18n.tr("Status", "about page daemon status column label")
                 keywords: I18n.tr("daemon connected offline socket", "settings search keywords, space separated, add synonyms in your language")
-                trailingBadge: DankFilesService.connected ? I18n.tr("Connected", "about page daemon status value") : I18n.tr("Offline", "about page daemon status value")
+                trailingBadge: DuxFilesService.connected ? I18n.tr("Connected", "about page daemon status value") : I18n.tr("Offline", "about page daemon status value")
 
                 DBadge {
-                    color: DankFilesService.connected ? Theme.success : Theme.error
+                    color: DuxFilesService.connected ? Theme.success : Theme.error
                 }
             }
 
             SettingsRow {
                 title: I18n.tr("Socket", "about page daemon socket row label")
                 keywords: I18n.tr("daemon path unix", "settings search keywords, space separated, add synonyms in your language")
-                subtitle: DankFilesService.socketPath || "—"
+                subtitle: DuxFilesService.socketPath || "—"
             }
 
             SettingsRow {
@@ -197,7 +197,7 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: DankFilesService.openUri(root.licenseUrl)
+                onClicked: DuxFilesService.openUri(root.licenseUrl)
             }
         }
     }

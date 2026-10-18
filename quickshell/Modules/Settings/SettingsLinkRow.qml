@@ -7,7 +7,7 @@ SettingsRow {
     property string url: ""
 
     clickable: url !== ""
-    onClicked: DankFilesService.openUri(url)
+    onClicked: DuxFilesService.openUri(url)
 
     DIcon {
         anchors.verticalCenter: parent.verticalCenter

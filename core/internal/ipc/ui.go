@@ -5,11 +5,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
-	"github.com/AvengeMedia/dankfiles/core/internal/location"
-	"github.com/AvengeMedia/dankfiles/core/internal/wire"
 	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/AvengeMedia/dankgo/paths"
+	"github.com/duxlabsdev/dux-files/core/internal/fileops"
+	"github.com/duxlabsdev/dux-files/core/internal/location"
+	"github.com/duxlabsdev/dux-files/core/internal/wire"
 )
 
 func hostEnv() location.Env {

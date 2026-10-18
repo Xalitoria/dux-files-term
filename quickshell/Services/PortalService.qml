@@ -22,7 +22,7 @@ Singleton {
     }
 
     function refresh() {
-        DankFilesService.call("system.colorScheme.get", null, result => {
+        DuxFilesService.call("system.colorScheme.get", null, result => {
             if (result.error)
                 return;
             root._apply(result);
@@ -30,19 +30,19 @@ Singleton {
     }
 
     Component.onCompleted: {
-        if (DankFilesService.connected)
+        if (DuxFilesService.connected)
             refresh();
     }
 
     Connections {
-        target: DankFilesService
+        target: DuxFilesService
 
         function onColorSchemeUpdate(data) {
             root._apply(data);
         }
 
         function onConnectedChanged() {
-            if (DankFilesService.connected)
+            if (DuxFilesService.connected)
                 root.refresh();
         }
     }

@@ -1,6 +1,6 @@
 # Translations
 
-Dank Files uses the same translation pipeline as DankMaterialShell: strings
+Dux Files uses the same translation pipeline as DankMaterialShell: strings
 are wrapped in `I18n.tr(term, context)` in QML, extracted to a
 POEditor-compatible `en.json`, and translated exports are dropped into
 `poexports/` as `<locale>.json` key-value files.

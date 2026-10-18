@@ -9,7 +9,7 @@ import qs.Services
 Singleton {
     id: root
 
-    property var transport: DankFilesService
+    property var transport: DuxFilesService
 
     property var entries: []
     property bool loaded: false

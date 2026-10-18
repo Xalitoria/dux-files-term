@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/helper"
-	"github.com/AvengeMedia/dankfiles/core/internal/wire"
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
+	"github.com/duxlabsdev/dux-files/core/internal/helper"
+	"github.com/duxlabsdev/dux-files/core/internal/wire"
 )
 
 func (m *Manager) Handle(_ context.Context, w *ipc.ConnWriter, req ipc.Request) {

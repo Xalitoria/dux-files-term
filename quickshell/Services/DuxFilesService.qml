@@ -10,7 +10,7 @@ import qs.Services
 Singleton {
     id: root
 
-    readonly property var log: Log.scoped("DankFilesService")
+    readonly property var log: Log.scoped("DuxFilesService")
 
     readonly property string socketPath: Quickshell.env("DFILES_SOCKET")
 

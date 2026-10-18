@@ -98,7 +98,7 @@ FloatingWindow {
         if (!surface.windowActive)
             return;
         const active = ToplevelManager.activeToplevel;
-        if (active && active.appId === "com.danklinux.dankfiles")
+        if (active && active.appId === "dev.duxlabs.files")
             toplevel = active;
     }
 

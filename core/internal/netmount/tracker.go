@@ -3,7 +3,7 @@ package netmount
 import (
 	"strings"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/dbusutil"
+	"github.com/duxlabsdev/dux-files/core/internal/dbusutil"
 	"github.com/godbus/dbus/v5"
 )
 
@@ -13,7 +13,7 @@ const (
 	TrackerIface = "org.gtk.vfs.MountTracker"
 	MountIface   = "org.gtk.vfs.Mount"
 	OpIface      = "org.gtk.vfs.MountOperation"
-	OpRoot       = "/com/danklinux/dankfiles/mountop/"
+	OpRoot       = "/dev/duxlabs/files/mountop/"
 )
 
 const (

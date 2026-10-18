@@ -8,11 +8,11 @@ let
   inherit (lib) types;
 in
 {
-  options.programs.dank-files = {
-    enable = lib.mkEnableOption "DankFiles";
+  options.programs.dux-files = {
+    enable = lib.mkEnableOption "Dux Files";
 
-    package = lib.mkPackageOption dfilesPkgs "dankfiles" {
-      extraDescription = "The DankFiles package to use (defaults to be built from source)";
+    package = lib.mkPackageOption dfilesPkgs "dux-files" {
+      extraDescription = "The Dux Files package to use (defaults to be built from source)";
     };
 
     quickshell = {
@@ -38,7 +38,7 @@ in
     };
 
     systemd = {
-      enable = lib.mkEnableOption "DankFiles systemd startup";
+      enable = lib.mkEnableOption "Dux Files systemd startup";
 
       target = lib.mkOption {
         type = types.str;
@@ -49,7 +49,7 @@ in
       restartIfChanged = lib.mkOption {
         type = types.bool;
         default = true;
-        description = "Auto-restart dfiles.service when dank-files changes";
+        description = "Auto-restart dfiles.service when dux-files changes";
       };
     };
   };

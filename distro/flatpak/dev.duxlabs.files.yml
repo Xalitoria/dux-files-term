@@ -1,4 +1,4 @@
-id: com.danklinux.dankfiles
+id: dev.duxlabs.files
 runtime: org.kde.Platform
 runtime-version: '6.11'
 sdk: org.kde.Sdk
@@ -76,7 +76,7 @@ modules:
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_INSTALL_PREFIX=/app
-      - -DDISTRIBUTOR=DankFiles Flatpak
+      - -DDISTRIBUTOR=Dux Files Flatpak
       - -DUSE_JEMALLOC=OFF
       - -DCRASH_HANDLER=OFF
       - -DBUILD_TESTING=OFF
@@ -106,7 +106,7 @@ modules:
         commit: 1a4716cde794a59928d9d9fc15f2afc7a95de360
         disable-submodules: true
 
-  - name: dankfiles
+  - name: dux-files
     buildsystem: simple
     build-commands:
       - make -C core sync-shell
@@ -116,19 +116,19 @@ modules:
         -o dfiles ./cmd/dfiles
       - install -Dm755 core/dfiles /app/bin/dfiles
       - >-
-        install -Dm644 assets/com.danklinux.dankfiles.desktop
-        /app/share/applications/com.danklinux.dankfiles.desktop
+        install -Dm644 assets/dev.duxlabs.files.desktop
+        /app/share/applications/dev.duxlabs.files.desktop
       - >-
-        install -Dm644 assets/com.danklinux.dankfiles.metainfo.xml
-        /app/share/metainfo/com.danklinux.dankfiles.metainfo.xml
+        install -Dm644 assets/dev.duxlabs.files.metainfo.xml
+        /app/share/metainfo/dev.duxlabs.files.metainfo.xml
       - >-
-        install -Dm644 assets/com.danklinux.dankfiles.svg
-        /app/share/icons/hicolor/scalable/apps/com.danklinux.dankfiles.svg
+        install -Dm644 assets/dev.duxlabs.files.svg
+        /app/share/icons/hicolor/scalable/apps/dev.duxlabs.files.svg
       - >-
         install -Dm644 LICENSE
-        /app/share/licenses/com.danklinux.dankfiles/LICENSE
+        /app/share/licenses/dev.duxlabs.files/LICENSE
     sources:
       - type: git
-        url: https://github.com/AvengeMedia/dfiles.git
+        url: https://github.com/duxlabsdev/dux-files.git
         commit: 49e38e29bb039487ff710ee83cb2c93bce9b1994
       - go.mod.yml

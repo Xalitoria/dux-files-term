@@ -51,7 +51,7 @@ Singleton {
     }
 
     function answer(id, answer) {
-        DankFilesService.sendRequest("portal.respond", Object.assign({
+        DuxFilesService.sendRequest("portal.respond", Object.assign({
             "id": id
         }, answer), response => {
             if (response.error)

@@ -12,8 +12,8 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
 	"github.com/AvengeMedia/dankgo/log"
+	"github.com/duxlabsdev/dux-files/core/internal/atomicfile"
 )
 
 const (

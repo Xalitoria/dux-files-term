@@ -5,10 +5,10 @@ import (
 	"context"
 	"slices"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/recent"
-	"github.com/AvengeMedia/dankfiles/core/internal/wire"
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/ipc/params"
+	"github.com/duxlabsdev/dux-files/core/internal/recent"
+	"github.com/duxlabsdev/dux-files/core/internal/wire"
 )
 
 const recentLimit = 1000

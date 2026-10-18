@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/ipc"
-	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/AvengeMedia/dankgo/log"
+	"github.com/duxlabsdev/dux-files/core/internal/ipc"
+	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
 )
 
 type event struct {

@@ -10,7 +10,7 @@ import qs.DCommon.FileBrowser
 Singleton {
     id: root
 
-    property var transport: DankFilesService
+    property var transport: DuxFilesService
     property var paths: []
     property bool active: false
     property int generation: 0

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/wire"
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
+	"github.com/duxlabsdev/dux-files/core/internal/wire"
 )
 
 func Handles(method string) bool {

@@ -28,7 +28,7 @@ ShellRoot {
         function call(method, params, callback) {
             fixture.requests++;
             fixture.check("method " + fixture.requests, method, "system.capabilities");
-            callback(DankFilesService.unwrap(fixture.response));
+            callback(DuxFilesService.unwrap(fixture.response));
         }
     }
 
@@ -46,7 +46,7 @@ ShellRoot {
         response = {
             "result": {
                 "sandboxed": true,
-                "appId": "com.danklinux.dankfiles",
+                "appId": "dev.duxlabs.files",
                 "hostFilesystem": false,
                 "hostOsRoot": "/run/host",
                 "portals": {
@@ -73,7 +73,7 @@ ShellRoot {
         check("connect refetches", requests, 2);
         check("loaded", SandboxService.loaded, true);
         check("sandboxed", SandboxService.sandboxed, true);
-        check("app id", SandboxService.appId, "com.danklinux.dankfiles");
+        check("app id", SandboxService.appId, "dev.duxlabs.files");
         check("host filesystem", SandboxService.hostFilesystem, false);
         check("host os root", SandboxService.hostOsRoot, "/run/host");
         check("missing feature", SandboxService.available("terminal"), false);

@@ -5,7 +5,7 @@
   ...
 }@args:
 let
-  cfg = config.programs.dank-files;
+  cfg = config.programs.dux-files;
 in
 {
   imports = [ (import ./options.nix args) ];

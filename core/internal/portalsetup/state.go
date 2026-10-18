@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/atomicfile"
+	"github.com/duxlabsdev/dux-files/core/internal/atomicfile"
 )
 
 type installState struct {

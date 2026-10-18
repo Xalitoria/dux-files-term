@@ -82,7 +82,7 @@ func TestHandleDisconnectRejectsUnknownMounts(t *testing.T) {
 }
 
 func TestHandleAnswerRejectsStaleQuestions(t *testing.T) {
-	out := call(t, mountedService(t), ipc.Request{ID: 7, Method: "network.answer", Params: map[string]any{"id": "/com/danklinux/dankfiles/mountop/1/1"}})
+	out := call(t, mountedService(t), ipc.Request{ID: 7, Method: "network.answer", Params: map[string]any{"id": "/dev/duxlabs/files/mountop/1/1"}})
 	assert.Equal(t, "EINVAL", out["code"])
 }
 

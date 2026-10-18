@@ -2,19 +2,19 @@
   {
     "term": "%1 already exist in this folder. Do you want to overwrite them?",
     "context": "%1 already exist in this folder. Do you want to overwrite them?",
-    "reference": "Modules/ChooserWindow.qml:826",
+    "reference": "Modules/ChooserWindow.qml:823",
     "comment": "file chooser overwrite dialog message, %1 lists the file names"
   },
   {
     "term": "%1 already exists in this folder.",
     "context": "%1 already exists in this folder.",
-    "reference": "Modules/ChooserWindow.qml:826, Modules/ConflictDialog.qml:29",
+    "reference": "Modules/ChooserWindow.qml:823, Modules/ConflictDialog.qml:32",
     "comment": "file conflict dialog explanation"
   },
   {
     "term": "%1 bookmarks imported",
     "context": "%1 bookmarks imported",
-    "reference": "Modules/MainWindow.qml:123",
+    "reference": "Modules/MainWindow.qml:112",
     "comment": "toast after importing gtk bookmarks"
   },
   {
@@ -26,7 +26,7 @@
   {
     "term": "%1 folders could not be read",
     "context": "%1 folders could not be read",
-    "reference": "Modules/SearchResults.qml:48",
+    "reference": "Modules/SearchResults.qml:49",
     "comment": "search results header note"
   },
   {
@@ -38,7 +38,7 @@
   {
     "term": "%1 has not been marked as trusted. Running it allows it to start any program.",
     "context": "%1 has not been marked as trusted. Running it allows it to start any program.",
-    "reference": "Modules/MainWindow.qml:2648",
+    "reference": "Modules/WindowDialogs.qml:192",
     "comment": "untrusted desktop file dialog explanation"
   },
   {
@@ -62,7 +62,7 @@
   {
     "term": "%1 is password protected.",
     "context": "%1 is password protected.",
-    "reference": "Modules/ArchivePasswordDialog.qml:42",
+    "reference": "Modules/ArchivePasswordDialog.qml:46",
     "comment": "archive password dialog explanation"
   },
   {
@@ -80,13 +80,13 @@
   {
     "term": "%1 levels deep",
     "context": "%1 levels deep",
-    "reference": "Modules/SearchResults.qml:54",
+    "reference": "Modules/SearchResults.qml:55",
     "comment": "search results header note giving how far below the folder the index reaches"
   },
   {
     "term": "%1 matching “%2”",
     "context": "%1 matching “%2”",
-    "reference": "Modules/TrashView.qml:40, Modules/FilesPane.qml:572",
+    "reference": "Modules/RecentView.qml:42, Modules/TrashView.qml:40, Modules/FilesPane.qml:703",
     "comment": "filter bar above a folder listing, count then the typed text"
   },
   {
@@ -116,14 +116,20 @@
   {
     "term": "%1 will be deleted permanently. This cannot be undone.",
     "context": "%1 will be deleted permanently. This cannot be undone.",
-    "reference": "Modules/MainWindow.qml:2761, Modules/MainWindow.qml:2772",
+    "reference": "Modules/WindowDialogs.qml:313, Modules/WindowDialogs.qml:334",
     "comment": "permanent delete confirmation explanation"
   },
   {
     "term": "%1 will be moved to the trash.",
     "context": "%1 will be moved to the trash.",
-    "reference": "Modules/MainWindow.qml:2704",
+    "reference": "Modules/WindowDialogs.qml:256",
     "comment": "trash confirmation explanation"
+  },
+  {
+    "term": "%1, %2 matches",
+    "context": "%1, %2 matches",
+    "reference": "Modules/Settings/SettingsSidebarItem.qml:23",
+    "comment": "accessible description of a settings page while searching, name then count"
   },
   {
     "term": "%1/s",
@@ -152,7 +158,7 @@
   {
     "term": "50 uses Material shapes. Lower values reduce rounding; higher values increase it.",
     "context": "50 uses Material shapes. Lower values reduce rounding; higher values increase it.",
-    "reference": "Modules/Settings/SettingsContent.qml:923",
+    "reference": "Modules/Settings/SettingsContent.qml:937",
     "comment": "radius strength slider description"
   },
   {
@@ -164,7 +170,7 @@
   {
     "term": "About",
     "context": "About",
-    "reference": "Modules/Settings/SettingsSidebar.qml:88, Modules/Settings/SettingsContent.qml:19",
+    "reference": "Modules/Settings/SettingsSidebar.qml:85, Modules/Settings/SettingsContent.qml:19",
     "comment": "settings sidebar tab label"
   },
   {
@@ -188,7 +194,7 @@
   {
     "term": "Add to bookmarks",
     "context": "Add to bookmarks",
-    "reference": "Modules/FileContextMenu.qml:111",
+    "reference": "Modules/FileContextMenu.qml:137",
     "comment": "context menu entry pinning the selected folder to the sidebar"
   },
   {
@@ -224,13 +230,13 @@
   {
     "term": "Already here",
     "context": "Already here",
-    "reference": "Modules/ConflictDialog.qml:42",
+    "reference": "Modules/ConflictDialog.qml:45",
     "comment": "file conflict dialog label for the existing item"
   },
   {
     "term": "Already in the sidebar",
     "context": "Already in the sidebar",
-    "reference": "Modules/FilesTopbar.qml:32",
+    "reference": "Modules/FilesTopbar.qml:34",
     "comment": "tooltip on the bookmark button over a folder the sidebar lists on its own"
   },
   {
@@ -242,13 +248,13 @@
   {
     "term": "Always use the dark theme.",
     "context": "Always use the dark theme.",
-    "reference": "Modules/Settings/SettingsContent.qml:798",
+    "reference": "Modules/Settings/SettingsContent.qml:812",
     "comment": "theme mode setting description"
   },
   {
     "term": "Always use the light theme.",
     "context": "Always use the light theme.",
-    "reference": "Modules/Settings/SettingsContent.qml:796",
+    "reference": "Modules/Settings/SettingsContent.qml:810",
     "comment": "theme mode setting description"
   },
   {
@@ -278,7 +284,7 @@
   {
     "term": "Appearance",
     "context": "Appearance",
-    "reference": "Modules/Settings/SettingsSidebar.qml:65, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:781",
+    "reference": "Modules/Settings/SettingsSidebar.qml:62, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:795",
     "comment": "settings sidebar tab label"
   },
   {
@@ -296,13 +302,13 @@
   {
     "term": "Archive",
     "context": "Archive",
-    "reference": "Modules/CompressDialog.qml:42",
+    "reference": "Modules/CompressDialog.qml:41",
     "comment": "default name for a new archive"
   },
   {
     "term": "Archive created",
     "context": "Archive created",
-    "reference": "Modules/MainWindow.qml:1560",
+    "reference": "Modules/JobLabels.qml:39",
     "comment": "toast after compressing files"
   },
   {
@@ -332,7 +338,7 @@
   {
     "term": "Auto",
     "context": "Auto",
-    "reference": "Modules/Settings/SettingsContent.qml:29, Modules/Settings/SettingsContent.qml:803",
+    "reference": "Modules/Settings/SettingsContent.qml:29, Modules/Settings/SettingsContent.qml:817",
     "comment": "color source button group option following DMS | theme mode button group option"
   },
   {
@@ -344,7 +350,7 @@
   {
     "term": "Automatic follows $TERMINAL, then the first installed emulator.",
     "context": "Automatic follows $TERMINAL, then the first installed emulator.",
-    "reference": "Modules/Settings/SettingsContent.qml:1073",
+    "reference": "Modules/Settings/SettingsContent.qml:1087",
     "comment": "terminal setting description"
   },
   {
@@ -392,43 +398,43 @@
   {
     "term": "Balanced",
     "context": "Balanced",
-    "reference": "Modules/Settings/SettingsContent.qml:994",
+    "reference": "Modules/Settings/SettingsContent.qml:1008",
     "comment": "spring bounce option"
   },
   {
     "term": "Behaviour",
     "context": "Behaviour",
-    "reference": "Modules/Settings/SettingsSidebar.qml:72, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:1061",
+    "reference": "Modules/Settings/SettingsSidebar.qml:69, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:1075",
     "comment": "settings sidebar tab label"
   },
   {
     "term": "Being added",
     "context": "Being added",
-    "reference": "Modules/ConflictDialog.qml:48",
+    "reference": "Modules/ConflictDialog.qml:51",
     "comment": "file conflict dialog label for the incoming item"
   },
   {
     "term": "Bookmark this folder",
     "context": "Bookmark this folder",
-    "reference": "Modules/FilesTopbar.qml:33, Common/Shortcuts.qml:117",
+    "reference": "Modules/FilesTopbar.qml:35, Common/Shortcuts.qml:117",
     "comment": "tooltip on the bookmark button"
   },
   {
     "term": "Bookmarks",
     "context": "Bookmarks",
-    "reference": "Modules/BookmarksSection.qml:28",
+    "reference": "Modules/BookmarksSection.qml:31",
     "comment": "sidebar section listing saved folders"
   },
   {
     "term": "Cancel",
     "context": "Cancel",
-    "reference": "Modules/MainWindow.qml:2625, Modules/OpenWithDialog.qml:160, Modules/ConfirmDialog.qml:25, Modules/ChooserWindow.qml:797, Modules/JobRow.qml:89, Modules/ArchivePasswordDialog.qml:63, Modules/ConnectServerDialog.qml:112, Modules/NameDialog.qml:41, Modules/OperationErrorDialog.qml:66, Modules/ExecutableDialog.qml:31, Modules/CredentialDialog.qml:145, Modules/ConflictDialog.qml:62, Modules/CompressDialog.qml:110, Modules/UnlockDialog.qml:60",
+    "reference": "Modules/DragController.qml:130, Modules/OpenWithDialog.qml:160, Modules/ConfirmDialog.qml:25, Modules/ChooserWindow.qml:777, Modules/JobRow.qml:70, Modules/ArchivePasswordDialog.qml:65, Modules/ConnectServerDialog.qml:110, Modules/NameDialog.qml:39, Modules/OperationErrorDialog.qml:69, Modules/ExecutableDialog.qml:31, Modules/CredentialDialog.qml:145, Modules/ConflictDialog.qml:65, Modules/CompressDialog.qml:105, Modules/UnlockDialog.qml:58",
     "comment": "dialog button to cancel"
   },
   {
     "term": "Cancelled",
     "context": "Cancelled",
-    "reference": "Modules/JobRow.qml:45",
+    "reference": "Modules/JobRow.qml:26",
     "comment": "file operation was cancelled"
   },
   {
@@ -438,16 +444,40 @@
     "comment": "about page daemon capabilities label"
   },
   {
+    "term": "Changing owner",
+    "context": "Changing owner",
+    "reference": "Modules/JobLabels.qml:74",
+    "comment": "file operation in progress"
+  },
+  {
+    "term": "Changing permissions",
+    "context": "Changing permissions",
+    "reference": "Modules/JobLabels.qml:70",
+    "comment": "file operation in progress"
+  },
+  {
     "term": "Choose a JSON color theme file.",
     "context": "Choose a JSON color theme file.",
-    "reference": "Modules/Settings/SettingsContent.qml:901",
+    "reference": "Modules/Settings/SettingsContent.qml:915",
     "comment": "custom theme hint when none selected"
+  },
+  {
+    "term": "Clear Recent",
+    "context": "Clear Recent",
+    "reference": "Modules/RecentView.qml:35, Modules/PlaceMenu.qml:109, Modules/WindowDialogs.qml:323, Modules/FileContextMenu.qml:53",
+    "comment": "action emptying the recently used list without touching the files"
   },
   {
     "term": "Clear the clipboard",
     "context": "Clear the clipboard",
     "reference": "Modules/PaneStatus.qml:88",
     "comment": "tooltip on the button dropping the copied or cut items"
+  },
+  {
+    "term": "Clear the recent files list?",
+    "context": "Clear the recent files list?",
+    "reference": "Modules/WindowDialogs.qml:321",
+    "comment": "confirmation header before emptying the recently used list"
   },
   {
     "term": "Clear the selection",
@@ -458,55 +488,61 @@
   {
     "term": "Close",
     "context": "Close",
-    "reference": "Modules/ShortcutsOverlay.qml:109, Modules/PropertiesDialog.qml:265, Modules/SearchResults.qml:141",
+    "reference": "Modules/ShortcutsOverlay.qml:109, Modules/PropertiesDialog.qml:264, Modules/SearchResults.qml:142",
     "comment": "dialog button dismissing a dialog | dialog button to close"
   },
   {
     "term": "Close behavior",
     "context": "Close behavior",
-    "reference": "Modules/Settings/SettingsContent.qml:529",
+    "reference": "Modules/Settings/SettingsContent.qml:534",
     "comment": "close behavior setting label"
   },
   {
     "term": "Close other tabs",
     "context": "Close other tabs",
-    "reference": "Modules/MainWindow.qml:2378",
+    "reference": "Modules/WindowMenus.qml:228",
     "comment": "tab context menu entry closing every tab but this one"
   },
   {
     "term": "Close tab",
     "context": "Close tab",
-    "reference": "Modules/MainWindow.qml:2368, Modules/FilesTab.qml:108, Common/Shortcuts.qml:174",
+    "reference": "Modules/FilesTab.qml:108, Modules/WindowMenus.qml:218, Common/Shortcuts.qml:174",
     "comment": "tooltip on the button closing a tab"
   },
   {
     "term": "Close tabs to the right",
     "context": "Close tabs to the right",
-    "reference": "Modules/MainWindow.qml:2388",
+    "reference": "Modules/WindowMenus.qml:238",
     "comment": "tab context menu entry closing the tabs after this one"
   },
   {
     "term": "Color source",
     "context": "Color source",
-    "reference": "Modules/Settings/SettingsContent.qml:832",
+    "reference": "Modules/Settings/SettingsContent.qml:846",
     "comment": "color source setting label"
   },
   {
     "term": "Column view",
     "context": "Column view",
-    "reference": "Modules/FilesTopbar.qml:49, Common/Shortcuts.qml:268, Modules/Settings/SettingsContent.qml:52",
+    "reference": "Modules/FilesTopbar.qml:51, Common/Shortcuts.qml:268, Modules/Settings/SettingsContent.qml:52",
     "comment": "view mode showing folders side by side"
   },
   {
     "term": "Compress",
     "context": "Compress",
-    "reference": "Modules/CompressDialog.qml:59",
+    "reference": "Modules/CompressDialog.qml:58",
     "comment": "compress dialog header"
+  },
+  {
+    "term": "Compressing",
+    "context": "Compressing",
+    "reference": "Modules/JobLabels.qml:38",
+    "comment": "file operation in progress"
   },
   {
     "term": "Compress…",
     "context": "Compress…",
-    "reference": "Modules/FileContextMenu.qml:173",
+    "reference": "Modules/FileContextMenu.qml:200",
     "comment": "context menu entry packing the selection into an archive"
   },
   {
@@ -518,13 +554,13 @@
   {
     "term": "Confirm before moving to the trash",
     "context": "Confirm before moving to the trash",
-    "reference": "Modules/Settings/SettingsContent.qml:731",
+    "reference": "Modules/Settings/SettingsContent.qml:737",
     "comment": "setting label"
   },
   {
     "term": "Connect",
     "context": "Connect",
-    "reference": "Modules/ConnectServerDialog.qml:116",
+    "reference": "Modules/ConnectServerDialog.qml:114",
     "comment": "connect to server dialog action"
   },
   {
@@ -566,61 +602,61 @@
   {
     "term": "Copied",
     "context": "Copied",
-    "reference": "Modules/MainWindow.qml:1556",
+    "reference": "Modules/JobLabels.qml:11",
     "comment": "toast after copying files"
   },
   {
     "term": "Copy",
     "context": "Copy",
-    "reference": "Modules/DragActionChip.qml:30, Modules/MainWindow.qml:2598, Modules/FileContextMenu.qml:126, Common/Shortcuts.qml:418, Modules/Settings/SettingsContent.qml:92",
+    "reference": "Modules/DragController.qml:103, Modules/DragActionChip.qml:30, Modules/FileContextMenu.qml:152, Common/Shortcuts.qml:418, Modules/Settings/SettingsContent.qml:92",
     "comment": "context menu entry copying the selection"
   },
   {
     "term": "Copy location path",
     "context": "Copy location path",
-    "reference": "Modules/MainWindow.qml:2432, Modules/FilesTopbar.qml:430, Modules/FileContextMenu.qml:222, Common/Shortcuts.qml:509",
+    "reference": "Modules/FilesTopbar.qml:434, Modules/PlaceMenu.qml:77, Modules/FileContextMenu.qml:260, Common/Shortcuts.qml:509",
     "comment": "menu entry copying the current path to the clipboard"
   },
   {
     "term": "Copy name",
     "context": "Copy name",
-    "reference": "Modules/FileContextMenu.qml:228",
+    "reference": "Modules/FileContextMenu.qml:266",
     "comment": "context menu entry copying the selected item names to the clipboard"
   },
   {
     "term": "Copy to",
     "context": "Copy to",
-    "reference": "Modules/MainWindow.qml:2740",
+    "reference": "Modules/WindowDialogs.qml:292",
     "comment": "folder picker title for copying the selection"
   },
   {
     "term": "Copy to…",
     "context": "Copy to…",
-    "reference": "Modules/FileContextMenu.qml:138",
+    "reference": "Modules/FileContextMenu.qml:164",
     "comment": "context menu entry copying the selection into a chosen folder"
   },
   {
     "term": "Copying",
     "context": "Copying",
-    "reference": "Modules/JobRow.qml:25",
+    "reference": "Modules/JobLabels.qml:10",
     "comment": "file operation in progress"
   },
   {
     "term": "Could not read that file, expected a JSON color theme.",
     "context": "Could not read that file, expected a JSON color theme.",
-    "reference": "Modules/Settings/SettingsContent.qml:904",
+    "reference": "Modules/Settings/SettingsContent.qml:918",
     "comment": "custom theme error when file is invalid"
   },
   {
     "term": "Count items in folders",
     "context": "Count items in folders",
-    "reference": "Modules/Settings/SettingsContent.qml:705",
+    "reference": "Modules/Settings/SettingsContent.qml:711",
     "comment": "folder counts toggle label"
   },
   {
     "term": "Create",
     "context": "Create",
-    "reference": "Modules/CompressDialog.qml:114",
+    "reference": "Modules/CompressDialog.qml:109",
     "comment": "dialog button creating an item"
   },
   {
@@ -630,21 +666,27 @@
     "comment": "file list column header"
   },
   {
+    "term": "Creating",
+    "context": "Creating",
+    "reference": "Modules/JobLabels.qml:58, Modules/JobLabels.qml:62, Modules/JobLabels.qml:66",
+    "comment": "file operation in progress"
+  },
+  {
     "term": "Ctrl copies and Alt asks regardless.",
     "context": "Ctrl copies and Alt asks regardless.",
-    "reference": "Modules/Settings/SettingsContent.qml:1088",
+    "reference": "Modules/Settings/SettingsContent.qml:1102",
     "comment": "drag default action setting description"
   },
   {
     "term": "Ctrl+H still toggles them for the current window.",
     "context": "Ctrl+H still toggles them for the current window.",
-    "reference": "Modules/Settings/SettingsContent.qml:656",
+    "reference": "Modules/Settings/SettingsContent.qml:661",
     "comment": "show hidden files setting description"
   },
   {
     "term": "Ctrl+Wheel or Ctrl and plus or minus resize the current window.",
     "context": "Ctrl+Wheel or Ctrl and plus or minus resize the current window.",
-    "reference": "Modules/Settings/SettingsContent.qml:690",
+    "reference": "Modules/Settings/SettingsContent.qml:696",
     "comment": "icon size setting description"
   },
   {
@@ -656,25 +698,25 @@
   {
     "term": "Cut",
     "context": "Cut",
-    "reference": "Modules/FileContextMenu.qml:120, Common/Shortcuts.qml:426",
+    "reference": "Modules/FileContextMenu.qml:146, Common/Shortcuts.qml:426",
     "comment": "context menu entry marking the selection for a move"
   },
   {
     "term": "DankMaterialShell not detected, using the %1 preset.",
     "context": "DankMaterialShell not detected, using the %1 preset.",
-    "reference": "Modules/Settings/SettingsContent.qml:853",
+    "reference": "Modules/Settings/SettingsContent.qml:867",
     "comment": "auto color source status when DMS is missing"
   },
   {
     "term": "Dark",
     "context": "Dark",
-    "reference": "Modules/Settings/SettingsContent.qml:803",
+    "reference": "Modules/Settings/SettingsContent.qml:817",
     "comment": "theme mode button group option"
   },
   {
     "term": "Decrease",
     "context": "Decrease",
-    "reference": "Modules/Settings/SettingsSliderRow.qml:53",
+    "reference": "Modules/Settings/SettingsSliderRow.qml:51",
     "comment": "slider row step down button"
   },
   {
@@ -692,7 +734,7 @@
   {
     "term": "Default view",
     "context": "Default view",
-    "reference": "Modules/Settings/SettingsContent.qml:631",
+    "reference": "Modules/Settings/SettingsContent.qml:636",
     "comment": "setting label for the view a new window starts in"
   },
   {
@@ -704,31 +746,31 @@
   {
     "term": "Delete permanently",
     "context": "Delete permanently",
-    "reference": "Modules/FileContextMenu.qml:45, Modules/FileContextMenu.qml:211, Common/Shortcuts.qml:465",
+    "reference": "Modules/FileContextMenu.qml:71, Modules/FileContextMenu.qml:249, Common/Shortcuts.qml:465",
     "comment": "context menu entry deleting the selection for good"
   },
   {
     "term": "Delete permanently?",
     "context": "Delete permanently?",
-    "reference": "Modules/MainWindow.qml:2771",
+    "reference": "Modules/WindowDialogs.qml:333",
     "comment": "permanent delete confirmation header"
   },
   {
     "term": "Deleting",
     "context": "Deleting",
-    "reference": "Modules/JobRow.qml:33",
+    "reference": "Modules/JobLabels.qml:26",
     "comment": "file operation in progress"
   },
   {
     "term": "Details",
     "context": "Details",
-    "reference": "Modules/PropertiesDialog.qml:138",
+    "reference": "Modules/PropertiesDialog.qml:137",
     "comment": "properties tab with the basic facts about an item"
   },
   {
     "term": "Devices",
     "context": "Devices",
-    "reference": "Modules/DevicesSection.qml:91, Modules/Settings/SettingsSidebar.qml:80, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:1169, Modules/Settings/SettingsAboutPage.qml:36",
+    "reference": "Modules/DevicesSection.qml:91, Modules/Settings/SettingsSidebar.qml:77, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:1184, Modules/Settings/SettingsAboutPage.qml:36",
     "comment": "sidebar section listing drives and volumes"
   },
   {
@@ -740,7 +782,7 @@
   {
     "term": "Do this for the rest",
     "context": "Do this for the rest",
-    "reference": "Modules/OperationErrorDialog.qml:58, Modules/ConflictDialog.qml:54",
+    "reference": "Modules/OperationErrorDialog.qml:61, Modules/ConflictDialog.qml:57",
     "comment": "file conflict dialog option to reuse the answer"
   },
   {
@@ -758,25 +800,25 @@
   {
     "term": "Domain",
     "context": "Domain",
-    "reference": "Modules/CredentialDialog.qml:85",
+    "reference": "Modules/CredentialDialog.qml:86",
     "comment": "label for a network domain input"
   },
   {
     "term": "Double click",
     "context": "Double click",
-    "reference": "Modules/Settings/SettingsContent.qml:721",
+    "reference": "Modules/Settings/SettingsContent.qml:727",
     "comment": "click to open option"
   },
   {
     "term": "Drag and drop",
     "context": "Drag and drop",
-    "reference": "Modules/Settings/SettingsContent.qml:1081",
+    "reference": "Modules/Settings/SettingsContent.qml:1095",
     "comment": "behaviour settings section label"
   },
   {
     "term": "Drives and mounting",
     "context": "Drives and mounting",
-    "reference": "Modules/Settings/SettingsSidebar.qml:81",
+    "reference": "Modules/Settings/SettingsSidebar.qml:78",
     "comment": "settings sidebar tab hint"
   },
   {
@@ -794,37 +836,43 @@
   {
     "term": "Dropping without a modifier",
     "context": "Dropping without a modifier",
-    "reference": "Modules/Settings/SettingsContent.qml:1086",
+    "reference": "Modules/Settings/SettingsContent.qml:1100",
     "comment": "drag default action setting label"
   },
   {
     "term": "Duplicate",
     "context": "Duplicate",
-    "reference": "Modules/FileContextMenu.qml:156, Common/Shortcuts.qml:488",
+    "reference": "Modules/FileContextMenu.qml:183, Common/Shortcuts.qml:488",
     "comment": "context menu entry copying the selection beside itself"
   },
   {
     "term": "Duplicate tab",
     "context": "Duplicate tab",
-    "reference": "Modules/MainWindow.qml:2347",
+    "reference": "Modules/WindowMenus.qml:197",
     "comment": "tab context menu entry opening a copy of this tab beside it"
   },
   {
     "term": "Duplicated",
     "context": "Duplicated",
-    "reference": "Modules/MainWindow.qml:1562",
+    "reference": "Modules/JobLabels.qml:47",
     "comment": "toast after copying files beside themselves"
+  },
+  {
+    "term": "Duplicating",
+    "context": "Duplicating",
+    "reference": "Modules/JobLabels.qml:46",
+    "comment": "file operation in progress"
   },
   {
     "term": "Duration",
     "context": "Duration",
-    "reference": "Modules/Settings/SettingsContent.qml:981",
+    "reference": "Modules/Settings/SettingsContent.qml:995",
     "comment": "animation duration slider label"
   },
   {
     "term": "Each folder keeps the sort and view picked in it. Off applies the last choice everywhere.",
     "context": "Each folder keeps the sort and view picked in it. Off applies the last choice everywhere.",
-    "reference": "Modules/Settings/SettingsContent.qml:671",
+    "reference": "Modules/Settings/SettingsContent.qml:676",
     "comment": "setting description for per-folder sort and view memory"
   },
   {
@@ -836,43 +884,43 @@
   {
     "term": "Empty Trash",
     "context": "Empty Trash",
-    "reference": "Modules/MainWindow.qml:2508, Modules/MainWindow.qml:2762, Modules/TrashView.qml:33, Modules/FileContextMenu.qml:70",
+    "reference": "Modules/TrashView.qml:33, Modules/PlaceMenu.qml:97, Modules/WindowDialogs.qml:314, Modules/FileContextMenu.qml:96",
     "comment": "action deleting everything in the trash"
   },
   {
     "term": "Empty file",
     "context": "Empty file",
-    "reference": "Modules/MainWindow.qml:2265",
+    "reference": "Modules/WindowMenus.qml:145",
     "comment": "new document menu entry creating a blank file"
   },
   {
     "term": "Empty the trash?",
     "context": "Empty the trash?",
-    "reference": "Modules/MainWindow.qml:2760",
+    "reference": "Modules/WindowDialogs.qml:312",
     "comment": "confirmation header before deleting everything in the trash"
   },
   {
     "term": "Emptying the trash",
     "context": "Emptying the trash",
-    "reference": "Modules/JobRow.qml:35",
+    "reference": "Modules/JobLabels.qml:30",
     "comment": "file operation in progress"
   },
   {
     "term": "Enter filename...",
     "context": "Enter filename...",
-    "reference": "Modules/ChooserWindow.qml:776",
+    "reference": "Modules/ChooserWindow.qml:758",
     "comment": "file browser save filename input placeholder"
   },
   {
     "term": "Estimating…",
     "context": "Estimating…",
-    "reference": "Modules/JobRow.qml:49",
+    "reference": "Modules/JobRow.qml:30",
     "comment": "file operation is still measuring the work"
   },
   {
     "term": "Every folder goes back to the default sort and view.",
     "context": "Every folder goes back to the default sort and view.",
-    "reference": "Modules/Settings/SettingsContent.qml:399, Modules/Settings/SettingsContent.qml:682",
+    "reference": "Modules/Settings/SettingsContent.qml:404, Modules/Settings/SettingsContent.qml:688",
     "comment": "dialog message before clearing every remembered folder sort and view"
   },
   {
@@ -884,7 +932,7 @@
   {
     "term": "Everywhere",
     "context": "Everywhere",
-    "reference": "Modules/SearchResults.qml:64, Common/SearchFilters.qml:56",
+    "reference": "Modules/SearchResults.qml:65, Common/SearchFilters.qml:56",
     "comment": "search scope chip covering home and every mounted local drive"
   },
   {
@@ -896,43 +944,49 @@
   {
     "term": "Extract archives on open",
     "context": "Extract archives on open",
-    "reference": "Modules/Settings/SettingsContent.qml:559",
+    "reference": "Modules/Settings/SettingsContent.qml:564",
     "comment": "setting label for opening archives"
   },
   {
     "term": "Extract here",
     "context": "Extract here",
-    "reference": "Modules/FileContextMenu.qml:180",
+    "reference": "Modules/FileContextMenu.qml:207",
     "comment": "context menu entry unpacking the selected archives"
   },
   {
     "term": "Extract to",
     "context": "Extract to",
-    "reference": "Modules/MainWindow.qml:2722",
+    "reference": "Modules/WindowDialogs.qml:274",
     "comment": "folder picker title for unpacking archives"
   },
   {
     "term": "Extract to…",
     "context": "Extract to…",
-    "reference": "Modules/FileContextMenu.qml:187",
+    "reference": "Modules/FileContextMenu.qml:214",
     "comment": "context menu entry unpacking the selected archives into a chosen folder"
   },
   {
     "term": "Extracted",
     "context": "Extracted",
-    "reference": "Modules/MainWindow.qml:1135, Modules/MainWindow.qml:1140",
+    "reference": "Modules/FileOpenFlow.qml:149, Modules/FileOpenFlow.qml:154",
     "comment": "toast after unpacking an archive"
   },
   {
     "term": "Extracted to %1",
     "context": "Extracted to %1",
-    "reference": "Modules/MainWindow.qml:1143",
+    "reference": "Modules/FileOpenFlow.qml:157",
     "comment": "toast after unpacking into another folder, %1 is the folder name"
+  },
+  {
+    "term": "Extracting",
+    "context": "Extracting",
+    "reference": "Modules/JobLabels.qml:42",
+    "comment": "file operation in progress"
   },
   {
     "term": "File operations",
     "context": "File operations",
-    "reference": "Modules/MainWindow.qml:1822, Modules/JobsPopover.qml:39",
+    "reference": "Modules/JobsPopover.qml:39, Modules/JobsButton.qml:14",
     "comment": "jobs popover header"
   },
   {
@@ -944,31 +998,37 @@
   {
     "term": "Files",
     "context": "Files",
-    "reference": "Modules/MainWindow.qml:355, Common/Shortcuts.qml:585, Modules/Settings/SettingsContent.qml:714, Modules/Settings/SettingsAboutPage.qml:97",
+    "reference": "Modules/TabManager.qml:187, Common/Shortcuts.qml:585, Modules/Settings/SettingsContent.qml:720, Modules/Settings/SettingsAboutPage.qml:97",
     "comment": "keyboard shortcut group | main window title"
   },
   {
     "term": "Files Settings",
     "context": "Files Settings",
-    "reference": "Modules/Settings/SettingsModal.qml:32",
+    "reference": "Modules/Settings/SettingsModal.qml:34",
     "comment": "settings window title"
+  },
+  {
+    "term": "Files opened here join the recently used list shared with other applications, shown under Recent in the sidebar.",
+    "context": "Files opened here join the recently used list shared with other applications, shown under Recent in the sidebar.",
+    "reference": "Modules/Settings/SettingsContent.qml:746",
+    "comment": "setting description for the recently used files list"
   },
   {
     "term": "Filter",
     "context": "Filter",
-    "reference": "Modules/Settings/SettingsContent.qml:755",
+    "reference": "Modules/Settings/SettingsContent.qml:769",
     "comment": "typing in the file list option"
   },
   {
     "term": "Finished",
     "context": "Finished",
-    "reference": "Modules/JobRow.qml:51",
+    "reference": "Modules/JobRow.qml:32",
     "comment": "file operation completed"
   },
   {
     "term": "Focus ring",
     "context": "Focus ring",
-    "reference": "Modules/Settings/SettingsContent.qml:1018, Modules/Settings/SettingsContent.qml:1023",
+    "reference": "Modules/Settings/SettingsContent.qml:1032, Modules/Settings/SettingsContent.qml:1037",
     "comment": "appearance settings section label | focus ring toggle label"
   },
   {
@@ -980,7 +1040,7 @@
   {
     "term": "Folder names or paths, separated by commas. Build and cache folders are always skipped unless Include ignored is on.",
     "context": "Folder names or paths, separated by commas. Build and cache folders are always skipped unless Include ignored is on.",
-    "reference": "Modules/Settings/SettingsContent.qml:1147",
+    "reference": "Modules/Settings/SettingsContent.qml:1161",
     "comment": "search exclusions setting description"
   },
   {
@@ -992,55 +1052,55 @@
   {
     "term": "Folders before files",
     "context": "Folders before files",
-    "reference": "Modules/Settings/SettingsContent.qml:662",
+    "reference": "Modules/Settings/SettingsContent.qml:667",
     "comment": "folders first toggle label"
   },
   {
     "term": "Folders open in new tabs and files open in their applications.",
     "context": "Folders open in new tabs and files open in their applications.",
-    "reference": "Modules/MainWindow.qml:2692",
+    "reference": "Modules/WindowDialogs.qml:244",
     "comment": "explanation in the confirmation before opening many items"
   },
   {
     "term": "Folders open in new tabs, archives are extracted and other files open in their applications.",
     "context": "Folders open in new tabs, archives are extracted and other files open in their applications.",
-    "reference": "Modules/MainWindow.qml:2692",
+    "reference": "Modules/WindowDialogs.qml:244",
     "comment": "explanation in the confirmation before opening many items, some of them archives"
   },
   {
     "term": "Folders to skip",
     "context": "Folders to skip",
-    "reference": "Modules/Settings/SettingsContent.qml:1145",
+    "reference": "Modules/Settings/SettingsContent.qml:1159",
     "comment": "search exclusions setting label"
   },
   {
     "term": "Follow DankMaterialShell colors, falling back to a preset.",
     "context": "Follow DankMaterialShell colors, falling back to a preset.",
-    "reference": "Modules/Settings/SettingsContent.qml:841",
+    "reference": "Modules/Settings/SettingsContent.qml:855",
     "comment": "color source description for auto"
   },
   {
     "term": "Following the system color scheme (currently %1).",
     "context": "Following the system color scheme (currently %1).",
-    "reference": "Modules/Settings/SettingsContent.qml:800",
+    "reference": "Modules/Settings/SettingsContent.qml:814",
     "comment": "theme mode setting description"
   },
   {
     "term": "Forget",
     "context": "Forget",
-    "reference": "Modules/Settings/SettingsContent.qml:400",
+    "reference": "Modules/Settings/SettingsContent.qml:405",
     "comment": "dialog button clearing the remembered folder settings"
   },
   {
     "term": "Forget all folder settings",
     "context": "Forget all folder settings",
-    "reference": "Modules/Settings/SettingsContent.qml:680",
+    "reference": "Modules/Settings/SettingsContent.qml:686",
     "comment": "settings row clearing every remembered folder sort and view"
   },
   {
     "term": "Forget all folder settings?",
     "context": "Forget all folder settings?",
-    "reference": "Modules/Settings/SettingsContent.qml:398",
+    "reference": "Modules/Settings/SettingsContent.qml:403",
     "comment": "dialog title before clearing every remembered folder sort and view"
   },
   {
@@ -1052,7 +1112,7 @@
   {
     "term": "From the index",
     "context": "From the index",
-    "reference": "Modules/SearchResults.qml:52",
+    "reference": "Modules/SearchResults.qml:53",
     "comment": "search results header note when danksearch served the search"
   },
   {
@@ -1064,7 +1124,7 @@
   {
     "term": "General",
     "context": "General",
-    "reference": "Modules/Settings/SettingsSidebar.qml:58, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:519",
+    "reference": "Modules/Settings/SettingsSidebar.qml:55, Modules/Settings/SettingsContent.qml:19, Modules/Settings/SettingsContent.qml:524",
     "comment": "settings sidebar tab label"
   },
   {
@@ -1100,13 +1160,13 @@
   {
     "term": "Grid icon size",
     "context": "Grid icon size",
-    "reference": "Modules/Settings/SettingsContent.qml:688",
+    "reference": "Modules/Settings/SettingsContent.qml:694",
     "comment": "setting label for the grid view icon size"
   },
   {
     "term": "Grid view",
     "context": "Grid view",
-    "reference": "Modules/FilesTopbar.qml:44, Modules/ChooserWindow.qml:574, Common/Shortcuts.qml:261, Modules/Settings/SettingsContent.qml:48",
+    "reference": "Modules/FilesTopbar.qml:46, Modules/ChooserWindow.qml:550, Common/Shortcuts.qml:261, Modules/Settings/SettingsContent.qml:48",
     "comment": "file browser toolbar button switching to the grid | view mode showing items as tiles"
   },
   {
@@ -1118,7 +1178,7 @@
   {
     "term": "Home",
     "context": "Home",
-    "reference": "Modules/MainWindow.qml:359, Modules/BookmarksSection.qml:22, Common/SearchFilters.qml:51",
+    "reference": "Modules/TabManager.qml:193, Modules/BookmarksSection.qml:25, Common/SearchFilters.qml:51",
     "comment": "sidebar entry for the user's home folder"
   },
   {
@@ -1130,13 +1190,13 @@
   {
     "term": "How new windows start and how folders open.",
     "context": "How new windows start and how folders open.",
-    "reference": "Modules/Settings/SettingsContent.qml:520",
+    "reference": "Modules/Settings/SettingsContent.qml:525",
     "comment": "general settings section subtitle"
   },
   {
     "term": "Image pasted",
     "context": "Image pasted",
-    "reference": "Modules/MainWindow.qml:1564",
+    "reference": "Modules/JobLabels.qml:51",
     "comment": "toast after writing a clipboard image into the folder"
   },
   {
@@ -1148,19 +1208,19 @@
   {
     "term": "Import",
     "context": "Import",
-    "reference": "Modules/MainWindow.qml:121",
+    "reference": "Modules/MainWindow.qml:110",
     "comment": "toast action importing gtk bookmarks"
   },
   {
     "term": "Import your GTK bookmarks?",
     "context": "Import your GTK bookmarks?",
-    "reference": "Modules/MainWindow.qml:120",
+    "reference": "Modules/MainWindow.qml:109",
     "comment": "toast offering to copy the gtk file chooser bookmarks once"
   },
   {
     "term": "Include hidden files",
     "context": "Include hidden files",
-    "reference": "Modules/Settings/SettingsContent.qml:1137",
+    "reference": "Modules/Settings/SettingsContent.qml:1151",
     "comment": "search hidden files toggle label"
   },
   {
@@ -1172,19 +1232,19 @@
   {
     "term": "Increase",
     "context": "Increase",
-    "reference": "Modules/Settings/SettingsSliderRow.qml:79",
+    "reference": "Modules/Settings/SettingsSliderRow.qml:76",
     "comment": "slider row step up button"
   },
   {
     "term": "Index is still building, results may be incomplete",
     "context": "Index is still building, results may be incomplete",
-    "reference": "Modules/SearchResults.qml:52",
+    "reference": "Modules/SearchResults.qml:53",
     "comment": "search results header note while danksearch is indexing"
   },
   {
     "term": "Internal partitions udisks marks as part of the system, such as a separate /home.",
     "context": "Internal partitions udisks marks as part of the system, such as a separate /home.",
-    "reference": "Modules/Settings/SettingsContent.qml:1177",
+    "reference": "Modules/Settings/SettingsContent.qml:1192",
     "comment": "devices setting description"
   },
   {
@@ -1196,7 +1256,7 @@
   {
     "term": "Items in the trash cannot be opened",
     "context": "Items in the trash cannot be opened",
-    "reference": "Modules/MainWindow.qml:1363",
+    "reference": "Modules/FileOpenFlow.qml:212",
     "comment": "toast when opening an item inside the trash"
   },
   {
@@ -1214,13 +1274,13 @@
   {
     "term": "Jump to name",
     "context": "Jump to name",
-    "reference": "Modules/Settings/SettingsContent.qml:755",
+    "reference": "Modules/Settings/SettingsContent.qml:769",
     "comment": "typing in the file list option"
   },
   {
     "term": "Jump to the first name starting with what you type, or filter the folder through the search field.",
     "context": "Jump to the first name starting with what you type, or filter the folder through the search field.",
-    "reference": "Modules/Settings/SettingsContent.qml:754",
+    "reference": "Modules/Settings/SettingsContent.qml:768",
     "comment": "typing in the file list setting description"
   },
   {
@@ -1230,39 +1290,45 @@
     "comment": "keyboard shortcut"
   },
   {
+    "term": "Keep a list of recent files",
+    "context": "Keep a list of recent files",
+    "reference": "Modules/Settings/SettingsContent.qml:744",
+    "comment": "setting label for the recently used files list"
+  },
+  {
     "term": "Keep both",
     "context": "Keep both",
-    "reference": "Modules/ConflictDialog.qml:88",
+    "reference": "Modules/ConflictDialog.qml:91",
     "comment": "file conflict dialog button to keep both items"
   },
   {
     "term": "Keep running",
     "context": "Keep running",
-    "reference": "Modules/Settings/SettingsContent.qml:532",
+    "reference": "Modules/Settings/SettingsContent.qml:537",
     "comment": "close behavior button group option keeping the daemon warm"
   },
   {
     "term": "Keyboard",
     "context": "Keyboard",
-    "reference": "Modules/Settings/SettingsContent.qml:739",
+    "reference": "Modules/Settings/SettingsContent.qml:753",
     "comment": "general settings section label"
   },
   {
     "term": "Keyboard shortcuts",
     "context": "Keyboard shortcuts",
-    "reference": "Modules/FilesTopbar.qml:459, Modules/ShortcutsOverlay.qml:12, Common/Shortcuts.qml:360, Modules/Settings/SettingsContent.qml:766",
+    "reference": "Modules/FilesTopbar.qml:456, Modules/ShortcutsOverlay.qml:12, Common/Shortcuts.qml:360, Modules/Settings/SettingsContent.qml:780",
     "comment": "overlay listing every keyboard shortcut"
   },
   {
     "term": "Language",
     "context": "Language",
-    "reference": "Modules/Settings/SettingsContent.qml:567",
+    "reference": "Modules/Settings/SettingsContent.qml:572",
     "comment": "interface language setting label"
   },
   {
     "term": "Language of the interface.",
     "context": "Language of the interface.",
-    "reference": "Modules/Settings/SettingsContent.qml:569",
+    "reference": "Modules/Settings/SettingsContent.qml:574",
     "comment": "interface language setting description"
   },
   {
@@ -1274,14 +1340,20 @@
   {
     "term": "Light",
     "context": "Light",
-    "reference": "Modules/Settings/SettingsContent.qml:803",
+    "reference": "Modules/Settings/SettingsContent.qml:817",
     "comment": "theme mode button group option"
   },
   {
     "term": "Link",
     "context": "Link",
-    "reference": "Modules/DragActionChip.qml:32, Modules/MainWindow.qml:2616",
+    "reference": "Modules/DragController.qml:121, Modules/DragActionChip.qml:32",
     "comment": "drag label for creating a symlink"
+  },
+  {
+    "term": "Linking",
+    "context": "Linking",
+    "reference": "Modules/JobLabels.qml:54",
+    "comment": "file operation in progress"
   },
   {
     "term": "Links to",
@@ -1292,19 +1364,19 @@
   {
     "term": "List icon size",
     "context": "List icon size",
-    "reference": "Modules/Settings/SettingsContent.qml:697",
+    "reference": "Modules/Settings/SettingsContent.qml:703",
     "comment": "setting label for the list view icon size"
   },
   {
     "term": "List view",
     "context": "List view",
-    "reference": "Modules/FilesTopbar.qml:39, Modules/ChooserWindow.qml:574, Common/Shortcuts.qml:254, Modules/Settings/SettingsContent.qml:44",
+    "reference": "Modules/FilesTopbar.qml:41, Modules/ChooserWindow.qml:550, Common/Shortcuts.qml:254, Modules/Settings/SettingsContent.qml:44",
     "comment": "file browser toolbar button switching to the list | view mode showing one row per item"
   },
   {
     "term": "Load colors from your own theme file.",
     "context": "Load colors from your own theme file.",
-    "reference": "Modules/Settings/SettingsContent.qml:839",
+    "reference": "Modules/Settings/SettingsContent.qml:853",
     "comment": "color source description for custom"
   },
   {
@@ -1316,7 +1388,7 @@
   {
     "term": "Locations opened from other applications get their own tab instead of replacing the current one.",
     "context": "Locations opened from other applications get their own tab instead of replacing the current one.",
-    "reference": "Modules/Settings/SettingsContent.qml:553",
+    "reference": "Modules/Settings/SettingsContent.qml:558",
     "comment": "setting description for external open requests"
   },
   {
@@ -1334,13 +1406,13 @@
   {
     "term": "Menu",
     "context": "Menu",
-    "reference": "Modules/Settings/SettingsModal.qml:95",
+    "reference": "Modules/Settings/SettingsModal.qml:97",
     "comment": "settings header button that shows the section list on narrow windows"
   },
   {
     "term": "Merge",
     "context": "Merge",
-    "reference": "Modules/ConflictDialog.qml:67",
+    "reference": "Modules/ConflictDialog.qml:70",
     "comment": "file conflict dialog button to merge folders"
   },
   {
@@ -1352,13 +1424,13 @@
   {
     "term": "More actions",
     "context": "More actions",
-    "reference": "Modules/FilesTopbar.qml:329",
+    "reference": "Modules/FilesTopbar.qml:321",
     "comment": "tooltip on the overflow menu button"
   },
   {
     "term": "Motion",
     "context": "Motion",
-    "reference": "Modules/Settings/SettingsContent.qml:976",
+    "reference": "Modules/Settings/SettingsContent.qml:990",
     "comment": "appearance settings section label"
   },
   {
@@ -1370,13 +1442,13 @@
   {
     "term": "Mount and open the drive together. Off mounts it and leaves you where you are.",
     "context": "Mount and open the drive together. Off mounts it and leaves you where you are.",
-    "reference": "Modules/Settings/SettingsContent.qml:1185",
+    "reference": "Modules/Settings/SettingsContent.qml:1200",
     "comment": "devices setting description"
   },
   {
     "term": "Move",
     "context": "Move",
-    "reference": "Modules/DragActionChip.qml:38, Modules/MainWindow.qml:2607, Modules/Settings/SettingsContent.qml:96",
+    "reference": "Modules/DragController.qml:112, Modules/DragActionChip.qml:38, Modules/Settings/SettingsContent.qml:96",
     "comment": "drag label for moving files"
   },
   {
@@ -1412,13 +1484,13 @@
   {
     "term": "Move to",
     "context": "Move to",
-    "reference": "Modules/MainWindow.qml:2740",
+    "reference": "Modules/WindowDialogs.qml:292",
     "comment": "folder picker title for moving the selection"
   },
   {
     "term": "Move to Trash",
     "context": "Move to Trash",
-    "reference": "Modules/DragActionChip.qml:36, Modules/MainWindow.qml:2703, Modules/MainWindow.qml:2705, Modules/FileContextMenu.qml:204, Common/Shortcuts.qml:457",
+    "reference": "Modules/DragActionChip.qml:36, Modules/WindowDialogs.qml:255, Modules/WindowDialogs.qml:257, Modules/FileContextMenu.qml:242, Common/Shortcuts.qml:457",
     "comment": "context menu entry trashing the selection"
   },
   {
@@ -1430,43 +1502,43 @@
   {
     "term": "Move to…",
     "context": "Move to…",
-    "reference": "Modules/FileContextMenu.qml:132",
+    "reference": "Modules/FileContextMenu.qml:158",
     "comment": "context menu entry moving the selection into a chosen folder"
   },
   {
     "term": "Moved",
     "context": "Moved",
-    "reference": "Modules/MainWindow.qml:1554",
+    "reference": "Modules/JobLabels.qml:15",
     "comment": "toast after moving files"
   },
   {
     "term": "Moved to trash",
     "context": "Moved to trash",
-    "reference": "Modules/MainWindow.qml:1550",
+    "reference": "Modules/JobLabels.qml:19",
     "comment": "toast after trashing files"
   },
   {
     "term": "Moving",
     "context": "Moving",
-    "reference": "Modules/JobRow.qml:27",
+    "reference": "Modules/JobLabels.qml:14",
     "comment": "file operation in progress"
   },
   {
     "term": "Moving to trash",
     "context": "Moving to trash",
-    "reference": "Modules/JobRow.qml:29",
+    "reference": "Modules/JobLabels.qml:18",
     "comment": "file operation in progress"
   },
   {
     "term": "Name",
     "context": "Name",
-    "reference": "Modules/PropertiesDialog.qml:191, Modules/NameDialog.qml:33, Modules/CompressDialog.qml:68, Modules/Settings/SettingsContent.qml:69",
+    "reference": "Modules/PropertiesDialog.qml:190, Modules/NameDialog.qml:33, Modules/CompressDialog.qml:67, Modules/Settings/SettingsContent.qml:69",
     "comment": "file browser sort criterion option | label for a file name input"
   },
   {
     "term": "Needed before the change takes effect.",
     "context": "Needed before the change takes effect.",
-    "reference": "Modules/Settings/SettingsContent.qml:619",
+    "reference": "Modules/Settings/SettingsContent.qml:624",
     "comment": "settings row subtitle when xdg-desktop-portal still runs the old configuration"
   },
   {
@@ -1496,19 +1568,19 @@
   {
     "term": "New document",
     "context": "New document",
-    "reference": "Modules/FileContextMenu.qml:249",
+    "reference": "Modules/FileContextMenu.qml:287",
     "comment": "context menu entry creating a file from a template"
   },
   {
     "term": "New folder",
     "context": "New folder",
-    "reference": "Modules/ChooserWindow.qml:549, Modules/FileContextMenu.qml:243, Common/Shortcuts.qml:495",
+    "reference": "Modules/ChooserWindow.qml:525, Modules/FileContextMenu.qml:281, Common/Shortcuts.qml:495",
     "comment": "file browser toolbar button creating a folder | new folder dialog header"
   },
   {
     "term": "New folder with selection",
     "context": "New folder with selection",
-    "reference": "Modules/FileContextMenu.qml:163, Common/Shortcuts.qml:502",
+    "reference": "Modules/FileContextMenu.qml:190, Common/Shortcuts.qml:502",
     "comment": "context menu entry moving the selection into a new folder"
   },
   {
@@ -1520,7 +1592,7 @@
   {
     "term": "New window",
     "context": "New window",
-    "reference": "Modules/FilesTopbar.qml:410, Common/Shortcuts.qml:159",
+    "reference": "Modules/FilesTopbar.qml:418, Common/Shortcuts.qml:159",
     "comment": "menu entry opening another file manager window"
   },
   {
@@ -1532,19 +1604,25 @@
   {
     "term": "No limit",
     "context": "No limit",
-    "reference": "Modules/Settings/SettingsContent.qml:1111",
+    "reference": "Modules/Settings/SettingsContent.qml:1125",
     "comment": "thumbnail size cap slider label at zero"
+  },
+  {
+    "term": "No recent files",
+    "context": "No recent files",
+    "reference": "Modules/RecentView.qml:221, Modules/BookmarksSection.qml:39",
+    "comment": "recent files view placeholder when nothing was opened yet"
   },
   {
     "term": "No results",
     "context": "No results",
-    "reference": "Modules/TrashView.qml:219, Modules/SearchResults.qml:41, Modules/FilesPane.qml:438, Modules/Settings/SettingsContent.qml:440",
+    "reference": "Modules/RecentView.qml:221, Modules/TrashView.qml:219, Modules/SearchResults.qml:42, Modules/FilesPane.qml:520, Modules/Settings/SettingsContent.qml:445",
     "comment": "search results header when nothing matched"
   },
   {
     "term": "No theme file selected",
     "context": "No theme file selected",
-    "reference": "Modules/Settings/SettingsContent.qml:897",
+    "reference": "Modules/Settings/SettingsContent.qml:911",
     "comment": "custom theme empty state title"
   },
   {
@@ -1586,13 +1664,13 @@
   {
     "term": "Off",
     "context": "Off",
-    "reference": "Modules/Settings/SettingsContent.qml:983",
+    "reference": "Modules/Settings/SettingsContent.qml:997",
     "comment": "animation duration slider label at zero"
   },
   {
     "term": "Off lets the compositor decorate windows. Open windows update when reopened.",
     "context": "Off lets the compositor decorate windows. Open windows update when reopened.",
-    "reference": "Modules/Settings/SettingsContent.qml:969",
+    "reference": "Modules/Settings/SettingsContent.qml:983",
     "comment": "window title bars toggle description"
   },
   {
@@ -1610,19 +1688,19 @@
   {
     "term": "Open",
     "context": "Open",
-    "reference": "Modules/MainWindow.qml:2693, Modules/OpenWithDialog.qml:164, Modules/ChooserWindow.qml:58, Modules/FileContextMenu.qml:80, Common/Shortcuts.qml:18",
+    "reference": "Modules/OpenWithDialog.qml:164, Modules/ChooserWindow.qml:58, Modules/WindowDialogs.qml:245, Modules/FileContextMenu.qml:106, Common/Shortcuts.qml:18",
     "comment": "context menu entry opening a file | file browser open button"
   },
   {
     "term": "Open %1 items?",
     "context": "Open %1 items?",
-    "reference": "Modules/MainWindow.qml:2691",
+    "reference": "Modules/WindowDialogs.qml:243",
     "comment": "confirmation before opening many selected items at once"
   },
   {
     "term": "Open and save dialogs",
     "context": "Open and save dialogs",
-    "reference": "Modules/Settings/SettingsContent.qml:577",
+    "reference": "Modules/Settings/SettingsContent.qml:582",
     "comment": "general settings section label for the portal file chooser"
   },
   {
@@ -1640,7 +1718,7 @@
   {
     "term": "Open folders in a new tab",
     "context": "Open folders in a new tab",
-    "reference": "Modules/Settings/SettingsContent.qml:551",
+    "reference": "Modules/Settings/SettingsContent.qml:556",
     "comment": "setting label for external open requests"
   },
   {
@@ -1652,31 +1730,31 @@
   {
     "term": "Open in new tab",
     "context": "Open in new tab",
-    "reference": "Modules/MainWindow.qml:2297, Modules/MainWindow.qml:2412, Modules/MainWindow.qml:2488, Modules/FileContextMenu.qml:93, Common/Shortcuts.qml:26",
+    "reference": "Modules/PlaceMenu.qml:34, Modules/FileContextMenu.qml:119, Common/Shortcuts.qml:26",
     "comment": "context menu entry opening a folder in a new tab"
   },
   {
     "term": "Open in new window",
     "context": "Open in new window",
-    "reference": "Modules/MainWindow.qml:2306, Modules/MainWindow.qml:2421, Modules/MainWindow.qml:2497, Modules/FileContextMenu.qml:99",
+    "reference": "Modules/PlaceMenu.qml:43, Modules/FileContextMenu.qml:125",
     "comment": "context menu entry opening a folder in another window"
   },
   {
     "term": "Open in terminal",
     "context": "Open in terminal",
-    "reference": "Modules/FilesTopbar.qml:450, Modules/FileContextMenu.qml:289, Common/Shortcuts.qml:54, Modules/Settings/SettingsContent.qml:1066, Modules/Settings/SettingsAboutPage.qml:44",
+    "reference": "Modules/FilesTopbar.qml:449, Modules/FileContextMenu.qml:327, Common/Shortcuts.qml:54, Modules/Settings/SettingsContent.qml:1080, Modules/Settings/SettingsAboutPage.qml:44",
     "comment": "context menu entry opening a terminal"
   },
   {
     "term": "Open in the other pane",
     "context": "Open in the other pane",
-    "reference": "Modules/FileContextMenu.qml:105, Common/Shortcuts.qml:33",
+    "reference": "Modules/FileContextMenu.qml:131, Common/Shortcuts.qml:33",
     "comment": "context menu entry opening a folder beside the current one"
   },
   {
     "term": "Open items with",
     "context": "Open items with",
-    "reference": "Modules/Settings/SettingsContent.qml:719",
+    "reference": "Modules/Settings/SettingsContent.qml:725",
     "comment": "setting label choosing single or double click"
   },
   {
@@ -1688,7 +1766,7 @@
   {
     "term": "Open the containing folder",
     "context": "Open the containing folder",
-    "reference": "Modules/FileContextMenu.qml:194, Common/Shortcuts.qml:40",
+    "reference": "Modules/FileContextMenu.qml:221, Common/Shortcuts.qml:40",
     "comment": "keyboard shortcut"
   },
   {
@@ -1706,19 +1784,19 @@
   {
     "term": "Open unmounted drives on click",
     "context": "Open unmounted drives on click",
-    "reference": "Modules/Settings/SettingsContent.qml:1183",
+    "reference": "Modules/Settings/SettingsContent.qml:1198",
     "comment": "devices setting label"
   },
   {
     "term": "Open with",
     "context": "Open with",
-    "reference": "Modules/OpenWithDialog.qml:94, Modules/PropertiesDialog.qml:144, Modules/FileContextMenu.qml:86, Modules/FileContextMenu.qml:296, Common/Shortcuts.qml:47, Modules/Settings/SettingsAboutPage.qml:52",
+    "reference": "Modules/OpenWithDialog.qml:94, Modules/PropertiesDialog.qml:143, Modules/FileContextMenu.qml:112, Modules/FileContextMenu.qml:334, Common/Shortcuts.qml:47, Modules/Settings/SettingsAboutPage.qml:52",
     "comment": "open with dialog header"
   },
   {
     "term": "Opening an archive unpacks it into a folder beside it instead of launching another application.",
     "context": "Opening an archive unpacks it into a folder beside it instead of launching another application.",
-    "reference": "Modules/Settings/SettingsContent.qml:561",
+    "reference": "Modules/Settings/SettingsContent.qml:566",
     "comment": "setting description for opening archives"
   },
   {
@@ -1730,12 +1808,12 @@
   {
     "term": "Other application…",
     "context": "Other application…",
-    "reference": "Modules/MainWindow.qml:2550",
+    "reference": "Modules/WindowMenus.qml:313",
     "comment": "open with menu entry opening the full application picker"
   },
   {
-    "term": "Other apps open and save files through Dank Files.",
-    "context": "Other apps open and save files through Dank Files.",
+    "term": "Other apps open and save files through Dux Files.",
+    "context": "Other apps open and save files through Dux Files.",
     "reference": "Modules/Settings/SettingsContent.qml:203",
     "comment": "portal chooser setting description while enabled"
   },
@@ -1760,7 +1838,7 @@
   {
     "term": "Outline the control that has keyboard focus.",
     "context": "Outline the control that has keyboard focus.",
-    "reference": "Modules/Settings/SettingsContent.qml:1025",
+    "reference": "Modules/Settings/SettingsContent.qml:1039",
     "comment": "focus ring toggle description"
   },
   {
@@ -1778,12 +1856,12 @@
   {
     "term": "Palette: %1",
     "context": "Palette: %1",
-    "reference": "Modules/Settings/SettingsContent.qml:858",
+    "reference": "Modules/Settings/SettingsContent.qml:872",
     "comment": "selected preset palette name"
   },
   {
-    "term": "Part of the Dank Linux suite.",
-    "context": "Part of the Dank Linux suite.",
+    "term": "Part of the dux desktop.",
+    "context": "Part of the dux desktop.",
     "reference": "Modules/Settings/SettingsAboutPage.qml:99",
     "comment": "app tagline on about page"
   },
@@ -1796,55 +1874,61 @@
   {
     "term": "Password",
     "context": "Password",
-    "reference": "Modules/ArchivePasswordDialog.qml:55, Modules/CredentialDialog.qml:98, Modules/CompressDialog.qml:102",
+    "reference": "Modules/ArchivePasswordDialog.qml:59, Modules/CredentialDialog.qml:100, Modules/CompressDialog.qml:99",
     "comment": "label for a password input"
   },
   {
     "term": "Password required",
     "context": "Password required",
-    "reference": "Modules/ArchivePasswordDialog.qml:41",
+    "reference": "Modules/ArchivePasswordDialog.qml:45",
     "comment": "archive password dialog header"
   },
   {
     "term": "Paste",
     "context": "Paste",
-    "reference": "Modules/FileContextMenu.qml:256, Common/Shortcuts.qml:434",
+    "reference": "Modules/FileContextMenu.qml:294, Common/Shortcuts.qml:434",
     "comment": "context menu entry pasting the clipboard here"
   },
   {
     "term": "Paste as link",
     "context": "Paste as link",
-    "reference": "Modules/FileContextMenu.qml:262, Common/Shortcuts.qml:442",
+    "reference": "Modules/FileContextMenu.qml:300, Common/Shortcuts.qml:442",
     "comment": "context menu entry creating symlinks from the clipboard"
   },
   {
     "term": "Paste into folder",
     "context": "Paste into folder",
-    "reference": "Modules/FileContextMenu.qml:144",
+    "reference": "Modules/FileContextMenu.qml:170",
     "comment": "context menu entry pasting the clipboard into the selected folder"
   },
   {
     "term": "Pasted image",
     "context": "Pasted image",
-    "reference": "Modules/MainWindow.qml:1401",
+    "reference": "Modules/WindowActions.qml:533",
     "comment": "file name for an image pasted from the clipboard"
+  },
+  {
+    "term": "Pasting image",
+    "context": "Pasting image",
+    "reference": "Modules/JobLabels.qml:50",
+    "comment": "file operation in progress"
   },
   {
     "term": "Permissions",
     "context": "Permissions",
-    "reference": "Modules/PropertiesDialog.qml:141",
+    "reference": "Modules/PropertiesDialog.qml:140",
     "comment": "file list column header"
   },
   {
     "term": "Pick a color source, palette, or your own theme file.",
     "context": "Pick a color source, palette, or your own theme file.",
-    "reference": "Modules/Settings/SettingsContent.qml:782",
+    "reference": "Modules/Settings/SettingsContent.qml:796",
     "comment": "appearance settings section subtitle"
   },
   {
     "term": "Playful",
     "context": "Playful",
-    "reference": "Modules/Settings/SettingsContent.qml:994",
+    "reference": "Modules/Settings/SettingsContent.qml:1008",
     "comment": "spring bounce option"
   },
   {
@@ -1866,8 +1950,8 @@
     "comment": "portal chooser status line, %1 is another backend name"
   },
   {
-    "term": "Preference: %1 names Dank Files",
-    "context": "Preference: %1 names Dank Files",
+    "term": "Preference: %1 names Dux Files",
+    "context": "Preference: %1 names Dux Files",
     "reference": "Modules/Settings/SettingsContent.qml:218",
     "comment": "portal chooser status line, %1 is a path"
   },
@@ -1886,13 +1970,13 @@
   {
     "term": "Press ? or F1 in the main window for the full list.",
     "context": "Press ? or F1 in the main window for the full list.",
-    "reference": "Modules/Settings/SettingsContent.qml:768",
+    "reference": "Modules/Settings/SettingsContent.qml:782",
     "comment": "keyboard shortcuts settings row description"
   },
   {
     "term": "Preview",
     "context": "Preview",
-    "reference": "Modules/FilesTopbar.qml:52, Modules/ChooserWindow.qml:584, Common/Shortcuts.qml:325",
+    "reference": "Modules/FilesTopbar.qml:54, Modules/ChooserWindow.qml:560, Common/Shortcuts.qml:325",
     "comment": "view menu entry and shortcut showing or hiding the preview drawer"
   },
   {
@@ -1904,7 +1988,7 @@
   {
     "term": "Previews for images, videos and PDFs, cached under the shared thumbnail folder.",
     "context": "Previews for images, videos and PDFs, cached under the shared thumbnail folder.",
-    "reference": "Modules/Settings/SettingsContent.qml:1103",
+    "reference": "Modules/Settings/SettingsContent.qml:1117",
     "comment": "thumbnails toggle description"
   },
   {
@@ -1916,13 +2000,13 @@
   {
     "term": "Properties",
     "context": "Properties",
-    "reference": "Modules/MainWindow.qml:2441, Modules/FilesTopbar.qml:420, Modules/FileContextMenu.qml:234, Modules/FileContextMenu.qml:306, Common/Shortcuts.qml:516",
+    "reference": "Modules/FilesTopbar.qml:426, Modules/PlaceMenu.qml:87, Modules/FileContextMenu.qml:272, Modules/FileContextMenu.qml:344, Common/Shortcuts.qml:516",
     "comment": "menu entry showing details about the current folder"
   },
   {
     "term": "Protect with a password",
     "context": "Protect with a password",
-    "reference": "Modules/CompressDialog.qml:85",
+    "reference": "Modules/CompressDialog.qml:82",
     "comment": "compress dialog option encrypting the archive"
   },
   {
@@ -1934,13 +2018,13 @@
   {
     "term": "Quit",
     "context": "Quit",
-    "reference": "Modules/Settings/SettingsContent.qml:532",
+    "reference": "Modules/Settings/SettingsContent.qml:537",
     "comment": "close behavior button group option to quit the app"
   },
   {
     "term": "Radius strength",
     "context": "Radius strength",
-    "reference": "Modules/Settings/SettingsContent.qml:921",
+    "reference": "Modules/Settings/SettingsContent.qml:935",
     "comment": "global component corner rounding"
   },
   {
@@ -1952,14 +2036,14 @@
   {
     "term": "Reads every file over the connection to draw its preview.",
     "context": "Reads every file over the connection to draw its preview.",
-    "reference": "Modules/Settings/SettingsContent.qml:1124",
+    "reference": "Modules/Settings/SettingsContent.qml:1138",
     "comment": "network thumbnails toggle description"
   },
   {
     "term": "Recent",
     "context": "Recent",
-    "reference": "Modules/ConnectServerDialog.qml:87",
-    "comment": "header above previously used servers"
+    "reference": "Modules/TabManager.qml:191, Modules/RecentView.qml:147, Modules/BookmarksSection.qml:37, Modules/ConnectServerDialog.qml:85",
+    "comment": "header above previously used servers | recent files view header and sidebar entry"
   },
   {
     "term": "Recently used",
@@ -1976,43 +2060,43 @@
   {
     "term": "Recursive searches also descend into dot folders.",
     "context": "Recursive searches also descend into dot folders.",
-    "reference": "Modules/Settings/SettingsContent.qml:1139",
+    "reference": "Modules/Settings/SettingsContent.qml:1153",
     "comment": "search hidden files toggle description"
   },
   {
     "term": "Redo",
     "context": "Redo",
-    "reference": "Modules/MainWindow.qml:1170, Common/Shortcuts.qml:481",
+    "reference": "Modules/FileOpenFlow.qml:184, Common/Shortcuts.qml:481",
     "comment": "toast action repeating the operation that was just undone"
   },
   {
     "term": "Redone",
     "context": "Redone",
-    "reference": "Modules/MainWindow.qml:1161",
+    "reference": "Modules/FileOpenFlow.qml:175",
     "comment": "toast after repeating an undone operation"
   },
   {
     "term": "Reduce motion",
     "context": "Reduce motion",
-    "reference": "Modules/Settings/SettingsContent.qml:1010",
+    "reference": "Modules/Settings/SettingsContent.qml:1024",
     "comment": "reduce motion toggle label"
   },
   {
     "term": "Register as the session file manager",
     "context": "Register as the session file manager",
-    "reference": "Modules/Settings/SettingsContent.qml:542",
+    "reference": "Modules/Settings/SettingsContent.qml:547",
     "comment": "setting label for owning org.freedesktop.FileManager1"
   },
   {
     "term": "Relevance",
     "context": "Relevance",
-    "reference": "Modules/FilesTopbar.qml:61",
+    "reference": "Modules/FilesTopbar.qml:63",
     "comment": "sort criterion for search results, best match first"
   },
   {
     "term": "Reload",
     "context": "Reload",
-    "reference": "Modules/FilesTopbar.qml:439, Modules/FileContextMenu.qml:61, Modules/FileContextMenu.qml:283, Common/Shortcuts.qml:353",
+    "reference": "Modules/FilesTopbar.qml:441, Modules/FileContextMenu.qml:44, Modules/FileContextMenu.qml:87, Modules/FileContextMenu.qml:321, Common/Shortcuts.qml:353",
     "comment": "menu entry re-reading the current folder"
   },
   {
@@ -2024,14 +2108,20 @@
   {
     "term": "Remember view and sort per folder",
     "context": "Remember view and sort per folder",
-    "reference": "Modules/Settings/SettingsContent.qml:669",
+    "reference": "Modules/Settings/SettingsContent.qml:674",
     "comment": "setting label for per-folder sort and view memory"
   },
   {
     "term": "Remove bookmark",
     "context": "Remove bookmark",
-    "reference": "Modules/MainWindow.qml:2324, Modules/FilesTopbar.qml:33, Modules/BookmarksSection.qml:91, Modules/FileContextMenu.qml:111",
+    "reference": "Modules/FilesTopbar.qml:35, Modules/BookmarksSection.qml:115, Modules/PlaceMenu.qml:63, Modules/FileContextMenu.qml:137",
     "comment": "tooltip on the bookmark button"
+  },
+  {
+    "term": "Remove from Recent",
+    "context": "Remove from Recent",
+    "reference": "Modules/RecentView.qml:34, Modules/FileContextMenu.qml:232",
+    "comment": "action dropping the selected files from the recently used list without touching the files"
   },
   {
     "term": "Remove the bookmark or eject the drive",
@@ -2042,7 +2132,7 @@
   {
     "term": "Rename",
     "context": "Rename",
-    "reference": "Modules/MainWindow.qml:2315, Modules/MainWindow.qml:2675, Modules/MainWindow.qml:2676, Modules/FileContextMenu.qml:150, Common/Shortcuts.qml:449",
+    "reference": "Modules/PlaceMenu.qml:53, Modules/WindowDialogs.qml:227, Modules/WindowDialogs.qml:228, Modules/FileContextMenu.qml:176, Common/Shortcuts.qml:449",
     "comment": "rename dialog header"
   },
   {
@@ -2054,25 +2144,31 @@
   {
     "term": "Renamed",
     "context": "Renamed",
-    "reference": "Modules/MainWindow.qml:1558",
+    "reference": "Modules/JobLabels.qml:35",
     "comment": "toast after renaming a file"
+  },
+  {
+    "term": "Renaming",
+    "context": "Renaming",
+    "reference": "Modules/JobLabels.qml:34",
+    "comment": "file operation in progress"
   },
   {
     "term": "Reopen the closed tab",
     "context": "Reopen the closed tab",
-    "reference": "Modules/MainWindow.qml:2356, Common/Shortcuts.qml:181",
+    "reference": "Modules/WindowMenus.qml:206, Common/Shortcuts.qml:181",
     "comment": "keyboard shortcut"
   },
   {
     "term": "Replace",
     "context": "Replace",
-    "reference": "Modules/ChooserWindow.qml:827, Modules/ConflictDialog.qml:81",
+    "reference": "Modules/ChooserWindow.qml:824, Modules/ConflictDialog.qml:84",
     "comment": "file conflict dialog button to overwrite the existing item"
   },
   {
     "term": "Reset this folder",
     "context": "Reset this folder",
-    "reference": "Modules/FilesTopbar.qml:54",
+    "reference": "Modules/FilesTopbar.qml:56",
     "comment": "view menu entry dropping this folder's own sort and view"
   },
   {
@@ -2090,55 +2186,55 @@
   {
     "term": "Restart",
     "context": "Restart",
-    "reference": "Modules/Settings/SettingsContent.qml:390",
+    "reference": "Modules/Settings/SettingsContent.qml:395",
     "comment": "dialog button restarting xdg-desktop-portal"
   },
   {
     "term": "Restart the portal service",
     "context": "Restart the portal service",
-    "reference": "Modules/Settings/SettingsContent.qml:617",
+    "reference": "Modules/Settings/SettingsContent.qml:622",
     "comment": "settings row restarting xdg-desktop-portal"
   },
   {
     "term": "Restart the portal service?",
     "context": "Restart the portal service?",
-    "reference": "Modules/Settings/SettingsContent.qml:388",
+    "reference": "Modules/Settings/SettingsContent.qml:393",
     "comment": "dialog title before restarting xdg-desktop-portal"
   },
   {
     "term": "Restore",
     "context": "Restore",
-    "reference": "Modules/MainWindow.qml:1364, Modules/TrashView.qml:32, Modules/FileContextMenu.qml:36",
+    "reference": "Modules/FileOpenFlow.qml:213, Modules/TrashView.qml:32, Modules/FileContextMenu.qml:62",
     "comment": "trash action returning items to where they were deleted from"
   },
   {
     "term": "Restored",
     "context": "Restored",
-    "reference": "Modules/MainWindow.qml:1552",
+    "reference": "Modules/JobLabels.qml:23",
     "comment": "toast after restoring items from the trash"
   },
   {
     "term": "Restoring",
     "context": "Restoring",
-    "reference": "Modules/JobRow.qml:31",
+    "reference": "Modules/JobLabels.qml:22",
     "comment": "file operation in progress"
   },
   {
     "term": "Results for “%1” in %2",
     "context": "Results for “%1” in %2",
-    "reference": "Modules/SearchResults.qml:116",
+    "reference": "Modules/SearchResults.qml:117",
     "comment": "search results header, query then folder"
   },
   {
     "term": "Results in %1",
     "context": "Results in %1",
-    "reference": "Modules/SearchResults.qml:116",
+    "reference": "Modules/SearchResults.qml:117",
     "comment": "search results header without a query"
   },
   {
     "term": "Retry as administrator",
     "context": "Retry as administrator",
-    "reference": "Modules/OperationErrorDialog.qml:85, Modules/Settings/SettingsAboutPage.qml:60",
+    "reference": "Modules/OperationErrorDialog.qml:88, Modules/Settings/SettingsAboutPage.qml:60",
     "comment": "file operation error dialog action | file operation error dialog button to retry with elevated rights"
   },
   {
@@ -2150,7 +2246,7 @@
   {
     "term": "Ripple effects",
     "context": "Ripple effects",
-    "reference": "Modules/Settings/SettingsContent.qml:1003",
+    "reference": "Modules/Settings/SettingsContent.qml:1017",
     "comment": "ripple effects toggle label"
   },
   {
@@ -2168,7 +2264,7 @@
   {
     "term": "Run this desktop file?",
     "context": "Run this desktop file?",
-    "reference": "Modules/MainWindow.qml:2647",
+    "reference": "Modules/WindowDialogs.qml:191",
     "comment": "untrusted desktop file dialog header"
   },
   {
@@ -2210,13 +2306,13 @@
   {
     "term": "Saving %1 into the chosen folder",
     "context": "Saving %1 into the chosen folder",
-    "reference": "Modules/ChooserWindow.qml:748",
+    "reference": "Modules/ChooserWindow.qml:730",
     "comment": "file chooser footer listing the names an app wants to save"
   },
   {
     "term": "Scale",
     "context": "Scale",
-    "reference": "Modules/Settings/SettingsContent.qml:951",
+    "reference": "Modules/Settings/SettingsContent.qml:965",
     "comment": "font scale slider label"
   },
   {
@@ -2234,25 +2330,25 @@
   {
     "term": "Search in Files",
     "context": "Search in Files",
-    "reference": "Modules/FilesTopbar.qml:490, Modules/ChooserWindow.qml:609, Common/Shortcuts.qml:138, Modules/Settings/SettingsContent.qml:1132",
+    "reference": "Modules/FilesTopbar.qml:481, Modules/ChooserWindow.qml:585, Common/Shortcuts.qml:138, Modules/Settings/SettingsContent.qml:1146",
     "comment": "placeholder in the search field"
   },
   {
     "term": "Search results",
     "context": "Search results",
-    "reference": "Modules/Settings/SettingsContent.qml:439",
+    "reference": "Modules/Settings/SettingsContent.qml:444",
     "comment": "settings page header while a search query is typed"
   },
   {
     "term": "Search settings",
     "context": "Search settings",
-    "reference": "Modules/Settings/SettingsSidebar.qml:123",
+    "reference": "Modules/Settings/SettingsSidebar.qml:121",
     "comment": "placeholder in the settings search field"
   },
   {
     "term": "Search subfolders",
     "context": "Search subfolders",
-    "reference": "Modules/FilesPane.qml:586",
+    "reference": "Modules/FilesPane.qml:717",
     "comment": "chip that turns the folder filter into a recursive search"
   },
   {
@@ -2276,7 +2372,7 @@
   {
     "term": "Searching…",
     "context": "Searching…",
-    "reference": "Modules/SearchResults.qml:35",
+    "reference": "Modules/SearchResults.qml:36",
     "comment": "search results header while the daemon walks the tree"
   },
   {
@@ -2288,7 +2384,7 @@
   {
     "term": "Select all",
     "context": "Select all",
-    "reference": "Modules/FileContextMenu.qml:55, Modules/FileContextMenu.qml:271, Common/Shortcuts.qml:374",
+    "reference": "Modules/FileContextMenu.qml:38, Modules/FileContextMenu.qml:81, Modules/FileContextMenu.qml:309, Common/Shortcuts.qml:374",
     "comment": "menu entry selecting every item in the folder"
   },
   {
@@ -2306,43 +2402,43 @@
   {
     "term": "Settings",
     "context": "Settings",
-    "reference": "Modules/FilesTopbar.qml:468, Common/Shortcuts.qml:367, Modules/Settings/SettingsModal.qml:88",
+    "reference": "Modules/FilesTopbar.qml:463, Common/Shortcuts.qml:367, Modules/Settings/SettingsModal.qml:90",
     "comment": "settings window header title"
   },
   {
     "term": "Shape",
     "context": "Shape",
-    "reference": "Modules/Settings/SettingsContent.qml:916",
+    "reference": "Modules/Settings/SettingsContent.qml:930",
     "comment": "appearance settings section label"
   },
   {
     "term": "Show",
     "context": "Show",
-    "reference": "Modules/MainWindow.qml:1144",
+    "reference": "Modules/FileOpenFlow.qml:158",
     "comment": "toast action revealing the extracted files"
   },
   {
     "term": "Show hidden files",
     "context": "Show hidden files",
-    "reference": "Modules/ChooserWindow.qml:566, Modules/FileContextMenu.qml:277, Modules/SearchChips.qml:170, Common/Shortcuts.qml:317, Modules/Settings/SettingsContent.qml:654",
+    "reference": "Modules/ChooserWindow.qml:542, Modules/FileContextMenu.qml:315, Modules/SearchChips.qml:170, Common/Shortcuts.qml:317, Modules/Settings/SettingsContent.qml:659",
     "comment": "file browser toolbar toggle | menu entry listing dot files"
   },
   {
     "term": "Show system partitions",
     "context": "Show system partitions",
-    "reference": "Modules/Settings/SettingsContent.qml:1175",
+    "reference": "Modules/Settings/SettingsContent.qml:1190",
     "comment": "devices setting label"
   },
   {
     "term": "Show thumbnails",
     "context": "Show thumbnails",
-    "reference": "Modules/Settings/SettingsContent.qml:1101",
+    "reference": "Modules/Settings/SettingsContent.qml:1115",
     "comment": "thumbnails toggle label"
   },
   {
     "term": "Showing the first %1 results",
     "context": "Showing the first %1 results",
-    "reference": "Modules/SearchResults.qml:38",
+    "reference": "Modules/SearchResults.qml:39",
     "comment": "search results header when the cap was hit"
   },
   {
@@ -2360,7 +2456,7 @@
   {
     "term": "Single click",
     "context": "Single click",
-    "reference": "Modules/Settings/SettingsContent.qml:721",
+    "reference": "Modules/Settings/SettingsContent.qml:727",
     "comment": "click to open option"
   },
   {
@@ -2372,13 +2468,13 @@
   {
     "term": "Skip",
     "context": "Skip",
-    "reference": "Modules/ArchivePasswordDialog.qml:68, Modules/OperationErrorDialog.qml:71, Modules/ConflictDialog.qml:74",
+    "reference": "Modules/ArchivePasswordDialog.qml:70, Modules/OperationErrorDialog.qml:74, Modules/ConflictDialog.qml:77",
     "comment": "file conflict dialog button to leave the item alone"
   },
   {
     "term": "Skip images larger than",
     "context": "Skip images larger than",
-    "reference": "Modules/Settings/SettingsContent.qml:1109",
+    "reference": "Modules/Settings/SettingsContent.qml:1123",
     "comment": "thumbnail size cap slider label"
   },
   {
@@ -2390,7 +2486,7 @@
   {
     "term": "Smooth",
     "context": "Smooth",
-    "reference": "Modules/Settings/SettingsContent.qml:994",
+    "reference": "Modules/Settings/SettingsContent.qml:1008",
     "comment": "spring bounce option"
   },
   {
@@ -2402,13 +2498,13 @@
   {
     "term": "Some matches may be missing",
     "context": "Some matches may be missing",
-    "reference": "Modules/SearchResults.qml:50",
+    "reference": "Modules/SearchResults.qml:51",
     "comment": "search results header note when the index could not return every candidate"
   },
   {
     "term": "Sort by",
     "context": "Sort by",
-    "reference": "Modules/Settings/SettingsContent.qml:639",
+    "reference": "Modules/Settings/SettingsContent.qml:644",
     "comment": "setting label for the default sort key"
   },
   {
@@ -2420,25 +2516,25 @@
   {
     "term": "Sort descending",
     "context": "Sort descending",
-    "reference": "Modules/Settings/SettingsContent.qml:647",
+    "reference": "Modules/Settings/SettingsContent.qml:652",
     "comment": "sort direction option"
   },
   {
     "term": "Split view",
     "context": "Split view",
-    "reference": "Modules/FilesTopbar.qml:307, Modules/FilesTopbar.qml:379, Common/Shortcuts.qml:225",
+    "reference": "Modules/FilesTopbar.qml:299, Modules/FilesTopbar.qml:391, Common/Shortcuts.qml:225",
     "comment": "tooltip on the button showing a second pane"
   },
   {
     "term": "Spring",
     "context": "Spring",
-    "reference": "Modules/Settings/SettingsContent.qml:992",
+    "reference": "Modules/Settings/SettingsContent.qml:1006",
     "comment": "spring bounce setting label"
   },
   {
     "term": "Square",
     "context": "Square",
-    "reference": "Modules/Settings/SettingsContent.qml:924",
+    "reference": "Modules/Settings/SettingsContent.qml:938",
     "comment": "radius strength slider label at zero"
   },
   {
@@ -2450,13 +2546,13 @@
   {
     "term": "Steam, ~/VirtualBox VMs",
     "context": "Steam, ~/VirtualBox VMs",
-    "reference": "Modules/Settings/SettingsContent.qml:1153",
+    "reference": "Modules/Settings/SettingsContent.qml:1167",
     "comment": "example list in the search exclusions field, folder names or paths separated by commas"
   },
   {
     "term": "Stop measuring",
     "context": "Stop measuring",
-    "reference": "Modules/PropertiesDialog.qml:211",
+    "reference": "Modules/PropertiesDialog.qml:210",
     "comment": "properties action halting the recursive size scan"
   },
   {
@@ -2480,43 +2576,49 @@
   {
     "term": "System preference unavailable, using dark.",
     "context": "System preference unavailable, using dark.",
-    "reference": "Modules/Settings/SettingsContent.qml:800",
+    "reference": "Modules/Settings/SettingsContent.qml:814",
     "comment": "theme mode setting description"
   },
   {
     "term": "Terminal",
     "context": "Terminal",
-    "reference": "Modules/Settings/SettingsContent.qml:1071",
+    "reference": "Modules/Settings/SettingsContent.qml:1085",
     "comment": "setting label for the terminal emulator"
   },
   {
     "term": "Terminal, drag and drop, thumbnails and search.",
     "context": "Terminal, drag and drop, thumbnails and search.",
-    "reference": "Modules/Settings/SettingsContent.qml:1062",
+    "reference": "Modules/Settings/SettingsContent.qml:1076",
     "comment": "behaviour settings section subtitle"
   },
   {
     "term": "Terminal, drag and thumbnails",
     "context": "Terminal, drag and thumbnails",
-    "reference": "Modules/Settings/SettingsSidebar.qml:73",
+    "reference": "Modules/Settings/SettingsSidebar.qml:70",
     "comment": "settings sidebar tab hint"
   },
   {
     "term": "The change takes effect after xdg-desktop-portal restarts. Open and save dialogs other apps have open will close.",
     "context": "The change takes effect after xdg-desktop-portal restarts. Open and save dialogs other apps have open will close.",
-    "reference": "Modules/Settings/SettingsContent.qml:389",
+    "reference": "Modules/Settings/SettingsContent.qml:394",
     "comment": "dialog message before restarting xdg-desktop-portal"
   },
   {
-    "term": "The portal list is managed by the system; add Dank Files to it there.",
-    "context": "The portal list is managed by the system; add Dank Files to it there.",
+    "term": "The files themselves stay where they are.",
+    "context": "The files themselves stay where they are.",
+    "reference": "Modules/WindowDialogs.qml:322",
+    "comment": "explanation under the clear recent confirmation"
+  },
+  {
+    "term": "The portal list is managed by the system; add Dux Files to it there.",
+    "context": "The portal list is managed by the system; add Dux Files to it there.",
     "reference": "Modules/Settings/SettingsContent.qml:201",
     "comment": "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set"
   },
   {
     "term": "The sandbox cannot see the host's terminals; name the one to launch.",
     "context": "The sandbox cannot see the host's terminals; name the one to launch.",
-    "reference": "Modules/Settings/SettingsContent.qml:1073",
+    "reference": "Modules/Settings/SettingsContent.qml:1087",
     "comment": "terminal setting description inside flatpak"
   },
   {
@@ -2528,7 +2630,7 @@
   {
     "term": "The size column shows how many entries a folder holds, one request per folder in view.",
     "context": "The size column shows how many entries a folder holds, one request per folder in view.",
-    "reference": "Modules/Settings/SettingsContent.qml:707",
+    "reference": "Modules/Settings/SettingsContent.qml:713",
     "comment": "folder counts toggle description"
   },
   {
@@ -2540,19 +2642,19 @@
   {
     "term": "Theme",
     "context": "Theme",
-    "reference": "Modules/Settings/SettingsContent.qml:786, Modules/Settings/SettingsContent.qml:791",
+    "reference": "Modules/Settings/SettingsContent.qml:800, Modules/Settings/SettingsContent.qml:805",
     "comment": "appearance settings section label | theme mode setting label"
   },
   {
     "term": "Theme, shape and motion",
     "context": "Theme, shape and motion",
-    "reference": "Modules/Settings/SettingsSidebar.qml:66",
+    "reference": "Modules/Settings/SettingsSidebar.qml:63",
     "comment": "settings sidebar tab hint"
   },
   {
     "term": "Thickness",
     "context": "Thickness",
-    "reference": "Modules/Settings/SettingsContent.qml:1031",
+    "reference": "Modules/Settings/SettingsContent.qml:1045",
     "comment": "focus ring thickness slider label"
   },
   {
@@ -2564,7 +2666,7 @@
   {
     "term": "This folder is empty",
     "context": "This folder is empty",
-    "reference": "Modules/FilesPane.qml:439",
+    "reference": "Modules/FilesPane.qml:521",
     "comment": "empty directory placeholder"
   },
   {
@@ -2576,7 +2678,7 @@
   {
     "term": "This item already exists",
     "context": "This item already exists",
-    "reference": "Modules/ChooserWindow.qml:825, Modules/ConflictDialog.qml:28",
+    "reference": "Modules/ChooserWindow.qml:822, Modules/ConflictDialog.qml:31",
     "comment": "file conflict dialog header"
   },
   {
@@ -2594,7 +2696,7 @@
   {
     "term": "This step cannot be retried as administrator",
     "context": "This step cannot be retried as administrator",
-    "reference": "Modules/OperationErrorDialog.qml:50",
+    "reference": "Modules/OperationErrorDialog.qml:53",
     "comment": "file operation error dialog explanation"
   },
   {
@@ -2606,19 +2708,19 @@
   {
     "term": "Thumbnails",
     "context": "Thumbnails",
-    "reference": "Modules/Settings/SettingsContent.qml:1096, Modules/Settings/SettingsAboutPage.qml:32",
+    "reference": "Modules/Settings/SettingsContent.qml:1110, Modules/Settings/SettingsAboutPage.qml:32",
     "comment": "capability row on the about page"
   },
   {
     "term": "Thumbnails on network locations",
     "context": "Thumbnails on network locations",
-    "reference": "Modules/Settings/SettingsContent.qml:1122",
+    "reference": "Modules/Settings/SettingsContent.qml:1136",
     "comment": "network thumbnails toggle label"
   },
   {
     "term": "Title bars",
     "context": "Title bars",
-    "reference": "Modules/Settings/SettingsContent.qml:967",
+    "reference": "Modules/Settings/SettingsContent.qml:981",
     "comment": "window title bars toggle label"
   },
   {
@@ -2630,31 +2732,31 @@
   {
     "term": "Toggle sidebar",
     "context": "Toggle sidebar",
-    "reference": "Modules/FilesTopbar.qml:188, Modules/ChooserWindow.qml:532, Common/Shortcuts.qml:239",
+    "reference": "Modules/FilesTopbar.qml:240, Modules/ChooserWindow.qml:508, Common/Shortcuts.qml:239",
     "comment": "tooltip on the button showing or hiding the sidebar"
   },
   {
     "term": "Trash",
     "context": "Trash",
-    "reference": "Modules/MainWindow.qml:357, Modules/BookmarksSection.qml:51, Modules/TrashView.qml:146, Modules/Settings/SettingsAboutPage.qml:28",
+    "reference": "Modules/TabManager.qml:189, Modules/BookmarksSection.qml:75, Modules/TrashView.qml:146, Modules/Settings/SettingsAboutPage.qml:28",
     "comment": "capability row on the about page | trash view header and sidebar entry"
   },
   {
     "term": "Trash is empty",
     "context": "Trash is empty",
-    "reference": "Modules/BookmarksSection.qml:53, Modules/TrashView.qml:219",
+    "reference": "Modules/BookmarksSection.qml:77, Modules/TrashView.qml:219",
     "comment": "trash view placeholder and sidebar tooltip when nothing is trashed"
   },
   {
     "term": "Trust and run",
     "context": "Trust and run",
-    "reference": "Modules/MainWindow.qml:2649",
+    "reference": "Modules/WindowDialogs.qml:193",
     "comment": "untrusted desktop file dialog action"
   },
   {
     "term": "Try again",
     "context": "Try again",
-    "reference": "Modules/OperationErrorDialog.qml:78",
+    "reference": "Modules/OperationErrorDialog.qml:81",
     "comment": "file operation error dialog button to retry"
   },
   {
@@ -2672,13 +2774,13 @@
   {
     "term": "Typing in the file list",
     "context": "Typing in the file list",
-    "reference": "Modules/Settings/SettingsContent.qml:752",
+    "reference": "Modules/Settings/SettingsContent.qml:766",
     "comment": "setting label choosing what typed letters do in the file list"
   },
   {
     "term": "Typography",
     "context": "Typography",
-    "reference": "Modules/Settings/SettingsContent.qml:934",
+    "reference": "Modules/Settings/SettingsContent.qml:948",
     "comment": "appearance settings section label"
   },
   {
@@ -2690,13 +2792,13 @@
   {
     "term": "Undo",
     "context": "Undo",
-    "reference": "Modules/MainWindow.qml:1151, Common/Shortcuts.qml:473",
+    "reference": "Modules/FileOpenFlow.qml:165, Common/Shortcuts.qml:473",
     "comment": "toast action reversing the last operation"
   },
   {
     "term": "Undone",
     "context": "Undone",
-    "reference": "Modules/MainWindow.qml:1164",
+    "reference": "Modules/FileOpenFlow.qml:178",
     "comment": "toast after reversing an operation"
   },
   {
@@ -2708,8 +2810,8 @@
   {
     "term": "Unlock",
     "context": "Unlock",
-    "reference": "Modules/DevicesSection.qml:77, Modules/ArchivePasswordDialog.qml:74, Modules/UnlockDialog.qml:39, Modules/UnlockDialog.qml:64",
-    "comment": "Unlock | unlock dialog header for an encrypted device"
+    "reference": "Modules/DevicesSection.qml:77, Modules/ArchivePasswordDialog.qml:76, Modules/UnlockDialog.qml:39, Modules/UnlockDialog.qml:62",
+    "comment": "unlock dialog header for an encrypted device"
   },
   {
     "term": "Unmount",
@@ -2720,31 +2822,31 @@
   {
     "term": "Untitled document",
     "context": "Untitled document",
-    "reference": "Modules/MainWindow.qml:1254",
+    "reference": "Modules/WindowMenus.qml:108",
     "comment": "default name for a new empty file"
   },
   {
     "term": "Untitled folder",
     "context": "Untitled folder",
-    "reference": "Modules/MainWindow.qml:825, Modules/MainWindow.qml:1186, Modules/ChooserWindow.qml:381",
+    "reference": "Modules/WindowActions.qml:305, Modules/WindowActions.qml:479, Modules/ChooserWindow.qml:365",
     "comment": "default name for a new folder"
   },
   {
-    "term": "Use Dank Files for open and save dialogs",
-    "context": "Use Dank Files for open and save dialogs",
-    "reference": "Modules/Settings/SettingsContent.qml:582",
+    "term": "Use Dux Files for open and save dialogs",
+    "context": "Use Dux Files for open and save dialogs",
+    "reference": "Modules/Settings/SettingsContent.qml:587",
     "comment": "setting label for serving the desktop portal file chooser"
   },
   {
     "term": "Use a bundled color palette.",
     "context": "Use a bundled color palette.",
-    "reference": "Modules/Settings/SettingsContent.qml:837",
+    "reference": "Modules/Settings/SettingsContent.qml:851",
     "comment": "color source description for preset"
   },
   {
     "term": "Use these settings for all folders",
     "context": "Use these settings for all folders",
-    "reference": "Modules/FilesTopbar.qml:53",
+    "reference": "Modules/FilesTopbar.qml:55",
     "comment": "view menu entry making this folder's sort and view the defaults"
   },
   {
@@ -2762,7 +2864,7 @@
   {
     "term": "Using DankMaterialShell dynamic colors.",
     "context": "Using DankMaterialShell dynamic colors.",
-    "reference": "Modules/Settings/SettingsContent.qml:853",
+    "reference": "Modules/Settings/SettingsContent.qml:867",
     "comment": "auto color source status when DMS is active"
   },
   {
@@ -2774,7 +2876,7 @@
   {
     "term": "Version and capabilities",
     "context": "Version and capabilities",
-    "reference": "Modules/Settings/SettingsSidebar.qml:89",
+    "reference": "Modules/Settings/SettingsSidebar.qml:86",
     "comment": "settings sidebar tab hint"
   },
   {
@@ -2786,61 +2888,61 @@
   {
     "term": "View",
     "context": "View",
-    "reference": "Modules/FilesTopbar.qml:227, Common/Shortcuts.qml:577, Modules/Settings/SettingsContent.qml:626",
+    "reference": "Modules/FilesTopbar.qml:279, Common/Shortcuts.qml:577, Modules/Settings/SettingsContent.qml:631",
     "comment": "keyboard shortcut group"
   },
   {
     "term": "Views, sorting and defaults",
     "context": "Views, sorting and defaults",
-    "reference": "Modules/Settings/SettingsSidebar.qml:59",
+    "reference": "Modules/Settings/SettingsSidebar.qml:56",
     "comment": "settings sidebar tab hint"
   },
   {
     "term": "Vim keys",
     "context": "Vim keys",
-    "reference": "Modules/ShortcutsOverlay.qml:101, Modules/Settings/SettingsContent.qml:744",
+    "reference": "Modules/ShortcutsOverlay.qml:101, Modules/Settings/SettingsContent.qml:758",
     "comment": "toggle label for vim style navigation"
   },
   {
     "term": "Waiting",
     "context": "Waiting",
-    "reference": "Modules/JobRow.qml:47",
+    "reference": "Modules/JobRow.qml:28",
     "comment": "file operation is queued"
   },
   {
     "term": "Weight",
     "context": "Weight",
-    "reference": "Modules/Settings/SettingsContent.qml:939",
+    "reference": "Modules/Settings/SettingsContent.qml:953",
     "comment": "font weight slider label"
   },
   {
     "term": "What the sidebar lists and what a click does.",
     "context": "What the sidebar lists and what a click does.",
-    "reference": "Modules/Settings/SettingsContent.qml:1170",
+    "reference": "Modules/Settings/SettingsContent.qml:1185",
     "comment": "devices settings section subtitle"
   },
   {
     "term": "What the window's close button does.",
     "context": "What the window's close button does.",
-    "reference": "Modules/Settings/SettingsContent.qml:531",
+    "reference": "Modules/Settings/SettingsContent.qml:536",
     "comment": "close behavior setting description"
   },
   {
     "term": "Window",
     "context": "Window",
-    "reference": "Modules/Settings/SettingsContent.qml:524",
+    "reference": "Modules/Settings/SettingsContent.qml:529",
     "comment": "general settings section label"
   },
   {
     "term": "Windows",
     "context": "Windows",
-    "reference": "Modules/Settings/SettingsContent.qml:962",
+    "reference": "Modules/Settings/SettingsContent.qml:976",
     "comment": "appearance settings section label"
   },
   {
     "term": "Working",
     "context": "Working",
-    "reference": "Modules/JobRow.qml:37",
+    "reference": "Modules/JobLabels.qml:80",
     "comment": "file operation in progress"
   },
   {
@@ -2852,31 +2954,31 @@
   {
     "term": "Wrong password",
     "context": "Wrong password",
-    "reference": "Modules/ArchivePasswordDialog.qml:54",
+    "reference": "Modules/ArchivePasswordDialog.qml:58",
     "comment": "archive password dialog error after a failed attempt"
   },
   {
     "term": "accessibility animation disable",
     "context": "accessibility animation disable",
-    "reference": "Modules/Settings/SettingsContent.qml:1011",
+    "reference": "Modules/Settings/SettingsContent.qml:1025",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "animation click feedback",
     "context": "animation click feedback",
-    "reference": "Modules/Settings/SettingsContent.qml:1004",
+    "reference": "Modules/Settings/SettingsContent.qml:1018",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "animation speed motion",
     "context": "animation speed motion",
-    "reference": "Modules/Settings/SettingsContent.qml:982",
+    "reference": "Modules/Settings/SettingsContent.qml:996",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "bounce animation motion",
     "context": "bounce animation motion",
-    "reference": "Modules/Settings/SettingsContent.qml:993",
+    "reference": "Modules/Settings/SettingsContent.qml:1007",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
@@ -2888,19 +2990,19 @@
   {
     "term": "console emulator shell command line",
     "context": "console emulator shell command line",
-    "reference": "Modules/Settings/SettingsContent.qml:1072",
+    "reference": "Modules/Settings/SettingsContent.qml:1086",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "corners rounding shape square",
     "context": "corners rounding shape square",
-    "reference": "Modules/Settings/SettingsContent.qml:922",
+    "reference": "Modules/Settings/SettingsContent.qml:936",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "custom theme json file",
     "context": "custom theme json file",
-    "reference": "Modules/Settings/SettingsContent.qml:898",
+    "reference": "Modules/Settings/SettingsContent.qml:912",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
@@ -2930,31 +3032,31 @@
   {
     "term": "dark",
     "context": "dark",
-    "reference": "Modules/Settings/SettingsContent.qml:800",
+    "reference": "Modules/Settings/SettingsContent.qml:814",
     "comment": "current scheme name in theme mode description"
   },
   {
     "term": "decorations csd window header",
     "context": "decorations csd window header",
-    "reference": "Modules/Settings/SettingsContent.qml:968",
+    "reference": "Modules/Settings/SettingsContent.qml:982",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "default file manager dbus reveal",
     "context": "default file manager dbus reveal",
-    "reference": "Modules/Settings/SettingsContent.qml:543",
+    "reference": "Modules/Settings/SettingsContent.qml:548",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "delete confirmation prompt",
     "context": "delete confirmation prompt",
-    "reference": "Modules/Settings/SettingsContent.qml:732",
+    "reference": "Modules/Settings/SettingsContent.qml:738",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "directories first sort",
     "context": "directories first sort",
-    "reference": "Modules/Settings/SettingsContent.qml:663",
+    "reference": "Modules/Settings/SettingsContent.qml:668",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
@@ -2966,13 +3068,13 @@
   {
     "term": "dotfiles invisible",
     "context": "dotfiles invisible",
-    "reference": "Modules/Settings/SettingsContent.qml:655",
+    "reference": "Modules/Settings/SettingsContent.qml:660",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "drag drop copy move ask default action",
     "context": "drag drop copy move ask default action",
-    "reference": "Modules/Settings/SettingsContent.qml:1087",
+    "reference": "Modules/Settings/SettingsContent.qml:1101",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
@@ -2984,25 +3086,25 @@
   {
     "term": "focus ring width outline",
     "context": "focus ring width outline",
-    "reference": "Modules/Settings/SettingsContent.qml:1032",
+    "reference": "Modules/Settings/SettingsContent.qml:1046",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "folder memory per-folder remember",
     "context": "folder memory per-folder remember",
-    "reference": "Modules/Settings/SettingsContent.qml:670",
+    "reference": "Modules/Settings/SettingsContent.qml:675",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "font bold typography",
     "context": "font bold typography",
-    "reference": "Modules/Settings/SettingsContent.qml:940",
+    "reference": "Modules/Settings/SettingsContent.qml:954",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "font size text zoom typography",
     "context": "font size text zoom typography",
-    "reference": "Modules/Settings/SettingsContent.qml:952",
+    "reference": "Modules/Settings/SettingsContent.qml:966",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
@@ -3014,139 +3116,145 @@
   {
     "term": "h j k l move, / searches and letters run commands instead of jumping to or filtering names.",
     "context": "h j k l move, / searches and letters run commands instead of jumping to or filtering names.",
-    "reference": "Modules/Settings/SettingsContent.qml:746",
+    "reference": "Modules/Settings/SettingsContent.qml:760",
     "comment": "vim keys toggle description"
+  },
+  {
+    "term": "history recently used opened sidebar",
+    "context": "history recently used opened sidebar",
+    "reference": "Modules/Settings/SettingsContent.qml:745",
+    "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "hjkl keyboard navigation modal",
     "context": "hjkl keyboard navigation modal",
-    "reference": "Modules/Settings/SettingsContent.qml:745",
+    "reference": "Modules/Settings/SettingsContent.qml:759",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "internal drives udisks home boot",
     "context": "internal drives udisks home boot",
-    "reference": "Modules/Settings/SettingsContent.qml:1176",
+    "reference": "Modules/Settings/SettingsContent.qml:1191",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "keyboard outline accessibility",
     "context": "keyboard outline accessibility",
-    "reference": "Modules/Settings/SettingsContent.qml:1024",
+    "reference": "Modules/Settings/SettingsContent.qml:1038",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "keys bindings hotkeys F1",
     "context": "keys bindings hotkeys F1",
-    "reference": "Modules/Settings/SettingsContent.qml:767",
+    "reference": "Modules/Settings/SettingsContent.qml:781",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "light",
     "context": "light",
-    "reference": "Modules/Settings/SettingsContent.qml:800",
+    "reference": "Modules/Settings/SettingsContent.qml:814",
     "comment": "current scheme name in theme mode description"
   },
   {
     "term": "light dark mode system color scheme",
     "context": "light dark mode system color scheme",
-    "reference": "Modules/Settings/SettingsContent.qml:792",
+    "reference": "Modules/Settings/SettingsContent.qml:806",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "list grid columns icons tiles",
     "context": "list grid columns icons tiles",
-    "reference": "Modules/Settings/SettingsContent.qml:632",
+    "reference": "Modules/Settings/SettingsContent.qml:637",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "locale translation interface",
     "context": "locale translation interface",
-    "reference": "Modules/Settings/SettingsContent.qml:568",
+    "reference": "Modules/Settings/SettingsContent.qml:573",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "mount usb removable sidebar",
     "context": "mount usb removable sidebar",
-    "reference": "Modules/Settings/SettingsContent.qml:1184",
+    "reference": "Modules/Settings/SettingsContent.qml:1199",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "order direction ascending reverse",
     "context": "order direction ascending reverse",
-    "reference": "Modules/Settings/SettingsContent.qml:648",
+    "reference": "Modules/Settings/SettingsContent.qml:653",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "order name size modified type date",
     "context": "order name size modified type date",
-    "reference": "Modules/Settings/SettingsContent.qml:640",
+    "reference": "Modules/Settings/SettingsContent.qml:645",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "palette dms preset custom accent",
     "context": "palette dms preset custom accent",
-    "reference": "Modules/Settings/SettingsContent.qml:833",
+    "reference": "Modules/Settings/SettingsContent.qml:847",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "portal file chooser picker xdg",
     "context": "portal file chooser picker xdg",
-    "reference": "Modules/Settings/SettingsContent.qml:583",
+    "reference": "Modules/Settings/SettingsContent.qml:588",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "preset palette swatch colors",
     "context": "preset palette swatch colors",
-    "reference": "Modules/Settings/SettingsContent.qml:859",
+    "reference": "Modules/Settings/SettingsContent.qml:873",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "previews images video pdf",
     "context": "previews images video pdf",
-    "reference": "Modules/Settings/SettingsContent.qml:1102",
+    "reference": "Modules/Settings/SettingsContent.qml:1116",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "quit exit hide daemon keep running",
     "context": "quit exit hide daemon keep running",
-    "reference": "Modules/Settings/SettingsContent.qml:530",
+    "reference": "Modules/Settings/SettingsContent.qml:535",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "remote sftp smb previews",
     "context": "remote sftp smb previews",
-    "reference": "Modules/Settings/SettingsContent.qml:1123",
+    "reference": "Modules/Settings/SettingsContent.qml:1137",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "reset clear per-folder memory",
     "context": "reset clear per-folder memory",
-    "reference": "Modules/Settings/SettingsContent.qml:681",
+    "reference": "Modules/Settings/SettingsContent.qml:687",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "search dotfiles recursive",
     "context": "search dotfiles recursive",
-    "reference": "Modules/Settings/SettingsContent.qml:1138",
+    "reference": "Modules/Settings/SettingsContent.qml:1152",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "search exclude ignore",
     "context": "search exclude ignore",
-    "reference": "Modules/Settings/SettingsContent.qml:1146",
+    "reference": "Modules/Settings/SettingsContent.qml:1160",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "single double click activate",
     "context": "single double click activate",
-    "reference": "Modules/Settings/SettingsContent.qml:720",
+    "reference": "Modules/Settings/SettingsContent.qml:726",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "size column entries",
     "context": "size column entries",
-    "reference": "Modules/Settings/SettingsContent.qml:706",
+    "reference": "Modules/Settings/SettingsContent.qml:712",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
@@ -3158,43 +3266,43 @@
   {
     "term": "tabs external open location",
     "context": "tabs external open location",
-    "reference": "Modules/Settings/SettingsContent.qml:552",
+    "reference": "Modules/Settings/SettingsContent.qml:557",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "thumbnail size limit cap megabytes",
     "context": "thumbnail size limit cap megabytes",
-    "reference": "Modules/Settings/SettingsContent.qml:1110",
+    "reference": "Modules/Settings/SettingsContent.qml:1124",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "type-ahead jump filter search keyboard",
     "context": "type-ahead jump filter search keyboard",
-    "reference": "Modules/Settings/SettingsContent.qml:753",
+    "reference": "Modules/Settings/SettingsContent.qml:767",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "xdg-desktop-portal",
     "context": "xdg-desktop-portal",
-    "reference": "Modules/Settings/SettingsContent.qml:618",
+    "reference": "Modules/Settings/SettingsContent.qml:623",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "zip tar unpack compressed",
     "context": "zip tar unpack compressed",
-    "reference": "Modules/Settings/SettingsContent.qml:560",
+    "reference": "Modules/Settings/SettingsContent.qml:565",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "zoom rows",
     "context": "zoom rows",
-    "reference": "Modules/Settings/SettingsContent.qml:698",
+    "reference": "Modules/Settings/SettingsContent.qml:704",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   },
   {
     "term": "zoom thumbnails tiles",
     "context": "zoom thumbnails tiles",
-    "reference": "Modules/Settings/SettingsContent.qml:689",
+    "reference": "Modules/Settings/SettingsContent.qml:695",
     "comment": "settings search keywords, space separated, add synonyms in your language"
   }
 ]

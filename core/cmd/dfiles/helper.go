@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/helper"
+	"github.com/duxlabsdev/dux-files/core/internal/helper"
 )
 
 var helperCmd = &cobra.Command{

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/dbusutil"
+	"github.com/duxlabsdev/dux-files/core/internal/dbusutil"
 	"github.com/godbus/dbus/v5"
 )
 

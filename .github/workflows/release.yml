@@ -195,4 +195,4 @@ jobs:
           VERSION_NUM=${VERSION#v}
           gh release upload "$VERSION" "dfiles-${VERSION_NUM}.tar.gz" --clobber
 
-          gh release upload "$VERSION" "assets/com.danklinux.dankfiles.svg" --clobber
+          gh release upload "$VERSION" "assets/dev.duxlabs.files.svg" --clobber

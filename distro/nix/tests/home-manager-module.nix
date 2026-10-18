@@ -12,33 +12,33 @@ let
     + "/nixos";
 in
 pkgs.testers.runNixOSTest {
-  name = "dankfiles-home-manager-module";
+  name = "dux-files-home-manager-module";
 
   nodes.machine =
     { ... }:
     {
       imports = [ homeManagerNixosModule ];
 
-      users.users.danklinux = {
+      users.users.duxlabs = {
         isNormalUser = true;
         createHome = true;
-        home = "/home/danklinux";
+        home = "/home/duxlabs";
         extraGroups = [ "wheel" ];
       };
 
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
 
-      home-manager.users.danklinux =
+      home-manager.users.duxlabs =
         { pkgs, ... }:
         {
-          imports = [ self.homeModules.dank-files ];
+          imports = [ self.homeModules.dux-files ];
 
-          home.username = "danklinux";
-          home.homeDirectory = "/home/danklinux";
+          home.username = "duxlabs";
+          home.homeDirectory = "/home/duxlabs";
           home.stateVersion = "25.11";
 
-          programs.dank-files = {
+          programs.dux-files = {
             enable = true;
             systemd = {
               enable = true;
@@ -60,12 +60,12 @@ pkgs.testers.runNixOSTest {
 
     machine.wait_for_unit("multi-user.target")
 
-    machine.succeed("su -- danklinux -c 'command -v dfiles'")
-    machine.succeed("su -- danklinux -c 'test -f ~/.config/systemd/user/dfiles.service'")
-    machine.succeed("su -- danklinux -c 'test -L ~/.config/systemd/user/default.target.wants/dfiles.service'")
+    machine.succeed("su -- duxlabs -c 'command -v dfiles'")
+    machine.succeed("su -- duxlabs -c 'test -f ~/.config/systemd/user/dfiles.service'")
+    machine.succeed("su -- duxlabs -c 'test -L ~/.config/systemd/user/default.target.wants/dfiles.service'")
 
-    machine.succeed("su -- danklinux -c 'test -f ~/.config/dfiles/ui-settings.json'")
-    settings = json.loads(machine.succeed("su -- danklinux -c 'cat ~/.config/dfiles/ui-settings.json'"))
+    machine.succeed("su -- duxlabs -c 'test -f ~/.config/dfiles/ui-settings.json'")
+    settings = json.loads(machine.succeed("su -- duxlabs -c 'cat ~/.config/dfiles/ui-settings.json'"))
     t.assertEqual(settings["themeMode"], "dark")
     t.assertEqual(settings["radiusStrength"], 50)
   '';

@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
-	"github.com/AvengeMedia/dankfiles/core/internal/location"
-	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 	"github.com/AvengeMedia/dankgo/paths"
+	"github.com/duxlabsdev/dux-files/core/internal/fileops"
+	"github.com/duxlabsdev/dux-files/core/internal/location"
+	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
 )
 
 var showCmd = &cobra.Command{

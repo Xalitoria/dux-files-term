@@ -1,20 +1,20 @@
 package ipc
 
 import (
-	"github.com/AvengeMedia/dankfiles/core/internal/bookmarks"
-	"github.com/AvengeMedia/dankfiles/core/internal/clipboard"
-	"github.com/AvengeMedia/dankfiles/core/internal/colorscheme"
-	"github.com/AvengeMedia/dankfiles/core/internal/devices"
-	"github.com/AvengeMedia/dankfiles/core/internal/filemanager1"
-	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
-	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
-	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
-	"github.com/AvengeMedia/dankfiles/core/internal/portal"
-	"github.com/AvengeMedia/dankfiles/core/internal/recent"
-	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
-	"github.com/AvengeMedia/dankfiles/core/internal/search"
-	"github.com/AvengeMedia/dankfiles/core/internal/settings"
 	"github.com/AvengeMedia/dankgo/files"
+	"github.com/duxlabsdev/dux-files/core/internal/bookmarks"
+	"github.com/duxlabsdev/dux-files/core/internal/clipboard"
+	"github.com/duxlabsdev/dux-files/core/internal/colorscheme"
+	"github.com/duxlabsdev/dux-files/core/internal/devices"
+	"github.com/duxlabsdev/dux-files/core/internal/filemanager1"
+	"github.com/duxlabsdev/dux-files/core/internal/fileops"
+	"github.com/duxlabsdev/dux-files/core/internal/mimeapps"
+	"github.com/duxlabsdev/dux-files/core/internal/netmount"
+	"github.com/duxlabsdev/dux-files/core/internal/portal"
+	"github.com/duxlabsdev/dux-files/core/internal/recent"
+	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
+	"github.com/duxlabsdev/dux-files/core/internal/search"
+	"github.com/duxlabsdev/dux-files/core/internal/settings"
 )
 
 type Deps struct {

@@ -9,7 +9,7 @@ To contribute fork this repository, make your changes, and open a pull request.
 Clone with submodules. The shared widget library ([dank-qml-common](https://github.com/AvengeMedia/dank-qml-common)) is vendored at `dank-qml-common/` and symlinked into `quickshell/DCommon`:
 
 ```bash
-git clone --recurse-submodules https://github.com/AvengeMedia/dankfiles.git
+git clone --recurse-submodules https://github.com/duxlabsdev/dux-files.git
 # or, in an existing clone:
 git submodule update --init
 ```

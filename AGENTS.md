@@ -1,6 +1,6 @@
 ## What is this?
 
-DankFiles is an open-source, MIT-licensed standalone file manager for linux. It runs as a daemon with a quickshell UI and shares the look and feel of DankMaterialShell.
+Dux Files is an open-source, MIT-licensed standalone file manager for linux. It runs as a daemon with a quickshell UI and shares the look and feel of DankMaterialShell.
 
 ## Repo Structure
 
@@ -20,7 +20,7 @@ Go backend, daemon, and CLI (`cmd/dfiles`). Runs the unix socket server the UI t
 The entire UI, a quickshell app. Talks to core over two unix sockets: one for requests, one for the event subscription stream.
 
 - Common/ - Theme, SettingsData, I18n, Paths, Anims, CacheData, SessionData
-- Services/ - DankFilesService (the core bridge), Log, PortalService, SessionService
+- Services/ - DuxFilesService (the core bridge), Log, PortalService, SessionService
 - Modules/ - MainWindow
 - translations/ - POEditor-synced catalogs
 

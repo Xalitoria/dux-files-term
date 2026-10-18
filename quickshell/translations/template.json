@@ -147,6 +147,13 @@
     "comment": ""
   },
   {
+    "term": "%1, %2 matches",
+    "translation": "",
+    "context": "accessible description of a settings page while searching, name then count",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1/s",
     "translation": "",
     "context": "transfer speed, %1 is a size such as 12 MB",
@@ -511,6 +518,20 @@
     "comment": ""
   },
   {
+    "term": "Changing owner",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Changing permissions",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Choose a JSON color theme file.",
     "translation": "",
     "context": "custom theme hint when none selected",
@@ -518,9 +539,23 @@
     "comment": ""
   },
   {
+    "term": "Clear Recent",
+    "translation": "",
+    "context": "action emptying the recently used list without touching the files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Clear the clipboard",
     "translation": "",
     "context": "tooltip on the button dropping the copied or cut items",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Clear the recent files list?",
+    "translation": "",
+    "context": "confirmation header before emptying the recently used list",
     "reference": "",
     "comment": ""
   },
@@ -584,6 +619,13 @@
     "term": "Compress",
     "translation": "",
     "context": "compress dialog header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Compressing",
+    "translation": "",
+    "context": "file operation in progress",
     "reference": "",
     "comment": ""
   },
@@ -731,6 +773,13 @@
     "term": "Created",
     "translation": "",
     "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Creating",
+    "translation": "",
+    "context": "file operation in progress",
     "reference": "",
     "comment": ""
   },
@@ -952,6 +1001,13 @@
     "comment": ""
   },
   {
+    "term": "Duplicating",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Duration",
     "translation": "",
     "context": "animation duration slider label",
@@ -1085,6 +1141,13 @@
     "comment": ""
   },
   {
+    "term": "Extracting",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "File operations",
     "translation": "",
     "context": "jobs popover header",
@@ -1109,6 +1172,13 @@
     "term": "Files Settings",
     "translation": "",
     "context": "settings window title",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Files opened here join the recently used list shared with other applications, shown under Recent in the sidebar.",
+    "translation": "",
+    "context": "setting description for the recently used files list",
     "reference": "",
     "comment": ""
   },
@@ -1435,6 +1505,13 @@
     "comment": ""
   },
   {
+    "term": "Keep a list of recent files",
+    "translation": "",
+    "context": "setting label for the recently used files list",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Keep both",
     "translation": "",
     "context": "file conflict dialog button to keep both items",
@@ -1494,6 +1571,13 @@
     "term": "Link",
     "translation": "",
     "context": "drag label for creating a symlink",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Linking",
+    "translation": "",
+    "context": "file operation in progress",
     "reference": "",
     "comment": ""
   },
@@ -1792,6 +1876,13 @@
     "comment": ""
   },
   {
+    "term": "No recent files",
+    "translation": "",
+    "context": "recent files view placeholder when nothing was opened yet",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "No results",
     "translation": "",
     "context": "search results header when nothing matched",
@@ -2023,7 +2114,7 @@
     "comment": ""
   },
   {
-    "term": "Other apps open and save files through Dank Files.",
+    "term": "Other apps open and save files through Dux Files.",
     "translation": "",
     "context": "portal chooser setting description while enabled",
     "reference": "",
@@ -2079,7 +2170,7 @@
     "comment": ""
   },
   {
-    "term": "Part of the Dank Linux suite.",
+    "term": "Part of the dux desktop.",
     "translation": "",
     "context": "app tagline on about page",
     "reference": "",
@@ -2135,6 +2226,13 @@
     "comment": ""
   },
   {
+    "term": "Pasting image",
+    "translation": "",
+    "context": "file operation in progress",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Permissions",
     "translation": "",
     "context": "file list column header",
@@ -2177,7 +2275,7 @@
     "comment": ""
   },
   {
-    "term": "Preference: %1 names Dank Files",
+    "term": "Preference: %1 names Dux Files",
     "translation": "",
     "context": "portal chooser status line, %1 is a path",
     "reference": "",
@@ -2284,7 +2382,7 @@
   {
     "term": "Recent",
     "translation": "",
-    "context": "header above previously used servers",
+    "context": "header above previously used servers | recent files view header and sidebar entry",
     "reference": "",
     "comment": ""
   },
@@ -2373,6 +2471,13 @@
     "comment": ""
   },
   {
+    "term": "Remove from Recent",
+    "translation": "",
+    "context": "action dropping the selected files from the recently used list without touching the files",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Remove the bookmark or eject the drive",
     "translation": "",
     "context": "keyboard shortcut",
@@ -2397,6 +2502,13 @@
     "term": "Renamed",
     "translation": "",
     "context": "toast after renaming a file",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Renaming",
+    "translation": "",
+    "context": "file operation in progress",
     "reference": "",
     "comment": ""
   },
@@ -2926,7 +3038,14 @@
     "comment": ""
   },
   {
-    "term": "The portal list is managed by the system; add Dank Files to it there.",
+    "term": "The files themselves stay where they are.",
+    "translation": "",
+    "context": "explanation under the clear recent confirmation",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The portal list is managed by the system; add Dux Files to it there.",
     "translation": "",
     "context": "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set",
     "reference": "",
@@ -3159,7 +3278,7 @@
   {
     "term": "Unlock",
     "translation": "",
-    "context": "Unlock | unlock dialog header for an encrypted device",
+    "context": "unlock dialog header for an encrypted device",
     "reference": "",
     "comment": ""
   },
@@ -3185,7 +3304,7 @@
     "comment": ""
   },
   {
-    "term": "Use Dank Files for open and save dialogs",
+    "term": "Use Dux Files for open and save dialogs",
     "translation": "",
     "context": "setting label for serving the desktop portal file chooser",
     "reference": "",
@@ -3517,6 +3636,13 @@
     "term": "h j k l move, / searches and letters run commands instead of jumping to or filtering names.",
     "translation": "",
     "context": "vim keys toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "history recently used opened sidebar",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
     "comment": ""
   },

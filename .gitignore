@@ -32,7 +32,7 @@ builddir/
 .flatpak-builder/
 repo/
 repo-flatpak/
-DankFiles-*.flatpak
+DuxFiles-*.flatpak
 *.qm
 *.prl
 

@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/filechooser"
-	"github.com/AvengeMedia/dankfiles/core/internal/portalsetup"
+	"github.com/duxlabsdev/dux-files/core/internal/filechooser"
+	"github.com/duxlabsdev/dux-files/core/internal/portalsetup"
 	"github.com/godbus/dbus/v5"
 )
 

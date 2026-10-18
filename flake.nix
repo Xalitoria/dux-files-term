@@ -1,5 +1,5 @@
 {
-  description = "DankFiles";
+  description = "Dux Files";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -60,7 +60,7 @@
           in
           (pkgs.buildGoModule.override { go = goForPkgs pkgs; }) {
             inherit version;
-            pname = "dankfiles";
+            pname = "dux-files";
             src = ./.;
             modRoot = "core";
             vendorHash = "sha256-k6Q1jY613kwGiDjzUNQptUeV3TBGNentrqrxijNJ+Ek=";
@@ -97,14 +97,14 @@
             ];
 
             postInstall = ''
-              install -Dm644 ${./assets/com.danklinux.dankfiles.desktop} \
-                $out/share/applications/com.danklinux.dankfiles.desktop
-              install -Dm644 ${./assets/com.danklinux.dankfiles.svg} \
-                $out/share/icons/hicolor/scalable/apps/com.danklinux.dankfiles.svg
+              install -Dm644 ${./assets/dev.duxlabs.files.desktop} \
+                $out/share/applications/dev.duxlabs.files.desktop
+              install -Dm644 ${./assets/dev.duxlabs.files.svg} \
+                $out/share/icons/hicolor/scalable/apps/dev.duxlabs.files.svg
 
-              install -Dm644 ${./assets/dbus/com.danklinux.dankfiles.FileManager1.service} \
-                $out/share/dbus-1/services/com.danklinux.dankfiles.FileManager1.service
-              substituteInPlace $out/share/dbus-1/services/com.danklinux.dankfiles.FileManager1.service \
+              install -Dm644 ${./assets/dbus/dev.duxlabs.files.FileManager1.service} \
+                $out/share/dbus-1/services/dev.duxlabs.files.FileManager1.service
+              substituteInPlace $out/share/dbus-1/services/dev.duxlabs.files.FileManager1.service \
                 --replace-fail /usr/bin/dfiles $out/bin/dfiles
 
               install -Dm644 ${./assets/portal/dfiles.portal} \
@@ -129,8 +129,8 @@
             '';
 
             meta = {
-              description = "File manager for the dank desktop";
-              homepage = "https://github.com/AvengeMedia/dankfiles";
+              description = "File manager for the dux desktop";
+              homepage = "https://github.com/duxlabsdev/dux-files";
               license = pkgs.lib.licenses.mit;
               mainProgram = "dfiles";
               platforms = pkgs.lib.platforms.linux;
@@ -139,26 +139,26 @@
         );
 
       buildDfilesPkgs = pkgs: {
-        dankfiles = mkDfiles pkgs;
+        dux-files = mkDfiles pkgs;
       };
     in
     {
       packages = forEachSystem (
         system: pkgs: {
-          dankfiles = mkDfiles pkgs;
-          default = self.packages.${system}.dankfiles;
+          dux-files = mkDfiles pkgs;
+          default = self.packages.${system}.dux-files;
         }
       );
 
       lib = { inherit mkDfiles buildDfilesPkgs; };
 
-      homeModules.dank-files = mkModuleWithDfilesPkgs ./distro/nix/home.nix;
+      homeModules.dux-files = mkModuleWithDfilesPkgs ./distro/nix/home.nix;
 
-      homeModules.default = self.homeModules.dank-files;
+      homeModules.default = self.homeModules.dux-files;
 
-      nixosModules.dank-files = mkModuleWithDfilesPkgs ./distro/nix/nixos.nix;
+      nixosModules.dux-files = mkModuleWithDfilesPkgs ./distro/nix/nixos.nix;
 
-      nixosModules.default = self.nixosModules.dank-files;
+      nixosModules.default = self.nixosModules.dux-files;
 
       devShells = forEachSystem (
         system: pkgs: {

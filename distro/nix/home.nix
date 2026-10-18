@@ -5,16 +5,16 @@
   ...
 }@args:
 let
-  cfg = config.programs.dank-files;
+  cfg = config.programs.dux-files;
   jsonFormat = pkgs.formats.json { };
 in
 {
   imports = [ (import ./options.nix args) ];
 
-  options.programs.dank-files.settings = lib.mkOption {
+  options.programs.dux-files.settings = lib.mkOption {
     type = jsonFormat.type;
     default = { };
-    description = "Dank Files UI settings written to ~/.config/dfiles/ui-settings.json.";
+    description = "Dux Files UI settings written to ~/.config/dfiles/ui-settings.json.";
     example = lib.literalExpression ''
       {
         themeMode = "dark";
@@ -24,7 +24,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs.dank-files.systemd.target = lib.mkDefault config.wayland.systemd.target;
+    programs.dux-files.systemd.target = lib.mkDefault config.wayland.systemd.target;
 
     home.packages = [
       cfg.package
@@ -38,7 +38,7 @@ in
 
     systemd.user.services.dfiles = lib.mkIf cfg.systemd.enable {
       Unit = {
-        Description = "DankFiles";
+        Description = "Dux Files";
         PartOf = [ cfg.systemd.target ];
         After = [ cfg.systemd.target ];
       };

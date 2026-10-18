@@ -19,13 +19,13 @@ import (
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/portal"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/fileops"
-	"github.com/AvengeMedia/dankfiles/core/internal/helper"
+	"github.com/duxlabsdev/dux-files/core/internal/fileops"
+	"github.com/duxlabsdev/dux-files/core/internal/helper"
 )
 
 const (
-	PolicyName   = "com.danklinux.dankfiles.policy"
-	ActionID     = "com.danklinux.dankfiles.file-operations"
+	PolicyName   = "dev.duxlabs.files.policy"
+	ActionID     = "dev.duxlabs.files.file-operations"
 	waitAfterEOF = 5 * time.Second
 )
 

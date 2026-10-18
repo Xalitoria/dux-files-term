@@ -8,8 +8,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:           "dfiles",
-	Short:         "Dank Files CLI",
-	Long:          "Dank Files is a standalone file manager for the dank desktop.",
+	Short:         "Dux Files CLI",
+	Long:          "Dux Files is a standalone file manager for the dux desktop.",
 	Args:          cobra.NoArgs,
 	SilenceErrors: true,
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {

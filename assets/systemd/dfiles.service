@@ -1,6 +1,6 @@
 [Unit]
-Description=Dank Files
-Documentation=https://github.com/AvengeMedia/dankfiles
+Description=Dux Files
+Documentation=https://github.com/duxlabsdev/dux-files
 After=graphical-session.target
 PartOf=graphical-session.target
 

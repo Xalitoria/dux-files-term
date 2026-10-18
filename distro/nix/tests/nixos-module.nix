@@ -4,19 +4,19 @@
   ...
 }:
 pkgs.testers.runNixOSTest {
-  name = "dankfiles-nixos-module";
+  name = "dux-files-nixos-module";
 
   nodes.machine = {
     imports = [
-      self.nixosModules.dank-files
+      self.nixosModules.dux-files
     ];
 
-    users.users.danklinux = {
+    users.users.duxlabs = {
       isNormalUser = true;
       extraGroups = [ "wheel" ];
     };
 
-    programs.dank-files = {
+    programs.dux-files = {
       enable = true;
       systemd.enable = true;
     };
@@ -29,8 +29,8 @@ pkgs.testers.runNixOSTest {
 
     machine.succeed("command -v dfiles")
     machine.succeed("command -v qs")
-    machine.succeed("su -- danklinux -c 'dfiles --help >/dev/null'")
+    machine.succeed("su -- duxlabs -c 'dfiles --help >/dev/null'")
     machine.succeed("test -f /run/current-system/sw/share/systemd/user/dfiles.service")
-    machine.succeed("test -f /run/current-system/sw/share/dbus-1/services/com.danklinux.dankfiles.FileManager1.service")
+    machine.succeed("test -f /run/current-system/sw/share/dbus-1/services/dev.duxlabs.files.FileManager1.service")
   '';
 }

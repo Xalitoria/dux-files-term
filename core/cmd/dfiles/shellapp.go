@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/shellembed"
 	"github.com/AvengeMedia/dankgo/shellapp"
+	"github.com/duxlabsdev/dux-files/core/internal/shellembed"
 )
 
 var shellApp = shellapp.New(shellapp.Config{
 	ID:       "dfiles",
-	QSAppID:  "com.danklinux.dankfiles",
+	QSAppID:  "dev.duxlabs.files",
 	Version:  Version,
 	Embedded: embeddedShell{},
 	Boot:     bootBackend,

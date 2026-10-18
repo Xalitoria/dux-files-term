@@ -153,7 +153,7 @@ Item {
     }
 
     function loadTerminals() {
-        DankFilesService.sendRequest("files.apps.terminals", null, response => {
+        DuxFilesService.sendRequest("files.apps.terminals", null, response => {
             if (response.error)
                 return;
             root.terminals = (response.result || {}).terminals || [];
@@ -161,7 +161,7 @@ Item {
     }
 
     function loadPortalStatus() {
-        DankFilesService.sendRequest("system.portal.get", null, response => {
+        DuxFilesService.sendRequest("system.portal.get", null, response => {
             if (response.error)
                 return;
             root.portalStatus = response.result || {};
@@ -170,7 +170,7 @@ Item {
 
     function setPortal(enabled) {
         root.portalBusy = true;
-        DankFilesService.sendRequest(enabled ? "system.portal.install" : "system.portal.uninstall", null, response => {
+        DuxFilesService.sendRequest(enabled ? "system.portal.install" : "system.portal.uninstall", null, response => {
             root.portalBusy = false;
             if (response.error) {
                 ToastService.info(response.error);
@@ -185,7 +185,7 @@ Item {
 
     function restartPortal() {
         root.portalBusy = true;
-        DankFilesService.sendRequest("system.portal.restart", null, response => {
+        DuxFilesService.sendRequest("system.portal.restart", null, response => {
             root.portalBusy = false;
             if (response.error)
                 ToastService.info(response.error);
@@ -198,9 +198,9 @@ Item {
         if (status.available === false)
             return FilesFormat.featureUnavailable(status.reason ?? "");
         if (status.systemManaged === true)
-            return I18n.tr("The portal list is managed by the system; add Dank Files to it there.", "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set");
+            return I18n.tr("The portal list is managed by the system; add Dux Files to it there.", "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set");
         if (status.active === true)
-            return I18n.tr("Other apps open and save files through Dank Files.", "portal chooser setting description while enabled");
+            return I18n.tr("Other apps open and save files through Dux Files.", "portal chooser setting description while enabled");
         return I18n.tr("Other apps use the desktop's default open and save dialogs.", "portal chooser setting description while disabled");
     }
 
@@ -215,7 +215,7 @@ Item {
         const config = portalStatus.config ?? ({});
         const effective = config.effective ?? "";
         if (effective === "dfiles")
-            return I18n.tr("Preference: %1 names Dank Files", "portal chooser status line, %1 is a path").arg(config.path ?? "");
+            return I18n.tr("Preference: %1 names Dux Files", "portal chooser status line, %1 is a path").arg(config.path ?? "");
         if (effective !== "")
             return I18n.tr("Preference: %1 is used", "portal chooser status line, %1 is another backend name").arg(effective);
         return I18n.tr("Preference: no file chooser backend configured", "portal chooser status line");
@@ -232,7 +232,7 @@ Item {
     }
 
     function loadFileManagerStatus() {
-        DankFilesService.sendRequest("system.fileManager.get", null, response => {
+        DuxFilesService.sendRequest("system.fileManager.get", null, response => {
             if (response.error)
                 return;
             root.fileManagerStatus = response.result || {};
@@ -241,7 +241,7 @@ Item {
 
     function setFileManager(enabled) {
         SettingsData.registerFileManager = enabled;
-        DankFilesService.sendRequest("system.fileManager.set", {
+        DuxFilesService.sendRequest("system.fileManager.set", {
             "enabled": enabled
         }, response => {
             if (response.error) {
@@ -584,7 +584,7 @@ Item {
 
             SettingsGroup {
                 SettingsToggleRow {
-                    text: I18n.tr("Use Dank Files for open and save dialogs", "setting label for serving the desktop portal file chooser")
+                    text: I18n.tr("Use Dux Files for open and save dialogs", "setting label for serving the desktop portal file chooser")
                     keywords: I18n.tr("portal file chooser picker xdg", "settings search keywords, space separated, add synonyms in your language")
                     description: root.portalDescription()
                     enabled: root.portalStatus.available === true && root.portalStatus.systemManaged !== true

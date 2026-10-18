@@ -4,19 +4,19 @@
   ...
 }:
 pkgs.testers.runNixOSTest {
-  name = "dankfiles-nixos-service-start-module";
+  name = "dux-files-nixos-service-start-module";
 
   nodes.machine = {
     imports = [
-      self.nixosModules.dank-files
+      self.nixosModules.dux-files
     ];
 
-    users.users.danklinux = {
+    users.users.duxlabs = {
       isNormalUser = true;
       extraGroups = [ "wheel" ];
     };
 
-    programs.dank-files = {
+    programs.dux-files = {
       enable = true;
       systemd = {
         enable = true;

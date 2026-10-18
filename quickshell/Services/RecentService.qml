@@ -34,7 +34,7 @@ Singleton {
         _waiting.push(callback);
         if (_waiting.length > 1)
             return;
-        DankFilesService.call("recent.entries", {}, result => {
+        DuxFilesService.call("recent.entries", {}, result => {
             if (!result.error) {
                 root.stamp = result.stamp ?? "";
                 root.count = (result.entries || []).length;
@@ -49,13 +49,13 @@ Singleton {
     function remove(paths) {
         if (paths.length === 0)
             return;
-        DankFilesService.call("recent.remove", {
+        DuxFilesService.call("recent.remove", {
             "paths": paths
         }, result => root._edited(result));
     }
 
     function clear() {
-        DankFilesService.call("recent.clear", {}, result => root._edited(result));
+        DuxFilesService.call("recent.clear", {}, result => root._edited(result));
     }
 
     function affects(job) {
@@ -82,9 +82,9 @@ Singleton {
     }
 
     function _check() {
-        if (!DankFilesService.connected || listeners === 0)
+        if (!DuxFilesService.connected || listeners === 0)
             return;
-        DankFilesService.call("recent.entries", {
+        DuxFilesService.call("recent.entries", {
             "stamp": stamp
         }, result => {
             if (result.error || result.unchanged)
@@ -96,7 +96,7 @@ Singleton {
     }
 
     Connections {
-        target: DankFilesService
+        target: DuxFilesService
 
         function onConnectedChanged() {
             root.invalidate();

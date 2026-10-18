@@ -1,6 +1,6 @@
-# DankFiles Flatpak
+# Dux Files Flatpak
 
-The build provides `dfiles` and the Quickshell runtime and installs the desktop file, metainfo and icon as `com.danklinux.dankfiles`.
+The build provides `dfiles` and the Quickshell runtime and installs the desktop file, metainfo and icon as `dev.duxlabs.files`.
 
 ## Posture
 
@@ -15,7 +15,7 @@ Inside the sandbox with host access (or a `home` grant) the daemon points its ow
 | finish-arg | why | without it |
 | --- | --- | --- |
 | `--socket=wayland`, `--socket=fallback-x11`, `--share=ipc`, `--device=dri` | the Quickshell window | no window |
-| `--filesystem=host` | browse and edit the user's files (`dankgo/files`, `internal/fileops`); also implies `host-os` and `host-etc` (`/run/host/usr`, `/run/host/etc`) | only `~/.var/app/com.danklinux.dankfiles` is visible; trash, thumbnails and mimeapps go to that private tree; `features.hostFilesystem`, `trash`, `setDefault` report `NOHOSTFS` |
+| `--filesystem=host` | browse and edit the user's files (`dankgo/files`, `internal/fileops`); also implies `host-os` and `host-etc` (`/run/host/usr`, `/run/host/etc`) | only `~/.var/app/dev.duxlabs.files` is visible; trash, thumbnails and mimeapps go to that private tree; `features.hostFilesystem`, `trash`, `setDefault` report `NOHOSTFS` |
 | `--filesystem=/tmp`, `--filesystem=/var` | `host` leaves these private to the sandbox; both are browsed often enough to grant, and `/var/lib/flatpak/exports/share` holds other Flatpak apps' desktop entries | the sandbox's own empty `/tmp` and `/var`; `/boot`, `/efi` and `/root` are deliberately not granted |
 | `--filesystem=xdg-run/gvfs`, `--filesystem=xdg-run/gvfsd`, `--talk-name=org.gtk.vfs.*` | gvfs FUSE paths, backend sockets and the mount tracker for network shares, MTP and archives (`internal/netmount`) | `features.network` reports `NOGVFS`; the Network section explains it and hides Connect to Server |
 | `--system-talk-name=org.freedesktop.UDisks2` | mount, unmount, eject, unlock through udisks2, polkit inside udisks (`internal/devices`) | `features.devices` reports `NOUDISKS`; the Devices section explains it |
@@ -52,19 +52,19 @@ Native installs answer the same method with everything available, no portals and
 
 ## Build and install
 
-`make flatpak-build` is the same command as below. The manifest pins a commit of the GitHub repository, which the sync workflow moves on each release; while the repository is private that clone fails inside `org.flatpak.Builder`, and the pin can trail the working tree. For a local build copy the manifest somewhere under `$HOME` (the builder cannot see `/tmp`), replace the `dankfiles` git source with `type: dir`, `path: /path/to/checkout` and a `skip` list (`.git`, `builddir`, `repo`, `.flatpak-builder`, `core/bin`, `core/vendor`, `core/internal/shellembed/dist`), copy `go.mod.yml` and `modules.txt` next to it, and run the same command against that copy.
+`make flatpak-build` is the same command as below. The manifest pins a commit of the GitHub repository, which the sync workflow moves on each release; while the repository is private that clone fails inside `org.flatpak.Builder`, and the pin can trail the working tree. For a local build copy the manifest somewhere under `$HOME` (the builder cannot see `/tmp`), replace the `dux-files` git source with `type: dir`, `path: /path/to/checkout` and a `skip` list (`.git`, `builddir`, `repo`, `.flatpak-builder`, `core/bin`, `core/vendor`, `core/internal/shellembed/dist`), copy `go.mod.yml` and `modules.txt` next to it, and run the same command against that copy.
 
 ```bash
 flatpak run org.flatpak.Builder \
   --force-clean --user --install --repo=repo \
   --mirror-screenshots-url=https://dl.flathub.org/media \
   --compose-url-policy=full \
-  builddir distro/flatpak/com.danklinux.dankfiles.yml
+  builddir distro/flatpak/dev.duxlabs.files.yml
 ```
 
 ```bash
-flatpak run com.danklinux.dankfiles
-flatpak run com.danklinux.dankfiles open ~/Downloads
+flatpak run dev.duxlabs.files
+flatpak run dev.duxlabs.files open ~/Downloads
 ```
 
 `make flatpak-modules` regenerates `go.mod.yml` and `modules.txt` from `core/go.mod` with `flatpak-go-mod`.
@@ -72,7 +72,7 @@ flatpak run com.danklinux.dankfiles open ~/Downloads
 ## Uninstall
 
 ```bash
-flatpak uninstall --delete-data com.danklinux.dankfiles
+flatpak uninstall --delete-data dev.duxlabs.files
 ```
 
 Settings written while `host` was granted stay in `~/.config/dfiles` (see Posture).

@@ -47,7 +47,7 @@ ShellRoot {
         function unsubscribeTopic(topic, callback) {
         }
         function call(method, params, callback) {
-            sendRequest(method, params, response => callback?.(DankFilesService.unwrap(response)));
+            sendRequest(method, params, response => callback?.(DuxFilesService.unwrap(response)));
         }
         function sendRequest(method, params, callback) {
             let result = {};

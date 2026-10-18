@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/dbustest"
+	"github.com/duxlabsdev/dux-files/core/internal/dbustest"
 	"github.com/godbus/dbus/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

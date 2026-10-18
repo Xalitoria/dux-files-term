@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/AvengeMedia/dankfiles/core/internal/filechooser"
 	"github.com/AvengeMedia/dankgo/ipc/params"
+	"github.com/duxlabsdev/dux-files/core/internal/filechooser"
 )
 
 type ChooserUI struct{ Deps Deps }

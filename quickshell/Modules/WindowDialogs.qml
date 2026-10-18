@@ -40,7 +40,7 @@ Item {
         const request = ++propertiesRequest;
         const entries = [];
         let pending = paths.length;
-        paths.forEach((path, index) => DankFilesService.sendRequest("files.stat", {
+        paths.forEach((path, index) => DuxFilesService.sendRequest("files.stat", {
                 "path": path
             }, response => {
                 if (request !== dialogs.propertiesRequest)

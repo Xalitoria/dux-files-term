@@ -1,7 +1,7 @@
 //@ pragma Env QSG_RENDER_LOOP=threaded
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Material
 //@ pragma UseQApplication
-//@ pragma AppId com.danklinux.dankfiles
+//@ pragma AppId dev.duxlabs.files
 
 pragma ComponentBehavior: Bound
 
@@ -53,7 +53,7 @@ ShellRoot {
         const toplevels = ToplevelManager.toplevels;
         if (!toplevels || !toplevels.values)
             return [];
-        return toplevels.values.filter(t => t.appId === "com.danklinux.dankfiles");
+        return toplevels.values.filter(t => t.appId === "dev.duxlabs.files");
     }
 
     function unclaimedToplevel() {
@@ -119,7 +119,7 @@ ShellRoot {
                 return;
             }
             FolderHistory.unload();
-            DankFilesService.quit();
+            DuxFilesService.quit();
             return;
         }
         WindowService.close(windowId);
@@ -129,11 +129,11 @@ ShellRoot {
         if (!idle)
             return;
         FolderHistory.unload();
-        DankFilesService.quit();
+        DuxFilesService.quit();
     }
 
     Connections {
-        target: DankFilesService
+        target: DuxFilesService
         function onWindowActionRequested(action) {
             root.handleWindowAction(action);
         }

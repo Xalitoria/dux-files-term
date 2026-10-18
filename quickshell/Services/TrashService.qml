@@ -39,7 +39,7 @@ Singleton {
         _waiting.push(callback);
         if (_waiting.length > 1)
             return;
-        DankFilesService.call("trash.entries", {}, result => {
+        DuxFilesService.call("trash.entries", {}, result => {
             const waiting = root._waiting;
             root._waiting = [];
             for (const pending of waiting)
@@ -71,9 +71,9 @@ Singleton {
     }
 
     function _check() {
-        if (!DankFilesService.connected)
+        if (!DuxFilesService.connected)
             return;
-        DankFilesService.call("trash.count", {}, result => {
+        DuxFilesService.call("trash.count", {}, result => {
             if (result.error)
                 return;
             root.count = result.count ?? 0;
@@ -90,7 +90,7 @@ Singleton {
     }
 
     Connections {
-        target: DankFilesService
+        target: DuxFilesService
 
         function onConnectedChanged() {
             root.stamp = "";

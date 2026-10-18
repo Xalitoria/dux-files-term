@@ -1,4 +1,4 @@
-module github.com/AvengeMedia/dankfiles/core
+module github.com/duxlabsdev/dux-files/core
 
 go 1.27
 

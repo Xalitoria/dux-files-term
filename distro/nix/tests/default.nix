@@ -5,7 +5,7 @@
 }:
 rec {
   all = pkgs.symlinkJoin {
-    name = "dankfiles-nixos-tests";
+    name = "dux-files-nixos-tests";
     paths = [
       nixos-module
       nixos-service-start-module
