@@ -12,16 +12,16 @@ Singleton {
     property var transport: DankFilesService
 
     function open(paths, callback) {
-        _send("files.open", _launchParams({
+        _launch("files.open", {
             "paths": paths
-        }), callback);
+        }, callback);
     }
 
     function openWith(paths, desktopId, callback) {
-        _send("files.openWith", _launchParams({
+        _launch("files.openWith", {
             "paths": paths,
             "desktopId": desktopId
-        }), callback);
+        }, callback);
     }
 
     function run(path, callback) {
@@ -69,6 +69,14 @@ Singleton {
         if (SettingsData.terminal !== "")
             params.terminal = SettingsData.terminal;
         return params;
+    }
+
+    function _launch(method, params, callback) {
+        _send(method, _launchParams(params), result => {
+            if (!result.error)
+                RecentService.refresh();
+            callback?.(result);
+        });
     }
 
     function _send(method, params, callback) {

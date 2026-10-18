@@ -118,6 +118,10 @@ var Methods = []MethodSpec{
 	{Name: "trash.count", Group: "trash", Desc: "Number of trashed items, plus a stamp that changes whenever the count or the home trash changes"},
 	{Name: "trash.entries", Group: "trash", Desc: "Trashed items as file entries for the trash view: original name and location, deletion time, newest first"},
 
+	{Name: "recent.entries", Group: "recent", Desc: "Recently used files from the shared recently-used.xbel list as file entries, newest first; missing and private items are skipped; needs the files service", Params: []ParamSpec{opt("stamp", "stamp from the previous answer; the reply says unchanged when the list did not change")}},
+	{Name: "recent.remove", Group: "recent", Desc: "Drop paths from the recently used list", Params: []ParamSpec{req("paths", "absolute paths")}},
+	{Name: "recent.clear", Group: "recent", Desc: "Empty the recently used list"},
+
 	{Name: "clipboard.copy", Group: "clipboard", Desc: "Put paths on the system clipboard as a file selection", Params: []ParamSpec{req("paths", "absolute paths"), opt("cut", "mark the selection for a move")}},
 	{Name: "clipboard.paths", Group: "clipboard", Desc: "Read the file selection on the system clipboard"},
 	{Name: "clipboard.clear", Group: "clipboard", Desc: "Release the system clipboard"},

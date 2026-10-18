@@ -739,6 +739,14 @@ Item {
                     checked: SettingsData.confirmTrash
                     onToggled: checked => SettingsData.confirmTrash = checked
                 }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Keep a list of recent files", "setting label for the recently used files list")
+                    keywords: I18n.tr("history recently used opened sidebar", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Files opened here join the recently used list shared with other applications, shown under Recent in the sidebar.", "setting description for the recently used files list")
+                    checked: SettingsData.recentFiles
+                    onToggled: checked => SettingsData.recentFiles = checked
+                }
             }
 
             SettingsSectionLabel {

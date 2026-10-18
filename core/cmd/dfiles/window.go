@@ -42,6 +42,7 @@ Accepted locations:
   /path, relative/path     a local path
   file:///path             a local path, percent-encoded
   trash:///                the home trash's files folder
+  recent:///               recently used files
   computer:///             the root filesystem
   network:///              the Connect to Server dialog
   admin:///path            the path; denied operations offer Retry as administrator

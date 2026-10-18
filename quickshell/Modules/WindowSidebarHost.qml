@@ -83,6 +83,7 @@ Item {
         onConnectRequested: host.mainWindow.dialogs.askServer()
         onBookmarkMenuRequested: (path, pointX, pointY) => host.mainWindow.menus.presentPlaceMenu("bookmark", path, sidebar, pointX, pointY)
         onTrashMenuRequested: (pointX, pointY) => host.mainWindow.menus.presentPlaceMenu("trash", TrashService.filesPath, sidebar, pointX, pointY)
+        onRecentMenuRequested: (pointX, pointY) => host.mainWindow.menus.presentPlaceMenu("recent", RecentService.path, sidebar, pointX, pointY)
         onBookmarkRenameRequested: path => host.mainWindow.dialogs.renameBookmark(path)
         onLeaveRequested: host.leave()
         onDropRequested: (path, drop) => host.mainWindow.drag.applyDrop(DragService.pathsFrom(drop), path, DragService.overrideFor(drop.proposedAction))

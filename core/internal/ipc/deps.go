@@ -10,6 +10,7 @@ import (
 	"github.com/AvengeMedia/dankfiles/core/internal/mimeapps"
 	"github.com/AvengeMedia/dankfiles/core/internal/netmount"
 	"github.com/AvengeMedia/dankfiles/core/internal/portal"
+	"github.com/AvengeMedia/dankfiles/core/internal/recent"
 	"github.com/AvengeMedia/dankfiles/core/internal/sandbox"
 	"github.com/AvengeMedia/dankfiles/core/internal/search"
 	"github.com/AvengeMedia/dankfiles/core/internal/settings"
@@ -29,6 +30,7 @@ type Deps struct {
 	Clipboard   *clipboard.Service
 	Search      *search.Service
 	Bookmarks   *bookmarks.Store
+	Recent      *recent.Store
 	Settings    func() settings.UISettings
 	Sandbox     sandbox.Capabilities
 	FileManager *filemanager1.Service

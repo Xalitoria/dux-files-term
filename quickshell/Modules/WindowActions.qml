@@ -56,13 +56,52 @@ QtObject {
         }
     }
 
+    function recentAction(id) {
+        switch (id) {
+        case "openTerminal":
+        case "openFolderWith":
+        case "paste":
+        case "pasteLink":
+        case "rename":
+        case "duplicate":
+        case "newFolder":
+        case "newFolderWith":
+        case "newDocument":
+        case "compress":
+        case "extract":
+        case "bookmark":
+            return "";
+        case "pasteInto":
+            return mainWindow.selectedPaths().length === 1 ? id : "";
+        case "copyPath":
+        case "properties":
+            return mainWindow.selectedPaths().length > 0 ? id : "";
+        default:
+            return id;
+        }
+    }
+
+    function scopedAction(id) {
+        if (activePane.trashActive)
+            return trashAction(id);
+        if (activePane.recentActive)
+            return recentAction(id);
+        return id;
+    }
+
     function runAction(id) {
-        switch (activePane.trashActive ? trashAction(id) : id) {
+        switch (scopedAction(id)) {
         case "restore":
             mainWindow.openFlow.restoreEntries(mainWindow.selectedEntries());
             return;
         case "emptyTrash":
             mainWindow.dialogs.confirmEmptyTrash();
+            return;
+        case "removeFromRecent":
+            RecentService.remove(mainWindow.selectedPaths());
+            return;
+        case "clearRecent":
+            mainWindow.dialogs.confirmClearRecent();
             return;
         case "open":
             mainWindow.openFlow.openEntries(mainWindow.selectedEntries());

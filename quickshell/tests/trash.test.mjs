@@ -3,14 +3,18 @@ import test from "node:test";
 import vm from "node:vm";
 import { lift, source } from "./qml-script.mjs";
 
+const snapshotModel = source("../Modules/SnapshotModel.qml");
 const trashModel = source("../Modules/TrashModel.qml");
 const openFlow = source("../Modules/FileOpenFlow.qml");
 
 function modelContext() {
     const ctx = vm.createContext({ NameFilter: {} });
+    ctx.root = ctx;
     vm.runInContext(source("../DCommon/FileBrowser/NameFilter.js").replace(/^\.pragma.*$/gm, ""), ctx);
     Object.assign(ctx.NameFilter, { compile: ctx.compile, entryMatches: ctx.entryMatches });
     for (const name of ["sorted", "filtered", "syncInto"])
+        lift(snapshotModel, name, ctx);
+    for (const name of ["compare", "rowChanged"])
         lift(trashModel, name, ctx);
     return ctx;
 }

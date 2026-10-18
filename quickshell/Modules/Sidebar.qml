@@ -19,6 +19,7 @@ DFlickable {
     signal bookmarkMenuRequested(string path, real pointX, real pointY)
     signal bookmarkRenameRequested(string path)
     signal trashMenuRequested(real pointX, real pointY)
+    signal recentMenuRequested(real pointX, real pointY)
     signal leaveRequested
 
     function rows() {
@@ -124,6 +125,11 @@ DFlickable {
                 trashMenuRequested(point.x, point.y);
                 break;
             }
+            if (row && row === bookmarksSection.recentRow) {
+                const point = row.mapToItem(sidebar, row.width / 2, row.height / 2);
+                recentMenuRequested(point.x, point.y);
+                break;
+            }
             if (bookmarkPath(row) === "")
                 return;
             {
@@ -161,6 +167,10 @@ DFlickable {
             onTrashMenuRequested: (pointX, pointY) => {
                 const point = bookmarksSection.mapToItem(sidebar, pointX, pointY);
                 sidebar.trashMenuRequested(point.x, point.y);
+            }
+            onRecentMenuRequested: (pointX, pointY) => {
+                const point = bookmarksSection.mapToItem(sidebar, pointX, pointY);
+                sidebar.recentMenuRequested(point.x, point.y);
             }
         }
 

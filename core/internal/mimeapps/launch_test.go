@@ -113,9 +113,9 @@ func TestOpenGroupsPathsByTheirDefaultApp(t *testing.T) {
 	groups, unhandled, err := svc.groupByApp([]string{note, shot, readme, disc, photo})
 	require.NoError(t, err)
 	assert.Equal(t, []appGroup{
-		{app: "editor.desktop", paths: []string{note, readme}},
-		{app: "viewer.desktop", paths: []string{shot}},
-		{app: "system-viewer.desktop", paths: []string{photo}},
+		{app: "editor.desktop", paths: []string{note, readme}, mimes: []string{"text/plain", "text/markdown"}},
+		{app: "viewer.desktop", paths: []string{shot}, mimes: []string{"image/png"}},
+		{app: "system-viewer.desktop", paths: []string{photo}, mimes: []string{"image/jpeg"}},
 	}, groups, "two types with the same default app share one launch")
 	assert.Equal(t, []string{"application/x-cd-image"}, unhandled)
 }

@@ -40,6 +40,8 @@ func TestParse(t *testing.T) {
 		{"computer:///", Location{Kind: KindFolder, Path: "/", Select: []string{}}},
 		{"admin:///etc/fstab", Location{Kind: KindFolder, Path: "/etc/fstab", Select: []string{}}},
 		{"network:///", Location{Kind: KindServers, Select: []string{}}},
+		{"recent:///", Location{Kind: KindRecent, Select: []string{}}},
+		{"recent:", Location{Kind: KindRecent, Select: []string{}}},
 		{"sftp://me@host:2222/srv/www", Location{Kind: KindRemote, URI: "sftp://me@host:2222/srv/www", Select: []string{}}},
 		{"smb://nas/share/dir", Location{Kind: KindRemote, URI: "smb://nas/share/dir", Select: []string{}}},
 	}
@@ -54,7 +56,7 @@ func TestParse(t *testing.T) {
 
 func TestParseRefuses(t *testing.T) {
 	_, env := fixture(t)
-	for _, raw := range []string{"", "docs", "file://otherhost/srv", "file:relative", "http://example.com/", "recent:///", "sftp:///nohost"} {
+	for _, raw := range []string{"", "docs", "file://otherhost/srv", "file:relative", "http://example.com/", "mtp://phone/", "sftp:///nohost"} {
 		t.Run(raw, func(t *testing.T) {
 			_, err := Parse(raw, env)
 			assert.Error(t, err)
@@ -211,6 +213,7 @@ func TestTyped(t *testing.T) {
 		{"trash:///old", Location{Kind: KindFolder, Path: filepath.Join(trash, "old"), Select: []string{}}},
 		{"computer:///", Location{Kind: KindFolder, Path: "/", Select: []string{}}},
 		{"network:///", Location{Kind: KindServers, Select: []string{}}},
+		{"recent:///", Location{Kind: KindRecent, Select: []string{}}},
 		{"admin://" + docs, Location{Kind: KindFolder, Path: docs, Select: []string{}}},
 	}
 	for _, tt := range tests {

@@ -21,6 +21,7 @@ const (
 	KindArchive Kind = "archive"
 	KindRemote  Kind = "remote"
 	KindServers Kind = "servers"
+	KindRecent  Kind = "recent"
 )
 
 type Location struct {
@@ -202,6 +203,8 @@ func Parse(raw string, env Env) (Location, error) {
 		return folder("/"), nil
 	case "network":
 		return Location{Kind: KindServers, Select: []string{}}, nil
+	case "recent":
+		return Location{Kind: KindRecent, Select: []string{}}, nil
 	}
 
 	if !slices.Contains(remoteSchemes, scheme) {

@@ -78,6 +78,7 @@ type Service struct {
 	pending map[string]*pending
 	watched map[string]int
 	signals chan *dbus.Signal
+	Chosen  func(req Request, paths []string)
 }
 
 type pending struct {
@@ -150,7 +151,20 @@ func (s *Service) serve(method string, sender dbus.Sender, handle dbus.ObjectPat
 	s.ui.ShowChooser(*req)
 	answer := <-p.done
 	s.finish(id, p.sender)
+	if answer.Response == ResponseOK && s.Chosen != nil {
+		s.Chosen(*req, chosenPaths(answer.Paths))
+	}
 	return answer.Response, results(req, answer), nil
+}
+
+func chosenPaths(paths []string) []string {
+	out := make([]string, 0, len(paths))
+	for _, path := range paths {
+		if filepath.IsAbs(path) {
+			out = append(out, filepath.Clean(path))
+		}
+	}
+	return out
 }
 
 func (s *Service) begin(id, sender string, req Request) (*pending, error) {

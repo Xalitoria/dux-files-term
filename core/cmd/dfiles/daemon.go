@@ -121,6 +121,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 	}
 
 	config := configHome()
+	recentStore := wireRecent(appService, chooser, config)
 	networkService := netmount.NewService(bus, config)
 	if err := networkService.Start(); err != nil {
 		log.Warnf("gvfs unavailable: %v", err)
@@ -157,6 +158,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 		Clipboard:   clipboardService,
 		Search:      searchService,
 		Bookmarks:   bookmarkStore,
+		Recent:      recentStore,
 		Settings:    func() settings.UISettings { return settings.Load(config) },
 		Sandbox:     caps,
 		Quit:        requestQuit,

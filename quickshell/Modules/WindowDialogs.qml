@@ -12,7 +12,7 @@ Item {
 
     property int propertiesRequest: 0
 
-    readonly property bool anyOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || openConfirmDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible || emptyTrashDialog.visible || (extractPickerLoader.item?.visible ?? false) || (transferPickerLoader.item?.visible ?? false)
+    readonly property bool anyOpen: conflictDialog.visible || errorDialog.visible || archivePasswordDialog.visible || confirmDialog.visible || openConfirmDialog.visible || openWithDialog.visible || executableDialog.visible || trustDialog.visible || unlockDialog.visible || connectDialog.visible || credentialDialog.visible || propertiesDialog.visible || shortcutsOverlay.visible || compressDialog.visible || renameBookmarkDialog.visible || trashConfirmDialog.visible || emptyTrashDialog.visible || clearRecentDialog.visible || (extractPickerLoader.item?.visible ?? false) || (transferPickerLoader.item?.visible ?? false)
 
     function openSettings() {
         settingsLoader.active = true;
@@ -94,6 +94,10 @@ Item {
             return;
         emptyTrashDialog.subject = FileFormat.count(TrashService.count);
         emptyTrashDialog.open();
+    }
+
+    function confirmClearRecent() {
+        clearRecentDialog.open();
     }
 
     function askCompress(paths) {
@@ -309,6 +313,16 @@ Item {
         message: I18n.tr("%1 will be deleted permanently. This cannot be undone.", "permanent delete confirmation explanation").arg(subject)
         confirmText: I18n.tr("Empty Trash", "action deleting everything in the trash")
         onConfirmed: FileOpsService.emptyTrash()
+    }
+
+    ConfirmDialog {
+        id: clearRecentDialog
+
+        title: I18n.tr("Clear the recent files list?", "confirmation header before emptying the recently used list")
+        message: I18n.tr("The files themselves stay where they are.", "explanation under the clear recent confirmation")
+        confirmText: I18n.tr("Clear Recent", "action emptying the recently used list without touching the files")
+        danger: false
+        onConfirmed: RecentService.clear()
     }
 
     ConfirmDialog {

@@ -35,16 +35,21 @@ FocusScope {
     readonly property alias searchModel: searchModel
     readonly property bool resultsActive: searchModel.active
     readonly property bool trashActive: !resultsActive && TrashService.filesPath !== "" && browser.path === TrashService.filesPath
+    readonly property bool recentActive: !resultsActive && browser.path === RecentService.path
+    readonly property bool virtualActive: trashActive || recentActive
     readonly property var trashView: trashActive ? trashLoader.item : null
-    readonly property string effectiveSortKey: resultsActive ? searchModel.sortKey : trashView?.model.sortKey ?? sortKey
-    readonly property bool effectiveSortDescending: resultsActive ? searchModel.sortDescending : trashView?.model.sortDescending ?? sortDescending
+    readonly property var recentView: recentActive ? recentLoader.item : null
+    readonly property var snapshotView: trashView ?? recentView
+    readonly property var overlay: resultsActive ? results : snapshotView
+    readonly property string effectiveSortKey: resultsActive ? searchModel.sortKey : snapshotView?.model.sortKey ?? sortKey
+    readonly property bool effectiveSortDescending: resultsActive ? searchModel.sortDescending : snapshotView?.model.sortDescending ?? sortDescending
     readonly property var scroller: body.view?.activeList ?? body.view
-    readonly property var selection: resultsActive ? results.selection : trashView ? trashView.selection : browser.selection
-    readonly property var body: resultsActive ? results.body : trashView ? trashView.body : browser.body
-    readonly property var currentEntry: resultsActive ? results.body.cursorEntry() : trashView ? trashView.body.cursorEntry() : browser.currentEntry
-    readonly property var selectedEntries: resultsActive ? results.body.selectedEntries() : trashView ? trashView.body.selectedEntries() : browser.selectedEntries
+    readonly property var selection: overlay ? overlay.selection : browser.selection
+    readonly property var body: overlay ? overlay.body : browser.body
+    readonly property var currentEntry: overlay ? overlay.body.cursorEntry() : browser.currentEntry
+    readonly property var selectedEntries: overlay ? overlay.body.selectedEntries() : browser.selectedEntries
     readonly property bool filtering: nameFilter !== "" && !resultsActive
-    readonly property bool folderRemembered: SettingsData.rememberFolderViews && path !== "" && !trashActive && !resultsActive
+    readonly property bool folderRemembered: SettingsData.rememberFolderViews && path !== "" && !virtualActive && !resultsActive
     readonly property bool singleClickActivates: SettingsData.clickToOpen === "single"
     readonly property real thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
 
@@ -65,6 +70,8 @@ FocusScope {
     signal connectFailed(string uri, var result)
     signal restoreRequested
     signal emptyTrashRequested
+    signal removeFromRecentRequested
+    signal clearRecentRequested
     signal filterRequested(string text)
     signal filterFocusRequested
 
@@ -120,8 +127,8 @@ FocusScope {
         }
         if (key === "")
             return;
-        if (trashView) {
-            trashView.model.setSort(key, trashView.model.sortDescending);
+        if (snapshotView) {
+            snapshotView.model.setSort(key, snapshotView.model.sortDescending);
             return;
         }
         setSortOrder(key, sortDescending);
@@ -132,8 +139,8 @@ FocusScope {
             searchModel.sortDescending = !searchModel.sortDescending;
             return;
         }
-        if (trashView) {
-            trashView.model.setSort(trashView.model.sortKey, !trashView.model.sortDescending);
+        if (snapshotView) {
+            snapshotView.model.setSort(snapshotView.model.sortKey, !snapshotView.model.sortDescending);
             return;
         }
         setSortOrder(sortKey, !sortDescending);
@@ -177,10 +184,16 @@ FocusScope {
     }
 
     function up() {
-        if (trashActive)
+        if (virtualActive)
             return;
         closeSearch();
         browser.up();
+    }
+
+    function refreshOnActivate() {
+        if (recentActive)
+            return;
+        refresh();
     }
 
     function refresh() {
@@ -188,8 +201,8 @@ FocusScope {
             searchModel.refresh();
             return;
         }
-        if (trashView) {
-            trashView.refresh();
+        if (snapshotView) {
+            snapshotView.refresh();
             return;
         }
         browser.refresh();
@@ -218,15 +231,15 @@ FocusScope {
             results.focusBody();
             return;
         }
-        if (trashView && !editingPath) {
-            trashView.focusBody();
+        if (snapshotView && !editingPath) {
+            snapshotView.focusBody();
             return;
         }
         browser.focusBody();
     }
 
     function beginRename(target) {
-        if (trashActive)
+        if (virtualActive)
             return;
         if (resultsActive) {
             results.body.beginRename(target);
@@ -264,7 +277,7 @@ FocusScope {
     }
 
     function startSearch(query, filterState) {
-        if (path === "" || trashActive)
+        if (path === "" || virtualActive)
             return;
         const state = filterState ?? results.chips.filterState;
         searchModel.rootPath = state.scope === "folder" ? path : Paths.strip(Paths.home);
@@ -291,7 +304,13 @@ FocusScope {
     }
 
     function openTypedLocation(location) {
-        if (location.kind !== "remote") {
+        switch (location.kind) {
+        case "recent":
+            navigate(RecentService.path);
+            return;
+        case "remote":
+            break;
+        default:
             serverDialogRequested();
             return;
         }
@@ -365,9 +384,9 @@ FocusScope {
 
     Keys.onPressed: event => handleKey(event)
 
-    onTrashActiveChanged: refocus.restart()
+    onVirtualActiveChanged: refocus.restart()
     onEditingPathChanged: {
-        if (!editingPath && trashActive)
+        if (!editingPath && virtualActive)
             refocus.restart();
     }
 
@@ -458,8 +477,8 @@ FocusScope {
         id: browser
 
         anchors.fill: parent
-        visible: !pane.resultsActive && (!pane.trashActive || pane.editingPath)
-        focus: !pane.resultsActive && (!pane.trashActive || pane.editingPath)
+        visible: !pane.resultsActive && (!pane.virtualActive || pane.editingPath)
+        focus: !pane.resultsActive && (!pane.virtualActive || pane.editingPath)
         showSidebar: false
         showNavigation: false
         showHidden: pane.showHidden
@@ -491,11 +510,11 @@ FocusScope {
         thumbnailSizeLimit: pane.thumbnailSizeLimit
         networkThumbnails: SettingsData.networkThumbnails
         folderJump: FolderHistory
-        unlistedPath: TrashService.filesPath
+        unlistedPaths: [TrashService.filesPath, RecentService.path]
         header: pane.filtering ? filterHeader : null
         pathBarTrailing: paneStatus
         emptyText: {
-            if (pane.trashActive)
+            if (pane.virtualActive)
                 return "";
             if (pane.filtering)
                 return I18n.tr("No results", "search results header when nothing matched");
@@ -600,6 +619,48 @@ FocusScope {
             onRestoreRequested: pane.restoreRequested()
             onEmptyRequested: pane.emptyTrashRequested()
             onItemsDropped: drop => pane.dropOn(TrashService.filesPath, drop)
+            onZoomRequested: (mode, level) => pane.setZoom(mode, level)
+            onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
+            onPreviewToggleRequested: pane.previewToggleRequested()
+            onPreviewResized: width => pane.setPreviewWidth(width)
+            onFocusRequested: pane.focusRequested()
+            onBackRequested: pane.back()
+            onForwardRequested: pane.forward()
+        }
+    }
+
+    Loader {
+        id: recentLoader
+
+        anchors.fill: parent
+        active: pane.recentActive
+        visible: !pane.editingPath
+        sourceComponent: RecentView {
+            viewMode: pane.viewMode
+            gridZoom: SessionData.gridZoom
+            listZoom: SessionData.listZoom
+            columnWidths: SessionData.columnWidths
+            previewOpen: pane.previewOpen
+            previewWidth: CacheData.previewWidth
+            cutSet: pane.cutSet
+            nameFilter: pane.nameFilter
+            singleClickActivates: pane.singleClickActivates
+            typeAheadEnabled: pane.typeAhead
+            typeAheadMode: SettingsData.listTyping
+            countFolders: SettingsData.folderCounts
+            thumbnailsEnabled: SettingsData.thumbnails
+            thumbnailSizeLimit: pane.thumbnailSizeLimit
+            dragEnabled: pane.dragEnabled
+            outlined: pane.showActiveOutline && pane.active
+            onFilterRequested: text => pane.filterRequested(text)
+            onFilterFocusRequested: pane.filterFocusRequested()
+            onActivateRequested: entry => pane.activateRequested(entry)
+            onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.requestItemMenu(index, pointX, pointY, modifiers)
+            onBackgroundMenuRequested: (pointX, pointY) => pane.requestBackgroundMenu(pointX, pointY)
+            onRemoveRequested: pane.removeFromRecentRequested()
+            onClearRequested: pane.clearRecentRequested()
+            onDragRequested: paths => pane.dragRequested(paths)
+            onTabRequested: target => pane.tabRequested(target)
             onZoomRequested: (mode, level) => pane.setZoom(mode, level)
             onColumnResizeRequested: (id, width) => pane.setColumnWidth(id, width)
             onPreviewToggleRequested: pane.previewToggleRequested()

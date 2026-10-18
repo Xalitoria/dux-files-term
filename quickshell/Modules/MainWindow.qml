@@ -146,6 +146,9 @@ FloatingWindow {
         case "servers":
             dialogs.askServer();
             return;
+        case "recent":
+            openPath(RecentService.path, inNewTab);
+            return;
         case "remote":
             dialogs.connectRemote(location.uri, location.password);
             return;
@@ -316,6 +319,14 @@ FloatingWindow {
         }
     }
 
+    Connections {
+        target: RecentService
+
+        function onRequestFailed(message, code) {
+            ToastService.info(FileFormat.operationError(code, message));
+        }
+    }
+
     TabManager {
         id: tabManager
 
@@ -360,6 +371,8 @@ FloatingWindow {
         onConnectFailed: (uri, result) => window.dialogs.showServerFailure(uri, result)
         onRestoreRequested: window.actions.runAction("restore")
         onEmptyTrashRequested: window.actions.runAction("emptyTrash")
+        onRemoveFromRecentRequested: window.actions.runAction("removeFromRecent")
+        onClearRecentRequested: window.actions.runAction("clearRecent")
         onFilterRequested: text => topbar.openFilter(text)
         onFilterFocusRequested: topbar.focusFilter()
         onPathChanged: {
@@ -409,8 +422,9 @@ FloatingWindow {
             window.claimToplevel();
             ClipboardService.refresh();
             TrashService.refresh();
-            primaryPane.refresh();
-            window.secondPane?.refresh();
+            RecentService.refresh();
+            primaryPane.refreshOnActivate();
+            window.secondPane?.refreshOnActivate();
         }
 
         Keys.onPressed: event => {
@@ -499,6 +513,7 @@ FloatingWindow {
                 folderHasSettings: window.activePane.hasFolderSettings
                 previewOpen: window.previewOpen
                 trashActive: window.activePane.trashActive
+                recentActive: window.activePane.recentActive
                 filterText: window.activePane.nameFilter
                 currentPath: window.currentPath
                 onFilterChanged: text => window.activePane.nameFilter = text

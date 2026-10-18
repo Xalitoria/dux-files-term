@@ -18,15 +18,42 @@ FileMenu {
     property bool extractable: false
     property bool inResults: false
     property bool inTrash: false
+    property bool inRecent: false
     property int trashCount: 0
+    property int recentCount: 0
 
     signal actionTriggered(string id)
 
+    readonly property bool crossFolder: inResults || inRecent
     readonly property var entries: {
         if (forFolder)
-            return inTrash ? trashBackgroundRows : backgroundRows;
+            return inTrash ? trashBackgroundRows : inRecent ? recentBackgroundRows : backgroundRows;
         return inTrash ? trashItemRows : itemRows;
     }
+
+    readonly property var recentBackgroundRows: [
+        {
+            "id": "selectAll",
+            "icon": "select_all",
+            "label": I18n.tr("Select all", "menu entry selecting every item in the folder"),
+            "enabled": true
+        },
+        {
+            "id": "reload",
+            "icon": "refresh",
+            "label": I18n.tr("Reload", "menu entry re-reading the current folder"),
+            "enabled": true
+        },
+        {
+            "id": "separator"
+        },
+        {
+            "id": "clearRecent",
+            "icon": "delete_sweep",
+            "label": I18n.tr("Clear Recent", "action emptying the recently used list without touching the files"),
+            "enabled": recentCount > 0
+        }
+    ]
 
     readonly property var trashItemRows: [
         {
@@ -147,21 +174,22 @@ FileMenu {
             "id": "rename",
             "icon": "edit",
             "label": I18n.tr("Rename", "rename dialog header"),
-            "enabled": selectionCount === 1
+            "enabled": selectionCount === 1,
+            "visible": !inRecent
         },
         {
             "id": "duplicate",
             "icon": "difference",
             "label": I18n.tr("Duplicate", "context menu entry copying the selection beside itself"),
             "enabled": selectionCount > 0,
-            "visible": !inResults
+            "visible": !crossFolder
         },
         {
             "id": "newFolderWith",
             "icon": "create_new_folder",
             "label": I18n.tr("New folder with selection", "context menu entry moving the selection into a new folder"),
             "enabled": selectionCount > 1,
-            "visible": selectionCount > 1 && !inResults
+            "visible": selectionCount > 1 && !crossFolder
         },
         {
             "id": "separator"
@@ -171,14 +199,14 @@ FileMenu {
             "icon": "folder_zip",
             "label": I18n.tr("Compress…", "context menu entry packing the selection into an archive"),
             "enabled": selectionCount > 0,
-            "visible": !inResults
+            "visible": !crossFolder
         },
         {
             "id": "extract",
             "icon": "unarchive",
             "label": I18n.tr("Extract here", "context menu entry unpacking the selected archives"),
             "enabled": selectionCount > 0,
-            "visible": extractable && !inResults
+            "visible": extractable && !crossFolder
         },
         {
             "id": "extractTo",
@@ -192,7 +220,18 @@ FileMenu {
             "icon": "folder_open",
             "label": I18n.tr("Open the containing folder", "keyboard shortcut"),
             "enabled": selectionCount === 1,
-            "visible": inResults
+            "visible": crossFolder
+        },
+        {
+            "id": "separator",
+            "visible": inRecent
+        },
+        {
+            "id": "removeFromRecent",
+            "icon": "delete_history",
+            "label": I18n.tr("Remove from Recent", "action dropping the selected files from the recently used list without touching the files"),
+            "enabled": selectionCount > 0,
+            "visible": inRecent
         },
         {
             "id": "separator"

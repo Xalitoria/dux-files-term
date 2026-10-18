@@ -16,6 +16,9 @@ FilePlaceSection {
     signal dropRequested(string path, var drop)
     signal menuRequested(string path, real pointX, real pointY)
     signal trashMenuRequested(real pointX, real pointY)
+    signal recentMenuRequested(real pointX, real pointY)
+
+    readonly property alias recentRow: recentRow
 
     readonly property var places: DirectoryService.userDirs.map(dir => ({
                 "path": dir.path,
@@ -26,6 +29,27 @@ FilePlaceSection {
     readonly property var bookmarks: BookmarksService.entries.filter(entry => !placePaths.includes(entry.path))
 
     title: I18n.tr("Bookmarks", "sidebar section listing saved folders")
+
+    FilePlaceRow {
+        id: recentRow
+
+        visible: RecentService.shown
+        label: I18n.tr("Recent", "recent files view header and sidebar entry")
+        glyph: "history"
+        tooltipText: RecentService.count < 0 ? "" : RecentService.count > 0 ? FileFormat.count(RecentService.count) : I18n.tr("No recent files", "recent files view placeholder when nothing was opened yet")
+        selected: RecentService.path === section.currentPath
+        springLoad: false
+        onClicked: section.navigateRequested(RecentService.path)
+        onMiddleClicked: section.tabRequested(RecentService.path)
+
+        TapHandler {
+            acceptedButtons: Qt.RightButton
+            onTapped: point => {
+                const mapped = recentRow.mapToItem(section, point.position.x, point.position.y);
+                section.recentMenuRequested(mapped.x, mapped.y);
+            }
+        }
+    }
 
     Repeater {
         model: section.places

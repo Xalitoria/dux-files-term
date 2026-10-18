@@ -30,7 +30,7 @@ FloatingWindow {
         return typed === "" || pane.path === "" ? "" : FilePaths.join(pane.path, typed);
     }
     readonly property bool canAccept: {
-        if (pane.trashActive)
+        if (pane.virtualActive)
             return false;
         switch (method) {
         case "save":
@@ -360,7 +360,7 @@ FloatingWindow {
     }
 
     function createFolder() {
-        if (pane.path === "")
+        if (pane.path === "" || pane.virtualActive)
             return;
         FileOpsService.newFolder(pane.path, I18n.tr("Untitled folder", "default name for a new folder"), opScope, true);
     }
@@ -519,7 +519,7 @@ FloatingWindow {
 
                     FlatButton {
                         anchors.verticalCenter: parent.verticalCenter
-                        enabled: pane.path !== ""
+                        enabled: pane.path !== "" && !pane.virtualActive
                         iconName: "create_new_folder"
                         backgroundColor: Theme.chipSurface
                         tooltipText: I18n.tr("New folder", "file browser toolbar button creating a folder")

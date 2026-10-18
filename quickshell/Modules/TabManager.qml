@@ -177,7 +177,7 @@ QtObject {
         const state = tabState(index);
         const dest = index === currentTab ? activePane.path : (state?.panes?.[state.active ?? 0]?.path || state?.panes?.[0]?.path || "");
         const paths = DragService.pathsFrom(drop);
-        if (dest === "" || paths.length === 0 || paths.includes(dest))
+        if (dest === "" || dest === RecentService.path || paths.length === 0 || paths.includes(dest))
             return;
         dropRequested(paths, dest, DragService.overrideFor(drop.proposedAction));
     }
@@ -187,6 +187,8 @@ QtObject {
             return I18n.tr("Files", "main window title");
         if (path === TrashService.filesPath)
             return I18n.tr("Trash", "trash view header and sidebar entry");
+        if (path === RecentService.path)
+            return I18n.tr("Recent", "recent files view header and sidebar entry");
         if (path === Paths.strip(Paths.home))
             return I18n.tr("Home", "sidebar entry for the user's home folder");
         if (path === "/")

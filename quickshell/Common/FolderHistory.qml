@@ -72,7 +72,7 @@ Singleton {
     }
 
     function visit(path) {
-        if (path === "" || !load())
+        if (!path.startsWith("/") || !load())
             return;
         change(FolderJump.visit(entries, stored(path), Date.now()));
     }

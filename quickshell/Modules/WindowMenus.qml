@@ -128,6 +128,7 @@ Item {
         extractable: menus.selectionIsExtractable()
         inResults: menus.mainWindow.activePane.resultsActive
         inTrash: menus.mainWindow.activePane.trashActive
+        inRecent: menus.mainWindow.activePane.recentActive
         selectedBookmarked: menus.selectionIsDirectory() && BookmarksService.has(menus.mainWindow.selectedPaths()[0] ?? "")
         selectedPlace: menus.selectionIsDirectory() && BookmarksService.isPlace(menus.mainWindow.selectedPaths()[0] ?? "")
         onActionTriggered: id => menus.mainWindow.actions.runAction(id)
@@ -176,6 +177,7 @@ Item {
         onCopyPathRequested: path => menus.mainWindow.actions.copyText(path)
         onPropertiesRequested: path => menus.mainWindow.dialogs.showPropertiesFor([path])
         onEmptyTrashRequested: menus.mainWindow.dialogs.confirmEmptyTrash()
+        onClearRecentRequested: menus.mainWindow.dialogs.confirmClearRecent()
     }
 
     FileMenu {
@@ -271,7 +273,9 @@ Item {
         forFolder: true
         hasClipboard: ClipboardService.hasFiles
         inTrash: menus.mainWindow.activePane.trashActive
+        inRecent: menus.mainWindow.activePane.recentActive
         trashCount: TrashService.count
+        recentCount: menus.mainWindow.activePane.recentView?.model.total ?? 0
         onActionTriggered: id => menus.mainWindow.actions.runAction(id)
     }
 

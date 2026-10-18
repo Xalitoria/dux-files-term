@@ -14,11 +14,12 @@ const FileName = "ui-settings.json"
 type UISettings struct {
 	Terminal            string   `json:"terminal"`
 	RegisterFileManager bool     `json:"registerFileManager"`
+	RecentFiles         bool     `json:"recentFiles"`
 	SearchExcludes      []string `json:"searchExcludes"`
 }
 
 func Defaults() UISettings {
-	return UISettings{RegisterFileManager: true}
+	return UISettings{RegisterFileManager: true, RecentFiles: true}
 }
 
 // Load returns defaults when the file is missing or unreadable; a partial file

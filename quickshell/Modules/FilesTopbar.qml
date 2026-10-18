@@ -20,12 +20,14 @@ Item {
     property string sortKey: "name"
     property bool sortDescending: false
     property bool trashActive: false
+    property bool recentActive: false
     property string filterText: ""
     property string currentPath: ""
     property bool searchFocused: false
     property bool folderRemembered: false
     property bool folderHasSettings: false
 
+    readonly property bool virtualActive: trashActive || recentActive
     readonly property bool bookmarkPlace: BookmarksService.isPlace(currentPath)
     readonly property string bookmarkLabel: {
         if (bookmarkPlace)
@@ -104,7 +106,45 @@ Item {
             "label": FileColumns.label("size")
         }
     ]
-    readonly property var activeSortKeys: resultsActive ? resultSortKeys : trashActive ? trashSortKeys : sortKeys
+    readonly property var recentSortKeys: [
+        {
+            "key": "used",
+            "icon": "schedule",
+            "label": FileColumns.label("used")
+        },
+        {
+            "key": "name",
+            "icon": "sort_by_alpha",
+            "label": FileColumns.label("name")
+        },
+        {
+            "key": "location",
+            "icon": "folder_open",
+            "label": FileColumns.label("location")
+        },
+        {
+            "key": "mtime",
+            "icon": "history",
+            "label": FileColumns.label("modified")
+        },
+        {
+            "key": "size",
+            "icon": "straighten",
+            "label": FileColumns.label("size")
+        }
+    ]
+    readonly property var activeSortKeys: {
+        switch (true) {
+        case resultsActive:
+            return resultSortKeys;
+        case trashActive:
+            return trashSortKeys;
+        case recentActive:
+            return recentSortKeys;
+        default:
+            return sortKeys;
+        }
+    }
     readonly property var recentSuggestions: searchFocused && search.text === "" ? FolderHistory.top(FileBrowserMetrics.suggestionRows, currentPath).map(match => PathCompletion.row(match, "visited")) : []
 
     signal sidebarToggled
@@ -220,7 +260,7 @@ Item {
         FlatButton {
             anchors.verticalCenter: parent.verticalCenter
             visible: !topbar.compact
-            enabled: !topbar.trashActive && !topbar.bookmarkPlace
+            enabled: !topbar.virtualActive && !topbar.bookmarkPlace
             iconName: "bookmark"
             iconFilled: topbar.bookmarked
             iconColor: topbar.bookmarked ? Theme.primary : Theme.surfaceText
@@ -314,7 +354,7 @@ Item {
 
             FileMenuItem {
                 visible: menu.compactRows
-                enabled: !topbar.trashActive && !topbar.bookmarkPlace
+                enabled: !topbar.virtualActive && !topbar.bookmarkPlace
                 text: topbar.bookmarkLabel
                 iconName: topbar.bookmarked ? "bookmark_remove" : "bookmark"
                 onClicked: menu.pick(() => topbar.bookmarkToggled())
@@ -382,7 +422,7 @@ Item {
 
             FileMenuItem {
                 visible: menu.moreRows
-                enabled: !topbar.trashActive
+                enabled: !topbar.virtualActive
                 text: I18n.tr("Properties", "menu entry showing details about the current folder")
                 iconName: "info"
                 onClicked: menu.pick(() => topbar.propertiesRequested())
@@ -390,7 +430,7 @@ Item {
 
             FileMenuItem {
                 visible: menu.moreRows
-                enabled: !topbar.trashActive
+                enabled: !topbar.virtualActive
                 text: I18n.tr("Copy location path", "menu entry copying the current path to the clipboard")
                 iconName: "content_copy"
                 onClicked: menu.pick(() => topbar.copyPathRequested())
@@ -405,7 +445,7 @@ Item {
 
             FileMenuItem {
                 visible: menu.moreRows && SandboxService.available("terminal")
-                enabled: !topbar.trashActive
+                enabled: !topbar.virtualActive
                 text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
                 iconName: "terminal"
                 onClicked: menu.pick(() => topbar.terminalRequested())

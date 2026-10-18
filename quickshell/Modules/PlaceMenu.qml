@@ -11,6 +11,7 @@ FileMenu {
 
     readonly property bool bookmark: place === "bookmark"
     readonly property bool trash: place === "trash"
+    readonly property bool recent: place === "recent"
     readonly property bool folder: place === "folder"
 
     signal tabRequested(string path)
@@ -20,6 +21,7 @@ FileMenu {
     signal copyPathRequested(string path)
     signal propertiesRequested(string path)
     signal emptyTrashRequested
+    signal clearRecentRequested
 
     function present(kind, target, source, pointX, pointY) {
         place = kind;
@@ -99,6 +101,17 @@ FileMenu {
         onClicked: {
             menu.close();
             menu.emptyTrashRequested();
+        }
+    }
+
+    FileMenuItem {
+        visible: menu.recent
+        text: I18n.tr("Clear Recent", "action emptying the recently used list without touching the files")
+        iconName: "delete_sweep"
+        enabled: RecentService.count !== 0
+        onClicked: {
+            menu.close();
+            menu.clearRecentRequested();
         }
     }
 }

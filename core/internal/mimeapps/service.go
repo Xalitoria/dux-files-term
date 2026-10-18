@@ -19,6 +19,7 @@ func fail(code files.Code, format string, args ...any) error {
 type Service struct {
 	detector *Detector
 	entries  *entryIndex
+	Opened   func(paths, mimes []string, app *Entry)
 }
 
 func NewService() *Service { return NewServiceForDirs(MimeDirs()) }
@@ -69,9 +70,11 @@ func (s *Service) Open(ctx context.Context, paths []string, opts LaunchOptions) 
 	for _, group := range groups {
 		batch := opts
 		batch.Paths = group.paths
-		if err := s.Launch(s.EntryByID(group.app), batch); err != nil {
+		entry := s.EntryByID(group.app)
+		if err := s.Launch(entry, batch); err != nil {
 			return &files.Error{Code: files.CodeIO, Err: err}
 		}
+		s.noteOpened(entry, group.paths, group.mimes)
 	}
 	if len(unhandled) > 0 {
 		return fail(files.CodeNotSupported, "no application is registered for %s", strings.Join(unhandled, ", "))
@@ -95,7 +98,14 @@ func (s *Service) OpenWith(ctx context.Context, desktopID string, paths []string
 	if err := s.Launch(entry, opts); err != nil {
 		return &files.Error{Code: files.CodeIO, Err: err}
 	}
+	s.noteOpened(entry, paths, nil)
 	return nil
+}
+
+func (s *Service) noteOpened(entry *Entry, paths, mimes []string) {
+	if s.Opened != nil {
+		s.Opened(paths, mimes, entry)
+	}
 }
 
 // The execute bit is also what marks a desktop file trusted.
@@ -155,6 +165,7 @@ func (s *Service) OpenURI(ctx context.Context, uri string) error {
 type appGroup struct {
 	app   string
 	paths []string
+	mimes []string
 }
 
 func (s *Service) groupByApp(paths []string) ([]appGroup, []string, error) {
@@ -186,6 +197,7 @@ func (s *Service) groupByApp(paths []string) ([]appGroup, []string, error) {
 			groups = append(groups, appGroup{app: app})
 		}
 		groups[index].paths = append(groups[index].paths, path)
+		groups[index].mimes = append(groups[index].mimes, mimeType)
 	}
 	return groups, unhandled, nil
 }
