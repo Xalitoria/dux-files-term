@@ -10,6 +10,7 @@ import qs.DCommon.FileBrowser
 Singleton {
     id: root
 
+    readonly property string path: "trash:///"
     property string filesPath: localFilesPath()
     property int count: 0
     property string stamp: ""
@@ -28,7 +29,7 @@ Singleton {
     }
 
     function resolvePath() {
-        DirectoryService.resolveLocation("trash:///", "", result => {
+        DirectoryService.resolveLocation(root.path, "", result => {
             if (result.error)
                 return;
             root.filesPath = result.location?.path ?? root.filesPath;

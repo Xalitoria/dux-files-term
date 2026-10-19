@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 const (
 	FileName       = "bookmarks.json"
 	Topic          = "bookmarks"
+	fileVersion    = 2
 	coalesceWindow = 50 * time.Millisecond
 )
 
@@ -37,6 +39,12 @@ type changed struct {
 	Bookmarks []Bookmark `json:"bookmarks"`
 }
 
+// Version 1 files were a bare array written before the sidebar places lived here.
+type file struct {
+	Version   int        `json:"version"`
+	Bookmarks []Bookmark `json:"bookmarks"`
+}
+
 type Store struct {
 	bus     Publisher
 	dir     string
@@ -47,6 +55,8 @@ type Store struct {
 	items       []Bookmark
 	lastWritten []byte
 	gtkImport   bool
+	seeded      bool
+	seedPaths   []string
 
 	watcher *fsnotify.Watcher
 	done    chan struct{}
@@ -63,7 +73,7 @@ func (s *Store) Start() error {
 		return err
 	}
 	s.mu.Lock()
-	s.items, s.lastWritten, _ = s.load()
+	s.items, s.lastWritten, s.seeded, _ = s.load()
 	s.gtkImport = s.gtkImportAvailable()
 	s.mu.Unlock()
 
@@ -103,11 +113,59 @@ func (s *Store) Exists() bool {
 	return err == nil
 }
 
+func (s *Store) Seeded() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.seeded
+}
+
+// Seed puts the sidebar places in front of an unseeded list. It is kept in memory only, so a
+// list that is never edited keeps following the user dirs, and a legacy file written by an
+// external editor is seeded again on reload.
+func (s *Store) Seed(paths []string) ([]Bookmark, error) {
+	for _, path := range paths {
+		if !validPath(path) {
+			return nil, errors.New("seed paths must be absolute")
+		}
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.seedPaths = slices.Clone(paths)
+	if s.seeded {
+		return slices.Clone(s.items), nil
+	}
+	s.items = seed(s.seedPaths, s.items)
+	s.seeded = true
+	s.publish(s.items)
+	return slices.Clone(s.items), nil
+}
+
+func seed(paths []string, items []Bookmark) []Bookmark {
+	next := make([]Bookmark, 0, len(paths)+len(items))
+	for _, path := range paths {
+		path = clean(path)
+		if indexOf(next, path) >= 0 {
+			continue
+		}
+		if i := indexOf(items, path); i >= 0 {
+			next = append(next, items[i])
+			continue
+		}
+		next = append(next, Bookmark{Path: path, Label: labelOf(path)})
+	}
+	for _, b := range items {
+		if indexOf(next, b.Path) < 0 {
+			next = append(next, b)
+		}
+	}
+	return next
+}
+
 func (s *Store) Add(b Bookmark) ([]Bookmark, error) {
-	if !filepath.IsAbs(b.Path) {
+	if !validPath(b.Path) {
 		return nil, errors.New("bookmark path must be absolute")
 	}
-	b.Path = filepath.Clean(b.Path)
+	b.Path = clean(b.Path)
 	if b.Label == "" {
 		b.Label = labelOf(b.Path)
 	}
@@ -171,12 +229,13 @@ func (s *Store) update(apply func([]Bookmark) ([]Bookmark, error)) ([]Bookmark, 
 		return nil, err
 	}
 	s.items = next
+	s.seeded = true
 	s.publish(next)
 	return slices.Clone(next), nil
 }
 
 func (s *Store) write(items []Bookmark) error {
-	data, err := json.MarshalIndent(items, "", " ")
+	data, err := json.MarshalIndent(file{Version: fileVersion, Bookmarks: items}, "", " ")
 	if err != nil {
 		return err
 	}
@@ -189,19 +248,35 @@ func (s *Store) write(items []Bookmark) error {
 	return nil
 }
 
-func (s *Store) load() ([]Bookmark, []byte, bool) {
+func (s *Store) load() (items []Bookmark, data []byte, seeded bool, ok bool) {
 	data, err := os.ReadFile(s.file)
 	if err != nil {
-		return []Bookmark{}, nil, true
+		return []Bookmark{}, nil, false, true
 	}
-	var items []Bookmark
-	if err := json.Unmarshal(data, &items); err != nil {
+	items, seeded, err = parse(data)
+	if err != nil {
 		log.Warnf("bookmarks: ignoring unreadable %s: %v", s.file, err)
-		return []Bookmark{}, data, false
+		return []Bookmark{}, data, false, false
+	}
+	return items, data, seeded, true
+}
+
+func parse(data []byte) ([]Bookmark, bool, error) {
+	var items []Bookmark
+	seeded := false
+	if bytes.HasPrefix(bytes.TrimSpace(data), []byte("{")) {
+		var f file
+		if err := json.Unmarshal(data, &f); err != nil {
+			return nil, false, err
+		}
+		items = f.Bookmarks
+		seeded = f.Version >= fileVersion
+	} else if err := json.Unmarshal(data, &items); err != nil {
+		return nil, false, err
 	}
 	kept := items[:0]
 	for _, b := range items {
-		if !filepath.IsAbs(b.Path) {
+		if !validPath(b.Path) {
 			continue
 		}
 		if b.Label == "" {
@@ -209,7 +284,7 @@ func (s *Store) load() ([]Bookmark, []byte, bool) {
 		}
 		kept = append(kept, b)
 	}
-	return kept, data, true
+	return kept, seeded, nil
 }
 
 func (s *Store) watch() {
@@ -247,12 +322,17 @@ func (s *Store) watch() {
 func (s *Store) reload() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	items, data, ok := s.load()
+	items, data, seeded, ok := s.load()
 	s.gtkImport = s.gtkImportAvailable()
 	if !ok || bytes.Equal(data, s.lastWritten) {
 		return
 	}
+	if !seeded && s.seedPaths != nil {
+		items = seed(s.seedPaths, items)
+		seeded = true
+	}
 	s.items = items
+	s.seeded = seeded
 	s.lastWritten = data
 	s.publish(items)
 }
@@ -268,9 +348,29 @@ func indexOf(items []Bookmark, path string) int {
 	return slices.IndexFunc(items, func(b Bookmark) bool { return b.Path == path })
 }
 
+// Virtual places such as recent:/// sit in the list beside real folders.
+func validPath(path string) bool {
+	return filepath.IsAbs(path) || isVirtual(path)
+}
+
+func isVirtual(path string) bool {
+	scheme, _, ok := strings.Cut(path, "://")
+	return ok && scheme != ""
+}
+
+func clean(path string) string {
+	if isVirtual(path) {
+		return path
+	}
+	return filepath.Clean(path)
+}
+
 func labelOf(path string) string {
 	if path == "/" {
 		return "/"
+	}
+	if scheme, _, ok := strings.Cut(path, "://"); ok {
+		return scheme
 	}
 	return filepath.Base(path)
 }

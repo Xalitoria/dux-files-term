@@ -14,7 +14,6 @@ FileMenu {
     property bool shiftHeld: false
     property bool forFolder: false
     property bool selectedBookmarked: false
-    property bool selectedPlace: false
     property bool extractable: false
     property bool inResults: false
     property bool inTrash: false
@@ -135,7 +134,7 @@ FileMenu {
             "id": "bookmarkSelected",
             "icon": selectedBookmarked ? "bookmark_remove" : "bookmark",
             "label": selectedBookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Add to bookmarks", "context menu entry pinning the selected folder to the sidebar"),
-            "enabled": hasDirectory && selectionCount === 1 && !selectedPlace
+            "enabled": hasDirectory && selectionCount === 1
         },
         {
             "id": "separator"

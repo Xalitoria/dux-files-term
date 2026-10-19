@@ -100,9 +100,9 @@ func TestAddRemoveRenameReorderRoundTrip(t *testing.T) {
 
 	data, err := os.ReadFile(filepath.Join(dir, FileName))
 	require.NoError(t, err)
-	var stored []Bookmark
+	var stored file
 	require.NoError(t, json.Unmarshal(data, &stored))
-	assert.Equal(t, []Bookmark{{Path: "/home/me/Projects", Label: "Work", Icon: "folder-code"}}, stored)
+	assert.Equal(t, file{Version: 2, Bookmarks: []Bookmark{{Path: "/home/me/Projects", Label: "Work", Icon: "folder-code"}}}, stored)
 
 	entries, err := os.ReadDir(dir)
 	require.NoError(t, err)
@@ -111,7 +111,69 @@ func TestAddRemoveRenameReorderRoundTrip(t *testing.T) {
 	reopened := New(nil, dir, "")
 	require.NoError(t, reopened.Start())
 	t.Cleanup(reopened.Close)
-	assert.Equal(t, stored, reopened.List())
+	assert.Equal(t, stored.Bookmarks, reopened.List())
+	assert.True(t, reopened.Seeded(), "a version 2 file counts as seeded")
+}
+
+func TestSeedFrontsTheListOnceAndStaysInMemory(t *testing.T) {
+	store, bus, dir := newStore(t)
+	assert.False(t, store.Seeded())
+
+	items, err := store.Seed([]string{"recent:///", "/home/me", "/home/me/Downloads/", "/home/me"})
+	require.NoError(t, err)
+	assert.Equal(t, []Bookmark{{Path: "recent:///", Label: "recent"}, {Path: "/home/me", Label: "me"}, {Path: "/home/me/Downloads", Label: "Downloads"}}, items)
+	assert.Equal(t, items, bus.next(t).Bookmarks)
+	assert.True(t, store.Seeded())
+	assert.NoFileExists(t, filepath.Join(dir, FileName), "seeding alone writes nothing")
+
+	items, err = store.Seed([]string{"/elsewhere"})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"recent:///", "/home/me", "/home/me/Downloads"}, paths(items), "a second seed is a no-op")
+
+	_, err = store.Seed([]string{"relative"})
+	assert.Error(t, err)
+	_, err = store.Seed([]string{"://nope"})
+	assert.Error(t, err)
+
+	items, err = store.Remove("/home/me/Downloads")
+	require.NoError(t, err)
+	bus.next(t)
+	assert.Equal(t, []string{"recent:///", "/home/me"}, paths(items))
+
+	reopened := New(nil, dir, "")
+	require.NoError(t, reopened.Start())
+	t.Cleanup(reopened.Close)
+	assert.True(t, reopened.Seeded(), "the first edit writes a seeded file")
+	items, err = reopened.Seed([]string{"/home/me", "/home/me/Downloads"})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"recent:///", "/home/me"}, paths(items), "a removed place stays removed")
+}
+
+func TestSeedGoesInFrontOfALegacyFile(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "dfiles")
+	require.NoError(t, os.MkdirAll(dir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, FileName), []byte(`[{"path":"/srv/media","label":"Media","icon":""},{"path":"/home/me","label":"Mine","icon":"x"}]`), 0o644))
+	bus := newBus()
+	store := New(bus, dir, "")
+	require.NoError(t, store.Start())
+	t.Cleanup(store.Close)
+	assert.False(t, store.Seeded(), "a bare array predates the places")
+
+	items, err := store.Seed([]string{"/home/me", "/home/me/Documents"})
+	require.NoError(t, err)
+	assert.Equal(t, []Bookmark{
+		{Path: "/home/me", Label: "Mine", Icon: "x"},
+		{Path: "/home/me/Documents", Label: "Documents"},
+		{Path: "/srv/media", Label: "Media"},
+	}, items, "a place already saved keeps its label and icon")
+	bus.next(t)
+
+	external := []byte(`[{"path":"/two","label":"Two","icon":""}]`)
+	tmp := filepath.Join(dir, "edit.tmp")
+	require.NoError(t, os.WriteFile(tmp, external, 0o644))
+	require.NoError(t, os.Rename(tmp, filepath.Join(dir, FileName)))
+	assert.Equal(t, []string{"/home/me", "/home/me/Documents", "/two"}, paths(bus.next(t).Bookmarks), "a legacy file dropped in later is seeded again")
+	assert.True(t, store.Seeded())
 }
 
 func TestExternalEditIsPickedUp(t *testing.T) {

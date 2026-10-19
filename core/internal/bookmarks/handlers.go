@@ -14,7 +14,7 @@ func Handles(method string) bool {
 func (s *Store) Handle(w *ipc.ConnWriter, req ipc.Request) {
 	switch req.Method {
 	case "bookmarks.list":
-		w.Respond(req.ID, map[string]any{"bookmarks": s.List(), "gtkImportAvailable": s.GTKImportAvailable()})
+		w.Respond(req.ID, map[string]any{"bookmarks": s.List(), "seeded": s.Seeded(), "gtkImportAvailable": s.GTKImportAvailable()})
 	case "bookmarks.add":
 		items, err := s.Add(Bookmark{
 			Path:  params.StringOpt(req.Params, "path", ""),
@@ -27,6 +27,9 @@ func (s *Store) Handle(w *ipc.ConnWriter, req ipc.Request) {
 		respond(w, req.ID, items, err)
 	case "bookmarks.rename":
 		items, err := s.Rename(params.StringOpt(req.Params, "path", ""), params.StringOpt(req.Params, "label", ""))
+		respond(w, req.ID, items, err)
+	case "bookmarks.seed":
+		items, err := s.Seed(params.StringSlice(req.Params, "paths"))
 		respond(w, req.ID, items, err)
 	case "bookmarks.reorder":
 		items, err := s.Reorder(params.StringSlice(req.Params, "paths"))

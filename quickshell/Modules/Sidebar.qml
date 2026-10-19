@@ -120,12 +120,12 @@ DFlickable {
             bookmarkRenameRequested(row.dropPath);
             break;
         case Qt.Key_Menu:
-            if (row && row.dropPath !== "" && row.dropPath === TrashService.filesPath) {
+            if (row?.kind === "trash") {
                 const point = row.mapToItem(sidebar, row.width / 2, row.height / 2);
                 trashMenuRequested(point.x, point.y);
                 break;
             }
-            if (row && row === bookmarksSection.recentRow) {
+            if (row?.kind === "recent") {
                 const point = row.mapToItem(sidebar, row.width / 2, row.height / 2);
                 recentMenuRequested(point.x, point.y);
                 break;

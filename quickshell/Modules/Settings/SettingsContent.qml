@@ -85,7 +85,7 @@ Item {
 
     readonly property var dragOptions: [
         {
-            label: I18n.tr("Move on the same drive, copy otherwise", "drag default action option"),
+            label: I18n.tr("Move, copy across drives", "drag default action option"),
             value: "auto"
         },
         {
@@ -198,10 +198,8 @@ Item {
         if (status.available === false)
             return FilesFormat.featureUnavailable(status.reason ?? "");
         if (status.systemManaged === true)
-            return I18n.tr("The portal list is managed by the system; add Dux Files to it there.", "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set");
-        if (status.active === true)
-            return I18n.tr("Other apps open and save files through Dux Files.", "portal chooser setting description while enabled");
-        return I18n.tr("Other apps use the desktop's default open and save dialogs.", "portal chooser setting description while disabled");
+            return I18n.tr("The portal list is managed by the system.", "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set");
+        return "";
     }
 
     function portalFileLine() {
@@ -255,16 +253,14 @@ Item {
     function fileManagerDescription() {
         const status = fileManagerStatus;
         if (status.available === false)
-            return I18n.tr("This instance cannot reach the session bus.", "file manager registration setting description when the daemon has no session bus connection");
-        if (status.owned === true)
-            return I18n.tr("Other apps open folders and reveal files here.", "file manager registration setting description while registered");
+            return I18n.tr("No session bus.", "file manager registration setting description when the daemon has no session bus connection");
         if (status.queued === true && (status.owner ?? "") !== "")
-            return I18n.tr("%1 has the role now; Files takes it when %1 quits.", "file manager registration setting description while another file manager holds the name").arg(status.owner);
+            return I18n.tr("%1 holds it; Files takes over when it quits.", "file manager registration setting description while another file manager holds the name").arg(status.owner);
         if (status.queued === true)
-            return I18n.tr("Another file manager has the role now; Files takes it when that one quits.", "file manager registration setting description while an unknown file manager holds the name");
+            return I18n.tr("Another file manager holds it.", "file manager registration setting description while an unknown file manager holds the name");
         if ((status.reason ?? "") !== "")
-            return I18n.tr("The session bus refused the registration.", "file manager registration setting description when requesting the name failed");
-        return I18n.tr("Other apps open folders with whichever file manager they find.", "file manager registration setting description while not registered");
+            return I18n.tr("The session bus refused it.", "file manager registration setting description when requesting the name failed");
+        return "";
     }
 
     function collectRows(item, out, state) {
@@ -489,13 +485,23 @@ Item {
     }
 
     component OptionDropdownRow: SettingsDropdownRow {
+        id: optionRow
+
         property var optionList: []
         property var current: null
 
         signal picked(var value)
 
-        dropdownWidth: SettingsMetrics.dropdownWidth
+        dropdownWidth: Math.max(SettingsMetrics.dropdownWidth, widest.width + SettingsMetrics.dropdownChrome)
         options: root.optionLabels(optionList)
+
+        TextMetrics {
+            id: widest
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeMedium
+            font.weight: Theme.fontWeightMedium
+            text: optionRow.options.reduce((longest, label) => label.length > longest.length ? label : longest, "")
+        }
         currentValue: root.labelForValue(optionList, current)
         onValueChanged: label => picked(root.valueForLabel(optionList, label))
     }
@@ -523,7 +529,6 @@ Item {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Close behavior", "close behavior setting label")
                     keywords: I18n.tr("quit exit hide daemon keep running", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("What the window's close button does.", "close behavior setting description")
                     model: [I18n.tr("Keep running", "close behavior button group option keeping the daemon warm"), I18n.tr("Quit", "close behavior button group option to quit the app")]
                     currentIndex: SettingsData.closeBehavior === "quit" ? 1 : 0
                     onSelectionChanged: (index, selected) => {
@@ -543,9 +548,8 @@ Item {
                 }
 
                 SettingsToggleRow {
-                    text: I18n.tr("Open folders in a new tab", "setting label for external open requests")
+                    text: I18n.tr("Open folders from other apps in a new tab", "setting label for external open requests")
                     keywords: I18n.tr("tabs external open location", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Locations opened from other applications get their own tab instead of replacing the current one.", "setting description for external open requests")
                     checked: SettingsData.openLocationIn === "tab"
                     onToggled: checked => SettingsData.openLocationIn = checked ? "tab" : "current"
                 }
@@ -553,7 +557,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Extract archives on open", "setting label for opening archives")
                     keywords: I18n.tr("zip tar unpack compressed", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Opening an archive unpacks it into a folder beside it instead of launching another application.", "setting description for opening archives")
+                    description: I18n.tr("Unpacks into a folder beside it.", "setting description for opening archives")
                     checked: SettingsData.extractOnOpen
                     onToggled: checked => SettingsData.extractOnOpen = checked
                 }
@@ -561,7 +565,6 @@ Item {
                 OptionDropdownRow {
                     text: I18n.tr("Language", "interface language setting label")
                     keywords: I18n.tr("locale translation interface", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Language of the interface.", "interface language setting description")
                     optionList: root.languageOptions
                     current: SettingsData.language
                     onPicked: value => SettingsData.language = value
@@ -609,7 +612,6 @@ Item {
                     clickable: true
                     title: I18n.tr("Restart the portal service", "settings row restarting xdg-desktop-portal")
                     keywords: I18n.tr("xdg-desktop-portal", "settings search keywords, space separated, add synonyms in your language")
-                    subtitle: I18n.tr("Needed before the change takes effect.", "settings row subtitle when xdg-desktop-portal still runs the old configuration")
                     showChevron: true
                     onClicked: portalRestartDialog.open()
                 }
@@ -644,7 +646,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Show hidden files", "menu entry listing dot files")
                     keywords: I18n.tr("dotfiles invisible", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Ctrl+H still toggles them for the current window.", "show hidden files setting description")
+                    description: I18n.tr("Ctrl+H toggles per window.", "show hidden files setting description")
                     checked: SettingsData.showHidden
                     onToggled: checked => SettingsData.showHidden = checked
                 }
@@ -659,7 +661,6 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Remember view and sort per folder", "setting label for per-folder sort and view memory")
                     keywords: I18n.tr("folder memory per-folder remember", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Each folder keeps the sort and view picked in it. Off applies the last choice everywhere.", "setting description for per-folder sort and view memory")
                     checked: SettingsData.rememberFolderViews
                     onToggled: checked => SettingsData.rememberFolderViews = checked
                 }
@@ -671,7 +672,6 @@ Item {
                     enabled: SettingsData.rememberFolderViews
                     title: I18n.tr("Forget all folder settings", "settings row clearing every remembered folder sort and view")
                     keywords: I18n.tr("reset clear per-folder memory", "settings search keywords, space separated, add synonyms in your language")
-                    subtitle: I18n.tr("Every folder goes back to the default sort and view.", "dialog message before clearing every remembered folder sort and view")
                     showChevron: true
                     onClicked: forgetFoldersDialog.open()
                 }
@@ -679,7 +679,7 @@ Item {
                 OptionDropdownRow {
                     text: I18n.tr("Grid icon size", "setting label for the grid view icon size")
                     keywords: I18n.tr("zoom thumbnails tiles", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Ctrl+Wheel or Ctrl and plus or minus resize the current window.", "icon size setting description")
+                    description: I18n.tr("Ctrl+Wheel resizes per window.", "icon size setting description")
                     optionList: root.gridSizeOptions
                     current: SessionData.gridZoom
                     onPicked: value => SessionData.gridZoom = value
@@ -696,7 +696,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Count items in folders", "folder counts toggle label")
                     keywords: I18n.tr("size column entries", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("The size column shows how many entries a folder holds, one request per folder in view.", "folder counts toggle description")
+                    description: I18n.tr("Shown in the size column.", "folder counts toggle description")
                     checked: SettingsData.folderCounts
                     onToggled: checked => SettingsData.folderCounts = checked
                 }
@@ -727,7 +727,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Keep a list of recent files", "setting label for the recently used files list")
                     keywords: I18n.tr("history recently used opened sidebar", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Files opened here join the recently used list shared with other applications, shown under Recent in the sidebar.", "setting description for the recently used files list")
+                    description: I18n.tr("Shared with other apps.", "setting description for the recently used files list")
                     checked: SettingsData.recentFiles
                     onToggled: checked => SettingsData.recentFiles = checked
                 }
@@ -739,7 +739,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Vim keys", "toggle label for vim style navigation")
                     keywords: I18n.tr("hjkl keyboard navigation modal", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("h j k l move, / searches and letters run commands instead of jumping to or filtering names.", "vim keys toggle description")
+                    description: I18n.tr("h j k l move, / searches.", "vim keys toggle description")
                     checked: SettingsData.vimKeys
                     onToggled: checked => SettingsData.vimKeys = checked
                 }
@@ -747,7 +747,6 @@ Item {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Typing in the file list", "setting label choosing what typed letters do in the file list")
                     keywords: I18n.tr("type-ahead jump filter search keyboard", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Jump to the first name starting with what you type, or filter the folder through the search field.", "typing in the file list setting description")
                     model: [I18n.tr("Jump to name", "typing in the file list option"), I18n.tr("Filter", "typing in the file list option")]
                     currentIndex: SettingsData.listTyping === "filter" ? 1 : 0
                     enabled: !SettingsData.vimKeys
@@ -761,7 +760,7 @@ Item {
                 SettingsRow {
                     title: I18n.tr("Keyboard shortcuts", "overlay listing every keyboard shortcut")
                     keywords: I18n.tr("keys bindings hotkeys F1", "settings search keywords, space separated, add synonyms in your language")
-                    subtitle: I18n.tr("Press ? or F1 in the main window for the full list.", "keyboard shortcuts settings row description")
+                    subtitle: I18n.tr("? or F1 in the main window.", "keyboard shortcuts settings row description")
                     iconName: "keyboard"
                 }
             }
@@ -907,7 +906,7 @@ Item {
                 SettingsSliderRow {
                     text: I18n.tr("Radius strength", "global component corner rounding")
                     keywords: I18n.tr("corners rounding shape square", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("50 uses Material shapes. Lower values reduce rounding; higher values increase it.", "radius strength slider description")
+                    description: I18n.tr("50 is the Material default.", "radius strength slider description")
                     minimumLabel: I18n.tr("Square", "radius strength slider label at zero")
                     value: SettingsData.radiusStrength
                     minimum: 0
@@ -949,7 +948,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Title bars", "window title bars toggle label")
                     keywords: I18n.tr("decorations csd window header", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Off lets the compositor decorate windows. Open windows update when reopened.", "window title bars toggle description")
+                    description: I18n.tr("Off leaves decorations to the compositor. Applies to new windows.", "window title bars toggle description")
                     checked: SettingsData.windowTitleBars
                     onToggled: checked => SettingsData.windowTitleBars = checked
                 }
@@ -1001,7 +1000,6 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Focus ring", "focus ring toggle label")
                     keywords: I18n.tr("keyboard outline accessibility", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Outline the control that has keyboard focus.", "focus ring toggle description")
                     checked: SettingsData.focusRingEnabled
                     onToggled: checked => SettingsData.focusRingEnabled = checked
                 }
@@ -1042,7 +1040,7 @@ Item {
                 OptionDropdownRow {
                     text: I18n.tr("Terminal", "setting label for the terminal emulator")
                     keywords: I18n.tr("console emulator shell command line", "settings search keywords, space separated, add synonyms in your language")
-                    description: SandboxService.sandboxed ? I18n.tr("The sandbox cannot see the host's terminals; name the one to launch.", "terminal setting description inside flatpak") : I18n.tr("Automatic follows $TERMINAL, then the first installed emulator.", "terminal setting description")
+                    description: SandboxService.sandboxed ? I18n.tr("Name the host terminal to launch.", "terminal setting description inside flatpak") : I18n.tr("Automatic uses $TERMINAL.", "terminal setting description")
                     optionList: root.terminalOptions
                     current: SettingsData.terminal
                     onPicked: value => SettingsData.terminal = value
@@ -1055,7 +1053,7 @@ Item {
                 OptionDropdownRow {
                     text: I18n.tr("Dropping without a modifier", "drag default action setting label")
                     keywords: I18n.tr("drag drop copy move ask default action", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Ctrl copies and Alt asks regardless.", "drag default action setting description")
+                    description: I18n.tr("Ctrl copies, Alt asks.", "drag default action setting description")
                     optionList: root.dragOptions
                     current: SettingsData.dragAction
                     onPicked: value => SettingsData.dragAction = value
@@ -1068,7 +1066,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Show thumbnails", "thumbnails toggle label")
                     keywords: I18n.tr("previews images video pdf", "settings search keywords, space separated, add synonyms in your language")
-                    description: SandboxService.degraded("thumbnails") ? FilesFormat.featureUnavailable(SandboxService.reason("thumbnails")) : I18n.tr("Previews for images, videos and PDFs, cached under the shared thumbnail folder.", "thumbnails toggle description")
+                    description: SandboxService.degraded("thumbnails") ? FilesFormat.featureUnavailable(SandboxService.reason("thumbnails")) : ""
                     checked: SettingsData.thumbnails
                     onToggled: checked => SettingsData.thumbnails = checked
                 }
@@ -1089,7 +1087,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Thumbnails on network locations", "network thumbnails toggle label")
                     keywords: I18n.tr("remote sftp smb previews", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Reads every file over the connection to draw its preview.", "network thumbnails toggle description")
+                    description: I18n.tr("Downloads each file.", "network thumbnails toggle description")
                     enabled: SettingsData.thumbnails
                     checked: SettingsData.networkThumbnails
                     onToggled: checked => SettingsData.networkThumbnails = checked
@@ -1102,7 +1100,6 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Include hidden files", "search hidden files toggle label")
                     keywords: I18n.tr("search dotfiles recursive", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Recursive searches also descend into dot folders.", "search hidden files toggle description")
                     checked: SettingsData.searchHidden
                     onToggled: checked => SettingsData.searchHidden = checked
                 }
@@ -1110,7 +1107,7 @@ Item {
                 SettingsRow {
                     title: I18n.tr("Folders to skip", "search exclusions setting label")
                     keywords: I18n.tr("search exclude ignore", "settings search keywords, space separated, add synonyms in your language")
-                    subtitle: I18n.tr("Folder names or paths, separated by commas. Build and cache folders are always skipped unless Include ignored is on.", "search exclusions setting description")
+                    subtitle: I18n.tr("Names or paths, comma separated. Build and cache folders are skipped anyway.", "search exclusions setting description")
 
                     body: DTextField {
                         width: parent.width
@@ -1136,7 +1133,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Show system partitions", "devices setting label")
                     keywords: I18n.tr("internal drives udisks home boot", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Internal partitions udisks marks as part of the system, such as a separate /home.", "devices setting description")
+                    description: I18n.tr("Such as a separate /home.", "devices setting description")
                     checked: SettingsData.showSystemPartitions
                     onToggled: checked => SettingsData.showSystemPartitions = checked
                 }
@@ -1144,7 +1141,7 @@ Item {
                 SettingsToggleRow {
                     text: I18n.tr("Open unmounted drives on click", "devices setting label")
                     keywords: I18n.tr("mount usb removable sidebar", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Mount and open the drive together. Off mounts it and leaves you where you are.", "devices setting description")
+                    description: I18n.tr("Off only mounts.", "devices setting description")
                     checked: SettingsData.mountOnClick
                     onToggled: checked => SettingsData.mountOnClick = checked
                 }

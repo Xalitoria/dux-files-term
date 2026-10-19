@@ -15,6 +15,7 @@ Singleton {
     property bool loaded: false
     property bool gtkImportAvailable: false
     property bool importOffer: false
+    property bool seedPending: false
 
     readonly property var paths: entries.map(entry => entry.path)
 
@@ -44,15 +45,22 @@ Singleton {
             root.gtkImportAvailable = result.gtkImportAvailable === true;
             root.loaded = true;
             root.importOffer = root.gtkImportAvailable && !SettingsData.gtkBookmarksOffered;
+            root.seedPending = result.seeded === false;
+            root.seed();
         });
     }
 
-    function isPlace(path) {
-        return DirectoryService.userDirs.some(dir => dir.path === path);
+    function seed() {
+        if (!seedPending || DirectoryService.userDirs.length === 0)
+            return;
+        seedPending = false;
+        _call("bookmarks.seed", {
+            "paths": [RecentService.path].concat(DirectoryService.userDirs.map(dir => dir.path), [TrashService.path])
+        });
     }
 
     function add(path, label) {
-        if (path === "" || has(path) || isPlace(path))
+        if (path === "" || has(path))
             return;
         _call("bookmarks.add", {
             "path": path,
@@ -118,6 +126,13 @@ Singleton {
             root.entries = (response.result || {}).bookmarks || [];
             root.gtkImportAvailable = false;
         });
+    }
+
+    readonly property Connections _userDirs: Connections {
+        target: DirectoryService
+        function onUserDirsChanged() {
+            root.seed();
+        }
     }
 
     function _onEvent(data) {

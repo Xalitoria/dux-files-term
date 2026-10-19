@@ -32,9 +32,9 @@ FloatingWindow {
     onClosed: hide()
 
     title: I18n.tr("Files Settings", "settings window title")
-    minimumSize: Qt.size(Theme.smallBreakpoint, Theme.smallBreakpoint * 2 / 3)
-    implicitWidth: Math.max(minimumSize.width, Theme.modalWidth(parentWindow, screen, Theme.launcherWidthLarge))
-    implicitHeight: Math.max(minimumSize.height, Theme.modalHeight(parentWindow, screen, Theme.launcherHeightDefault + Theme.spacingXL))
+    minimumSize: Qt.size(SettingsMetrics.windowMinWidth, SettingsMetrics.windowMinHeight)
+    implicitWidth: screen ? Math.min(SettingsMetrics.windowWidth, screen.width - Theme.spacingXL * 2) : SettingsMetrics.windowWidth
+    implicitHeight: screen ? Math.min(SettingsMetrics.windowHeight, screen.height - Theme.spacingXL * 2) : SettingsMetrics.windowHeight
     color: Theme.surface
     visible: false
 

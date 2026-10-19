@@ -166,6 +166,44 @@ ShellRoot {
         check("import replaces the list", BookmarksService.paths, ["/a"]);
         check("no second offer", BookmarksService.importOffer, false);
 
+        listResponse = {
+            "bookmarks": [],
+            "seeded": false
+        };
+        DirectoryService.userDirs = [];
+        BookmarksService.refresh();
+        check("an unseeded list waits for the user dirs", last().method, "bookmarks.list");
+        DirectoryService.userDirs = [
+            {
+                "key": "home",
+                "path": "/home/me"
+            },
+            {
+                "key": "download",
+                "path": "/home/me/Downloads"
+            }
+        ];
+        check("the user dirs seed the places once", last(), {
+            "method": "bookmarks.seed",
+            "params": {
+                "paths": ["recent:///", "/home/me", "/home/me/Downloads", "trash:///"]
+            }
+        });
+        check("the seed response replaces the list", BookmarksService.paths, ["recent:///", "/home/me", "/home/me/Downloads", "trash:///"]);
+        listResponse = {
+            "bookmarks": [],
+            "seeded": true
+        };
+        BookmarksService.refresh();
+        DirectoryService.userDirs = [];
+        DirectoryService.userDirs = [
+            {
+                "key": "home",
+                "path": "/home/me"
+            }
+        ];
+        check("a seeded list is never seeded again", last().method, "bookmarks.list");
+
         log.info(failures === 0 ? "FIXTURE PASS" : `FIXTURE FAIL (${failures})`);
         Qt.callLater(Qt.quit);
     }

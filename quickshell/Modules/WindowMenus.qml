@@ -130,7 +130,6 @@ Item {
         inTrash: menus.mainWindow.activePane.trashActive
         inRecent: menus.mainWindow.activePane.recentActive
         selectedBookmarked: menus.selectionIsDirectory() && BookmarksService.has(menus.mainWindow.selectedPaths()[0] ?? "")
-        selectedPlace: menus.selectionIsDirectory() && BookmarksService.isPlace(menus.mainWindow.selectedPaths()[0] ?? "")
         onActionTriggered: id => menus.mainWindow.actions.runAction(id)
     }
 

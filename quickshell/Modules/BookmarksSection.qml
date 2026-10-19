@@ -18,78 +18,49 @@ FilePlaceSection {
     signal trashMenuRequested(real pointX, real pointY)
     signal recentMenuRequested(real pointX, real pointY)
 
-    readonly property alias recentRow: recentRow
+    readonly property var bookmarks: BookmarksService.entries.filter(entry => entry.path !== RecentService.path || RecentService.shown)
 
-    readonly property var places: DirectoryService.userDirs.map(dir => ({
-                "path": dir.path,
-                "label": dir.key === "home" ? I18n.tr("Home", "sidebar entry for the user's home folder") : dir.name,
-                "iconName": dir.iconName
-            }))
-    readonly property var placePaths: places.map(place => place.path)
-    readonly property var bookmarks: BookmarksService.entries.filter(entry => !placePaths.includes(entry.path))
-
-    title: I18n.tr("Bookmarks", "sidebar section listing saved folders")
-
-    FilePlaceRow {
-        id: recentRow
-
-        visible: RecentService.shown
-        label: I18n.tr("Recent", "recent files view header and sidebar entry")
-        glyph: "history"
-        tooltipText: RecentService.count < 0 ? "" : RecentService.count > 0 ? FileFormat.count(RecentService.count) : I18n.tr("No recent files", "recent files view placeholder when nothing was opened yet")
-        selected: RecentService.path === section.currentPath
-        springLoad: false
-        onClicked: section.navigateRequested(RecentService.path)
-        onMiddleClicked: section.tabRequested(RecentService.path)
-
-        TapHandler {
-            acceptedButtons: Qt.RightButton
-            onTapped: point => {
-                const mapped = recentRow.mapToItem(section, point.position.x, point.position.y);
-                section.recentMenuRequested(mapped.x, mapped.y);
-            }
+    function kindOf(path) {
+        switch (path) {
+        case RecentService.path:
+            return "recent";
+        case TrashService.path:
+            return "trash";
+        default:
+            return "bookmark";
         }
     }
 
-    Repeater {
-        model: section.places
-
-        FilePlaceRow {
-            required property var modelData
-
-            label: modelData.label
-            iconName: modelData.iconName
-            selected: modelData.path === section.currentPath
-            dropPath: modelData.path
-            onClicked: section.navigateRequested(modelData.path)
-            onMiddleClicked: section.tabRequested(modelData.path)
-            onDropped: drop => section.dropRequested(modelData.path, drop)
-            onSpringLoaded: section.navigateRequested(modelData.path)
-        }
+    function targetOf(entry) {
+        return entry.path === TrashService.path ? TrashService.filesPath : entry.path;
     }
 
-    FilePlaceRow {
-        id: trashRow
-
-        visible: TrashService.filesPath !== ""
-        label: I18n.tr("Trash", "trash view header and sidebar entry")
-        iconName: TrashService.count > 0 ? "user-trash-full" : "user-trash"
-        tooltipText: TrashService.count > 0 ? FileFormat.count(TrashService.count) : I18n.tr("Trash is empty", "trash view placeholder and sidebar tooltip when nothing is trashed")
-        selected: TrashService.filesPath === section.currentPath
-        dropPath: TrashService.filesPath
-        springLoad: false
-        onClicked: section.navigateRequested(TrashService.filesPath)
-        onMiddleClicked: section.tabRequested(TrashService.filesPath)
-        onDropped: drop => section.dropRequested(TrashService.filesPath, drop)
-
-        TapHandler {
-            acceptedButtons: Qt.RightButton
-            onTapped: point => {
-                const mapped = trashRow.mapToItem(section, point.position.x, point.position.y);
-                section.trashMenuRequested(mapped.x, mapped.y);
-            }
-        }
+    function fullOrder(visible) {
+        const all = BookmarksService.paths;
+        const order = visible.slice();
+        all.forEach((path, index) => {
+            if (!order.includes(path))
+                order.splice(index, 0, path);
+        });
+        return order;
     }
+
+    function placeFor(path) {
+        return DirectoryService.userDirs.find(dir => dir.path === path) ?? null;
+    }
+
+    function labelFor(entry) {
+        const place = placeFor(entry.path);
+        if (place?.key === "home" && entry.label === place.name)
+            return I18n.tr("Home", "sidebar entry for the user's home folder");
+        return entry.label;
+    }
+
+    function iconFor(entry) {
+        return entry.icon || placeFor(entry.path)?.iconName || "folder";
+    }
+
+    title: I18n.tr("Places", "sidebar section listing the user's places and saved folders")
 
     DReorderList {
         id: reorderList
@@ -97,7 +68,7 @@ FilePlaceSection {
         width: section.width
         model: section.bookmarks
         spacing: Theme.spacingXXS
-        onReordered: indices => BookmarksService.reorder(indices.map(index => section.bookmarks[index].path).concat(BookmarksService.paths.filter(path => section.placePaths.includes(path))))
+        onReordered: indices => BookmarksService.reorder(section.fullOrder(indices.map(index => section.bookmarks[index].path)))
 
         delegate: FilePlaceRow {
             id: row
@@ -105,22 +76,36 @@ FilePlaceSection {
             required property var modelData
             required property int index
 
+            readonly property string kind: section.kindOf(modelData.path)
+            readonly property bool recent: kind === "recent"
+            readonly property bool trash: kind === "trash"
+            readonly property bool saved: kind === "bookmark"
+            readonly property string target: section.targetOf(modelData)
             readonly property bool dragging: reorderList.draggingIndex === index
 
             width: reorderList.width
-            label: modelData.label
-            iconName: modelData.icon || "folder"
-            selected: modelData.path === section.currentPath
-            actionIcon: "bookmark_remove"
+            label: recent ? I18n.tr("Recent", "recent files view header and sidebar entry") : trash ? I18n.tr("Trash", "trash view header and sidebar entry") : section.labelFor(modelData)
+            glyph: recent ? "history" : ""
+            iconName: recent ? "" : trash ? (TrashService.count > 0 ? "user-trash-full" : "user-trash") : section.iconFor(modelData)
+            tooltipText: {
+                if (recent)
+                    return RecentService.count < 0 ? "" : RecentService.count > 0 ? FileFormat.count(RecentService.count) : I18n.tr("No recent files", "recent files view placeholder when nothing was opened yet");
+                if (trash)
+                    return TrashService.count > 0 ? FileFormat.count(TrashService.count) : I18n.tr("Trash is empty", "trash view placeholder and sidebar tooltip when nothing is trashed");
+                return "";
+            }
+            selected: target === section.currentPath
+            actionIcon: saved ? "bookmark_remove" : ""
             actionTooltip: I18n.tr("Remove bookmark", "tooltip on the bookmark button")
-            dropPath: modelData.path
+            dropPath: recent ? "" : target
+            springLoad: saved
             z: dragging ? 1 : 0
             opacity: dragging ? Theme.pendingOpacity : 1
-            onClicked: section.navigateRequested(modelData.path)
-            onMiddleClicked: section.tabRequested(modelData.path)
+            onClicked: section.navigateRequested(target)
+            onMiddleClicked: section.tabRequested(target)
             onActionTriggered: BookmarksService.remove(modelData.path)
-            onDropped: drop => section.dropRequested(modelData.path, drop)
-            onSpringLoaded: section.navigateRequested(modelData.path)
+            onDropped: drop => section.dropRequested(target, drop)
+            onSpringLoaded: section.navigateRequested(target)
 
             Behavior on y {
                 enabled: reorderList.animateLayout && !row.dragging && Theme.animationsEnabled
@@ -135,7 +120,16 @@ FilePlaceSection {
                 acceptedButtons: Qt.RightButton
                 onTapped: point => {
                     const mapped = row.mapToItem(section, point.position.x, point.position.y);
-                    section.menuRequested(row.modelData.path, mapped.x, mapped.y);
+                    switch (row.kind) {
+                    case "recent":
+                        section.recentMenuRequested(mapped.x, mapped.y);
+                        return;
+                    case "trash":
+                        section.trashMenuRequested(mapped.x, mapped.y);
+                        return;
+                    default:
+                        section.menuRequested(row.modelData.path, mapped.x, mapped.y);
+                    }
                 }
             }
 

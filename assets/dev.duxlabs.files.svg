@@ -5,10 +5,8 @@
       <stop offset="0" stop-color="#F5F0FF"/>
       <stop offset="1" stop-color="#D0BCFF"/>
     </linearGradient>
-    <clipPath id="front"><rect x="0" y="-555" width="960" height="400"/></clipPath>
   </defs>
   <g transform="translate(0 64) scale(0.0666667)">
-    <path d="M140-160q-24 0-42-18.5T80-220v-520q0-23 18-41.5t42-18.5h256q12 0 23.5 5t19.5 13l42 42h339q23 0 41.5 18.5T880-680v460q0 23-18.5 41.5T820-160H140Z" fill="#553C9A"/>
-    <path d="M140-160q-24 0-42-18.5T80-220v-520q0-23 18-41.5t42-18.5h256q12 0 23.5 5t19.5 13l42 42h339q23 0 41.5 18.5T880-680v460q0 23-18.5 41.5T820-160H140Z" fill="url(#body)" clip-path="url(#front)"/>
+    <path d="M140-160q-24 0-42-18.5T80-220v-520q0-23 18-41.5t42-18.5h256q12 0 23.5 5t19.5 13l42 42h339q23 0 41.5 18.5T880-680v460q0 23-18.5 41.5T820-160H140Z" fill="url(#body)"/>
   </g>
 </svg>
