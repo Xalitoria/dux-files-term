@@ -190,10 +190,10 @@ FloatingWindow {
         previewOpen = previewOpen;
     }
 
-    function resolvePanes() {
+    function resolvePanes(keepBrowsingView) {
         for (const pane of [primaryPane, secondPane]) {
             if (pane && pane.path !== "")
-                pane.resolveFolder(pane.path);
+                pane.resolveFolder(pane.path, keepBrowsingView ? pane.browsingView : "");
         }
     }
 
@@ -268,14 +268,14 @@ FloatingWindow {
             SessionData.remember({
                 "sortKey": SettingsData.defaultSort
             });
-            window.resolvePanes();
+            window.resolvePanes(true);
         }
 
         function onDefaultSortDescendingChanged() {
             SessionData.remember({
                 "sortDescending": SettingsData.defaultSortDescending
             });
-            window.resolvePanes();
+            window.resolvePanes(true);
         }
 
         function onShowHiddenChanged() {

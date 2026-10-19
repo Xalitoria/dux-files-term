@@ -16,6 +16,7 @@ FocusScope {
     property bool sortDescending: SessionData.lastUsed("sortDescending", SettingsData.defaultSortDescending)
     property string viewMode: SessionData.lastUsed("viewMode", SettingsData.defaultView)
     property bool hasFolderSettings: false
+    property var restoringView: null
     property bool previewOpen: true
     property var cutSet: ({})
     property string nameFilter: ""
@@ -49,6 +50,7 @@ FocusScope {
     readonly property var currentEntry: overlay ? overlay.body.cursorEntry() : browser.currentEntry
     readonly property var selectedEntries: overlay ? overlay.body.selectedEntries() : browser.selectedEntries
     readonly property bool filtering: nameFilter !== "" && !resultsActive
+    readonly property string browsingView: viewMode === "columns" ? viewMode : ""
     readonly property bool folderRemembered: SettingsData.rememberFolderViews && path !== "" && !virtualActive && !resultsActive
     readonly property bool singleClickActivates: SettingsData.clickToOpen === "single"
     readonly property real thumbnailSizeLimit: SettingsData.thumbnailSizeLimitMb > 0 ? SettingsData.thumbnailSizeLimitMb * 1000000 : -1
@@ -80,7 +82,7 @@ FocusScope {
         browser.navigate(target);
     }
 
-    function resolveFolder(target) {
+    function resolveFolder(target, heldView) {
         const entry = SettingsData.rememberFolderViews ? FolderViews.lookup(target) : null;
         const values = FolderViews.resolve(entry, SessionData.browsing, {
             "sortKey": SettingsData.defaultSort,
@@ -90,7 +92,7 @@ FocusScope {
         hasFolderSettings = entry !== null;
         sortKey = values.sortKey;
         sortDescending = values.sortDescending;
-        viewMode = values.viewMode;
+        viewMode = heldView || values.viewMode;
         if (entry)
             FolderViews.touch(target);
     }
@@ -98,7 +100,7 @@ FocusScope {
     function refreshFolder() {
         if (path === "" || resultsActive)
             return;
-        resolveFolder(path);
+        resolveFolder(path, browsingView);
     }
 
     function toggleSort(key) {
@@ -148,6 +150,8 @@ FocusScope {
 
     function setViewMode(mode) {
         viewMode = mode;
+        if (folderRemembered && mode === "columns")
+            return;
         if (folderRemembered) {
             FolderViews.set(path, {
                 "viewMode": mode
@@ -249,17 +253,21 @@ FocusScope {
     }
 
     function saveState() {
-        return browser.saveState();
+        return Object.assign(browser.saveState(), {
+            "viewMode": viewMode
+        });
     }
 
     function restoreState(state) {
         closeSearch();
         const folder = path => path === "computer:" ? "/" : path;
+        restoringView = state?.viewMode === "columns" ? state.viewMode : "";
         browser.restoreState(Object.assign({}, state, {
             "path": folder(state?.path),
             "back": state?.back?.map(folder),
             "forward": state?.forward?.map(folder)
         }));
+        restoringView = null;
     }
 
     function openSelection() {
@@ -525,7 +533,7 @@ FocusScope {
         paneMargin: FilesMetrics.paneBodyMargin
         paneBorderWidth: pane.showActiveOutline && pane.active ? Theme.outlineWidthFocused : 0
         paneBorderColor: Theme.primary
-        onNavigating: target => pane.resolveFolder(target)
+        onNavigating: target => pane.resolveFolder(target, pane.restoringView ?? pane.browsingView)
         onActivateRequested: entry => pane.activateRequested(entry)
         onItemMenuRequested: (index, pointX, pointY, modifiers) => pane.requestItemMenu(index, pointX, pointY, modifiers)
         onBackgroundMenuRequested: (pointX, pointY) => pane.requestBackgroundMenu(pointX, pointY)

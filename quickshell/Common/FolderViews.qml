@@ -48,10 +48,11 @@ Singleton {
 
     function resolve(entry, lastUsed, defaults) {
         const pick = name => entry?.[name] ?? lastUsed?.[name] ?? defaults[name];
+        const folderView = entry?.viewMode === "columns" ? undefined : entry?.viewMode;
         return {
             "sortKey": pick("sortKey"),
             "sortDescending": pick("sortDescending"),
-            "viewMode": pick("viewMode")
+            "viewMode": folderView ?? lastUsed?.viewMode ?? defaults.viewMode
         };
     }
 

@@ -44,7 +44,13 @@ test("the folder's own value wins, then the last used one, then the default", ()
     assert.deepEqual(plain(ctx.resolve(null, null, defaults)), defaults);
     assert.deepEqual(plain(ctx.resolve(null, { sortKey: "size", viewMode: "grid" }, defaults)), { sortKey: "size", sortDescending: false, viewMode: "grid" });
     assert.deepEqual(plain(ctx.resolve({ sortKey: "mtime", sortDescending: true }, { sortKey: "size", viewMode: "grid" }, defaults)), { sortKey: "mtime", sortDescending: true, viewMode: "grid" });
-    assert.deepEqual(plain(ctx.resolve({ viewMode: "columns", sortDescending: false }, { sortDescending: true }, defaults)), { sortKey: "name", sortDescending: false, viewMode: "columns" });
+});
+
+test("a stored columns view is ignored, columns is how a pane browses, not a folder setting", () => {
+    const ctx = context();
+    const defaults = { sortKey: "name", sortDescending: false, viewMode: "list" };
+    assert.deepEqual(plain(ctx.resolve({ viewMode: "columns", sortDescending: false }, { sortDescending: true }, defaults)), { sortKey: "name", sortDescending: false, viewMode: "list" });
+    assert.deepEqual(plain(ctx.resolve({ viewMode: "columns" }, { viewMode: "grid" }, defaults)).viewMode, "grid");
 });
 
 test("the cap drops the least recently used folders first", () => {
