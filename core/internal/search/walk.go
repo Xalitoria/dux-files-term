@@ -148,8 +148,14 @@ func (sc *search) attach() {
 	}
 }
 
+// Runs before the done event is published, so a client that saw the search finish
+// cannot cancel a still registered id. The deferred call in run is only a backstop.
 func (sc *search) retire() {
 	sc.mu.Lock()
+	if sc.done {
+		sc.mu.Unlock()
+		return
+	}
 	sc.done = true
 	flushed := sc.attached || sc.svc.attachOnOpen.Load()
 	sc.mu.Unlock()
@@ -341,6 +347,7 @@ func (em *emitter) finish(partial bool, unreadable int) {
 	done.Cancelled = em.sc.ctx.Err() != nil && !done.Truncated
 	done.Partial = partial
 	done.Unreadable = unreadable
+	em.sc.retire()
 	em.sc.publish(done)
 }
 
