@@ -271,10 +271,8 @@ Item {
         for (const child of item.children) {
             if (!child.visible)
                 continue;
-            if (child.isSettingsSectionLabel === true) {
-                state.section = child.text;
-                continue;
-            }
+            if (child.isSettingsCard === true)
+                state.section = child.title;
             if (child.isSettingsRow === true) {
                 if (child.title !== "")
                     out.push({
@@ -407,9 +405,32 @@ Item {
     }
 
     Item {
+        id: pageHeader
+
+        width: Math.min(SettingsMetrics.contentMaxWidth, parent.width - Theme.spacingL * 2)
+        anchors.horizontalCenter: parent.horizontalCenter
+        height: Math.max(SettingsMetrics.pageHeaderHeight, pageHeading.implicitHeight + Theme.spacingM * 2)
+
+        StyledText {
+            id: pageHeading
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignLeft
+            text: root.searching ? I18n.tr("Search results", "settings page header while a search query is typed") : root.pageLabels[root.currentIndex]
+            font.pixelSize: Theme.fontSizeXXLarge
+            color: Theme.surfaceText
+        }
+    }
+
+    Item {
         id: pagesHost
 
-        anchors.fill: parent
+        anchors.top: pageHeader.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         clip: true
 
         Repeater {
@@ -435,14 +456,18 @@ Item {
     }
 
     Rectangle {
-        anchors.fill: parent
+        anchors.fill: pagesHost
         visible: root.searching
         color: Theme.surface
 
         SettingsPage {
-            PageHeader {
-                title: I18n.tr("Search results", "settings page header while a search query is typed")
-                subtitle: root.results.length === 0 ? I18n.tr("No results", "search results header when nothing matched") : ""
+            StyledText {
+                visible: root.results.length === 0
+                width: parent.width
+                text: I18n.tr("No results", "search results header when nothing matched")
+                font.pixelSize: Theme.fontSizeMedium
+                color: Theme.surfaceVariantText
+                horizontalAlignment: Text.AlignLeft
             }
 
             SettingsGroup {
@@ -460,34 +485,6 @@ Item {
                     }
                 }
             }
-        }
-    }
-
-    component PageHeader: Column {
-        property string title: ""
-        property string subtitle: ""
-
-        width: parent.width
-        spacing: Theme.spacingXS
-        bottomPadding: Theme.spacingS
-
-        StyledText {
-            text: parent.title
-            font.pixelSize: Theme.fontSizeXLarge
-            font.weight: Theme.fontWeightMedium
-            color: Theme.surfaceText
-            width: parent.width
-            horizontalAlignment: Text.AlignLeft
-        }
-
-        StyledText {
-            visible: text !== ""
-            text: parent.subtitle
-            font.pixelSize: Theme.fontSizeMedium
-            color: Theme.surfaceVariantText
-            width: parent.width
-            wrapMode: Text.WordWrap
-            horizontalAlignment: Text.AlignLeft
         }
     }
 
@@ -520,16 +517,9 @@ Item {
     Component {
         id: generalPage
         SettingsPage {
-            PageHeader {
-                title: I18n.tr("General", "settings sidebar tab label")
-                subtitle: I18n.tr("How new windows start and how folders open.", "general settings section subtitle")
-            }
+            SettingsCard {
+                title: I18n.tr("Window", "general settings section label")
 
-            SettingsSectionLabel {
-                text: I18n.tr("Window", "general settings section label")
-            }
-
-            SettingsGroup {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Close behavior", "close behavior setting label")
                     keywords: I18n.tr("quit exit hide daemon keep running", "settings search keywords, space separated, add synonyms in your language")
@@ -578,11 +568,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Open and save dialogs", "general settings section label for the portal file chooser")
-            }
+            SettingsCard {
+                title: I18n.tr("Open and save dialogs", "general settings section label for the portal file chooser")
 
-            SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Use Dux Files for open and save dialogs", "setting label for serving the desktop portal file chooser")
                     keywords: I18n.tr("portal file chooser picker xdg", "settings search keywords, space separated, add synonyms in your language")
@@ -627,11 +615,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("View", "keyboard shortcut group")
-            }
+            SettingsCard {
+                title: I18n.tr("View", "keyboard shortcut group")
 
-            SettingsGroup {
                 OptionGroupRow {
                     text: I18n.tr("Default view", "setting label for the view a new window starts in")
                     keywords: I18n.tr("list grid columns icons tiles", "settings search keywords, space separated, add synonyms in your language")
@@ -716,11 +702,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Files", "keyboard shortcut group")
-            }
+            SettingsCard {
+                title: I18n.tr("Files", "keyboard shortcut group")
 
-            SettingsGroup {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Open items with", "setting label choosing single or double click")
                     keywords: I18n.tr("single double click activate", "settings search keywords, space separated, add synonyms in your language")
@@ -749,11 +733,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Keyboard", "general settings section label")
-            }
+            SettingsCard {
+                title: I18n.tr("Keyboard", "general settings section label")
 
-            SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Vim keys", "toggle label for vim style navigation")
                     keywords: I18n.tr("hjkl keyboard navigation modal", "settings search keywords, space separated, add synonyms in your language")
@@ -791,16 +773,9 @@ Item {
         SettingsPage {
             id: appearanceFlickable
 
-            PageHeader {
-                title: I18n.tr("Appearance", "settings sidebar tab label")
-                subtitle: I18n.tr("Pick a color source, palette, or your own theme file.", "appearance settings section subtitle")
-            }
+            SettingsCard {
+                title: I18n.tr("Theme", "appearance settings section label")
 
-            SettingsSectionLabel {
-                text: I18n.tr("Theme", "appearance settings section label")
-            }
-
-            SettingsGroup {
                 SettingsButtonGroupRow {
                     text: I18n.tr("Theme", "theme mode setting label")
                     keywords: I18n.tr("light dark mode system color scheme", "settings search keywords, space separated, add synonyms in your language")
@@ -926,11 +901,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Shape", "appearance settings section label")
-            }
+            SettingsCard {
+                title: I18n.tr("Shape", "appearance settings section label")
 
-            SettingsGroup {
                 SettingsSliderRow {
                     text: I18n.tr("Radius strength", "global component corner rounding")
                     keywords: I18n.tr("corners rounding shape square", "settings search keywords, space separated, add synonyms in your language")
@@ -944,11 +917,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Typography", "appearance settings section label")
-            }
+            SettingsCard {
+                title: I18n.tr("Typography", "appearance settings section label")
 
-            SettingsGroup {
                 SettingsSliderRow {
                     text: I18n.tr("Weight", "font weight slider label")
                     keywords: I18n.tr("font bold typography", "settings search keywords, space separated, add synonyms in your language")
@@ -972,11 +943,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Windows", "appearance settings section label")
-            }
+            SettingsCard {
+                title: I18n.tr("Windows", "appearance settings section label")
 
-            SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Title bars", "window title bars toggle label")
                     keywords: I18n.tr("decorations csd window header", "settings search keywords, space separated, add synonyms in your language")
@@ -986,11 +955,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Motion", "appearance settings section label")
-            }
+            SettingsCard {
+                title: I18n.tr("Motion", "appearance settings section label")
 
-            SettingsGroup {
                 SettingsSliderRow {
                     text: I18n.tr("Duration", "animation duration slider label")
                     keywords: I18n.tr("animation speed motion", "settings search keywords, space separated, add synonyms in your language")
@@ -1028,11 +995,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Focus ring", "appearance settings section label")
-            }
+            SettingsCard {
+                title: I18n.tr("Focus ring", "appearance settings section label")
 
-            SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Focus ring", "focus ring toggle label")
                     keywords: I18n.tr("keyboard outline accessibility", "settings search keywords, space separated, add synonyms in your language")
@@ -1071,16 +1036,9 @@ Item {
     Component {
         id: behaviourPage
         SettingsPage {
-            PageHeader {
-                title: I18n.tr("Behaviour", "settings sidebar tab label")
-                subtitle: I18n.tr("Terminal, drag and drop, thumbnails and search.", "behaviour settings section subtitle")
-            }
+            SettingsCard {
+                title: I18n.tr("Open in terminal", "context menu entry opening a terminal")
 
-            SettingsSectionLabel {
-                text: I18n.tr("Open in terminal", "context menu entry opening a terminal")
-            }
-
-            SettingsGroup {
                 OptionDropdownRow {
                     text: I18n.tr("Terminal", "setting label for the terminal emulator")
                     keywords: I18n.tr("console emulator shell command line", "settings search keywords, space separated, add synonyms in your language")
@@ -1091,11 +1049,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Drag and drop", "behaviour settings section label")
-            }
+            SettingsCard {
+                title: I18n.tr("Drag and drop", "behaviour settings section label")
 
-            SettingsGroup {
                 OptionDropdownRow {
                     text: I18n.tr("Dropping without a modifier", "drag default action setting label")
                     keywords: I18n.tr("drag drop copy move ask default action", "settings search keywords, space separated, add synonyms in your language")
@@ -1106,11 +1062,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Thumbnails", "capability row on the about page")
-            }
+            SettingsCard {
+                title: I18n.tr("Thumbnails", "capability row on the about page")
 
-            SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Show thumbnails", "thumbnails toggle label")
                     keywords: I18n.tr("previews images video pdf", "settings search keywords, space separated, add synonyms in your language")
@@ -1142,11 +1096,9 @@ Item {
                 }
             }
 
-            SettingsSectionLabel {
-                text: I18n.tr("Search in Files", "placeholder in the search field")
-            }
+            SettingsCard {
+                title: I18n.tr("Search in Files", "placeholder in the search field")
 
-            SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Include hidden files", "search hidden files toggle label")
                     keywords: I18n.tr("search dotfiles recursive", "settings search keywords, space separated, add synonyms in your language")
@@ -1180,11 +1132,6 @@ Item {
     Component {
         id: devicesPage
         SettingsPage {
-            PageHeader {
-                title: I18n.tr("Devices", "sidebar section listing drives and volumes")
-                subtitle: I18n.tr("What the sidebar lists and what a click does.", "devices settings section subtitle")
-            }
-
             SettingsGroup {
                 SettingsToggleRow {
                     text: I18n.tr("Show system partitions", "devices setting label")

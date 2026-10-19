@@ -10,6 +10,7 @@ Singleton {
     readonly property real compactBreakpoint: Theme.smallBreakpoint + Theme.sidebarWidth / 2
     readonly property real contentMaxWidth: Theme.smallBreakpoint + Theme.spacingXL * 2
     readonly property real pagePaddingV: Theme.spacingXL
+    readonly property real pageHeaderHeight: Theme.fontSizeXXLarge + Theme.spacingXL + Theme.spacingM
     readonly property real rowPaddingH: Theme.spacingL + Theme.spacingXS
     readonly property real rowPaddingV: Theme.spacingL
     readonly property real rowContentSpacing: Theme.spacingL

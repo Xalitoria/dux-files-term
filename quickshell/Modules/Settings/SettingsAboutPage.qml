@@ -126,11 +126,9 @@ Item {
             }
         }
 
-        SettingsSectionLabel {
-            text: I18n.tr("Backend", "about page daemon section header")
-        }
+        SettingsCard {
+            title: I18n.tr("Backend", "about page daemon section header")
 
-        SettingsGroup {
             SettingsRow {
                 title: I18n.tr("Version", "about page daemon version column label")
                 keywords: I18n.tr("daemon release build", "settings search keywords, space separated, add synonyms in your language")
@@ -167,11 +165,9 @@ Item {
             }
         }
 
-        SettingsSectionLabel {
-            text: I18n.tr("Capabilities", "about page daemon capabilities label")
-        }
+        SettingsCard {
+            title: I18n.tr("Capabilities", "about page daemon capabilities label")
 
-        SettingsGroup {
             Repeater {
                 model: root.featureRows
 
