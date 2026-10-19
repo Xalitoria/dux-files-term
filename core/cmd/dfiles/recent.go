@@ -5,10 +5,10 @@ import (
 
 	"github.com/AvengeMedia/dankgo/log"
 	dankpaths "github.com/AvengeMedia/dankgo/paths"
-	"github.com/duxlabsdev/dux-files/core/internal/filechooser"
-	"github.com/duxlabsdev/dux-files/core/internal/mimeapps"
-	"github.com/duxlabsdev/dux-files/core/internal/recent"
-	"github.com/duxlabsdev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-files/core/internal/filechooser"
+	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
+	"github.com/duxlabs-dev/dux-files/core/internal/recent"
+	"github.com/duxlabs-dev/dux-files/core/internal/settings"
 )
 
 const (

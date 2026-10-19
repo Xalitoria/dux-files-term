@@ -13,8 +13,8 @@ import (
 
 	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/AvengeMedia/dankgo/log"
-	"github.com/duxlabsdev/dux-files/core/internal/ipc"
-	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
+	"github.com/duxlabs-dev/dux-files/core/internal/ipc"
+	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 )
 
 type event struct {

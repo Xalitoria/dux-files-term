@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/AvengeMedia/dankgo/paths"
-	"github.com/duxlabsdev/dux-files/core/internal/fileops"
-	"github.com/duxlabsdev/dux-files/core/internal/location"
-	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
+	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
+	"github.com/duxlabs-dev/dux-files/core/internal/location"
+	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 )
 
 var showCmd = &cobra.Command{

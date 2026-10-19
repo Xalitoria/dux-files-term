@@ -21,8 +21,8 @@
   </provides>
 
   <url type="homepage">https://danklinux.com</url>
-  <url type="bugtracker">https://github.com/duxlabsdev/dux-files/issues</url>
-  <url type="vcs-browser">https://github.com/duxlabsdev/dux-files</url>
+  <url type="bugtracker">https://github.com/duxlabs-dev/dux-files/issues</url>
+  <url type="vcs-browser">https://github.com/duxlabs-dev/dux-files</url>
 
   <content_rating type="oars-1.1" />
 

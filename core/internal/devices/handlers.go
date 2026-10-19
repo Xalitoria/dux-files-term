@@ -4,7 +4,7 @@ import (
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
-	"github.com/duxlabsdev/dux-files/core/internal/wire"
+	"github.com/duxlabs-dev/dux-files/core/internal/wire"
 	"github.com/godbus/dbus/v5"
 )
 

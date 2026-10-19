@@ -8,7 +8,7 @@ import (
 
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/log"
-	"github.com/duxlabsdev/dux-files/core/internal/location"
+	"github.com/duxlabs-dev/dux-files/core/internal/location"
 	"github.com/godbus/dbus/v5"
 )
 

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/duxlabsdev/dux-files/core/internal/atomicfile"
+	"github.com/duxlabs-dev/dux-files/core/internal/atomicfile"
 )
 
 func Install(env Env) (Status, error) {

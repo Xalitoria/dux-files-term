@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/duxlabsdev/dux-files/core/internal/portal"
+	"github.com/duxlabs-dev/dux-files/core/internal/portal"
 )
 
 var (

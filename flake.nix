@@ -130,7 +130,7 @@
 
             meta = {
               description = "File manager for the dux desktop";
-              homepage = "https://github.com/duxlabsdev/dux-files";
+              homepage = "https://github.com/duxlabs-dev/dux-files";
               license = pkgs.lib.licenses.mit;
               mainProgram = "dfiles";
               platforms = pkgs.lib.platforms.linux;

@@ -1,7 +1,7 @@
 package devices
 
 import (
-	"github.com/duxlabsdev/dux-files/core/internal/dbusutil"
+	"github.com/duxlabs-dev/dux-files/core/internal/dbusutil"
 	"github.com/godbus/dbus/v5"
 )
 

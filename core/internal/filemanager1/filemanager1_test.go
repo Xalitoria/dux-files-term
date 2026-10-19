@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/duxlabsdev/dux-files/core/internal/dbustest"
+	"github.com/duxlabs-dev/dux-files/core/internal/dbustest"
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/stretchr/testify/assert"

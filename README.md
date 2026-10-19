@@ -47,7 +47,7 @@ Owns `org.freedesktop.FileManager1`, so "show in folder" from browsers and other
 You need Go and `quickshell`.
 
 ```bash
-git clone --recurse-submodules https://github.com/duxlabsdev/dux-files.git
+git clone --recurse-submodules https://github.com/duxlabs-dev/dux-files.git
 cd dux-files
 make
 sudo make install
@@ -66,7 +66,7 @@ systemctl --user enable --now dfiles
 
 ```nix
 {
-  inputs.dux-files.url = "github:duxlabsdev/dux-files";
+  inputs.dux-files.url = "github:duxlabs-dev/dux-files";
 
   # home-manager or NixOS
   imports = [ inputs.dux-files.homeModules.dux-files ];

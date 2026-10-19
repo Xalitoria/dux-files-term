@@ -5,13 +5,13 @@ import (
 
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/log"
-	"github.com/duxlabsdev/dux-files/core/internal/devices"
-	"github.com/duxlabsdev/dux-files/core/internal/fileops"
-	"github.com/duxlabsdev/dux-files/core/internal/ipc"
-	"github.com/duxlabsdev/dux-files/core/internal/mimeapps"
-	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
-	"github.com/duxlabsdev/dux-files/core/internal/search"
-	"github.com/duxlabsdev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-files/core/internal/devices"
+	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
+	"github.com/duxlabs-dev/dux-files/core/internal/ipc"
+	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
+	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
+	"github.com/duxlabs-dev/dux-files/core/internal/search"
+	"github.com/duxlabs-dev/dux-files/core/internal/settings"
 )
 
 func noServices(*ipc.EventBus) (ipc.Deps, func()) { return ipc.Deps{}, func() {} }

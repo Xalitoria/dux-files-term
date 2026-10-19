@@ -19,8 +19,8 @@ import (
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/portal"
 
-	"github.com/duxlabsdev/dux-files/core/internal/fileops"
-	"github.com/duxlabsdev/dux-files/core/internal/helper"
+	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
+	"github.com/duxlabs-dev/dux-files/core/internal/helper"
 )
 
 const (

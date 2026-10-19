@@ -7,9 +7,9 @@ import (
 
 	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/AvengeMedia/dankgo/paths"
-	"github.com/duxlabsdev/dux-files/core/internal/fileops"
-	"github.com/duxlabsdev/dux-files/core/internal/location"
-	"github.com/duxlabsdev/dux-files/core/internal/wire"
+	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
+	"github.com/duxlabs-dev/dux-files/core/internal/location"
+	"github.com/duxlabs-dev/dux-files/core/internal/wire"
 )
 
 func hostEnv() location.Env {

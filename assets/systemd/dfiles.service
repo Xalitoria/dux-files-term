@@ -1,6 +1,6 @@
 [Unit]
 Description=Dux Files
-Documentation=https://github.com/duxlabsdev/dux-files
+Documentation=https://github.com/duxlabs-dev/dux-files
 After=graphical-session.target
 PartOf=graphical-session.target
 

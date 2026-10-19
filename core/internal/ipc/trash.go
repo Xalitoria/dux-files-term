@@ -12,7 +12,7 @@ import (
 	"github.com/AvengeMedia/dankgo/files"
 	"github.com/AvengeMedia/dankgo/paths"
 	"github.com/AvengeMedia/dankgo/trash"
-	"github.com/duxlabsdev/dux-files/core/internal/fileops"
+	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
 )
 
 const trashDateLayout = "2006-01-02T15:04:05"

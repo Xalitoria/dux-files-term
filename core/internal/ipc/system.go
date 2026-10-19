@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/AvengeMedia/dankgo/ipc/params"
-	"github.com/duxlabsdev/dux-files/core/internal/filemanager1"
-	"github.com/duxlabsdev/dux-files/core/internal/portal"
-	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
+	"github.com/duxlabs-dev/dux-files/core/internal/filemanager1"
+	"github.com/duxlabs-dev/dux-files/core/internal/portal"
+	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 )
 
 func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {

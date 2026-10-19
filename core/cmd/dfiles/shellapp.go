@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/AvengeMedia/dankgo/shellapp"
-	"github.com/duxlabsdev/dux-files/core/internal/shellembed"
+	"github.com/duxlabs-dev/dux-files/core/internal/shellembed"
 )
 
 var shellApp = shellapp.New(shellapp.Config{

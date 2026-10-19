@@ -2,19 +2,19 @@ package ipc
 
 import (
 	"github.com/AvengeMedia/dankgo/files"
-	"github.com/duxlabsdev/dux-files/core/internal/bookmarks"
-	"github.com/duxlabsdev/dux-files/core/internal/clipboard"
-	"github.com/duxlabsdev/dux-files/core/internal/colorscheme"
-	"github.com/duxlabsdev/dux-files/core/internal/devices"
-	"github.com/duxlabsdev/dux-files/core/internal/filemanager1"
-	"github.com/duxlabsdev/dux-files/core/internal/fileops"
-	"github.com/duxlabsdev/dux-files/core/internal/mimeapps"
-	"github.com/duxlabsdev/dux-files/core/internal/netmount"
-	"github.com/duxlabsdev/dux-files/core/internal/portal"
-	"github.com/duxlabsdev/dux-files/core/internal/recent"
-	"github.com/duxlabsdev/dux-files/core/internal/sandbox"
-	"github.com/duxlabsdev/dux-files/core/internal/search"
-	"github.com/duxlabsdev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-files/core/internal/bookmarks"
+	"github.com/duxlabs-dev/dux-files/core/internal/clipboard"
+	"github.com/duxlabs-dev/dux-files/core/internal/colorscheme"
+	"github.com/duxlabs-dev/dux-files/core/internal/devices"
+	"github.com/duxlabs-dev/dux-files/core/internal/filemanager1"
+	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
+	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
+	"github.com/duxlabs-dev/dux-files/core/internal/netmount"
+	"github.com/duxlabs-dev/dux-files/core/internal/portal"
+	"github.com/duxlabs-dev/dux-files/core/internal/recent"
+	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
+	"github.com/duxlabs-dev/dux-files/core/internal/search"
+	"github.com/duxlabs-dev/dux-files/core/internal/settings"
 )
 
 type Deps struct {

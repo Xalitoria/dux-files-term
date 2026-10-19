@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/duxlabsdev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-files/core/internal/settings"
 )
 
 func TestWithTerminalDefault(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/duxlabsdev/dux-files/core/internal/atomicfile"
+	"github.com/duxlabs-dev/dux-files/core/internal/atomicfile"
 )
 
 const (

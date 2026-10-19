@@ -11,7 +11,7 @@ Item {
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
 
-    readonly property string githubUrl: "https://github.com/duxlabsdev/dux-files"
+    readonly property string githubUrl: "https://github.com/duxlabs-dev/dux-files"
     readonly property string docsUrl: "https://danklinux.com/docs"
     readonly property string kofiUrl: "https://ko-fi.com/danklinux"
     readonly property string licenseUrl: githubUrl + "/blob/master/LICENSE"

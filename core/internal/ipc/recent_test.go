@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/AvengeMedia/dankgo/files"
-	"github.com/duxlabsdev/dux-files/core/internal/recent"
+	"github.com/duxlabs-dev/dux-files/core/internal/recent"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

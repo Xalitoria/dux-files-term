@@ -3,7 +3,7 @@ package clipboard
 import (
 	"github.com/AvengeMedia/dankgo/ipc"
 	"github.com/AvengeMedia/dankgo/ipc/params"
-	"github.com/duxlabsdev/dux-files/core/internal/wire"
+	"github.com/duxlabs-dev/dux-files/core/internal/wire"
 )
 
 func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {

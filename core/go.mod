@@ -1,4 +1,4 @@
-module github.com/duxlabsdev/dux-files/core
+module github.com/duxlabs-dev/dux-files/core
 
 go 1.27
 

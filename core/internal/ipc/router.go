@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/AvengeMedia/dankgo/ipc/params"
-	"github.com/duxlabsdev/dux-files/core/internal/bookmarks"
-	"github.com/duxlabsdev/dux-files/core/internal/clipboard"
-	"github.com/duxlabsdev/dux-files/core/internal/devices"
-	"github.com/duxlabsdev/dux-files/core/internal/mimeapps"
-	"github.com/duxlabsdev/dux-files/core/internal/netmount"
-	"github.com/duxlabsdev/dux-files/core/internal/search"
+	"github.com/duxlabs-dev/dux-files/core/internal/bookmarks"
+	"github.com/duxlabs-dev/dux-files/core/internal/clipboard"
+	"github.com/duxlabs-dev/dux-files/core/internal/devices"
+	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
+	"github.com/duxlabs-dev/dux-files/core/internal/netmount"
+	"github.com/duxlabs-dev/dux-files/core/internal/search"
 )
 
 func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {

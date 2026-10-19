@@ -129,6 +129,6 @@ modules:
         /app/share/licenses/dev.duxlabs.files/LICENSE
     sources:
       - type: git
-        url: https://github.com/duxlabsdev/dux-files.git
+        url: https://github.com/duxlabs-dev/dux-files.git
         commit: 49e38e29bb039487ff710ee83cb2c93bce9b1994
       - go.mod.yml
