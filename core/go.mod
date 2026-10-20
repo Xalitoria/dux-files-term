@@ -3,9 +3,9 @@ module github.com/duxlabs-dev/dux-files/core
 go 1.27
 
 require (
-	github.com/duxlabs-dev/dux-go v0.0.0-00010101000000-000000000000
 	github.com/bodgit/sevenzip v1.6.5
 	github.com/cavaliergopher/cpio v1.0.1
+	github.com/duxlabs-dev/dux-go v1.6.3-0.20261020163124-e2ca52bdf500
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-git/go-billy/v5 v5.9.2
 	github.com/go-git/go-git/v5 v5.19.3
