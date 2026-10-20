@@ -3,12 +3,12 @@ package main
 import (
 	"time"
 
-	"github.com/AvengeMedia/dankgo/log"
-	dankpaths "github.com/AvengeMedia/dankgo/paths"
 	"github.com/duxlabs-dev/dux-files/core/internal/filechooser"
 	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
 	"github.com/duxlabs-dev/dux-files/core/internal/recent"
 	"github.com/duxlabs-dev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-go/log"
+	dankpaths "github.com/duxlabs-dev/dux-go/paths"
 )
 
 const (

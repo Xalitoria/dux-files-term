@@ -1,10 +1,10 @@
 ## What is this?
 
-Dux Files is an open-source, MIT-licensed standalone file manager for linux. It runs as a daemon with a quickshell UI and shares the look and feel of DankMaterialShell.
+Dux Files is an open-source, MIT-licensed standalone file manager for linux. It runs as a daemon with a quickshell UI and shares the look and feel of Dux Shell.
 
 ## Repo Structure
 
-Two apps that operate together, plus a `dank-qml-common` submodule holding the shared QML widget library used across the Dank Desktop suite (symlinked in as `quickshell/DCommon`).
+Two apps that operate together, plus a `dank-qml-common` submodule holding the shared QML widget library used across the Dux suite (symlinked in as `quickshell/DCommon`).
 
 ### 1- core
 
@@ -37,7 +37,7 @@ The entire UI, a quickshell app. Talks to core over two unix sockets: one for re
 - Follow each apps' own conventions. QML uses Theme tokens instead of hardcoded colors, spacing, or other constants.
 - Resource usage matters. The daemon runs 24/7 - audit any change for idle CPU cost, extra processes, timers, and retained memory.
 - `core` and `quickshell` are tightly coupled through the unix socket protocol. When you are changing one, be mindful of the consequences for the other.
-- Use the Dank* wrappers in DCommon/ (DListView, DFlickable, and so on) instead of raw ListView/Flickable/ScrollView.
+- Use the D* widgets in DCommon/ (DListView, DFlickable, and so on) instead of raw ListView/Flickable/ScrollView.
 - All user-facing text goes through `I18n.tr()` with translator context as the second argument. Prefer reusing existing terms in `quickshell/translations/en.json` over adding new ones. Never edit the translation catalogs by hand, they are synced with POEditor. Strings under `DCommon/` belong to dank-qml-common, not this repo.
 - Go must build and test with `CGO_ENABLED=0`. No cgo dependencies.
 - Do not start editing code in response to a question. We'll tell you when to edit code.

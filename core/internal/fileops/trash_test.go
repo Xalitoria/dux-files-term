@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AvengeMedia/dankgo/trash"
+	"github.com/duxlabs-dev/dux-go/trash"
 	"github.com/stretchr/testify/require"
 )
 

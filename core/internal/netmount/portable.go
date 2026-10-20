@@ -1,8 +1,8 @@
 package netmount
 
 import (
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/log"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/log"
 	"github.com/godbus/dbus/v5"
 )
 

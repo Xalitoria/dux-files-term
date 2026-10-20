@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/ipc"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/ipc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

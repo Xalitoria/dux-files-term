@@ -1,10 +1,10 @@
 package netmount
 
 import (
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/ipc"
-	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/duxlabs-dev/dux-files/core/internal/wire"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/ipc"
+	"github.com/duxlabs-dev/dux-go/ipc/params"
 )
 
 func Handles(method string) bool {

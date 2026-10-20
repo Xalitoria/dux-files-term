@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/trash"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/trash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

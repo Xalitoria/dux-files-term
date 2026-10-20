@@ -7,10 +7,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AvengeMedia/dankgo/ipc/params"
-	"github.com/AvengeMedia/dankgo/paths"
 	"github.com/duxlabs-dev/dux-files/core/internal/location"
 	"github.com/duxlabs-dev/dux-files/core/internal/wire"
+	"github.com/duxlabs-dev/dux-go/ipc/params"
+	"github.com/duxlabs-dev/dux-go/paths"
 )
 
 const missingCheckLimit = 500

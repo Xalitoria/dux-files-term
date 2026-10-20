@@ -9,7 +9,7 @@ Built with [Quickshell](https://quickshell.org/) and [Go](https://go.dev/)
 
 </div>
 
-Dux Files is a standalone file manager for Wayland. A small Go daemon does the file work and a Quickshell UI sits on top of it. It looks and feels like the rest of the dux desktop and picks up DankMaterialShell's colors when DMS is running, but it works fine on its own.
+Dux Files is a standalone file manager for Wayland. A small Go daemon does the file work and a Quickshell UI sits on top of it. It looks and feels like the rest of the dux desktop and picks up Dux Shell's colors when DMS is running, but it works fine on its own.
 
 ## Features
 
@@ -20,7 +20,7 @@ Tabs, a split view with two panes, and list, grid and column views. Sort and vie
 Type to jump to a name or filter the folder, jump to any folder you have visited before, and reopen closed tabs.
 
 **Search**
-Recursive search by name with filters. Uses [danksearch](https://github.com/AvengeMedia/danksearch) when it is running and walks the tree when it isn't.
+Recursive search by name with filters. Uses [danksearch](https://github.com/duxlabs-dev/dux-search) when it is running and walks the tree when it isn't.
 
 **File operations**
 Copy, move, rename, trash and delete run as jobs with progress and conflict handling, and most of them can be undone. Denied operations offer Retry as administrator through polkit.

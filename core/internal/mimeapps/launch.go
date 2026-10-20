@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/AvengeMedia/dankgo/files"
+	"github.com/duxlabs-dev/dux-go/files"
 )
 
 type LaunchOptions struct {

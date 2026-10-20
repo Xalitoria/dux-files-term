@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     dank-qml-common = {
-      url = "github:AvengeMedia/dank-qml-common";
+      url = "github:duxlabs-dev/dux-qml-common";
       flake = false;
     };
   };

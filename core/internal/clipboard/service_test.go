@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AvengeMedia/dankgo/wlclipboard"
+	"github.com/duxlabs-dev/dux-go/wlclipboard"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

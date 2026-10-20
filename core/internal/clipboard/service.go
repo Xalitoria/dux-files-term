@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/AvengeMedia/dankgo/wlclipboard"
+	"github.com/duxlabs-dev/dux-go/wlclipboard"
 )
 
 type selection interface {

@@ -1,9 +1,9 @@
 package clipboard
 
 import (
-	"github.com/AvengeMedia/dankgo/ipc"
-	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/duxlabs-dev/dux-files/core/internal/wire"
+	"github.com/duxlabs-dev/dux-go/ipc"
+	"github.com/duxlabs-dev/dux-go/ipc/params"
 )
 
 func (s *Service) Handle(w *ipc.ConnWriter, req ipc.Request) {

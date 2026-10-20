@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AvengeMedia/dankgo/files"
+	"github.com/duxlabs-dev/dux-go/files"
 	"golang.org/x/sys/unix"
 )
 

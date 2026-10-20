@@ -3,10 +3,10 @@ package ipc
 import (
 	"context"
 
-	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/duxlabs-dev/dux-files/core/internal/filemanager1"
 	"github.com/duxlabs-dev/dux-files/core/internal/portal"
 	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
+	"github.com/duxlabs-dev/dux-go/ipc/params"
 )
 
 func HandleSystem(ctx context.Context, w *ConnWriter, req Request, deps Deps) {

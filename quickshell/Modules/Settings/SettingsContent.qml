@@ -826,7 +826,7 @@ Item {
                         case "custom":
                             return I18n.tr("Load colors from your own theme file.", "color source description for custom");
                         default:
-                            return I18n.tr("Follow DankMaterialShell colors, falling back to a preset.", "color source description for auto");
+                            return I18n.tr("Follow Dux Shell colors, falling back to a preset.", "color source description for auto");
                         }
                     }
                     optionList: root.colorSourceOptions
@@ -838,7 +838,7 @@ Item {
                     visible: SettingsData.colorSource === "auto"
                     iconName: Theme.dmsColorsAvailable ? "check_circle" : "info"
                     iconColor: Theme.dmsColorsAvailable ? Theme.success : Theme.surfaceVariantText
-                    title: Theme.dmsColorsAvailable ? I18n.tr("Using DankMaterialShell dynamic colors.", "auto color source status when DMS is active") : I18n.tr("DankMaterialShell not detected, using the %1 preset.", "auto color source status when DMS is missing").arg(Theme.presetLabel(SettingsData.presetTheme))
+                    title: Theme.dmsColorsAvailable ? I18n.tr("Using Dux Shell dynamic colors.", "auto color source status when DMS is active") : I18n.tr("Dux Shell not detected, using the %1 preset.", "auto color source status when DMS is missing").arg(Theme.presetLabel(SettingsData.presetTheme))
                 }
 
                 SettingsRow {

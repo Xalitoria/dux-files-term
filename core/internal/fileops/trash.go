@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/AvengeMedia/dankgo/paths"
-	"github.com/AvengeMedia/dankgo/trash"
+	"github.com/duxlabs-dev/dux-go/paths"
+	"github.com/duxlabs-dev/dux-go/trash"
 )
 
 const trashInfoExt = ".trashinfo"

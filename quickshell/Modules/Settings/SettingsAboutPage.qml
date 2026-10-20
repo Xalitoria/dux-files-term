@@ -12,7 +12,7 @@ Item {
     LayoutMirroring.childrenInherit: true
 
     readonly property string githubUrl: "https://github.com/duxlabs-dev/dux-files"
-    readonly property string docsUrl: "https://danklinux.com/docs"
+    readonly property string docsUrl: "https://duxlabs.dev/docs"
     readonly property string kofiUrl: "https://ko-fi.com/danklinux"
     readonly property string licenseUrl: githubUrl + "/blob/master/LICENSE"
     readonly property string version: DuxFilesService.daemonVersion.match(/^v?(\d+\.\d+)/)?.[1] ?? ""
@@ -98,7 +98,7 @@ Item {
 
             DButton {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: I18n.tr("Support Dank Linux", "about page hero button, opens the Ko-fi donation page")
+                text: I18n.tr("Support Dux Labs", "about page hero button, opens the Ko-fi donation page")
                 iconName: "favorite"
                 backgroundColor: Theme.primary
                 textColor: Theme.onPrimary

@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/AvengeMedia/dankgo/files"
+	"github.com/duxlabs-dev/dux-go/files"
 )
 
 const (

@@ -1,7 +1,7 @@
 package devices
 
 import (
-	"github.com/AvengeMedia/dankgo/files"
+	"github.com/duxlabs-dev/dux-go/files"
 	"github.com/godbus/dbus/v5"
 )
 

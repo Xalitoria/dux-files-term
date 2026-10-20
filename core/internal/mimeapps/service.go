@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/AvengeMedia/dankgo/files"
+	"github.com/duxlabs-dev/dux-go/files"
 )
 
 func fail(code files.Code, format string, args ...any) error {

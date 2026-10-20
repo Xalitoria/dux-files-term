@@ -1,19 +1,19 @@
-# github.com/AvengeMedia/dankgo v1.6.3-0.20261014163416-69bf1572e3de
+# github.com/duxlabs-dev/dux-go v1.6.3-0.20261014163416-69bf1572e3de
 ## explicit; go 1.27
-github.com/AvengeMedia/dankgo/dbusutil
-github.com/AvengeMedia/dankgo/files
-github.com/AvengeMedia/dankgo/ipc
-github.com/AvengeMedia/dankgo/ipc/params
-github.com/AvengeMedia/dankgo/log
-github.com/AvengeMedia/dankgo/paths
-github.com/AvengeMedia/dankgo/portal
-github.com/AvengeMedia/dankgo/shellapp
-github.com/AvengeMedia/dankgo/shellapp/shellfs
-github.com/AvengeMedia/dankgo/syncmap
-github.com/AvengeMedia/dankgo/trash
-github.com/AvengeMedia/dankgo/wayland/client
-github.com/AvengeMedia/dankgo/wayland/ext_data_control
-github.com/AvengeMedia/dankgo/wlclipboard
+github.com/duxlabs-dev/dux-go/dbusutil
+github.com/duxlabs-dev/dux-go/files
+github.com/duxlabs-dev/dux-go/ipc
+github.com/duxlabs-dev/dux-go/ipc/params
+github.com/duxlabs-dev/dux-go/log
+github.com/duxlabs-dev/dux-go/paths
+github.com/duxlabs-dev/dux-go/portal
+github.com/duxlabs-dev/dux-go/shellapp
+github.com/duxlabs-dev/dux-go/shellapp/shellfs
+github.com/duxlabs-dev/dux-go/syncmap
+github.com/duxlabs-dev/dux-go/trash
+github.com/duxlabs-dev/dux-go/wayland/client
+github.com/duxlabs-dev/dux-go/wayland/ext_data_control
+github.com/duxlabs-dev/dux-go/wlclipboard
 # github.com/andybalholm/brotli v1.2.2
 ## explicit; go 1.22
 github.com/andybalholm/brotli

@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/portal"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/portal"
 	"github.com/godbus/dbus/v5"
 )
 

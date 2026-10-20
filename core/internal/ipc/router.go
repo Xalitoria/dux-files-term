@@ -4,13 +4,13 @@ import (
 	"context"
 	"strings"
 
-	"github.com/AvengeMedia/dankgo/ipc/params"
 	"github.com/duxlabs-dev/dux-files/core/internal/bookmarks"
 	"github.com/duxlabs-dev/dux-files/core/internal/clipboard"
 	"github.com/duxlabs-dev/dux-files/core/internal/devices"
 	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
 	"github.com/duxlabs-dev/dux-files/core/internal/netmount"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
+	"github.com/duxlabs-dev/dux-go/ipc/params"
 )
 
 func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {

@@ -1,7 +1,6 @@
 package ipc
 
 import (
-	"github.com/AvengeMedia/dankgo/files"
 	"github.com/duxlabs-dev/dux-files/core/internal/bookmarks"
 	"github.com/duxlabs-dev/dux-files/core/internal/clipboard"
 	"github.com/duxlabs-dev/dux-files/core/internal/colorscheme"
@@ -15,6 +14,7 @@ import (
 	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
 	"github.com/duxlabs-dev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-go/files"
 )
 
 type Deps struct {

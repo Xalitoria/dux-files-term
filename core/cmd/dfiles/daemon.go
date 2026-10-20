@@ -11,9 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/log"
-	dankpaths "github.com/AvengeMedia/dankgo/paths"
 	"github.com/duxlabs-dev/dux-files/core/internal/bookmarks"
 	"github.com/duxlabs-dev/dux-files/core/internal/clipboard"
 	"github.com/duxlabs-dev/dux-files/core/internal/colorscheme"
@@ -29,6 +26,9 @@ import (
 	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
 	"github.com/duxlabs-dev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/log"
+	dankpaths "github.com/duxlabs-dev/dux-go/paths"
 	"github.com/godbus/dbus/v5"
 )
 

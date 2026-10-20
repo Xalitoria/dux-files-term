@@ -3,8 +3,6 @@ package main
 import (
 	"os"
 
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/log"
 	"github.com/duxlabs-dev/dux-files/core/internal/devices"
 	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
 	"github.com/duxlabs-dev/dux-files/core/internal/ipc"
@@ -12,6 +10,8 @@ import (
 	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
 	"github.com/duxlabs-dev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/log"
 )
 
 func noServices(*ipc.EventBus) (ipc.Deps, func()) { return ipc.Deps{}, func() {} }

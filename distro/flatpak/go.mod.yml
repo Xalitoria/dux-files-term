@@ -2,7 +2,7 @@
 - dest: core/vendor
   path: modules.txt
   type: file
-- dest: core/vendor/github.com/AvengeMedia/dankgo
+- dest: core/vendor/github.com/duxlabs-dev/dux-go
   sha256: 57212278be878468803e54fc4e03d7bacaad155b930de2c8c4d2fb849c2da24e
   strip-components: 3
   type: archive

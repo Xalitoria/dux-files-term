@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/AvengeMedia/dankgo/files"
-	"github.com/AvengeMedia/dankgo/paths"
-	"github.com/AvengeMedia/dankgo/trash"
 	"github.com/duxlabs-dev/dux-files/core/internal/fileops"
+	"github.com/duxlabs-dev/dux-go/files"
+	"github.com/duxlabs-dev/dux-go/paths"
+	"github.com/duxlabs-dev/dux-go/trash"
 )
 
 const trashDateLayout = "2006-01-02T15:04:05"

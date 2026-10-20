@@ -6,7 +6,7 @@
   <summary>File manager for the dux desktop</summary>
 
   <description>
-    <p>Dux Files is a standalone file manager for the modern Linux desktop with a Material Design 3 inspired UI. It is built with Quickshell, Qt6, and Go, and pairs with DankMaterialShell (DMS) for an integrated experience.</p>
+    <p>Dux Files is a standalone file manager for the modern Linux desktop with a Material Design 3 inspired UI. It is built with Quickshell, Qt6, and Go, and pairs with Dux Shell (DMS) for an integrated experience.</p>
   </description>
 
   <developer id="dev.duxlabs">
@@ -20,7 +20,7 @@
     <mediatype>inode/directory</mediatype>
   </provides>
 
-  <url type="homepage">https://danklinux.com</url>
+  <url type="homepage">https://duxlabs.dev</url>
   <url type="bugtracker">https://github.com/duxlabs-dev/dux-files/issues</url>
   <url type="vcs-browser">https://github.com/duxlabs-dev/dux-files</url>
 

@@ -11,7 +11,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/AvengeMedia/dankgo/files"
+	"github.com/duxlabs-dev/dux-go/files"
 )
 
 type Kind string
