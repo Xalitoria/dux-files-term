@@ -14,7 +14,7 @@ OverlayDialog {
 
     Shortcut {
         enabled: overlay.visible
-        sequences: ["F1", "?"]
+        sequences: Shortcuts.entries.find(entry => entry.id === "shortcuts").keys
         onActivated: overlay.close()
     }
 

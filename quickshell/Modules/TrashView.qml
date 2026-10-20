@@ -70,45 +70,6 @@ Rectangle {
     border.width: outlined ? Theme.outlineWidthFocused : 0
     border.color: Theme.primary
 
-    component HeaderAction: Item {
-        id: headerAction
-
-        property string label: ""
-        property string iconName: ""
-        property color containerColor: Theme.secondaryContainer
-        property color contentColor: Theme.onSecondaryContainer
-
-        signal triggered
-
-        implicitWidth: trashView.compact ? iconButton.width : textButton.implicitWidth
-        implicitHeight: Theme.buttonHeightXS
-
-        DButton {
-            id: textButton
-
-            visible: !trashView.compact
-            text: headerAction.label
-            iconName: headerAction.iconName
-            buttonHeight: Theme.buttonHeightXS
-            backgroundColor: headerAction.containerColor
-            textColor: headerAction.contentColor
-            onClicked: headerAction.triggered()
-        }
-
-        DActionButton {
-            id: iconButton
-
-            visible: trashView.compact
-            buttonSize: Theme.buttonHeightXS
-            iconName: headerAction.iconName
-            iconSize: Theme.iconSizeMedium
-            iconColor: headerAction.contentColor
-            backgroundColor: headerAction.containerColor
-            tooltipText: headerAction.label
-            onClicked: headerAction.triggered()
-        }
-    }
-
     TrashModel {
         id: trashModel
 
@@ -167,6 +128,7 @@ Rectangle {
             spacing: Theme.spacingS
 
             HeaderAction {
+                compact: trashView.compact
                 label: trashView.restoreLabel
                 iconName: "restore_from_trash"
                 enabled: selectionModel.count > 0
@@ -177,6 +139,7 @@ Rectangle {
             }
 
             HeaderAction {
+                compact: trashView.compact
                 label: trashView.emptyLabel
                 iconName: "delete_forever"
                 containerColor: Theme.errorContainer

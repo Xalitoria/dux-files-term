@@ -53,6 +53,15 @@ func (s *Service) RecordUse(mimeType, desktopID string) error {
 	path := writePath()
 	original, _ := os.ReadFile(path)
 	canonical := s.detector.db.Canonical(mimeType)
+	updated := setGroupLine(original, groupAdded, canonical, addedLine(original, canonical, desktopID))
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	return atomicfile.WriteFile(path, updated, 0o644)
+}
+
+// GLib's update_mimeapps_list also records a new default under Added Associations, as the spec wants a default to be associated.
+func addedLine(original []byte, canonical, desktopID string) string {
 	ids := []string{desktopID}
 	if added := parseGroups(original)[groupAdded]; added != nil {
 		for _, id := range splitList(added.value(canonical)) {
@@ -61,11 +70,7 @@ func (s *Service) RecordUse(mimeType, desktopID string) error {
 			}
 		}
 	}
-	updated := setGroupLine(original, groupAdded, canonical, strings.Join(ids, ";")+";")
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
-	return atomicfile.WriteFile(path, updated, 0o644)
+	return strings.Join(ids, ";") + ";"
 }
 
 func (s *Service) RecordUseForPaths(paths []string, desktopID string) error {

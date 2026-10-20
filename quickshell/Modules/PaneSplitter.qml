@@ -41,7 +41,7 @@ Item {
         onPositionChanged: mouse => {
             if (!pressed)
                 return;
-            splitter.moved(mouse.x - pressX);
+            splitter.moved(I18n.isRtl ? pressX - mouse.x : mouse.x - pressX);
         }
         onDoubleClicked: splitter.reset()
     }

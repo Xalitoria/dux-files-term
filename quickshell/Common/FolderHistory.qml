@@ -100,10 +100,6 @@ Singleton {
         return FolderJump.storedPath(path, NetworkService.networkMounts);
     }
 
-    function match(query, limit, exclude) {
-        return FolderJump.match(prepared(), query, Date.now(), limit, stored(exclude ?? ""));
-    }
-
     function top(limit, exclude) {
         return FolderJump.top(prepared(), Date.now(), limit, stored(exclude ?? ""));
     }

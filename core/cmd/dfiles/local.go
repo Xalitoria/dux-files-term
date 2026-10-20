@@ -28,11 +28,17 @@ func fileServices(bus *ipc.EventBus) (ipc.Deps, func()) {
 
 func searchServices(bus *ipc.EventBus) (ipc.Deps, func()) {
 	fileService := files.NewService(bus, cacheHome(), mimeapps.NewService().Detector())
+	deviceService := devices.NewService(bus, uint32(os.Getuid()))
+	if err := deviceService.Start(); err != nil {
+		log.Debugf("udisks2 unavailable: %v", err)
+	}
 	searchService := search.NewService(bus, fileService)
 	searchService.SetIndexEnabled(!sandbox.Current().Sandboxed)
+	searchService.SetMounts(func() []string { return localMounts(deviceService.Snapshot()) })
 	searchService.SetExcludes(func() []string { return settings.Load(configHome()).SearchExcludes })
 	return ipc.Deps{Files: fileService, Search: searchService}, func() {
 		searchService.Close()
+		deviceService.Close()
 		fileService.Close()
 	}
 }

@@ -177,6 +177,9 @@ func failure(err error, stderr []byte) error {
 	case 126:
 		return &files.Error{Code: files.CodeAccess, Err: errors.New("administrator authorization was not granted")}
 	case 127:
+		if bytes.Contains(stderr, []byte("Not authorized")) {
+			return &files.Error{Code: files.CodeAccess, Err: errors.New("administrator authorization failed")}
+		}
 		return &files.Error{Code: files.CodeNotSupported, Err: errors.New("pkexec failed: " + firstLine(stderr))}
 	}
 	return &files.Error{Code: files.CodeIO, Err: errors.New("helper exited " + strconv.Itoa(exit.ExitCode()) + ": " + firstLine(stderr))}
@@ -414,10 +417,10 @@ func (w *writer) Write(p []byte) (int, error) {
 	var header [4]byte
 	binary.BigEndian.PutUint32(header[:], uint32(len(p)))
 	if _, err := w.pipe.Write(header[:]); err != nil {
-		return 0, w.finish()
+		return 0, w.failed(err)
 	}
 	if _, err := w.pipe.Write(p); err != nil {
-		return 0, w.finish()
+		return 0, w.failed(err)
 	}
 	return len(p), nil
 }
@@ -439,6 +442,13 @@ func (w *writer) Abort() error {
 	}
 	_ = w.finish()
 	return nil
+}
+
+func (w *writer) failed(writeErr error) error {
+	if err := w.finish(); err != nil {
+		return err
+	}
+	return writeErr
 }
 
 func (w *writer) finish() error {

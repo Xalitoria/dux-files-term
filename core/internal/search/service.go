@@ -39,6 +39,7 @@ type Service struct {
 
 	running  sync.WaitGroup
 	mu       sync.Mutex
+	closed   bool
 	searches map[string]*search
 	nextID   int
 }
@@ -75,6 +76,7 @@ func (s *Service) AttachOnOpen() { s.attachOnOpen.Store(true) }
 
 func (s *Service) Close() {
 	s.mu.Lock()
+	s.closed = true
 	all := make([]*search, 0, len(s.searches))
 	for _, sc := range s.searches {
 		all = append(all, sc)
@@ -97,7 +99,14 @@ func (s *Service) Start(ctx context.Context, root, query string, opts Options) (
 		return "", "", err
 	}
 	sc.follow(ctx)
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		sc.cancel()
+		return "", "", errors.New("search service is shutting down")
+	}
 	s.running.Add(1)
+	s.mu.Unlock()
 	go func() {
 		defer s.running.Done()
 		sc.run(root, query, opts)

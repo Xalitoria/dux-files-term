@@ -101,6 +101,13 @@
                 $out/share/applications/dev.duxlabs.files.desktop
               install -Dm644 ${./assets/dev.duxlabs.files.svg} \
                 $out/share/icons/hicolor/scalable/apps/dev.duxlabs.files.svg
+              install -Dm644 ${./assets/dev.duxlabs.files.metainfo.xml} \
+                $out/share/metainfo/dev.duxlabs.files.metainfo.xml
+
+              install -Dm644 ${./assets/dev.duxlabs.files.policy} \
+                $out/share/polkit-1/actions/dev.duxlabs.files.policy
+              substituteInPlace $out/share/polkit-1/actions/dev.duxlabs.files.policy \
+                --replace-fail /usr/bin/dfiles $out/bin/.dfiles-wrapped
 
               install -Dm644 ${./assets/dbus/dev.duxlabs.files.FileManager1.service} \
                 $out/share/dbus-1/services/dev.duxlabs.files.FileManager1.service

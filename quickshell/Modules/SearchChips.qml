@@ -32,18 +32,6 @@ Flow {
 
     signal changed
 
-    function reset() {
-        scope = "folder";
-        types = [];
-        modified = "";
-        size = "";
-        includeIgnored = false;
-        fuzzy = false;
-        contents = false;
-        direct = false;
-        changed();
-    }
-
     function resetScope() {
         scope = "folder";
         contents = false;
@@ -61,8 +49,7 @@ Flow {
     onModifiedChanged: modifiedChips.currentIndex = indexOf(SearchFilters.modified, modified)
     onSizeChanged: sizeChips.currentIndex = indexOf(SearchFilters.sizes, size)
 
-    // A Flow only knows its single-row width once it has one; summing the
-    // chips keeps each group on one line and lets the outer Flow wrap groups.
+    // A Flow only knows its single-row width once it has one, so the chips are summed by hand.
     function rowWidth(group) {
         let total = 0;
         const items = group.children;
@@ -181,11 +168,11 @@ Flow {
 
         width: chips.rowWidth(toggleChips)
         model: chips.contentsAvailable && !chips.direct ? options.concat([
-                {
-                    "value": "contents",
-                    "label": I18n.tr("Contents", "search chip matching the text inside indexed files")
-                }
-            ]) : options
+            {
+                "value": "contents",
+                "label": I18n.tr("Contents", "search chip matching the text inside indexed files")
+            }
+        ]) : options
         multiSelect: true
         selectedValues: [chips.fuzzy ? "fuzzy" : "", chips.includeHidden ? "hidden" : "", chips.includeIgnored ? "ignored" : "", chips.direct ? "direct" : "", chips.contents ? "contents" : ""].filter(value => value !== "")
         showCounts: false
@@ -195,7 +182,6 @@ Flow {
                 chips.fuzzy = selected;
                 break;
             case "hidden":
-                chips.includeHidden = selected;
                 SettingsData.searchHidden = selected;
                 break;
             case "ignored":

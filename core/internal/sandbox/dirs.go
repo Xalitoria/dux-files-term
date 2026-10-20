@@ -7,9 +7,6 @@ import (
 	"strings"
 )
 
-// Dirs are the XDG base directories user-visible state belongs to. Inside a
-// sandbox with host access they point at the host's tree, because trash,
-// thumbnails, mimeapps.list and user-dirs.dirs are only useful there.
 type Dirs struct {
 	ConfigHome string   `json:"configHome"`
 	DataHome   string   `json:"dataHome"`
@@ -28,9 +25,7 @@ const (
 
 var hostConfigDirs = []string{hostOSRoot + "/etc/xdg"}
 
-// Other Flatpak apps export their desktop entries under these two, which
-// `host` plus `/var` make visible; the rest of the host OS sits under
-// /run/host because /usr inside the sandbox is the runtime.
+// Other Flatpak apps export desktop entries under the first two; /usr inside the sandbox is the runtime, the host's sits under /run/host.
 func hostDataDirs(dataHome string) []string {
 	return []string{
 		filepath.Join(dataHome, "flatpak", "exports", "share"),
@@ -52,9 +47,7 @@ func nativeDirs(env func(string) string) Dirs {
 	}
 }
 
-// Flatpak exports HOST_XDG_*_HOME only when the host overrides that variable,
-// so the spec defaults under HOME stand in otherwise. The runtime's own
-// XDG_*_DIRS stay first so the sandbox keeps finding its own resources.
+// Flatpak exports HOST_XDG_*_HOME only when the host overrides it; the runtime's own XDG_*_DIRS stay first so the sandbox still finds its resources.
 func hostDirs(env func(string) string, hostOS bool) Dirs {
 	home := env("HOME")
 	dirs := Dirs{
@@ -73,10 +66,7 @@ func hostDirs(env func(string) string, hostOS bool) Dirs {
 	return dirs
 }
 
-// ExportHostDirs points this process's XDG variables at the host tree, so
-// every reader (trash, mimeapps, thumbnails, user-dirs, Qt in the UI child)
-// behaves as it would in a native install. No-op unless the sandbox can
-// reach the user's home.
+// Also reaches Qt in the UI child, which inherits the environment.
 func ExportHostDirs(caps Capabilities) {
 	if !caps.Sandboxed || !caps.UserFilesystem {
 		return

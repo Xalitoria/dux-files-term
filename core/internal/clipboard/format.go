@@ -5,13 +5,7 @@ import (
 	"strings"
 )
 
-// The flavours a file manager selection is published under. The GNOME payload
-// is the only one that carries the cut/copy distinction for GTK file managers;
-// KDE carries it in a separate one-byte flavour.
-//
-// Sources:
-// nautilus_clipboard_to_string, gitlab.gnome.org/GNOME/nautilus src/nautilus-clipboard.c
-// KIO::setClipboardDataCut, invent.kde.org/frameworks/kio src/widgets/paste.cpp
+// Only the GNOME flavour carries cut vs copy (nautilus src/nautilus-clipboard.c); KDE uses a separate one-byte flavour (kio src/widgets/paste.cpp).
 const (
 	MimeGnomeCopiedFiles = "x-special/gnome-copied-files"
 	MimeUriList          = "text/uri-list"
@@ -19,8 +13,6 @@ const (
 	MimeTextUTF8         = "text/plain;charset=utf-8"
 )
 
-// GnomePayload is "copy\n" or "cut\n" followed by one file URI per line, each
-// terminated by a newline.
 func GnomePayload(paths []string, cut bool) []byte {
 	action := "copy"
 	if cut {
@@ -36,7 +28,7 @@ func GnomePayload(paths []string, cut bool) []byte {
 	return []byte(out.String())
 }
 
-// UriList is RFC 2483 text/uri-list: CRLF-separated URIs.
+// RFC 2483 wants CRLF between URIs.
 func UriList(paths []string) []byte {
 	out := strings.Builder{}
 	for _, path := range paths {
@@ -46,7 +38,6 @@ func UriList(paths []string) []byte {
 	return []byte(out.String())
 }
 
-// PlainText is what a text editor pastes: one absolute path per line.
 func PlainText(paths []string) []byte {
 	return []byte(strings.Join(paths, "\n"))
 }
@@ -55,9 +46,7 @@ func FileURI(path string) string {
 	return (&url.URL{Scheme: "file", Path: path}).String()
 }
 
-// Parse reads a selection published by any file manager back into absolute
-// paths plus whether it was cut. Only the GNOME flavour carries the cut flag,
-// so every other flavour reads as a copy.
+// Every flavour but GNOME reads as a copy.
 func Parse(data []byte, mime string) ([]string, bool) {
 	switch {
 	case strings.HasPrefix(mime, MimeGnomeCopiedFiles):
@@ -100,8 +89,7 @@ func collect(lines []string) []string {
 	return paths
 }
 
-// toPath accepts a local file URI or a bare absolute path and rejects
-// everything else, so a remote URI or a comment never becomes an operand.
+// A remote URI or a # comment line must never become an operand.
 func toPath(line string) string {
 	switch {
 	case line == "" || strings.HasPrefix(line, "#"):

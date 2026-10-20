@@ -13,6 +13,8 @@ OverlayDialog {
     readonly property var saveOptions: [I18n.tr("Never", "credential dialog option that forgets the password"), I18n.tr("This session", "credential dialog option that keeps the password until logout"), I18n.tr("Always", "credential dialog option that stores the password in the keyring")]
 
     function present(request) {
+        if (ask && ask.id !== request.id)
+            NetworkService.abort(ask.id);
         ask = request;
         userField.text = request.defaultUser || "";
         domainField.text = request.defaultDomain || "";

@@ -157,10 +157,13 @@ func openEncryptedZipEntry(f *zip.File, password string) (io.ReadCloser, error) 
 	default:
 		return nil, zip.ErrAlgorithm
 	}
-	if !expectCRC {
-		return &passwordFailureReader{inner: plain}, nil
+	if expectCRC {
+		plain = &crcReader{inner: plain, want: f.CRC32, hash: crc32.NewIEEE()}
 	}
-	return &passwordFailureReader{inner: &crcReader{inner: plain, want: f.CRC32, hash: crc32.NewIEEE()}}, nil
+	if f.Method == zipMethodAES {
+		return plain, nil
+	}
+	return &passwordFailureReader{inner: plain}, nil
 }
 
 func openWinZipAES(raw io.Reader, size int64, params winZipAES, password string) (io.Reader, error) {

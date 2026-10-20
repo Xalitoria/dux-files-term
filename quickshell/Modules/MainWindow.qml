@@ -441,7 +441,7 @@ FloatingWindow {
                     return;
                 break;
             default:
-                if (!window.actions.handleVimKey(event))
+                if (window.sidebarFocused || !window.actions.handleVimKey(event))
                     return;
             }
             event.accepted = true;

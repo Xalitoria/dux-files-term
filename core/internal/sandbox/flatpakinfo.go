@@ -6,9 +6,7 @@ import (
 
 const flatpakInfoPath = "/.flatpak-info"
 
-// flatpakInfo is the subset of /.flatpak-info the daemon consults: the
-// filesystem grants and the bus policies flatpak resolved for this instance,
-// overrides included.
+// /.flatpak-info already has overrides applied.
 type flatpakInfo struct {
 	appID       string
 	filesystems map[string]string
@@ -91,8 +89,7 @@ func (fi flatpakInfo) hasFilesystem(path string) bool {
 	return ok
 }
 
-// canTalk reports whether the policy lets the app call name: an exact entry
-// or a `prefix.*` wildcard at talk or own level, matched like xdg-dbus-proxy.
+// Matched like xdg-dbus-proxy: exact name or a `prefix.*` wildcard at talk or own level.
 func canTalk(policy map[string]string, name string) bool {
 	for pattern, level := range policy {
 		if level != "talk" && level != "own" {

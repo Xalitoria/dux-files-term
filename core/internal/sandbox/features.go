@@ -5,8 +5,7 @@ import (
 	"slices"
 )
 
-// features derives the degraded-mode table every plan documents from the
-// permission facts. Names are the ones the UI switches on.
+// Names are the ones the UI switches on.
 func features(c Capabilities) map[string]Feature {
 	userFS := gate(c.UserFilesystem, ReasonNoHostFS)
 	hostSpawn := gate(c.HostSpawn, ReasonNoHostSpawn)

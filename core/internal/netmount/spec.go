@@ -82,6 +82,9 @@ func ParseURI(raw string, mountables []Mountable) (Spec, error) {
 		return smbSpec(spec, parsed.Hostname()), nil
 	}
 	spec.Items["host"] = parsed.Hostname()
+	if parsed.Scheme == "davs" {
+		spec.Items["ssl"] = "true"
+	}
 	return spec, nil
 }
 
@@ -111,6 +114,9 @@ func URIOf(spec Spec, mountables []Mountable) string {
 	scheme := spec.Type()
 	if mountable, ok := FindMountable(spec.Type(), mountables); ok {
 		scheme = mountable.Scheme
+	}
+	if scheme == "dav" && spec.Items["ssl"] == "true" {
+		scheme = "davs"
 	}
 
 	host := spec.Items["host"]

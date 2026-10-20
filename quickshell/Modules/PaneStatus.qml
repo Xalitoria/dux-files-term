@@ -19,7 +19,7 @@ Row {
         const items = FileFormat.count(total);
         if (hidden <= 0)
             return items;
-        return `${items} · ${I18n.tr("%1 hidden", "count of hidden items left out of a folder listing").arg(hidden)}`;
+        return I18n.tr("%1 · %2", "folder status: item count then hidden count").arg(items).arg(I18n.tr("%1 hidden", "count of hidden items left out of a folder listing").arg(hidden));
     }
     readonly property string clipboardText: {
         switch (true) {

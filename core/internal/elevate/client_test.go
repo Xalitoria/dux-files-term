@@ -92,6 +92,9 @@ func TestFailureMapsExitCodesAndHelperReports(t *testing.T) {
 	assert.Equal(t, files.CodeNotSupported, files.CodeOf(err))
 	assert.Contains(t, err.Error(), "No authentication agent")
 
+	err = failure(exitWith(127), []byte("Error executing command as another user: Not authorized\n"))
+	assert.Equal(t, files.CodeAccess, files.CodeOf(err))
+
 	err = failure(exitWith(1), []byte("noise\n{\"code\":\"ENOENT\",\"error\":\"lstat /x: no such file\"}\n"))
 	assert.Equal(t, files.CodeNotFound, files.CodeOf(err))
 	assert.Equal(t, "ENOENT: lstat /x: no such file", err.Error())

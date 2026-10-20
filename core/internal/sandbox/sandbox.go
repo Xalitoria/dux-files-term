@@ -22,17 +22,14 @@ const (
 	portalIfacePrefix   = "org.freedesktop.portal."
 )
 
-// Feature is one user-visible capability. Reason is a stable code the UI maps
-// to a sentence; it is set when the feature is missing or Degraded.
+// Reason is a stable code the UI maps to a sentence.
 type Feature struct {
 	Available bool   `json:"available"`
 	Degraded  bool   `json:"degraded,omitempty"`
 	Reason    string `json:"reason,omitempty"`
 }
 
-// Capabilities is what the environment permits, computed once at boot.
-// Whether a permitted service is actually running is reported live by that
-// service (devices, network, elevation), not here.
+// Boot-time permissions only; whether a permitted service is running is reported live by that service.
 type Capabilities struct {
 	Sandboxed      bool               `json:"sandboxed"`
 	AppID          string             `json:"appId,omitempty"`
@@ -53,7 +50,6 @@ var (
 	current     Capabilities
 )
 
-// Current probes the real environment once and caches the answer.
 func Current() Capabilities {
 	currentOnce.Do(func() {
 		probe := newOSProbe()
@@ -101,8 +97,7 @@ func sandboxed(p Probe) Capabilities {
 		HostSpawn:   hostSpawnPermitted(info, p),
 		Portals:     portalVersions(p),
 	}
-	// The policy alone is not proof: an override can drop `host` after the
-	// info file was written, so the host OS mount is checked as well.
+	// An override can drop `host` after the info file was written, so the mount is checked too.
 	caps.HostFilesystem = info.hasFilesystem("host") && p.Exists(hostOSRoot+"/usr")
 	caps.UserFilesystem = caps.HostFilesystem || info.hasFilesystem("home")
 	caps.Dirs = nativeDirs(p.Getenv)
@@ -143,8 +138,6 @@ func portalVersions(p Probe) map[string]uint32 {
 	return out
 }
 
-// WithFeature returns a copy carrying one overridden feature, for callers
-// that overlay live service state onto the boot-time table.
 func (c Capabilities) WithFeature(name string, f Feature) Capabilities {
 	out := c
 	out.Features = maps.Clone(c.Features)

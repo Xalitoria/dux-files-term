@@ -156,7 +156,7 @@ func (s *Service) Associations(mimeType string) []*Entry {
 			add(m, id, files)
 		}
 		for _, entry := range s.entries.all() {
-			if entry.Hidden || !claimsMime(entry, m, s.detector.db) {
+			if !claimsMime(entry, m, s.detector.db) {
 				continue
 			}
 			add(m, entry.ID, files)
@@ -189,7 +189,9 @@ func (s *Service) SetDefault(mimeType, desktopID string) error {
 
 	path := writePath()
 	original, _ := os.ReadFile(path)
-	updated := setGroupLine(original, groupDefaults, s.detector.db.Canonical(mimeType), desktopID)
+	canonical := s.detector.db.Canonical(mimeType)
+	updated := setGroupLine(original, groupDefaults, canonical, desktopID)
+	updated = setGroupLine(updated, groupAdded, canonical, addedLine(updated, canonical, desktopID))
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}

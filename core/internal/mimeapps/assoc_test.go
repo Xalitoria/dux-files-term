@@ -113,6 +113,14 @@ func TestLocalizedNames(t *testing.T) {
 	t.Setenv("LC_ALL", "de_CH.UTF-8")
 	localeCandidates = sync.OnceValue(sessionLocaleCandidates)
 	assert.Equal(t, "Bearbeiter", svc3.EntryByID("editor.desktop").Name, "de_CH falls back to the de translation")
+
+	t.Setenv("LANGUAGE", "de_AT:de")
+	t.Setenv("LC_ALL", "en_US.UTF-8")
+	localeCandidates = sync.OnceValue(sessionLocaleCandidates)
+	svc4, _ := fixture(t)
+	t.Setenv("LANGUAGE", "de_AT:de")
+	localeCandidates = sync.OnceValue(sessionLocaleCandidates)
+	assert.Equal(t, "Schreibtisch", svc4.EntryByID("editor.desktop").Name, "LANGUAGE outranks LC_ALL like g_get_language_names")
 }
 
 func TestSetDefaultRewritesUserList(t *testing.T) {
@@ -142,6 +150,8 @@ func TestSetDefaultAddsKeyAndGroup(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(updated), "[Default Applications]\nimage/png=viewer.desktop")
 	assert.Contains(t, string(updated), "[Added Associations]")
+	assert.Contains(t, string(updated), "image/png=viewer.desktop;", "a new default is also an added association")
+	assert.Contains(t, string(updated), "text/plain=editor.desktop;")
 }
 
 func TestSetDefaultRejectsUnknownEntry(t *testing.T) {

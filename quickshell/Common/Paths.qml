@@ -31,7 +31,12 @@ Singleton {
     }
 
     function shortenHome(path: string): string {
-        return path.replace(strip(root.home), "~");
+        const home = strip(root.home);
+        if (path === home)
+            return "~";
+        if (path.startsWith(home + "/"))
+            return "~" + path.slice(home.length);
+        return path;
     }
 
     property var _iconPaths: ({})

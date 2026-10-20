@@ -5,12 +5,10 @@ import dankipc "github.com/AvengeMedia/dankgo/ipc"
 const APIVersion = 1
 
 type (
-	Request         = dankipc.Request
-	Response[T any] = dankipc.Response[T]
-	ConnWriter      = dankipc.ConnWriter
-	Subscriber      = dankipc.Subscriber
-	EventBus        = dankipc.EventBus
-	Client          = dankipc.Client
+	Request    = dankipc.Request
+	ConnWriter = dankipc.ConnWriter
+	Subscriber = dankipc.Subscriber
+	EventBus   = dankipc.EventBus
 )
 
 var (

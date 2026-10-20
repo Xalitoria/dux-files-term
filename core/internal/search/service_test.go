@@ -363,3 +363,10 @@ func TestConcurrentSearchesAreCapped(t *testing.T) {
 	assert.Equal(t, files.CodeBusy, files.CodeOf(err))
 	svc.Close()
 }
+
+func TestStartAfterCloseIsRefused(t *testing.T) {
+	svc := NewService(newBus(), files.NewService(nil, t.TempDir(), nil))
+	svc.Close()
+	_, _, err := svc.Start(context.Background(), tree(t), "report", Options{})
+	require.Error(t, err)
+}

@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"os"
 	"sort"
+	"strconv"
+	"strings"
 )
 
 const magicHeader = "MIME-Magic\x00\n"
@@ -96,12 +98,12 @@ func (p *magicParser) section() (int, string, bool) {
 		p.pos++
 	}
 
-	priorityText, mime, ok := cut(head, ':')
+	priorityText, mime, ok := strings.Cut(head, ":")
 	if !ok {
 		return 0, "", false
 	}
-	priority, ok := atoi(priorityText)
-	if !ok {
+	priority, err := strconv.Atoi(priorityText)
+	if err != nil || priority < 0 {
 		return 0, "", false
 	}
 	return priority, mime, true
@@ -266,27 +268,4 @@ func equalMasked(got, want, mask []byte) bool {
 		}
 	}
 	return true
-}
-
-func cut(s string, sep byte) (string, string, bool) {
-	for i := 0; i < len(s); i++ {
-		if s[i] == sep {
-			return s[:i], s[i+1:], true
-		}
-	}
-	return s, "", false
-}
-
-func atoi(s string) (int, bool) {
-	if s == "" {
-		return 0, false
-	}
-	value := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] < '0' || s[i] > '9' {
-			return 0, false
-		}
-		value = value*10 + int(s[i]-'0')
-	}
-	return value, true
 }

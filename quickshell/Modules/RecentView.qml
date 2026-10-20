@@ -73,43 +73,6 @@ Rectangle {
     border.width: outlined ? Theme.outlineWidthFocused : 0
     border.color: Theme.primary
 
-    component HeaderAction: Item {
-        id: headerAction
-
-        property string label: ""
-        property string iconName: ""
-
-        signal triggered
-
-        implicitWidth: recentView.compact ? iconButton.width : textButton.implicitWidth
-        implicitHeight: Theme.buttonHeightXS
-
-        DButton {
-            id: textButton
-
-            visible: !recentView.compact
-            text: headerAction.label
-            iconName: headerAction.iconName
-            buttonHeight: Theme.buttonHeightXS
-            backgroundColor: Theme.secondaryContainer
-            textColor: Theme.onSecondaryContainer
-            onClicked: headerAction.triggered()
-        }
-
-        DActionButton {
-            id: iconButton
-
-            visible: recentView.compact
-            buttonSize: Theme.buttonHeightXS
-            iconName: headerAction.iconName
-            iconSize: Theme.iconSizeMedium
-            iconColor: Theme.onSecondaryContainer
-            backgroundColor: Theme.secondaryContainer
-            tooltipText: headerAction.label
-            onClicked: headerAction.triggered()
-        }
-    }
-
     RecentModel {
         id: recentModel
 
@@ -168,6 +131,7 @@ Rectangle {
             spacing: Theme.spacingS
 
             HeaderAction {
+                compact: recentView.compact
                 label: recentView.removeLabel
                 iconName: "delete_history"
                 enabled: selectionModel.count > 0
@@ -178,6 +142,7 @@ Rectangle {
             }
 
             HeaderAction {
+                compact: recentView.compact
                 label: recentView.clearLabel
                 iconName: "delete_sweep"
                 enabled: recentModel.total > 0

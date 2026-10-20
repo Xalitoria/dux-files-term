@@ -22,7 +22,7 @@ Singleton {
     readonly property string defaultDisplayFontFamily: Fonts.display
     readonly property var log: Log.scoped("Theme")
 
-    // "auto" follows the desktop portal color-scheme; no preference falls back to dark
+    // "auto" follows the desktop portal color-scheme; no preference counts as light
     readonly property bool isLightMode: {
         switch (SettingsData.themeMode) {
         case "light":
@@ -34,9 +34,7 @@ Singleton {
         }
     }
 
-    // DMS publishes to the host cache. Inside Flatpak, StandardPaths resolve
-    // to the sandbox cache while a user-granted xdg-cache override mounts at
-    // the host path, which only HOST_XDG_CACHE_HOME (or HOME) locates.
+    // Inside Flatpak StandardPaths resolve to the sandbox cache; DMS writes to the host cache, which only HOST_XDG_CACHE_HOME or HOME locates.
     readonly property string xdgCacheDir: {
         const flatpakId = Quickshell.env("FLATPAK_ID");
         if (!flatpakId || flatpakId === "")
@@ -77,6 +75,28 @@ Singleton {
     }
 
     function presetLabel(name) {
+        switch (name) {
+        case "purple":
+            return I18n.tr("Purple", "color palette name");
+        case "blue":
+            return I18n.tr("Blue", "color palette name");
+        case "green":
+            return I18n.tr("Green", "color palette name");
+        case "orange":
+            return I18n.tr("Orange", "color palette name");
+        case "red":
+            return I18n.tr("Red", "color palette name");
+        case "cyan":
+            return I18n.tr("Cyan", "color palette name");
+        case "pink":
+            return I18n.tr("Pink", "color palette name");
+        case "amber":
+            return I18n.tr("Amber", "color palette name");
+        case "coral":
+            return I18n.tr("Coral", "color palette name");
+        case "monochrome":
+            return I18n.tr("Monochrome", "color palette name");
+        }
         return StockTheme.presetLabel(name);
     }
 
@@ -507,10 +527,6 @@ Singleton {
     readonly property color popupFieldBorderColor: withAlpha(outline, 0.16)
     readonly property color popupFieldFocusedBorderColor: primary
 
-    function isFloatingWindow(item) {
-        return Surface.isFloatingWindow(item);
-    }
-
     function accent(name) {
         return accents[name] ?? null;
     }
@@ -638,23 +654,12 @@ Singleton {
         return Qt.rgba(c1.r * (1 - r) + c2.r * r, c1.g * (1 - r) + c2.g * r, c1.b * (1 - r) + c2.b * r, c1.a * (1 - r) + c2.a * r);
     }
 
-    function modalWidth(parentWin, scr, preferred) {
-        const screenCap = scr ? scr.width - 80 : 1200;
-        const parentCap = parentWin && parentWin.width > 0 ? parentWin.width * 0.8 : screenCap;
-        return Math.round(Math.min(preferred, screenCap, parentCap));
-    }
-
-    function modalHeight(parentWin, scr, natural) {
-        const screenCap = scr ? scr.height - 80 : 900;
-        const parentCap = parentWin && parentWin.height > 0 ? parentWin.height * 0.8 : screenCap;
-        return Math.round(Math.min(natural, screenCap, parentCap));
-    }
-
     FileView {
         id: dmsColorsView
         path: SettingsData.colorSource === "auto" ? root.dmsColorsPath : ""
         blockLoading: false
         watchChanges: true
+        printErrors: false
 
         onLoaded: {
             try {

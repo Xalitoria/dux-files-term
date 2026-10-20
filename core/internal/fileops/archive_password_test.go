@@ -267,3 +267,31 @@ func writeLzip(t *testing.T, path string, body []byte) {
 	require.NoError(t, w.Close())
 	require.NoError(t, f.Close())
 }
+
+func TestADamagedAESEntryIsNotReportedAsAWrongPassword(t *testing.T) {
+	root, project := sampleTree(t)
+	manager, bus := newHarness(t)
+	view := run(t, manager, bus, spec{kind: KindCompress, sources: []string{project}, dest: root, name: "locked", format: FormatZip, password: "hunter2"})
+	require.Equal(t, StateDone, view.State, view.Error)
+	archive := filepath.Join(root, "locked.zip")
+
+	reader, err := zip.OpenReader(archive)
+	require.NoError(t, err)
+	var offset int64
+	for _, f := range reader.File {
+		if f.Name == "project/src/main.go" {
+			offset, err = f.DataOffset()
+			require.NoError(t, err)
+		}
+	}
+	require.NoError(t, reader.Close())
+	data, err := os.ReadFile(archive)
+	require.NoError(t, err)
+	data[offset+18] ^= 0xff
+	require.NoError(t, os.WriteFile(archive, data, 0o644))
+
+	_, view, bus = extractProtected(t, []string{archive}, unlockWith("hunter2"))
+	require.Equal(t, StateFailed, view.State)
+	assert.NotContains(t, strings.ToLower(view.Error), "password")
+	require.Len(t, prompts(bus), 1, "the right password is not asked for again")
+}

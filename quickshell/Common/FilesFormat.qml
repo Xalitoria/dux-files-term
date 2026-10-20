@@ -59,7 +59,7 @@ Singleton {
             return "";
         const rate = I18n.tr("%1/s", "transfer speed, %1 is a size such as 12 MB").arg(FileFormat.size(progress.bytesPerSec));
         const remaining = Math.max(0, progress.bytesTotal - progress.bytesDone) / progress.bytesPerSec;
-        return `${rate} · ${timeLeft(remaining)}`;
+        return I18n.tr("%1 · %2", "transfer speed then time left").arg(rate).arg(timeLeft(remaining));
     }
 
     function extractable(mime) {

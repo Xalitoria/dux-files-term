@@ -49,8 +49,7 @@ Singleton {
         });
     }
 
-    // connectTo blocks in the daemon until gvfs is done, which includes every
-    // credential round trip the ask dialog answers.
+    // Blocks in the daemon until gvfs is done, credential round trips included.
     function connectTo(uri, callback, password) {
         connecting = true;
         const params = {

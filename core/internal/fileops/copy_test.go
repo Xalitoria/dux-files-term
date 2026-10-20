@@ -3,6 +3,7 @@ package fileops
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -282,6 +283,17 @@ func TestUniquePathNaming(t *testing.T) {
 
 	write(t, filepath.Join(root, "notes"), "")
 	require.Equal(t, filepath.Join(root, "notes (copy)"), uniquePath(filepath.Join(root, "notes")))
+
+	write(t, filepath.Join(root, "site.tar.gz"), "")
+	require.Equal(t, filepath.Join(root, "site (copy).tar.gz"), uniquePath(filepath.Join(root, "site.tar.gz")))
+}
+
+func TestTruncateNameKeepsRunesWhole(t *testing.T) {
+	require.Equal(t, "abc", truncateName("abc", 64))
+	require.Equal(t, "abcd", truncateName("abcdef", 4))
+	require.Equal(t, "ab", truncateName("abéé", 3))
+	long := strings.Repeat("x", 240) + ".txt"
+	require.Less(t, len(filepath.Base((&runner{job: &job{id: "j1"}}).tempPath(long))), 255)
 }
 
 func TestTransferOntoItselfKeepsTheSource(t *testing.T) {

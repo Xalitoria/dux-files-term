@@ -32,5 +32,6 @@ pkgs.testers.runNixOSTest {
     machine.succeed("su -- duxlabs -c 'dfiles --help >/dev/null'")
     machine.succeed("test -f /run/current-system/sw/share/systemd/user/dfiles.service")
     machine.succeed("test -f /run/current-system/sw/share/dbus-1/services/dev.duxlabs.files.FileManager1.service")
+    machine.succeed("test -f /run/current-system/sw/share/polkit-1/actions/dev.duxlabs.files.policy")
   '';
 }

@@ -118,6 +118,9 @@ func sessionLocaleCandidates() []string {
 }
 
 func sessionLocale() string {
+	if first, _, _ := strings.Cut(os.Getenv("LANGUAGE"), ":"); first != "" {
+		return first
+	}
 	for _, key := range []string{"LC_ALL", "LC_MESSAGES", "LANG"} {
 		if value := os.Getenv(key); value != "" {
 			return value

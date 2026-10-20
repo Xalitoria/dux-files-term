@@ -8,9 +8,12 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
+	"unicode/utf8"
 )
 
 var copyChunk = 256 << 10
+
+const tempNameTail = 64
 
 type outcome struct {
 	dst      string
@@ -95,9 +98,9 @@ func (r *runner) transfer(src, dst string, move bool) (outcome, error) {
 	case info.IsDir():
 		return outcome{dst: dst, undoable: undoable, dir: true}, r.transferDir(src, dst, move, res.merge)
 	case info.Mode()&fs.ModeSymlink != 0:
-		return outcome{dst: dst, undoable: undoable}, r.transferLink(src, dst, move, res.unverified)
+		return outcome{dst: dst, undoable: undoable}, r.transferLink(src, dst, move, !res.replaced)
 	case info.Mode().IsRegular():
-		return outcome{dst: dst, undoable: undoable}, r.transferFile(src, dst, info, move, res.unverified)
+		return outcome{dst: dst, undoable: undoable}, r.transferFile(src, dst, info, move, !res.replaced)
 	default:
 		r.skip()
 		return outcome{}, errSkipped
@@ -353,7 +356,18 @@ func (r *runner) growTotals(children int) {
 }
 
 func (r *runner) tempPath(dst string) string {
-	return filepath.Join(filepath.Dir(dst), ".dfiles-tmp-"+r.job.id+r.job.nextID("-t")+"-"+filepath.Base(dst))
+	return filepath.Join(filepath.Dir(dst), ".dfiles-tmp-"+r.job.id+r.job.nextID("-t")+"-"+truncateName(filepath.Base(dst), tempNameTail))
+}
+
+func truncateName(name string, limit int) string {
+	if len(name) <= limit {
+		return name
+	}
+	cut := limit
+	for cut > 0 && !utf8.RuneStart(name[cut]) {
+		cut--
+	}
+	return name[:cut]
 }
 
 func inverseOf(move bool) Kind {

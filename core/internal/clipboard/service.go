@@ -10,8 +10,6 @@ import (
 	"github.com/AvengeMedia/dankgo/wlclipboard"
 )
 
-// selection is the wayland side of the clipboard, behind an interface so the
-// tests never touch a compositor.
 type selection interface {
 	Set(offers []wlclipboard.Offer) error
 	Close()
@@ -23,9 +21,7 @@ var imageFormats = []string{"image/png", "image/jpeg", "image/webp"}
 
 var fileFormats = []string{MimeTextUTF8, "text/plain", "UTF8_STRING", "STRING", "TEXT", MimeGnomeCopiedFiles, MimeUriList}
 
-// Service owns the wayland selection while dfiles holds it. The owner keeps a
-// wayland connection and a goroutine alive, so it is created on the first copy
-// and dropped again on clear or shutdown.
+// The owner holds a wayland connection and a goroutine, so it lives only from the first copy until clear or shutdown.
 type Service struct {
 	newOwner func() (selection, error)
 	pick     selector
@@ -45,8 +41,6 @@ func NewService() *Service {
 	}
 }
 
-// Image reads an image off the clipboard in the format it is offered in:
-// png, jpeg or webp first, then any other image type.
 func (s *Service) Image() ([]byte, string, bool) {
 	data, mime, err := s.pick(chooseImage)
 	if err != nil || len(data) == 0 {
@@ -55,8 +49,7 @@ func (s *Service) Image() ([]byte, string, bool) {
 	return data, mime, true
 }
 
-// chooseFiles declines an image-only clipboard so Paths never pulls an image
-// across the pipe just to find no paths in it.
+// An image-only clipboard is declined so no image crosses the pipe just to find no paths in it.
 func chooseFiles(offered []string) string {
 	for _, want := range fileFormats {
 		if slices.Contains(offered, want) {
@@ -88,7 +81,6 @@ func (s *Service) Close() {
 	s.drop()
 }
 
-// Copy takes the selection for paths. cut marks them for a move.
 func (s *Service) Copy(paths []string, cut bool) error {
 	if len(paths) == 0 {
 		return errors.New("clipboard.copy requires paths")
@@ -121,8 +113,6 @@ func (s *Service) Copy(paths []string, cut bool) error {
 	return nil
 }
 
-// Paths reads the selection back. Our own is returned exactly; anything else is
-// parsed out of whatever flavour the owner serves.
 func (s *Service) Paths() ([]string, bool, string) {
 	data, mime, err := s.pick(chooseFiles)
 	if err != nil {
@@ -147,8 +137,7 @@ func (s *Service) Clear() {
 	s.drop()
 }
 
-// Available reports whether the compositor let us take the selection. It stays
-// true until a copy actually fails, so the UI does not probe wayland at startup.
+// Stays true until a copy fails, so the UI never probes wayland at startup.
 func (s *Service) Available() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -12,7 +12,6 @@ Singleton {
     property var transport: DuxFilesService
 
     property var entries: []
-    property bool loaded: false
     property bool gtkImportAvailable: false
     property bool importOffer: false
     property bool seedPending: false
@@ -43,7 +42,6 @@ Singleton {
             const result = response.result || {};
             root.entries = result.bookmarks || [];
             root.gtkImportAvailable = result.gtkImportAvailable === true;
-            root.loaded = true;
             root.importOffer = root.gtkImportAvailable && !SettingsData.gtkBookmarksOffered;
             root.seedPending = result.seeded === false;
             root.seed();

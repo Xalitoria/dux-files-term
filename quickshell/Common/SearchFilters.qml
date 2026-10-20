@@ -138,8 +138,4 @@ Singleton {
             "maxSize": range.maxSize
         };
     }
-
-    function isActive(state) {
-        return (state.types?.length ?? 0) > 0 || (state.modified ?? "") !== "" || (state.size ?? "") !== "";
-    }
 }

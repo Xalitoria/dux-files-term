@@ -18,7 +18,6 @@ Singleton {
     property bool subscribed: false
     property int apiVersion: 0
     property string daemonVersion: ""
-    property var capabilities: []
 
     property var pendingRequests: ({})
     property var topicHandlers: ({})
@@ -149,7 +148,6 @@ Singleton {
         if (!id) {
             if (response.apiVersion !== undefined) {
                 apiVersion = response.apiVersion;
-                capabilities = response.capabilities || [];
             }
             return;
         }

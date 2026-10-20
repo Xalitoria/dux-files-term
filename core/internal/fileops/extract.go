@@ -42,9 +42,7 @@ func (r *runner) extract() error {
 			return skipToNil(err)
 		}
 		r.remember(KindDelete, created, "")
-		r.job.mu.Lock()
-		r.job.created = append(r.job.created, Created{Path: created, Dir: dir})
-		r.job.mu.Unlock()
+		r.noteCreated(created, dir)
 	}
 	return nil
 }
@@ -248,6 +246,9 @@ func (r *runner) unzip(in *os.File, root *os.Root, password string) error {
 }
 
 func (r *runner) unzipEntry(root *os.Root, f *zip.File, open func() (io.ReadCloser, error)) error {
+	if rootEntry(f.Name) {
+		return nil
+	}
 	name, err := entryName(f.Name)
 	if err != nil {
 		return err
@@ -296,6 +297,9 @@ func (r *runner) un7z(in *os.File, root *os.Root, password string) error {
 	for _, f := range reader.File {
 		if r.job.closed() {
 			return context.Canceled
+		}
+		if rootEntry(f.Name) {
+			continue
 		}
 		name, err := entryName(f.Name)
 		if err != nil {
@@ -406,6 +410,9 @@ func (r *runner) unrar(stream io.Reader, root *os.Root, password string) error {
 		if (header.Encrypted || header.HeaderEncrypted) && password == "" {
 			return errPasswordNeeded
 		}
+		if rootEntry(header.Name) {
+			continue
+		}
 		name, err := entryName(header.Name)
 		if err != nil {
 			return err
@@ -480,7 +487,7 @@ func (r *runner) uncpio(stream io.Reader, root *os.Root) error {
 		if err != nil {
 			return err
 		}
-		if filepath.Clean(header.Name) == "." {
+		if rootEntry(header.Name) {
 			continue
 		}
 		name, err := entryName(header.Name)
@@ -531,6 +538,9 @@ func (r *runner) untar(in io.Reader, root *os.Root) error {
 		}
 		if err != nil {
 			return err
+		}
+		if rootEntry(header.Name) {
+			continue
 		}
 		name, err := entryName(header.Name)
 		if err != nil {
@@ -611,6 +621,10 @@ func (r *runner) writeEntry(root *os.Root, name string, body io.Reader, perm fs.
 		return err
 	}
 	return out.Close()
+}
+
+func rootEntry(name string) bool {
+	return filepath.Clean(filepath.FromSlash(name)) == "."
 }
 
 func entryName(name string) (string, error) {

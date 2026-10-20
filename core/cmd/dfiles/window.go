@@ -118,8 +118,7 @@ func locationArgs(args []string) ([]string, error) {
 	return out, nil
 }
 
-// CallOrLaunch retries a refused request until its timeout, so a cold start is validated first.
-// The window a cold start opens is the new window, so the flag is dropped before launching.
+// A cold start opens the new window itself, so --new-window is dropped before launching.
 func callWindow(method string, params map[string]any, validate func(location.Env) error) error {
 	if s, err := dialDaemon(); err == nil {
 		defer s.Close()

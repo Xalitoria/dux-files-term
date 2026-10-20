@@ -1,6 +1,7 @@
 package fileops
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"os"
 	"path/filepath"
@@ -314,4 +315,22 @@ func TestCompressSkipsAnUnreadableSubdirectory(t *testing.T) {
 	require.Equal(t, StateDone, view.State, view.Error)
 	assert.FileExists(t, filepath.Join(root, "project.zip"))
 	assert.Equal(t, 1, view.Skipped)
+}
+
+func TestExtractSkipsTheRootEntryOfATar(t *testing.T) {
+	archive := filepath.Join(t.TempDir(), "rooted.tar")
+	f, err := os.Create(archive)
+	require.NoError(t, err)
+	w := tar.NewWriter(f)
+	require.NoError(t, w.WriteHeader(&tar.Header{Name: "./", Typeflag: tar.TypeDir, Mode: 0o755}))
+	require.NoError(t, w.WriteHeader(&tar.Header{Name: "./sample/", Typeflag: tar.TypeDir, Mode: 0o755}))
+	require.NoError(t, w.WriteHeader(&tar.Header{Name: "./sample/hello.txt", Typeflag: tar.TypeReg, Mode: 0o644, Size: 5}))
+	_, err = w.Write([]byte("hello"))
+	require.NoError(t, err)
+	require.NoError(t, w.Close())
+	require.NoError(t, f.Close())
+
+	out, view := extractFixture(t, archive)
+	require.Equal(t, StateDone, view.State, view.Error)
+	assert.Equal(t, "hello", read(t, filepath.Join(out, "rooted", "sample", "hello.txt")))
 }

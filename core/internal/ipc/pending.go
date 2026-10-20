@@ -2,8 +2,7 @@ package ipc
 
 import "sync"
 
-// PendingOpen holds "ui" actions captured before the GUI subscribed to the
-// "ui" topic, so a cold start still honors every request that caused it.
+// Holds "ui" actions that arrived before the GUI subscribed, so a cold start still honors them.
 type PendingOpen struct {
 	mu       sync.Mutex
 	payloads []map[string]any

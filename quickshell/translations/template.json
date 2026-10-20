@@ -49,16 +49,16 @@
     "comment": ""
   },
   {
-    "term": "%1 has the role now; Files takes it when %1 quits.",
+    "term": "%1 hidden",
     "translation": "",
-    "context": "file manager registration setting description while another file manager holds the name",
+    "context": "count of hidden items left out of a folder listing",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "%1 hidden",
+    "term": "%1 holds it; Files takes over when it quits.",
     "translation": "",
-    "context": "count of hidden items left out of a folder listing",
+    "context": "file manager registration setting description while another file manager holds the name",
     "reference": "",
     "comment": ""
   },
@@ -147,6 +147,20 @@
     "comment": ""
   },
   {
+    "term": "%1 · %2",
+    "translation": "",
+    "context": "folder status: item count then hidden count | properties size row: bytes then item count | transfer speed then time left",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "%1 …",
+    "translation": "",
+    "context": "properties size row while the folder is still being measured",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1, %2 matches",
     "translation": "",
     "context": "accessible description of a settings page while searching, name then count",
@@ -182,9 +196,16 @@
     "comment": ""
   },
   {
-    "term": "50 uses Material shapes. Lower values reduce rounding; higher values increase it.",
+    "term": "50 is the Material default.",
     "translation": "",
     "context": "radius strength slider description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "? or F1 in the main window.",
+    "translation": "",
+    "context": "keyboard shortcuts settings row description",
     "reference": "",
     "comment": ""
   },
@@ -273,13 +294,6 @@
     "comment": ""
   },
   {
-    "term": "Already in the sidebar",
-    "translation": "",
-    "context": "tooltip on the bookmark button over a folder the sidebar lists on its own",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Always",
     "translation": "",
     "context": "credential dialog option that stores the password in the keyring",
@@ -308,7 +322,14 @@
     "comment": ""
   },
   {
-    "term": "Another file manager has the role now; Files takes it when that one quits.",
+    "term": "Amber",
+    "translation": "",
+    "context": "color palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Another file manager holds it.",
     "translation": "",
     "context": "file manager registration setting description while an unknown file manager holds the name",
     "reference": "",
@@ -406,7 +427,7 @@
     "comment": ""
   },
   {
-    "term": "Automatic follows $TERMINAL, then the first installed emulator.",
+    "term": "Automatic uses $TERMINAL.",
     "translation": "",
     "context": "terminal setting description",
     "reference": "",
@@ -483,16 +504,16 @@
     "comment": ""
   },
   {
-    "term": "Bookmark this folder",
+    "term": "Blue",
     "translation": "",
-    "context": "tooltip on the bookmark button",
+    "context": "color palette name",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "Bookmarks",
+    "term": "Bookmark this folder",
     "translation": "",
-    "context": "sidebar section listing saved folders",
+    "context": "tooltip on the bookmark button",
     "reference": "",
     "comment": ""
   },
@@ -749,6 +770,13 @@
     "comment": ""
   },
   {
+    "term": "Coral",
+    "translation": "",
+    "context": "color palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Could not read that file, expected a JSON color theme.",
     "translation": "",
     "context": "custom theme error when file is invalid",
@@ -784,21 +812,21 @@
     "comment": ""
   },
   {
-    "term": "Ctrl copies and Alt asks regardless.",
+    "term": "Ctrl copies, Alt asks.",
     "translation": "",
     "context": "drag default action setting description",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "Ctrl+H still toggles them for the current window.",
+    "term": "Ctrl+H toggles per window.",
     "translation": "",
     "context": "show hidden files setting description",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "Ctrl+Wheel or Ctrl and plus or minus resize the current window.",
+    "term": "Ctrl+Wheel resizes per window.",
     "translation": "",
     "context": "icon size setting description",
     "reference": "",
@@ -815,6 +843,13 @@
     "term": "Cut",
     "translation": "",
     "context": "context menu entry marking the selection for a move",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Cyan",
+    "translation": "",
+    "context": "color palette name",
     "reference": "",
     "comment": ""
   },
@@ -945,6 +980,13 @@
     "comment": ""
   },
   {
+    "term": "Downloads each file.",
+    "translation": "",
+    "context": "network thumbnails toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Drag and drop",
     "translation": "",
     "context": "behaviour settings section label",
@@ -1011,13 +1053,6 @@
     "term": "Duration",
     "translation": "",
     "context": "animation duration slider label",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Each folder keeps the sort and view picked in it. Off applies the last choice everywhere.",
-    "translation": "",
-    "context": "setting description for per-folder sort and view memory",
     "reference": "",
     "comment": ""
   },
@@ -1176,13 +1211,6 @@
     "comment": ""
   },
   {
-    "term": "Files opened here join the recently used list shared with other applications, shown under Recent in the sidebar.",
-    "translation": "",
-    "context": "setting description for the recently used files list",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Filter",
     "translation": "",
     "context": "typing in the file list option",
@@ -1207,13 +1235,6 @@
     "term": "Focus the sidebar",
     "translation": "",
     "context": "keyboard shortcut",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Folder names or paths, separated by commas. Build and cache folders are always skipped unless Include ignored is on.",
-    "translation": "",
-    "context": "search exclusions setting description",
     "reference": "",
     "comment": ""
   },
@@ -1351,6 +1372,13 @@
     "comment": ""
   },
   {
+    "term": "Green",
+    "translation": "",
+    "context": "color palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Grid icon size",
     "translation": "",
     "context": "setting label for the grid view icon size",
@@ -1382,13 +1410,6 @@
     "term": "Host filesystem",
     "translation": "",
     "context": "capability row on the about page",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "How new windows start and how folders open.",
-    "translation": "",
-    "context": "general settings section subtitle",
     "reference": "",
     "comment": ""
   },
@@ -1449,13 +1470,6 @@
     "comment": ""
   },
   {
-    "term": "Internal partitions udisks marks as part of the system, such as a separate /home.",
-    "translation": "",
-    "context": "devices setting description",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Invert the selection",
     "translation": "",
     "context": "keyboard shortcut",
@@ -1487,13 +1501,6 @@
     "term": "Jump to name",
     "translation": "",
     "context": "typing in the file list option",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Jump to the first name starting with what you type, or filter the folder through the search field.",
-    "translation": "",
-    "context": "typing in the file list setting description",
     "reference": "",
     "comment": ""
   },
@@ -1543,13 +1550,6 @@
     "term": "Language",
     "translation": "",
     "context": "interface language setting label",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Language of the interface.",
-    "translation": "",
-    "context": "interface language setting description",
     "reference": "",
     "comment": ""
   },
@@ -1617,13 +1617,6 @@
     "comment": ""
   },
   {
-    "term": "Locations opened from other applications get their own tab instead of replacing the current one.",
-    "translation": "",
-    "context": "setting description for external open requests",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Lock",
     "translation": "",
     "context": "device action",
@@ -1659,6 +1652,13 @@
     "comment": ""
   },
   {
+    "term": "Monochrome",
+    "translation": "",
+    "context": "color palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "More actions",
     "translation": "",
     "context": "tooltip on the overflow menu button",
@@ -1680,23 +1680,9 @@
     "comment": ""
   },
   {
-    "term": "Mount and open the drive together. Off mounts it and leaves you where you are.",
-    "translation": "",
-    "context": "devices setting description",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Move",
     "translation": "",
     "context": "drag label for moving files",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Move on the same drive, copy otherwise",
-    "translation": "",
-    "context": "drag default action option",
     "reference": "",
     "comment": ""
   },
@@ -1757,6 +1743,13 @@
     "comment": ""
   },
   {
+    "term": "Move, copy across drives",
+    "translation": "",
+    "context": "drag default action option",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Moved",
     "translation": "",
     "context": "toast after moving files",
@@ -1792,9 +1785,16 @@
     "comment": ""
   },
   {
-    "term": "Needed before the change takes effect.",
+    "term": "Name the host terminal to launch.",
     "translation": "",
-    "context": "settings row subtitle when xdg-desktop-portal still runs the old configuration",
+    "context": "terminal setting description inside flatpak",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Names or paths, comma separated. Build and cache folders are skipped anyway.",
+    "translation": "",
+    "context": "search exclusions setting description",
     "reference": "",
     "comment": ""
   },
@@ -1890,6 +1890,13 @@
     "comment": ""
   },
   {
+    "term": "No session bus.",
+    "translation": "",
+    "context": "file manager registration setting description when the daemon has no session bus connection",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "No theme file selected",
     "translation": "",
     "context": "custom theme empty state title",
@@ -1946,9 +1953,16 @@
     "comment": ""
   },
   {
-    "term": "Off lets the compositor decorate windows. Open windows update when reopened.",
+    "term": "Off leaves decorations to the compositor. Applies to new windows.",
     "translation": "",
     "context": "window title bars toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Off only mounts.",
+    "translation": "",
+    "context": "devices setting description",
     "reference": "",
     "comment": ""
   },
@@ -2002,7 +2016,7 @@
     "comment": ""
   },
   {
-    "term": "Open folders in a new tab",
+    "term": "Open folders from other apps in a new tab",
     "translation": "",
     "context": "setting label for external open requests",
     "reference": "",
@@ -2093,9 +2107,9 @@
     "comment": ""
   },
   {
-    "term": "Opening an archive unpacks it into a folder beside it instead of launching another application.",
+    "term": "Orange",
     "translation": "",
-    "context": "setting description for opening archives",
+    "context": "color palette name",
     "reference": "",
     "comment": ""
   },
@@ -2110,41 +2124,6 @@
     "term": "Other application…",
     "translation": "",
     "context": "open with menu entry opening the full application picker",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Other apps open and save files through Dux Files.",
-    "translation": "",
-    "context": "portal chooser setting description while enabled",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Other apps open folders and reveal files here.",
-    "translation": "",
-    "context": "file manager registration setting description while registered",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Other apps open folders with whichever file manager they find.",
-    "translation": "",
-    "context": "file manager registration setting description while not registered",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Other apps use the desktop's default open and save dialogs.",
-    "translation": "",
-    "context": "portal chooser setting description while disabled",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Outline the control that has keyboard focus.",
-    "translation": "",
-    "context": "focus ring toggle description",
     "reference": "",
     "comment": ""
   },
@@ -2166,13 +2145,6 @@
     "term": "Palette: %1",
     "translation": "",
     "context": "selected preset palette name",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Part of the dux desktop.",
-    "translation": "",
-    "context": "app tagline on about page",
     "reference": "",
     "comment": ""
   },
@@ -2240,9 +2212,16 @@
     "comment": ""
   },
   {
-    "term": "Pick a color source, palette, or your own theme file.",
+    "term": "Pink",
     "translation": "",
-    "context": "appearance settings section subtitle",
+    "context": "color palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Places",
+    "translation": "",
+    "context": "sidebar section listing the user's places and saved folders",
     "reference": "",
     "comment": ""
   },
@@ -2296,13 +2275,6 @@
     "comment": ""
   },
   {
-    "term": "Press ? or F1 in the main window for the full list.",
-    "translation": "",
-    "context": "keyboard shortcuts settings row description",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Preview",
     "translation": "",
     "context": "view menu entry and shortcut showing or hiding the preview drawer",
@@ -2313,13 +2285,6 @@
     "term": "Preview the next or previous selected item",
     "translation": "",
     "context": "keyboard shortcut",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Previews for images, videos and PDFs, cached under the shared thumbnail folder.",
-    "translation": "",
-    "context": "thumbnails toggle description",
     "reference": "",
     "comment": ""
   },
@@ -2352,6 +2317,13 @@
     "comment": ""
   },
   {
+    "term": "Purple",
+    "translation": "",
+    "context": "color palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Quit",
     "translation": "",
     "context": "close behavior button group option to quit the app",
@@ -2369,13 +2341,6 @@
     "term": "Read",
     "translation": "",
     "context": "permission bit",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "Reads every file over the connection to draw its preview.",
-    "translation": "",
-    "context": "network thumbnails toggle description",
     "reference": "",
     "comment": ""
   },
@@ -2401,9 +2366,9 @@
     "comment": ""
   },
   {
-    "term": "Recursive searches also descend into dot folders.",
+    "term": "Red",
     "translation": "",
-    "context": "search hidden files toggle description",
+    "context": "color palette name",
     "reference": "",
     "comment": ""
   },
@@ -2814,6 +2779,13 @@
     "comment": ""
   },
   {
+    "term": "Shared with other apps.",
+    "translation": "",
+    "context": "setting description for the recently used files list",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Show",
     "translation": "",
     "context": "toast action revealing the extracted files",
@@ -2845,6 +2817,13 @@
     "term": "Showing the first %1 results",
     "translation": "",
     "context": "search results header when the cap was hit",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Shown in the size column.",
+    "translation": "",
+    "context": "folder counts toggle description",
     "reference": "",
     "comment": ""
   },
@@ -2982,6 +2961,13 @@
     "comment": ""
   },
   {
+    "term": "Such as a separate /home.",
+    "translation": "",
+    "context": "devices setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Support Dank Linux",
     "translation": "",
     "context": "about page hero button, opens the Ko-fi donation page",
@@ -3017,13 +3003,6 @@
     "comment": ""
   },
   {
-    "term": "Terminal, drag and drop, thumbnails and search.",
-    "translation": "",
-    "context": "behaviour settings section subtitle",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Terminal, drag and thumbnails",
     "translation": "",
     "context": "settings sidebar tab hint",
@@ -3045,30 +3024,16 @@
     "comment": ""
   },
   {
-    "term": "The portal list is managed by the system; add Dux Files to it there.",
+    "term": "The portal list is managed by the system.",
     "translation": "",
     "context": "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set",
     "reference": "",
     "comment": ""
   },
   {
-    "term": "The sandbox cannot see the host's terminals; name the one to launch.",
-    "translation": "",
-    "context": "terminal setting description inside flatpak",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "The session bus refused the registration.",
+    "term": "The session bus refused it.",
     "translation": "",
     "context": "file manager registration setting description when requesting the name failed",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "The size column shows how many entries a folder holds, one request per folder in view.",
-    "translation": "",
-    "context": "folder counts toggle description",
     "reference": "",
     "comment": ""
   },
@@ -3290,6 +3255,13 @@
     "comment": ""
   },
   {
+    "term": "Unpacks into a folder beside it.",
+    "translation": "",
+    "context": "setting description for opening archives",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Untitled document",
     "translation": "",
     "context": "default name for a new empty file",
@@ -3398,20 +3370,6 @@
     "term": "Weight",
     "translation": "",
     "context": "font weight slider label",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "What the sidebar lists and what a click does.",
-    "translation": "",
-    "context": "devices settings section subtitle",
-    "reference": "",
-    "comment": ""
-  },
-  {
-    "term": "What the window's close button does.",
-    "translation": "",
-    "context": "close behavior setting description",
     "reference": "",
     "comment": ""
   },
@@ -3633,7 +3591,7 @@
     "comment": ""
   },
   {
-    "term": "h j k l move, / searches and letters run commands instead of jumping to or filtering names.",
+    "term": "h j k l move, / searches.",
     "translation": "",
     "context": "vim keys toggle description",
     "reference": "",

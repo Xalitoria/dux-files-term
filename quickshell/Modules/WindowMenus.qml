@@ -29,6 +29,7 @@ Item {
         openWithMenu.close();
         backgroundMenu.close();
         const point = mainWindow.activePane.mapToItem(anchorItem, pointX, pointY);
+        itemMenu.live = true;
         itemMenu.openAt(point.x, point.y);
     }
 
@@ -120,17 +121,21 @@ Item {
     FileContextMenu {
         id: itemMenu
 
+        // The rows rebuild on every input change, so the inputs only follow the selection while the menu is up.
+        property bool live: false
+
         anchorItem: menus.anchorItem
-        selectionCount: menus.mainWindow.selectedPaths().length
-        hasDirectory: menus.selectionIsDirectory()
-        hasClipboard: ClipboardService.hasFiles
+        selectionCount: live ? menus.mainWindow.selectedPaths().length : 0
+        hasDirectory: live && menus.selectionIsDirectory()
+        hasClipboard: live && ClipboardService.hasFiles
         shiftHeld: menus.shiftHeld
-        extractable: menus.selectionIsExtractable()
-        inResults: menus.mainWindow.activePane.resultsActive
-        inTrash: menus.mainWindow.activePane.trashActive
-        inRecent: menus.mainWindow.activePane.recentActive
-        selectedBookmarked: menus.selectionIsDirectory() && BookmarksService.has(menus.mainWindow.selectedPaths()[0] ?? "")
+        extractable: live && menus.selectionIsExtractable()
+        inResults: live && menus.mainWindow.activePane.resultsActive
+        inTrash: live && menus.mainWindow.activePane.trashActive
+        inRecent: live && menus.mainWindow.activePane.recentActive
+        selectedBookmarked: live && menus.selectionIsDirectory() && BookmarksService.has(menus.mainWindow.selectedPaths()[0] ?? "")
         onActionTriggered: id => menus.mainWindow.actions.runAction(id)
+        onClosed: live = false
     }
 
     FileMenu {

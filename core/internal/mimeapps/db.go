@@ -176,6 +176,12 @@ func (db *DB) Chain(mimeType string) []string {
 			chain = append(chain, parent)
 		}
 	}
+	if strings.HasPrefix(root, "text/") && !seen[TypeText] {
+		chain = append(chain, TypeText)
+	}
+	if !strings.HasPrefix(root, "inode/") && !seen[TypeBinary] {
+		chain = append(chain, TypeBinary)
+	}
 	return chain
 }
 

@@ -31,7 +31,6 @@ Singleton {
         VeryHigh
     }
 
-    property int animationSpeed: SettingsData.AnimationSpeed.Short
     property bool popoutElevationEnabled: true
     property bool scrollbarsEnabled: true
     property int textRenderType: SettingsData.TextRenderType.Qt

@@ -53,15 +53,17 @@ type daemonServices struct {
 }
 
 func (s *daemonServices) SocketPath() string {
-	if s == nil || s.ipc == nil {
+	if s.ipc == nil {
 		return ""
 	}
 	return s.ipc.SocketPath()
 }
 
+func (s *daemonServices) Done() <-chan error { return s.ipcErrCh }
+
 func (s *daemonServices) Close() {
-	if s == nil {
-		return
+	if s.ipc != nil {
+		s.ipc.Close()
 	}
 	if s.fm1 != nil {
 		s.fm1.Close()
@@ -89,9 +91,6 @@ func (s *daemonServices) Close() {
 	}
 	if s.colors != nil {
 		s.colors.Close()
-	}
-	if s.ipc != nil {
-		s.ipc.Close()
 	}
 }
 
@@ -183,8 +182,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 	return svc, nil
 }
 
-// localMounts lists where the mounted local drives sit, leaving out the
-// system device so scope Everywhere never walks the whole root filesystem.
+// The system device is left out so scope Everywhere never walks the whole root filesystem.
 func localMounts(snapshot devices.Snapshot) []string {
 	var out []string
 	for _, device := range snapshot.Devices {
@@ -289,7 +287,7 @@ func runDaemon(_ *cobra.Command, _ []string) error {
 	select {
 	case sig := <-signalCh:
 		log.Infof("received %s, shutting down", sig)
-	case err := <-svc.ipcErrCh:
+	case err := <-svc.Done():
 		if err != nil {
 			return fmt.Errorf("ipc server: %w", err)
 		}

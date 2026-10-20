@@ -12,12 +12,11 @@ import (
 )
 
 type resolution struct {
-	dst        string
-	skip       bool
-	merge      bool
-	replaced   bool
-	abort      bool
-	unverified bool
+	dst      string
+	skip     bool
+	merge    bool
+	replaced bool
+	abort    bool
 }
 
 func (r *runner) resolve(src, dst string, info os.FileInfo, move bool) resolution {
@@ -26,7 +25,7 @@ func (r *runner) resolve(src, dst string, info os.FileInfo, move bool) resolutio
 	case errors.Is(err, fs.ErrNotExist):
 		return resolution{dst: dst}
 	case err != nil:
-		return resolution{dst: dst, unverified: true}
+		return resolution{dst: dst}
 	case os.SameFile(info, target) && move:
 		return resolution{skip: true}
 	case os.SameFile(info, target):
@@ -123,5 +122,9 @@ func splitName(name string) (stem, ext string) {
 		return name[:dot+1], rest[dot:]
 	}
 	ext = filepath.Ext(name)
-	return strings.TrimSuffix(name, ext), ext
+	stem = strings.TrimSuffix(name, ext)
+	if tar := filepath.Ext(stem); strings.EqualFold(tar, ".tar") {
+		return strings.TrimSuffix(stem, tar), tar + ext
+	}
+	return stem, ext
 }

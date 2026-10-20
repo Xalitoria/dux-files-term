@@ -7,8 +7,7 @@ import Quickshell
 Singleton {
     id: root
 
-    // "window", "path", "selection" and "tabs" scopes become Shortcut objects; "view" and
-    // "sidebar" keys are handled by the focused item so they never fire inside a text field.
+    // "view" and "sidebar" keys are handled by the focused item so they never fire inside a text field.
     readonly property var entries: [
         {
             "id": "open",

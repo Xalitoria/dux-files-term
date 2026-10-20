@@ -24,9 +24,7 @@ QtObject {
     readonly property var backend: DirectoryService
     readonly property ListModel entries: ListModel {}
     readonly property int count: entries.count
-    readonly property bool hasMore: false
     readonly property bool pollOnFocus: false
-    readonly property string watchId: ""
 
     property var _all: []
     property var _shown: []
@@ -94,10 +92,6 @@ QtObject {
     }
 
     function loadMore() {
-    }
-
-    function indexOfName(name) {
-        return _shown.findIndex(entry => entry.name === name);
     }
 
     function indexOfPath(target) {

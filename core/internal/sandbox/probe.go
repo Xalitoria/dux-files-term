@@ -9,7 +9,6 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-// Probe is everything Detect asks the environment; tests supply a fake.
 type Probe interface {
 	Getenv(key string) string
 	ReadFile(path string) ([]byte, error)
@@ -20,8 +19,7 @@ type Probe interface {
 
 const portalProbeBudget = 2 * time.Second
 
-// osProbe keeps one private bus connection for the portal lookups and
-// closes it once Detect is done, so nothing lingers in the daemon.
+// Its bus connection is closed once Detect is done so nothing lingers in the daemon.
 type osProbe struct {
 	conn     *dbus.Conn
 	deadline time.Time

@@ -9,13 +9,6 @@ Singleton {
     id: root
 
     readonly property bool connected: DuxFilesService.connected
-    readonly property var capabilities: ({
-            "mkdir": true,
-            "rename": true,
-            "trash": SandboxService.available("trash"),
-            "search": DuxFilesService.capabilities.includes("search")
-        })
-
     property var userDirs: []
     property var _watchTopics: ({})
     property var _searchTopics: ({})

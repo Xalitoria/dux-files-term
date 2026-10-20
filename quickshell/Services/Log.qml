@@ -17,7 +17,6 @@ Singleton {
     }
 
     readonly property int level: _parseLevel(Quickshell.env("DFILES_LOG_LEVEL"))
-    readonly property string levelName: _levelName(level)
 
     readonly property string _logFilePath: Quickshell.env("DFILES_LOG_FILE") || ""
     readonly property bool _useColor: !Quickshell.env("NO_COLOR") && Quickshell.env("DFILES_LOG_NO_COLOR") !== "1"
@@ -72,22 +71,6 @@ Singleton {
         default:
             return Log.Level.Info;
         }
-    }
-
-    function _levelName(lvl) {
-        switch (lvl) {
-        case Log.Level.Debug:
-            return "debug";
-        case Log.Level.Info:
-            return "info";
-        case Log.Level.Warn:
-            return "warn";
-        case Log.Level.Error:
-            return "error";
-        case Log.Level.Fatal:
-            return "fatal";
-        }
-        return "info";
     }
 
     function _levelTag(lvl, color) {

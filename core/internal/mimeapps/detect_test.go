@@ -74,6 +74,9 @@ func TestDetectCombinesGlobAndMagic(t *testing.T) {
 	assert.Equal(t, "text/plain", d.Detect(trap, false), "a low priority magic match does not beat the glob, as gio does it")
 	assert.Equal(t, "image/png", d.Sniff(trap), "an explicit sniff always reports the content type")
 
+	deep := writeFile(t, filepath.Join(root, "files", "deep.txt"), append([]byte(strings.Repeat(".", 600)), []byte("DEEPMARK")...))
+	assert.Equal(t, "text/plain", d.Detect(deep, false), "a magic subtype of the glob type does not beat the glob either, per the spec's checking order")
+
 	wins := writeFile(t, filepath.Join(root, "files", "wins.txt"), []byte("MAGICWIN and more"))
 	assert.Equal(t, "application/x-magic-wins", d.Detect(wins, false), "priority 90 outranks the glob")
 
@@ -89,7 +92,9 @@ func TestAliasesAndSubclasses(t *testing.T) {
 
 	assert.Equal(t, "image/png", db.Canonical("image/x-png"))
 	assert.Equal(t, "application/gzip", db.Canonical("application/x-gzip; charset=binary"))
-	assert.Equal(t, []string{"text/markdown", "text/plain"}, db.Chain("text/markdown"))
+	assert.Equal(t, []string{"text/markdown", "text/plain", "application/octet-stream"}, db.Chain("text/markdown"))
+	assert.Equal(t, []string{"text/x-unknown", "text/plain", "application/octet-stream"}, db.Chain("text/x-unknown"), "text/* implicitly descends from text/plain")
+	assert.Equal(t, []string{"inode/directory"}, db.Chain("inode/directory"), "inode types are not streamable")
 	assert.True(t, db.IsSubclassOf("application/x-shellscript", "text/plain"))
 	assert.False(t, db.IsSubclassOf("image/png", "text/plain"))
 }

@@ -103,8 +103,8 @@ OverlayDialog {
 
     readonly property string sizeText: {
         if (scannedBytes >= 0) {
-            const measured = `${FileFormat.size(scannedBytes)} · ${FileFormat.count(scannedFiles)}`;
-            return scanning ? `${measured} …` : measured;
+            const measured = I18n.tr("%1 · %2", "properties size row: bytes then item count").arg(FileFormat.size(scannedBytes)).arg(FileFormat.count(scannedFiles));
+            return scanning ? I18n.tr("%1 …", "properties size row while the folder is still being measured").arg(measured) : measured;
         }
         return plainBytes >= 0 ? FileFormat.size(plainBytes) : "";
     }

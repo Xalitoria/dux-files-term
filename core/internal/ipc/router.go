@@ -93,8 +93,6 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 	}
 }
 
-// withTerminalDefault fills the terminal the UI settings name when a caller
-// (the CLI, another client) did not pick one.
 func withTerminalDefault(req Request, deps Deps) Request {
 	if deps.Settings == nil || params.StringOpt(req.Params, "terminal", "") != "" {
 		return req

@@ -2,6 +2,7 @@ package devices
 
 import (
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -119,13 +120,7 @@ func build(objects Objects, path dbus.ObjectPath, ifaces map[string]map[string]d
 		}
 	}
 	device.MountPoints = allMountPoints(mountSource[FsIface])
-	device.MountPoint = firstMountPoint(mountSource[FsIface])
-	for _, point := range device.MountPoints {
-		if point == "/" {
-			device.MountPoint = point
-			break
-		}
-	}
+	device.MountPoint = preferredMountPoint(device.MountPoints)
 	device.Mounted = device.MountPoint != ""
 	device.System = device.MountPoint == "/"
 	device.Protected = protectedMounts(device.MountPoints)
@@ -247,10 +242,12 @@ func cleartextByBacking(objects Objects) map[dbus.ObjectPath]dbus.ObjectPath {
 	return out
 }
 
-func firstMountPoint(fs map[string]dbus.Variant) string {
-	points := allMountPoints(fs)
-	if len(points) == 0 {
+func preferredMountPoint(points []string) string {
+	switch {
+	case len(points) == 0:
 		return ""
+	case slices.Contains(points, "/"):
+		return "/"
 	}
 	return points[0]
 }

@@ -148,8 +148,7 @@ func (sc *search) attach() {
 	}
 }
 
-// Runs before the done event is published, so a client that saw the search finish
-// cannot cancel a still registered id. The deferred call in run is only a backstop.
+// Must run before the done event, or a client that saw the search finish could cancel a still registered id.
 func (sc *search) retire() {
 	sc.mu.Lock()
 	if sc.done {

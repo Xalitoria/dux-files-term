@@ -16,6 +16,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
 	github.com/ulikunitz/xz v0.5.17
+	golang.org/x/image v0.47.0
 	golang.org/x/sys v0.49.0
 )
 
@@ -51,7 +52,6 @@ require (
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	go4.org v0.0.0-20261019143151-5b882263cdaf // indirect
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
-	golang.org/x/image v0.47.0 // indirect
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

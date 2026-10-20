@@ -1,6 +1,4 @@
-// Package settings reads the UI settings file the quickshell frontend owns.
-// The daemon only consumes it, so values are re-read on demand; defaults
-// mirror the JsonAdapter in quickshell/Common/SettingsData.qml.
+// Defaults mirror the JsonAdapter in quickshell/Common/SettingsData.qml.
 package settings
 
 import (
@@ -22,8 +20,6 @@ func Defaults() UISettings {
 	return UISettings{RegisterFileManager: true, RecentFiles: true}
 }
 
-// Load returns defaults when the file is missing or unreadable; a partial file
-// only overrides the keys it contains.
 func Load(configDir string) UISettings {
 	return loadFrom(filepath.Join(configDir, FileName))
 }

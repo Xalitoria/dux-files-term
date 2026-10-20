@@ -93,8 +93,6 @@ type capabilitiesResponse struct {
 	Thumbnailers []string `json:"thumbnailers"`
 }
 
-// capabilities overlays the live answers onto the boot-time table where the
-// sandbox alone cannot decide: elevation also needs pkexec and the policy.
 func capabilities(deps Deps) capabilitiesResponse {
 	caps := deps.Sandbox
 	if deps.FileOps != nil {

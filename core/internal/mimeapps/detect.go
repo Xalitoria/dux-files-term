@@ -8,11 +8,9 @@ import (
 
 const (
 	TypeDirectory = "inode/directory"
-	TypeSymlink   = "inode/symlink"
 	TypeDesktop   = "application/x-desktop"
 	TypeText      = "text/plain"
 	TypeBinary    = "application/octet-stream"
-	TypeExe       = "application/x-executable"
 )
 
 const magicWinsPriority = 80
@@ -71,7 +69,7 @@ func (d *Detector) Detect(path string, isDir bool) string {
 		return TypeText
 	case sniffed == "":
 		return TypeBinary
-	case globbed == "" || priority >= magicWinsPriority || d.db.IsSubclassOf(sniffed, globbed):
+	case globbed == "" || priority >= magicWinsPriority:
 		return sniffed
 	}
 	return globbed

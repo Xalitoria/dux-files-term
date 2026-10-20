@@ -10,11 +10,10 @@ const library = (path, names) => {
 };
 
 const ctx = vm.createContext({
-    Fzf: library("../DCommon/Common/fzf.js", "parseTerms, TermType"),
     PathCompletion: library("../DCommon/FileBrowser/PathCompletion.js", "compact, split")
 });
 vm.runInContext(source("../Common/FolderJump.js").replace(/^\.(pragma|import).*$/gm, ""), ctx);
-const jump = vm.runInContext("({frecency, visit, forget, seed, parse, storedPath, prepare, top, match})", ctx);
+const jump = vm.runInContext("({frecency, visit, forget, seed, parse, storedPath, prepare, top})", ctx);
 
 const plain = value => JSON.parse(JSON.stringify(value));
 const home = "/home/me";
@@ -25,7 +24,6 @@ const day = 24 * hour;
 
 const entry = (path, visits, ago) => ({ path, visits, last: now - ago });
 const paths = results => plain(results).map(result => result.path);
-const find = (entries, query, limit = 10) => paths(jump.match(jump.prepare(entries, home), query, now, limit));
 
 test("recent visits weigh more", () => {
     assert.equal(jump.frecency(entry("/a", 10, 30 * minute), now), 40);
@@ -90,56 +88,7 @@ const visited = [
     entry("/etc/ssh", 1, 9 * day)
 ];
 
-test("a fuzzy word finds the folder", () => {
-    assert.equal(find(visited, "ssh")[0], "/etc/ssh");
-    assert.equal(find(visited, "dow")[0], "/home/me/Downloads");
-});
-
-test("frecency picks between equally good fuzzy matches", () => {
-    assert.deepEqual(find(visited, "dl").slice(0, 2), ["/home/me/repos/dfiles", "/home/me/Downloads"]);
-    const downloadsDaily = visited.map(item => item.path === "/home/me/Downloads" ? entry(item.path, 60, minute) : item);
-    assert.equal(find(downloadsDaily, "dl")[0], "/home/me/Downloads");
-});
-
-test("a hit in the folder name beats a hit in the path", () => {
-    assert.deepEqual(find(visited, "repos").slice(0, 1), ["/home/me/repos"]);
-    assert.equal(find(visited, "internal")[0], "/home/me/repos/dfiles/core/internal");
-});
-
-test("an exact name beats a longer one however often that was visited", () => {
-    assert.equal(find(visited, "src")[2], "/home/me/old/srcs");
-});
-
-test("frecency breaks ties between equal matches", () => {
-    assert.deepEqual(find(visited, "src").slice(0, 2), ["/home/me/repos/dfiles/src", "/home/me/repos/dms/src"]);
-});
-
-test("several words must all match", () => {
-    assert.deepEqual(find(visited, "dms src"), ["/home/me/repos/dms/src"]);
-});
-
-test("fzf operators", () => {
-    assert.deepEqual(find(visited, "'ownl"), ["/home/me/Downloads"]);
-    assert.deepEqual(find(visited, "^/etc"), ["/etc/ssh"]);
-    assert.deepEqual(find(visited, "^dow"), ["/home/me/Downloads"]);
-    assert.deepEqual(find(visited, "^dfiles$"), ["/home/me/repos/dfiles"]);
-    assert.deepEqual(find(visited, "ments$"), ["/home/me/Documents"]);
-    assert.ok(!find(visited, "src !dms").includes("/home/me/repos/dms/src"));
-    assert.ok(find(visited, "src !dms").includes("/home/me/repos/dfiles/src"));
-});
-
-test("matches report the positions to mark", () => {
-    const [hit] = plain(jump.match(jump.prepare([entry("/home/me/Downloads", 1, 0)], home), "dl", now, 1));
-    assert.equal(hit.display, "~/Downloads");
-    assert.deepEqual(hit.positions.sort((a, b) => a - b), [2, 6]);
-});
-
-test("an empty query lists the most frecent folders", () => {
-    assert.deepEqual(paths(jump.match(jump.prepare(visited, home), "  ", now, 3)), ["/home/me/repos/dfiles", "/home/me/old/srcs", "/home/me/Documents"]);
-});
-
 test("the open folder is left out", () => {
     const prepared = jump.prepare(visited, home);
     assert.equal(paths(jump.top(prepared, now, 1, "/home/me/repos/dfiles"))[0], "/home/me/old/srcs");
-    assert.ok(!paths(jump.match(prepared, "dfiles", now, 10, "/home/me/repos/dfiles")).includes("/home/me/repos/dfiles"));
 });

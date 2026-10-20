@@ -119,9 +119,7 @@ func (s *Store) Seeded() bool {
 	return s.seeded
 }
 
-// Seed puts the sidebar places in front of an unseeded list. It is kept in memory only, so a
-// list that is never edited keeps following the user dirs, and a legacy file written by an
-// external editor is seeded again on reload.
+// Seeding stays in memory so an unedited list keeps following the user dirs and an external legacy file is reseeded on reload.
 func (s *Store) Seed(paths []string) ([]Bookmark, error) {
 	for _, path := range paths {
 		if !validPath(path) {

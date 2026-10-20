@@ -13,14 +13,14 @@ import (
 var mountables = []Mountable{
 	{Type: "sftp", Scheme: "sftp", Aliases: []string{"ssh"}, DefaultPort: 22, HostIsInet: true},
 	{Type: "ftp", Scheme: "ftp", DefaultPort: 21, HostIsInet: true},
-	{Type: "dav", Scheme: "dav", DefaultPort: 80, HostIsInet: true},
+	{Type: "dav", Scheme: "dav", Aliases: []string{"davs"}, DefaultPort: 80, HostIsInet: true},
 	{Type: "smb-share", Scheme: "smb", HostIsInet: true},
 	{Type: "archive", Scheme: "archive"},
 	{Type: "mtp", Scheme: "mtp"},
 }
 
 func TestAvailableSchemesKeepsOnlyInstalledBackends(t *testing.T) {
-	assert.Equal(t, []string{"sftp", "smb", "ftp", "dav"}, availableSchemes(mountables))
+	assert.Equal(t, []string{"sftp", "smb", "ftp", "dav", "davs"}, availableSchemes(mountables))
 	assert.Equal(t, []string{}, availableSchemes(nil))
 }
 
@@ -87,6 +87,18 @@ func TestURIOfRebuildsWhatWasMounted(t *testing.T) {
 	spec, err := ParseURI("ftp://probe@127.0.0.1:2121/pub", mountables)
 	require.NoError(t, err)
 	assert.Equal(t, "ftp://probe@127.0.0.1:2121/pub", URIOf(spec, mountables))
+}
+
+func TestDavsCarriesTheSSLItem(t *testing.T) {
+	spec, err := ParseURI("davs://ana@cloud.example/remote.php/dav", mountables)
+	require.NoError(t, err)
+	assert.Equal(t, "true", spec.Items["ssl"], "gvfsd-dav picks https from ssl=true")
+	assert.Equal(t, "davs://ana@cloud.example/remote.php/dav", URIOf(spec, mountables))
+
+	plain, err := ParseURI("dav://cloud.example/", mountables)
+	require.NoError(t, err)
+	assert.NotContains(t, plain.Items, "ssl")
+	assert.Equal(t, "dav://cloud.example/", URIOf(plain, mountables))
 }
 
 func TestURIOfRebuildsAnSMBShare(t *testing.T) {
