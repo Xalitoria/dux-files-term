@@ -183,7 +183,7 @@ dux-files/
 │   ├── Services/       # Bridges to the daemon
 │   ├── Modules/        # Windows, panes, dialogs, settings
 │   └── translations/   # POEditor catalogs
-├── dank-qml-common/    # Shared widget library (submodule, linked as quickshell/DCommon)
+├── dux-qml-common/    # Shared widget library (submodule, linked as quickshell/DCommon)
 ├── distro/             # Nix and Flatpak packaging
 └── assets/             # Icon, desktop entry, D-Bus, portal and systemd files
 ```

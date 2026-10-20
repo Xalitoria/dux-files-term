@@ -6,7 +6,7 @@ To contribute fork this repository, make your changes, and open a pull request.
 
 ## Setup
 
-Clone with submodules. The shared widget library ([dank-qml-common](https://github.com/duxlabs-dev/dux-qml-common)) is vendored at `dank-qml-common/` and symlinked into `quickshell/DCommon`:
+Clone with submodules. The shared widget library ([dux-qml-common](https://github.com/duxlabs-dev/dux-qml-common)) is vendored at `dux-qml-common/` and symlinked into `quickshell/DCommon`:
 
 ```bash
 git clone --recurse-submodules https://github.com/duxlabs-dev/dux-files.git
@@ -32,12 +32,12 @@ DFILES_ENABLE_HOTRELOAD=1 core/bin/dfiles run -c quickshell
 
 `dfiles ipc list` prints every IPC method the daemon exposes.
 
-## Shared widgets (dank-qml-common)
+## Shared widgets (dux-qml-common)
 
-Everything under `quickshell/DCommon/` is shared across the DMS suite and lives in the `dank-qml-common` submodule. It is a normal git worktree:
+Everything under `quickshell/DCommon/` is shared across the DMS suite and lives in the `dux-qml-common` submodule. It is a normal git worktree:
 
-1. Edit files under `dank-qml-common/` (or through the `quickshell/DCommon` symlink, same files) and test in the running app. For isolated widget work, the library is its own runnable config with a gallery: `qs -p dank-qml-common`.
-2. Commit and PR those changes in the `dank-qml-common` repo.
+1. Edit files under `dux-qml-common/` (or through the `quickshell/DCommon` symlink, same files) and test in the running app. For isolated widget work, the library is its own runnable config with a gallery: `qs -p dux-qml-common`.
+2. Commit and PR those changes in the `dux-qml-common` repo.
 3. Once merged, bump the pointer here with `make update-common` and commit the submodule change together with `flake.lock`.
 
 If a library change reads a new app-singleton property, add it to `quickshell/Common/Theme.qml` or `SettingsData.qml` in the same PR that bumps the pointer.

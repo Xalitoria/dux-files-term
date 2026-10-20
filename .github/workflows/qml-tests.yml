@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "quickshell/**"
-      - "dank-qml-common"
+      - "dux-qml-common"
       - "Makefile"
       - "core/Makefile"
       - "flake.nix"
@@ -15,7 +15,7 @@ on:
     branches: [master, main]
     paths:
       - "quickshell/**"
-      - "dank-qml-common"
+      - "dux-qml-common"
       - "Makefile"
       - "core/Makefile"
       - "flake.nix"
