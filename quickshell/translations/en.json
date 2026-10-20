@@ -278,7 +278,7 @@
   {
     "term": "Amber",
     "context": "Amber",
-    "reference": "Common/Theme.qml:94",
+    "reference": "Common/Theme.qml:95",
     "comment": "color palette name"
   },
   {
@@ -434,7 +434,7 @@
   {
     "term": "Blue",
     "context": "Blue",
-    "reference": "Common/Theme.qml:82",
+    "reference": "Common/Theme.qml:83",
     "comment": "color palette name"
   },
   {
@@ -518,19 +518,19 @@
   {
     "term": "Close other tabs",
     "context": "Close other tabs",
-    "reference": "Modules/WindowMenus.qml:231",
+    "reference": "Modules/WindowMenus.qml:232",
     "comment": "tab context menu entry closing every tab but this one"
   },
   {
     "term": "Close tab",
     "context": "Close tab",
-    "reference": "Modules/FilesTab.qml:108, Modules/WindowMenus.qml:221, Common/Shortcuts.qml:173",
+    "reference": "Modules/FilesTab.qml:108, Modules/WindowMenus.qml:222, Common/Shortcuts.qml:173",
     "comment": "tooltip on the button closing a tab"
   },
   {
     "term": "Close tabs to the right",
     "context": "Close tabs to the right",
-    "reference": "Modules/WindowMenus.qml:241",
+    "reference": "Modules/WindowMenus.qml:242",
     "comment": "tab context menu entry closing the tabs after this one"
   },
   {
@@ -662,7 +662,7 @@
   {
     "term": "Coral",
     "context": "Coral",
-    "reference": "Common/Theme.qml:96",
+    "reference": "Common/Theme.qml:97",
     "comment": "color palette name"
   },
   {
@@ -728,14 +728,8 @@
   {
     "term": "Cyan",
     "context": "Cyan",
-    "reference": "Common/Theme.qml:90",
+    "reference": "Common/Theme.qml:91",
     "comment": "color palette name"
-  },
-  {
-    "term": "DankMaterialShell not detected, using the %1 preset.",
-    "context": "DankMaterialShell not detected, using the %1 preset.",
-    "reference": "Modules/Settings/SettingsContent.qml:841",
-    "comment": "auto color source status when DMS is missing"
   },
   {
     "term": "Dark",
@@ -884,7 +878,7 @@
   {
     "term": "Duplicate tab",
     "context": "Duplicate tab",
-    "reference": "Modules/WindowMenus.qml:200",
+    "reference": "Modules/WindowMenus.qml:201",
     "comment": "tab context menu entry opening a copy of this tab beside it"
   },
   {
@@ -906,6 +900,12 @@
     "comment": "animation duration slider label"
   },
   {
+    "term": "Dux Shell not detected, using the %1 preset.",
+    "context": "Dux Shell not detected, using the %1 preset.",
+    "reference": "Modules/Settings/SettingsContent.qml:841",
+    "comment": "auto color source status when DMS is missing"
+  },
+  {
     "term": "Eject",
     "context": "Eject",
     "reference": "Modules/DevicesSection.qml:83",
@@ -920,7 +920,7 @@
   {
     "term": "Empty file",
     "context": "Empty file",
-    "reference": "Modules/WindowMenus.qml:148",
+    "reference": "Modules/WindowMenus.qml:149",
     "comment": "new document menu entry creating a blank file"
   },
   {
@@ -1092,8 +1092,8 @@
     "comment": "search exclusions setting label"
   },
   {
-    "term": "Follow DankMaterialShell colors, falling back to a preset.",
-    "context": "Follow DankMaterialShell colors, falling back to a preset.",
+    "term": "Follow Dux Shell colors, falling back to a preset.",
+    "context": "Follow Dux Shell colors, falling back to a preset.",
     "reference": "Modules/Settings/SettingsContent.qml:829",
     "comment": "color source description for auto"
   },
@@ -1178,7 +1178,7 @@
   {
     "term": "Green",
     "context": "Green",
-    "reference": "Common/Theme.qml:84",
+    "reference": "Common/Theme.qml:85",
     "comment": "color palette name"
   },
   {
@@ -1418,7 +1418,7 @@
   {
     "term": "Monochrome",
     "context": "Monochrome",
-    "reference": "Common/Theme.qml:98",
+    "reference": "Common/Theme.qml:99",
     "comment": "color palette name"
   },
   {
@@ -1808,7 +1808,7 @@
   {
     "term": "Orange",
     "context": "Orange",
-    "reference": "Common/Theme.qml:86",
+    "reference": "Common/Theme.qml:87",
     "comment": "color palette name"
   },
   {
@@ -1820,7 +1820,7 @@
   {
     "term": "Other application…",
     "context": "Other application…",
-    "reference": "Modules/WindowMenus.qml:316",
+    "reference": "Modules/WindowMenus.qml:317",
     "comment": "open with menu entry opening the full application picker"
   },
   {
@@ -1898,7 +1898,7 @@
   {
     "term": "Pink",
     "context": "Pink",
-    "reference": "Common/Theme.qml:92",
+    "reference": "Common/Theme.qml:93",
     "comment": "color palette name"
   },
   {
@@ -1988,7 +1988,7 @@
   {
     "term": "Purple",
     "context": "Purple",
-    "reference": "Common/Theme.qml:80",
+    "reference": "Common/Theme.qml:81",
     "comment": "color palette name"
   },
   {
@@ -2030,7 +2030,7 @@
   {
     "term": "Red",
     "context": "Red",
-    "reference": "Common/Theme.qml:88",
+    "reference": "Common/Theme.qml:89",
     "comment": "color palette name"
   },
   {
@@ -2126,7 +2126,7 @@
   {
     "term": "Reopen the closed tab",
     "context": "Reopen the closed tab",
-    "reference": "Modules/WindowMenus.qml:209, Common/Shortcuts.qml:180",
+    "reference": "Modules/WindowMenus.qml:210, Common/Shortcuts.qml:180",
     "comment": "keyboard shortcut"
   },
   {
@@ -2544,8 +2544,8 @@
     "comment": "devices setting description"
   },
   {
-    "term": "Support Dank Linux",
-    "context": "Support Dank Linux",
+    "term": "Support Dux Labs",
+    "context": "Support Dux Labs",
     "reference": "Modules/Settings/SettingsAboutPage.qml:101",
     "comment": "about page hero button, opens the Ko-fi donation page"
   },
@@ -2798,7 +2798,7 @@
   {
     "term": "Untitled document",
     "context": "Untitled document",
-    "reference": "Modules/WindowMenus.qml:108",
+    "reference": "Modules/WindowMenus.qml:109",
     "comment": "default name for a new empty file"
   },
   {
@@ -2838,8 +2838,8 @@
     "comment": "label for a user name input"
   },
   {
-    "term": "Using DankMaterialShell dynamic colors.",
-    "context": "Using DankMaterialShell dynamic colors.",
+    "term": "Using Dux Shell dynamic colors.",
+    "context": "Using Dux Shell dynamic colors.",
     "reference": "Modules/Settings/SettingsContent.qml:841",
     "comment": "auto color source status when DMS is active"
   },

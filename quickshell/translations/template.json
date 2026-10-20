@@ -854,13 +854,6 @@
     "comment": ""
   },
   {
-    "term": "DankMaterialShell not detected, using the %1 preset.",
-    "translation": "",
-    "context": "auto color source status when DMS is missing",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Dark",
     "translation": "",
     "context": "theme mode button group option",
@@ -1053,6 +1046,13 @@
     "term": "Duration",
     "translation": "",
     "context": "animation duration slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Dux Shell not detected, using the %1 preset.",
+    "translation": "",
+    "context": "auto color source status when DMS is missing",
     "reference": "",
     "comment": ""
   },
@@ -1274,7 +1274,7 @@
     "comment": ""
   },
   {
-    "term": "Follow DankMaterialShell colors, falling back to a preset.",
+    "term": "Follow Dux Shell colors, falling back to a preset.",
     "translation": "",
     "context": "color source description for auto",
     "reference": "",
@@ -2968,7 +2968,7 @@
     "comment": ""
   },
   {
-    "term": "Support Dank Linux",
+    "term": "Support Dux Labs",
     "translation": "",
     "context": "about page hero button, opens the Ko-fi donation page",
     "reference": "",
@@ -3311,7 +3311,7 @@
     "comment": ""
   },
   {
-    "term": "Using DankMaterialShell dynamic colors.",
+    "term": "Using Dux Shell dynamic colors.",
     "translation": "",
     "context": "auto color source status when DMS is active",
     "reference": "",
