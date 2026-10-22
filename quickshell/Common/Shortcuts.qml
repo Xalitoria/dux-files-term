@@ -238,6 +238,13 @@ Singleton {
             "label": I18n.tr("Toggle sidebar", "tooltip on the button showing or hiding the sidebar")
         },
         {
+            "id": "toggleTerminal",
+            "keys": ["F4"],
+            "group": "navigation",
+            "scope": "window",
+            "label": I18n.tr("Toggle terminal", "keyboard shortcut showing or hiding the terminal docked under the panes")
+        },
+        {
             "id": "focusSidebar",
             "keys": ["Ctrl+B"],
             "group": "navigation",

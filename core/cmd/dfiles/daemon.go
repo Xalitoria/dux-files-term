@@ -26,6 +26,7 @@ import (
 	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
 	"github.com/duxlabs-dev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-files/core/internal/terminal"
 	"github.com/duxlabs-dev/dux-go/files"
 	"github.com/duxlabs-dev/dux-go/log"
 	dankpaths "github.com/duxlabs-dev/dux-go/paths"
@@ -50,6 +51,7 @@ type daemonServices struct {
 	fm1       *filemanager1.Service
 	chooser   *filechooser.Service
 	colors    *colorscheme.Watcher
+	terminals *terminal.Manager
 }
 
 func (s *daemonServices) SocketPath() string {
@@ -91,6 +93,9 @@ func (s *daemonServices) Close() {
 	}
 	if s.colors != nil {
 		s.colors.Close()
+	}
+	if s.terminals != nil {
+		s.terminals.Close()
 	}
 }
 
@@ -138,6 +143,8 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 		bookmarkStore = nil
 	}
 
+	terminals := terminal.NewManager(bus.Publish, caps.Sandboxed, caps.HostSpawn)
+
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
 	if err := colorSchemeWatcher.Start(); err != nil {
 		log.Warnf("color-scheme portal watcher unavailable: %v", err)
@@ -158,6 +165,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 		Search:      searchService,
 		Bookmarks:   bookmarkStore,
 		Recent:      recentStore,
+		Terminals:   terminals,
 		Settings:    func() settings.UISettings { return settings.Load(config) },
 		Sandbox:     caps,
 		Quit:        requestQuit,
@@ -171,7 +179,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 		deps.FileManager = fm1
 	}
 
-	svc := &daemonServices{files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore, fm1: fm1, chooser: chooser, colors: colorSchemeWatcher}
+	svc := &daemonServices{files: fileService, devices: deviceService, network: networkService, clipboard: clipboardService, search: searchService, bookmarks: bookmarkStore, fm1: fm1, chooser: chooser, colors: colorSchemeWatcher, terminals: terminals}
 	ipcSrv, ipcErrCh, err := startIPC(ctx, deps)
 	if err != nil {
 		svc.Close()

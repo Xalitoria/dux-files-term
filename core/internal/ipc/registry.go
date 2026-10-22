@@ -23,7 +23,7 @@ var Methods = []MethodSpec{
 	{Name: "ping", Group: "core", Desc: "Liveness check"},
 	{Name: "version", Group: "core", Desc: "Daemon and API version"},
 	{Name: "describe", Group: "core", Desc: "List all IPC methods and their params"},
-	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network,sizes,bookmarks,search:<id>")}},
+	{Name: "subscribe", Group: "core", Desc: "Subscribe to event topics", Params: []ParamSpec{opt("topics", "ui,colorScheme,jobs,devices,network,sizes,bookmarks,search:<id>,terminal:<id>")}},
 	{Name: "unsubscribe", Group: "core", Desc: "Unsubscribe from event topics", Params: []ParamSpec{opt("topics", "topics to drop")}},
 
 	{Name: "ui.show", Group: "ui", Desc: "Show the last used file manager window, opening one if none is open"},
@@ -122,6 +122,13 @@ var Methods = []MethodSpec{
 	{Name: "recent.entries", Group: "recent", Desc: "Recently used files from the shared recently-used.xbel list as file entries, newest first; missing and private items are skipped; needs the files service", Params: []ParamSpec{opt("stamp", "stamp from the previous answer; the reply says unchanged when the list did not change")}},
 	{Name: "recent.remove", Group: "recent", Desc: "Drop paths from the recently used list", Params: []ParamSpec{req("paths", "absolute paths")}},
 	{Name: "recent.clear", Group: "recent", Desc: "Empty the recently used list"},
+
+	{Name: "terminal.open", Group: "terminal", Desc: "Start a shell on a pty and stream its screen on the returned topic; it ends when the opening connection closes", Params: []ParamSpec{opt("cwd", "absolute folder to start in (default home)"), opt("cols", "columns (default 80)"), opt("rows", "rows (default 24)")}},
+	{Name: "terminal.input", Group: "terminal", Desc: "Type into a terminal", Params: []ParamSpec{req("id", "terminal id"), req("seq", "input counter starting at 0, keeps keys in order"), opt("key", "named key: up, down, left, right, home, end, insert, delete, pageUp, pageDown, f1-f12, enter, tab, backspace, escape, space"), opt("text", "typed text when key is empty"), opt("mods", "bitmask: 1 shift, 2 alt, 4 ctrl"), opt("paste", "send text as a paste")}},
+	{Name: "terminal.resize", Group: "terminal", Desc: "Resize a terminal and redraw its whole screen", Params: []ParamSpec{req("id", "terminal id"), req("cols", "columns"), req("rows", "rows")}},
+	{Name: "terminal.scroll", Group: "terminal", Desc: "Scroll through the history; full-screen programs get arrow keys instead", Params: []ParamSpec{req("id", "terminal id"), req("lines", "positive scrolls back, negative forward")}},
+	{Name: "terminal.cd", Group: "terminal", Desc: "Change the shell's folder when it sits idle at a prompt", Params: []ParamSpec{req("id", "terminal id"), req("path", "absolute folder")}},
+	{Name: "terminal.close", Group: "terminal", Desc: "End a terminal and its shell", Params: []ParamSpec{req("id", "terminal id")}},
 
 	{Name: "clipboard.copy", Group: "clipboard", Desc: "Put paths on the system clipboard as a file selection", Params: []ParamSpec{req("paths", "absolute paths"), opt("cut", "mark the selection for a move")}},
 	{Name: "clipboard.paths", Group: "clipboard", Desc: "Read the file selection on the system clipboard"},

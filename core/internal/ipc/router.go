@@ -10,6 +10,7 @@ import (
 	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
 	"github.com/duxlabs-dev/dux-files/core/internal/netmount"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
+	"github.com/duxlabs-dev/dux-files/core/internal/terminal"
 	"github.com/duxlabs-dev/dux-go/ipc/params"
 )
 
@@ -60,6 +61,12 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			return
 		}
 		deps.Bookmarks.Handle(w, req)
+	case terminal.Handles(req.Method):
+		if deps.Terminals == nil {
+			w.RespondError(req.ID, "terminal unavailable")
+			return
+		}
+		deps.Terminals.Handle(ctx, w, req)
 	case strings.HasPrefix(req.Method, "files.op."):
 		if deps.FileOps == nil {
 			w.RespondError(req.ID, "file operations unavailable")

@@ -14,6 +14,7 @@ import (
 	"github.com/duxlabs-dev/dux-files/core/internal/sandbox"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
 	"github.com/duxlabs-dev/dux-files/core/internal/settings"
+	"github.com/duxlabs-dev/dux-files/core/internal/terminal"
 	"github.com/duxlabs-dev/dux-go/files"
 )
 
@@ -31,6 +32,7 @@ type Deps struct {
 	Search      *search.Service
 	Bookmarks   *bookmarks.Store
 	Recent      *recent.Store
+	Terminals   *terminal.Manager
 	Settings    func() settings.UISettings
 	Sandbox     sandbox.Capabilities
 	FileManager *filemanager1.Service

@@ -151,6 +151,9 @@ QtObject {
         case "toggleSidebar":
             mainWindow.sidebar.toggle();
             return;
+        case "toggleTerminal":
+            mainWindow.toggleTerminal();
+            return;
         case "focusSidebar":
             mainWindow.sidebar.takeFocus();
             return;

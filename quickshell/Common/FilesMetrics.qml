@@ -30,6 +30,12 @@ Singleton {
     readonly property real splitterHandleHeight: FileBrowserMetrics.splitterHandleHeight
     readonly property real minimumPaneFraction: 0.2
 
+    readonly property real terminalDefaultHeight: Theme.smallBreakpoint / 2
+    readonly property real terminalMinHeight: Theme.buttonHeightS * 2
+    readonly property real terminalPadding: Theme.spacingS
+    readonly property int terminalResizeDelay: 60
+    readonly property int terminalWheelLines: 3
+
     readonly property real tabHeight: Theme.buttonHeightS
     readonly property int tabShortcutCount: 9
     readonly property int closedTabHistory: 10

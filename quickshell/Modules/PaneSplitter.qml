@@ -6,15 +6,19 @@ import qs.Common
 Item {
     id: splitter
 
+    property int orientation: Qt.Horizontal
+    readonly property bool stacked: orientation === Qt.Vertical
+
     signal moved(real delta)
     signal reset
 
-    width: FilesMetrics.splitterWidth
+    implicitWidth: FilesMetrics.splitterWidth
+    implicitHeight: FilesMetrics.splitterWidth
 
     Rectangle {
         anchors.centerIn: parent
-        width: Theme.spacingXXS
-        height: FilesMetrics.splitterHandleHeight
+        width: splitter.stacked ? FilesMetrics.splitterHandleHeight : Theme.spacingXXS
+        height: splitter.stacked ? Theme.spacingXXS : FilesMetrics.splitterHandleHeight
         radius: Theme.cornerRadiusFull
         color: handle.containsMouse || handle.pressed ? Theme.primary : Theme.outlineVariant
         opacity: handle.containsMouse || handle.pressed ? 1 : Theme.pendingOpacity
@@ -31,17 +35,21 @@ Item {
     MouseArea {
         id: handle
 
-        property real pressX: 0
+        property real pressPosition: 0
 
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.SplitHCursor
+        cursorShape: splitter.stacked ? Qt.SplitVCursor : Qt.SplitHCursor
         acceptedButtons: Qt.LeftButton
-        onPressed: mouse => pressX = mouse.x
+        onPressed: mouse => pressPosition = splitter.stacked ? mouse.y : mouse.x
         onPositionChanged: mouse => {
             if (!pressed)
                 return;
-            splitter.moved(I18n.isRtl ? pressX - mouse.x : mouse.x - pressX);
+            if (splitter.stacked) {
+                splitter.moved(mouse.y - pressPosition);
+                return;
+            }
+            splitter.moved(I18n.isRtl ? pressPosition - mouse.x : mouse.x - pressPosition);
         }
         onDoubleClicked: splitter.reset()
     }

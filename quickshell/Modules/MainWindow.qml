@@ -22,6 +22,9 @@ FloatingWindow {
     property int activePaneIndex: 0
     property bool splitView: false
     property real splitRatio: 0.5
+    property bool terminalOpen: false
+    property bool terminalStarted: false
+    property real terminalHeight: FilesMetrics.terminalDefaultHeight
     property bool showHidden: SessionData.lastUsed("showHidden", SettingsData.showHidden)
     property bool previewOpen: SessionData.lastUsed("previewOpen", true)
 
@@ -87,6 +90,7 @@ FloatingWindow {
             tabManager.startFresh();
         }
         maximized = SessionData.maximized;
+        terminalHeight = SessionData.terminalHeight;
         if (primary)
             offerGtkImport();
         primaryPane.focusBody();
@@ -125,6 +129,29 @@ FloatingWindow {
 
     function resizeSplit(fraction) {
         setSplitRatio(splitRatio + fraction);
+    }
+
+    function setTerminalHeight(value) {
+        terminalHeight = Math.max(FilesMetrics.terminalMinHeight, Math.min(content.terminalMaxHeight, value));
+        SessionData.terminalHeight = terminalHeight;
+    }
+
+    function toggleTerminal() {
+        terminalOpen = !terminalOpen;
+        if (terminalOpen) {
+            terminalStarted = true;
+            terminalLoader.item.forceActiveFocus();
+            return;
+        }
+        if (terminalLoader.item?.activeFocus)
+            activePane.focusBody();
+    }
+
+    function endTerminal() {
+        if (terminalLoader.item?.activeFocus)
+            activePane.focusBody();
+        terminalOpen = false;
+        Qt.callLater(() => window.terminalStarted = false);
     }
 
     function openPath(path, inNewTab) {
@@ -474,6 +501,7 @@ FloatingWindow {
             anchors.leftMargin: FilesMetrics.contentMarginH + sidebarHost.dockedWidth
             anchors.rightMargin: FilesMetrics.contentMarginH
 
+            readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (height - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
             TabRow {
                 id: tabRow
 
@@ -555,7 +583,7 @@ FloatingWindow {
 
                 anchors.top: topbar.bottom
                 anchors.topMargin: FilesMetrics.contentSpacing
-                anchors.bottom: parent.bottom
+                anchors.bottom: window.terminalOpen ? terminalSplitter.top : parent.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
 
@@ -600,6 +628,34 @@ FloatingWindow {
                             "path": primaryPane.path
                         });
                     }
+                }
+            }
+
+            PaneSplitter {
+                id: terminalSplitter
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: terminalLoader.top
+                orientation: Qt.Vertical
+                visible: window.terminalOpen
+                onMoved: delta => window.setTerminalHeight(terminalLoader.height - delta)
+                onReset: window.setTerminalHeight(FilesMetrics.terminalDefaultHeight)
+            }
+
+            Loader {
+                id: terminalLoader
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: Math.min(window.terminalHeight, content.terminalMaxHeight)
+                active: window.terminalStarted
+                visible: window.terminalOpen
+                sourceComponent: TerminalView {
+                    directory: window.currentPath
+                    onExited: window.endTerminal()
+                    onFailed: response => window.openFlow.reportError(response)
                 }
             }
         }
