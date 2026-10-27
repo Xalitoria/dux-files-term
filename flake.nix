@@ -1,5 +1,5 @@
 {
-  description = "Dux Files";
+  description = "Dux Files with a docked terminal";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -136,8 +136,8 @@
             '';
 
             meta = {
-              description = "File manager for the dux desktop";
-              homepage = "https://github.com/duxlabs-dev/dux-files";
+              description = "File manager for the dux desktop, with a docked terminal";
+              homepage = "https://github.com/Xalitoria/dux-files-term";
               license = pkgs.lib.licenses.mit;
               mainProgram = "dfiles";
               platforms = pkgs.lib.platforms.linux;

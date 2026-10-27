@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>audizign@gmail.com</email>
+		<name>audizian</name>
+	</maintainer>
+	<use>
+		<flag name="systemd">Install the systemd user unit</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">Xalitoria/dux-files-term</remote-id>
+		<bugs-to>https://github.com/Xalitoria/dux-files-term/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
