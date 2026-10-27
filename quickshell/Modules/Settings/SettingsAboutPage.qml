@@ -11,6 +11,7 @@ Item {
     LayoutMirroring.enabled: I18n.isRtl
     LayoutMirroring.childrenInherit: true
 
+    readonly property string forkUrl: "https://github.com/Xalitoria/dux-files-term"
     readonly property string githubUrl: "https://github.com/duxlabs-dev/dux-files"
     readonly property string docsUrl: "https://duxlabs.dev/docs"
     readonly property string kofiUrl: "https://ko-fi.com/duxlabs"
@@ -113,6 +114,14 @@ Item {
                 keywords: I18n.tr("documentation help manual", "settings search keywords, space separated, add synonyms in your language")
                 subtitle: root.host(root.docsUrl)
                 url: root.docsUrl
+            }
+
+            SettingsLinkRow {
+                iconName: "terminal"
+                title: I18n.tr("Terminal fork", "about page resource button, the community fork that adds the docked terminal")
+                keywords: I18n.tr("source code repository issues", "settings search keywords, space separated, add synonyms in your language")
+                subtitle: root.host(root.forkUrl)
+                url: root.forkUrl
             }
 
             SettingsLinkRow {
