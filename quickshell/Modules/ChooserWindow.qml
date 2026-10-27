@@ -446,6 +446,7 @@ FloatingWindow {
             id: sidebarSlot
 
             anchors.top: header.bottom
+            anchors.topMargin: -FilesMetrics.sidebarPadding
             anchors.bottom: footer.top
             anchors.left: parent.left
             width: window.sidebarDocked ? Math.max(FilesMetrics.sidebarMinWidth, Math.min(CacheData.sidebarWidth, surface.width - FilesMetrics.windowMinWidth)) : 0
@@ -482,9 +483,8 @@ FloatingWindow {
             anchors.bottom: footer.top
             anchors.left: sidebarSlot.right
             anchors.right: parent.right
-            anchors.topMargin: FilesMetrics.contentMarginV
-            anchors.leftMargin: FilesMetrics.contentMarginH
-            anchors.rightMargin: FilesMetrics.contentMarginH
+            anchors.leftMargin: FilesMetrics.windowMargin
+            anchors.rightMargin: FilesMetrics.windowMargin
 
             Item {
                 id: topbar
@@ -656,9 +656,9 @@ FloatingWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: FilesMetrics.contentMarginH
-            anchors.rightMargin: FilesMetrics.contentMarginH
-            anchors.bottomMargin: FilesMetrics.contentMarginV
+            anchors.leftMargin: FilesMetrics.windowMargin
+            anchors.rightMargin: FilesMetrics.windowMargin
+            anchors.bottomMargin: FilesMetrics.windowMargin
             spacing: Theme.spacingS
 
             Flow {

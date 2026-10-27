@@ -45,10 +45,14 @@ func (m *Manager) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 	switch req.Method {
 	case "terminal.input":
 		session.Input(params.IntOpt(req.Params, "seq", 0), input{
-			key:   params.StringOpt(req.Params, "key", ""),
-			text:  params.StringOpt(req.Params, "text", ""),
-			mods:  params.IntOpt(req.Params, "mods", 0),
-			paste: params.BoolOpt(req.Params, "paste", false),
+			key:    params.StringOpt(req.Params, "key", ""),
+			text:   params.StringOpt(req.Params, "text", ""),
+			mods:   params.IntOpt(req.Params, "mods", 0),
+			paste:  params.BoolOpt(req.Params, "paste", false),
+			mouse:  params.StringOpt(req.Params, "mouse", ""),
+			x:      params.IntOpt(req.Params, "x", 0),
+			y:      params.IntOpt(req.Params, "y", 0),
+			button: params.StringOpt(req.Params, "button", "none"),
 		})
 		w.Respond(req.ID, map[string]any{})
 	case "terminal.resize":

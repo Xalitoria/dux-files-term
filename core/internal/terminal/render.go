@@ -79,7 +79,8 @@ func invisible(r run) bool {
 	return r.Bg == "" && r.Attr&(attrInverse|attrUnderline|attrStrike) == 0
 }
 
-// Wide characters get a run of their own so the UI can place every run on the cell grid.
+// Wide and non-ASCII characters get a run of their own: they can come from a fallback font with a
+// different advance, so the UI has to place each of them on the cell grid.
 func rowRuns(width int, cellAt func(x int) *uv.Cell, colors palette) []run {
 	runs := []run{}
 	joinable := false
@@ -90,16 +91,26 @@ func rowRuns(width int, cellAt func(x int) *uv.Cell, colors palette) []run {
 		}
 		span := max(cell.Width, 1)
 		style := styleOf(cell, colors)
-		if !joinable || !sameStyle(runs[len(runs)-1], style) || span > 1 {
+		alone := span > 1 || !isASCII(cell.Content)
+		if !joinable || !sameStyle(runs[len(runs)-1], style) || alone {
 			style.X = x
 			runs = append(runs, style)
 		}
 		runs[len(runs)-1].Text += cell.Content
 		runs[len(runs)-1].W += span
-		joinable = span == 1
+		joinable = !alone
 		x += span
 	}
 	return trimRuns(runs)
+}
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
 }
 
 func trimRuns(runs []run) []run {

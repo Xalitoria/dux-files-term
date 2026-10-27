@@ -14,6 +14,7 @@ import (
 	"time"
 
 	uv "github.com/charmbracelet/ultraviolet"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/vt"
 	"github.com/creack/pty"
 	"golang.org/x/sys/unix"
@@ -47,13 +48,17 @@ type frame struct {
 	Scroll     int         `json:"scroll"`
 	Scrollback int         `json:"scrollback"`
 	Title      string      `json:"title"`
+	Mouse      int         `json:"mouse"`
 }
 
 type input struct {
-	key   string
-	text  string
-	mods  int
-	paste bool
+	key    string
+	text   string
+	mods   int
+	paste  bool
+	mouse  string
+	x, y   int
+	button string
 }
 
 type Session struct {
@@ -70,6 +75,8 @@ type Session struct {
 	rows       []json.RawMessage
 	lastCursor cursor
 	lastTitle  string
+	mouse      mouseTracker
+	lastMouse  int
 	title      string
 	scroll     int
 	scheduled  bool
@@ -106,7 +113,11 @@ func startSession(topic string, argv []string, cwd string, cols, rows int, follo
 		emu:     emu,
 		queued:  map[int]input{},
 	}
-	emu.SetCallbacks(vt.Callbacks{Title: func(title string) { s.title = title }})
+	emu.SetCallbacks(vt.Callbacks{
+		Title:       func(title string) { s.title = title },
+		EnableMode:  func(mode ansi.Mode) { s.mouse.set(mode, true) },
+		DisableMode: func(mode ansi.Mode) { s.mouse.set(mode, false) },
+	})
 
 	go s.writes.run()
 	go s.pumpInput()
@@ -217,10 +228,12 @@ func (s *Session) frameLocked() (frame, bool) {
 
 	position := s.emu.CursorPosition()
 	current := cursor{X: position.X, Y: position.Y + s.scroll, Visible: !s.emu.CursorHidden() && s.scroll == 0}
-	changed := len(lines) > 0 || current != s.lastCursor || s.title != s.lastTitle
+	mouse := s.mouse.level()
+	changed := len(lines) > 0 || current != s.lastCursor || s.title != s.lastTitle || mouse != s.lastMouse
 	s.lastCursor = current
 	s.lastTitle = s.title
-	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title}, changed
+	s.lastMouse = mouse
+	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title, Mouse: mouse}, changed
 }
 
 func (s *Session) lineSource(index, history int) func(x int) *uv.Cell {
@@ -254,6 +267,12 @@ func (s *Session) apply(in input) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
+		return
+	}
+	if in.mouse != "" {
+		if event := mouseEventOf(in); event != nil {
+			s.emu.SendMouse(event)
+		}
 		return
 	}
 	s.jumpToBottomLocked()

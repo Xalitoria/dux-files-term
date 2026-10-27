@@ -22,7 +22,7 @@ FloatingWindow {
     property int activePaneIndex: 0
     property bool splitView: false
     property real splitRatio: 0.5
-    property bool terminalOpen: false
+    property string terminalMode: "hidden"
     property bool terminalStarted: false
     property real terminalHeight: FilesMetrics.terminalDefaultHeight
     property bool showHidden: SessionData.lastUsed("showHidden", SettingsData.showHidden)
@@ -55,6 +55,12 @@ FloatingWindow {
     readonly property bool tabRowFocused: ItemTree.isInside(surface.focusItem, tabRow)
     readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
     readonly property bool lastActive: WindowService.lastActiveId === windowId
+    readonly property var terminalModes: ["hidden", "files", "bottom", "right"]
+    readonly property bool terminalOpen: terminalMode !== "hidden"
+    readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (surface.height - header.height - FilesMetrics.windowMargin - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
+    readonly property real terminalDockHeight: Math.min(terminalHeight, terminalMaxHeight)
+    readonly property real terminalBottomInset: terminalMode === "bottom" ? terminalDockHeight + FilesMetrics.splitterWidth + FilesMetrics.windowMargin : 0
+    readonly property real terminalRightInset: terminalMode === "right" ? surface.width / 2 + FilesMetrics.splitterWidth : 0
 
     Component.onDestruction: FileOpsService.forget(opScope)
 
@@ -132,25 +138,30 @@ FloatingWindow {
     }
 
     function setTerminalHeight(value) {
-        terminalHeight = Math.max(FilesMetrics.terminalMinHeight, Math.min(content.terminalMaxHeight, value));
+        terminalHeight = Math.max(FilesMetrics.terminalMinHeight, Math.min(terminalMaxHeight, value));
         SessionData.terminalHeight = terminalHeight;
     }
 
-    function toggleTerminal() {
-        terminalOpen = !terminalOpen;
+    function setTerminalMode(mode) {
+        const hadFocus = terminalLoader.item?.activeFocus ?? false;
+        terminalMode = mode;
         if (terminalOpen) {
             terminalStarted = true;
             terminalLoader.item.forceActiveFocus();
             return;
         }
-        if (terminalLoader.item?.activeFocus)
+        if (hadFocus)
             activePane.focusBody();
+    }
+
+    function toggleTerminal() {
+        setTerminalMode(terminalModes[(terminalModes.indexOf(terminalMode) + 1) % terminalModes.length]);
     }
 
     function endTerminal() {
         if (terminalLoader.item?.activeFocus)
             activePane.focusBody();
-        terminalOpen = false;
+        terminalMode = "hidden";
         Qt.callLater(() => window.terminalStarted = false);
     }
 
@@ -496,12 +507,10 @@ FloatingWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.topMargin: FilesMetrics.contentMarginV
-            anchors.bottomMargin: FilesMetrics.contentMarginV
-            anchors.leftMargin: FilesMetrics.contentMarginH + sidebarHost.dockedWidth
-            anchors.rightMargin: FilesMetrics.contentMarginH
+            anchors.bottomMargin: Math.max(FilesMetrics.windowMargin, window.terminalBottomInset)
+            anchors.leftMargin: FilesMetrics.windowMargin + sidebarHost.dockedWidth
+            anchors.rightMargin: FilesMetrics.windowMargin
 
-            readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (height - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
             TabRow {
                 id: tabRow
 
@@ -540,6 +549,7 @@ FloatingWindow {
                 folderRemembered: window.activePane.folderRemembered
                 folderHasSettings: window.activePane.hasFolderSettings
                 previewOpen: window.previewOpen
+                terminalMode: window.terminalMode
                 trashActive: window.activePane.trashActive
                 recentActive: window.activePane.recentActive
                 filterText: window.activePane.nameFilter
@@ -574,6 +584,7 @@ FloatingWindow {
                 onPreviewToggled: window.actions.runAction("togglePreview")
                 onReloadRequested: window.actions.runAction("reload")
                 onTerminalRequested: window.actions.runAction("openTerminal")
+                onTerminalModeSelected: mode => window.setTerminalMode(mode)
                 onPropertiesRequested: window.actions.runAction("properties")
                 onNewWindowRequested: window.actions.runAction("newWindow")
             }
@@ -583,9 +594,11 @@ FloatingWindow {
 
                 anchors.top: topbar.bottom
                 anchors.topMargin: FilesMetrics.contentSpacing
-                anchors.bottom: window.terminalOpen ? terminalSplitter.top : parent.bottom
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: window.terminalMode === "files" ? terminalLoader.height + FilesMetrics.splitterWidth : 0
                 anchors.left: parent.left
                 anchors.right: parent.right
+                anchors.rightMargin: Math.max(0, window.terminalRightInset - FilesMetrics.windowMargin)
 
                 readonly property real usableWidth: width - (window.splitView ? FilesMetrics.splitterWidth : 0)
 
@@ -630,33 +643,47 @@ FloatingWindow {
                     }
                 }
             }
+        }
 
-            PaneSplitter {
-                id: terminalSplitter
+        PaneSplitter {
+            id: terminalSplitter
 
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: terminalLoader.top
-                orientation: Qt.Vertical
-                visible: window.terminalOpen
-                onMoved: delta => window.setTerminalHeight(terminalLoader.height - delta)
-                onReset: window.setTerminalHeight(FilesMetrics.terminalDefaultHeight)
-            }
+            anchors.left: terminalLoader.left
+            anchors.right: terminalLoader.right
+            anchors.bottom: terminalLoader.top
+            orientation: Qt.Vertical
+            visible: window.terminalOpen && window.terminalMode !== "right"
+            onMoved: delta => window.setTerminalHeight(terminalLoader.height - delta)
+            onReset: window.setTerminalHeight(FilesMetrics.terminalDefaultHeight)
+        }
 
-            Loader {
-                id: terminalLoader
+        Loader {
+            id: terminalLoader
 
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                height: Math.min(window.terminalHeight, content.terminalMaxHeight)
-                active: window.terminalStarted
-                visible: window.terminalOpen
-                sourceComponent: TerminalView {
-                    directory: window.currentPath
-                    onExited: window.endTerminal()
-                    onFailed: response => window.openFlow.reportError(response)
+            readonly property bool atRight: window.terminalMode === "right"
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: FilesMetrics.windowMargin
+            anchors.rightMargin: FilesMetrics.windowMargin
+            anchors.leftMargin: {
+                switch (window.terminalMode) {
+                case "right":
+                    return surface.width / 2;
+                case "bottom":
+                    return FilesMetrics.windowMargin;
+                default:
+                    return FilesMetrics.windowMargin + sidebarHost.dockedWidth;
                 }
+            }
+            height: atRight ? surface.height - content.y - panesRow.y - FilesMetrics.windowMargin : window.terminalDockHeight
+            active: window.terminalStarted
+            visible: window.terminalOpen
+            sourceComponent: TerminalView {
+                directory: window.currentPath
+                onExited: window.endTerminal()
+                onFailed: response => window.openFlow.reportError(response)
             }
         }
 
@@ -667,6 +694,9 @@ FloatingWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
+            anchors.topMargin: -FilesMetrics.sidebarPadding
+            anchors.bottomMargin: Math.max(0, window.terminalBottomInset - FilesMetrics.sidebarPadding)
+            anchors.rightMargin: window.terminalRightInset
             mainWindow: window
             focusItem: surface.focusItem
         }

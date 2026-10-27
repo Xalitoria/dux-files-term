@@ -19,6 +19,7 @@ Singleton {
     property bool splitView: false
     property real splitRatio: 0.5
     property real terminalHeight: FilesMetrics.terminalDefaultHeight
+    property int terminalZoom: 0
     property int currentTab: 0
     property var tabs: []
     property int gridZoom: FilesMetrics.defaultGridZoom
@@ -34,6 +35,7 @@ Singleton {
             "splitView": splitView,
             "splitRatio": splitRatio,
             "terminalHeight": Math.round(terminalHeight),
+            "terminalZoom": terminalZoom,
             "currentTab": currentTab,
             "tabs": tabs,
             "gridZoom": gridZoom,

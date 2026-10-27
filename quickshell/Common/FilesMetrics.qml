@@ -20,8 +20,7 @@ Singleton {
     readonly property real topbarSpacing: FileBrowserMetrics.controlSpacing
     readonly property real topbarGroupSpacing: Theme.spacingXS
 
-    readonly property real contentMarginH: Theme.spacingXL
-    readonly property real contentMarginV: FileBrowserMetrics.contentMargin
+    readonly property real windowMargin: Theme.windowInset
     readonly property real contentSpacing: FileBrowserMetrics.contentSpacing
     readonly property real paneRadius: FileBrowserMetrics.paneRadius
     readonly property real paneBodyMargin: FileBrowserMetrics.paneMargin
@@ -33,6 +32,8 @@ Singleton {
     readonly property real terminalDefaultHeight: Theme.smallBreakpoint / 2
     readonly property real terminalMinHeight: Theme.buttonHeightS * 2
     readonly property real terminalPadding: Theme.spacingS
+    readonly property int terminalMinZoom: -4
+    readonly property int terminalMaxZoom: 24
     readonly property int terminalResizeDelay: 60
     readonly property int terminalWheelLines: 3
 

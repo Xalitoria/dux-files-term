@@ -17,6 +17,7 @@ Item {
     property bool compact: false
     property string viewMode: "list"
     property bool previewOpen: false
+    property string terminalMode: "hidden"
     property string sortKey: "name"
     property bool sortDescending: false
     property bool trashActive: false
@@ -49,6 +50,29 @@ Item {
     readonly property string previewLabel: I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
     readonly property string useForAllLabel: I18n.tr("Use these settings for all folders", "view menu entry making this folder's sort and view the defaults")
     readonly property string resetFolderLabel: I18n.tr("Reset this folder", "view menu entry dropping this folder's own sort and view")
+    readonly property bool terminalOpen: terminalMode !== "hidden"
+    readonly property var terminalModes: [
+        {
+            "value": "hidden",
+            "icon": "close",
+            "label": I18n.tr("Hide terminal", "terminal menu entry closing the docked terminal")
+        },
+        {
+            "value": "files",
+            "icon": "dock_to_bottom",
+            "label": I18n.tr("Under the files", "terminal menu entry docking the terminal below the file panes")
+        },
+        {
+            "value": "bottom",
+            "icon": "bottom_panel_open",
+            "label": I18n.tr("Along the bottom", "terminal menu entry docking the terminal across the whole window bottom")
+        },
+        {
+            "value": "right",
+            "icon": "right_panel_open",
+            "label": I18n.tr("On the right", "terminal menu entry docking the terminal on the right half of the window")
+        }
+    ]
     readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
     property bool resultsActive: false
     readonly property var resultSortKeys: [
@@ -158,6 +182,7 @@ Item {
     signal copyPathRequested
     signal reloadRequested
     signal terminalRequested
+    signal terminalModeSelected(string mode)
     signal settingsRequested
     signal shortcutsRequested
     signal filterChanged(string text)
@@ -295,6 +320,18 @@ Item {
             onClicked: topbar.splitToggled()
         }
 
+        FlatButton {
+            id: terminalButton
+
+            anchors.verticalCenter: parent.verticalCenter
+            visible: !topbar.compact
+            iconName: "terminal"
+            iconColor: topbar.terminalOpen ? Theme.onPrimary : Theme.surfaceText
+            backgroundColor: topbar.terminalOpen ? Theme.primary : Theme.chipSurface
+            tooltipText: I18n.tr("Terminal", "setting label for the terminal emulator")
+            onClicked: menu.toggle(terminalButton, "terminal")
+        }
+
         FileSortButton {
             id: sortButton
 
@@ -324,6 +361,7 @@ Item {
             property string section: "more"
 
             readonly property bool viewOnly: section === "view"
+            readonly property bool terminalRows: section === "terminal"
             readonly property bool viewRows: viewOnly || topbar.compact
             readonly property bool moreRows: section === "more"
             readonly property bool compactRows: moreRows && topbar.compact
@@ -366,6 +404,20 @@ Item {
                     iconName: modelData.icon
                     checked: topbar.viewMode === modelData.value
                     onClicked: menu.pick(() => topbar.viewModeSelected(modelData.value))
+                }
+            }
+
+            Repeater {
+                model: topbar.terminalModes
+
+                FileMenuItem {
+                    required property var modelData
+
+                    visible: menu.terminalRows
+                    text: modelData.label
+                    iconName: modelData.icon
+                    checked: topbar.terminalMode === modelData.value
+                    onClicked: menu.pick(() => topbar.terminalModeSelected(modelData.value))
                 }
             }
 
