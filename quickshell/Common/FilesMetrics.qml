@@ -36,6 +36,7 @@ Singleton {
     readonly property int terminalMaxZoom: 24
     readonly property int terminalResizeDelay: 60
     readonly property int terminalWheelLines: 3
+    readonly property int terminalBlinkInterval: 530
 
     readonly property real tabHeight: Theme.buttonHeightS
     readonly property int tabShortcutCount: 9

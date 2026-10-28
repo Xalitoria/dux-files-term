@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Shapes
 import Quickshell
 import qs.Common
 import qs.Services
@@ -16,6 +17,8 @@ Rectangle {
     property int seq: 0
     property int cols: 0
     property int rows: 0
+    property var colors: ({})
+    property var behavior: ({})
     property int mouse: 0
     property int scrolled: 0
     property var selStart: null
@@ -26,17 +29,21 @@ Rectangle {
     property int lastPressCell: -1
     property bool painted: false
     property var lineStore: []
+    property var images: ({})
+    property var placements: []
     property var cursor: ({
             "x": 0,
             "y": 0,
             "visible": false
         })
     property real wheelRemainder: 0
+    property bool blinkVisible: true
+    property bool linkHover: false
     readonly property var life: ({
             "alive": true
         })
 
-    readonly property real cellWidth: Math.max(1, metrics.advanceWidth("M"))
+    readonly property real cellWidth: Math.max(1, glyph.advanceWidth)
     readonly property real cellHeight: Math.max(1, Math.ceil(metrics.height))
     readonly property int fitCols: Math.floor((width - 2 * FilesMetrics.terminalPadding) / cellWidth)
     readonly property int fitRows: Math.floor((height - 2 * FilesMetrics.terminalPadding) / cellHeight)
@@ -45,8 +52,18 @@ Rectangle {
     signal failed(var response)
     signal lineUpdated(int y, var runs)
 
-    radius: FilesMetrics.paneRadius
-    color: Theme.foregroundColor(Theme.cardSurface, true)
+    readonly property color paper: colors.bg ? colors.bg : Theme.foregroundColor(Theme.cardSurface, true)
+    readonly property color ink: colors.fg ? colors.fg : Theme.surfaceText
+    readonly property color cursorColor: colors.cursor ? colors.cursor : Theme.primary
+    readonly property real paperOpacity: colors.opacity ?? 1
+    readonly property bool customSelection: !!(colors.selectionBg || colors.selectionFg)
+    readonly property color selectionPaper: colors.selectionBg ? colors.selectionBg : ink
+    readonly property string cursorShape: cursor.shape || behavior.cursorShape || "block"
+    readonly property bool cursorBlinks: cursor.shape ? !!cursor.blink : !!behavior.cursorBlink
+    readonly property int baseFontSize: behavior.fontSize > 0 ? Math.round(behavior.fontSize * 4 / 3) : Theme.fontSizeMedium
+
+    radius: paperOpacity < 1 ? 0 : FilesMetrics.paneRadius
+    color: Qt.rgba(paper.r, paper.g, paper.b, paperOpacity)
     border.width: activeFocus ? Theme.outlineWidthFocused : 0
     border.color: Theme.primary
     clip: true
@@ -60,8 +77,18 @@ Rectangle {
     }
 
     onDirectoryChanged: follow()
+    onActiveFocusChanged: request("terminal.focus", {
+        "focused": activeFocus
+    })
+    onCursorChanged: {
+        blinkVisible = true;
+        if (blinkTimer.running)
+            blinkTimer.restart();
+    }
     onFitColsChanged: resizeDebounce.restart()
     onFitRowsChanged: resizeDebounce.restart()
+    onCellWidthChanged: resizeDebounce.restart()
+    onCellHeightChanged: resizeDebounce.restart()
 
     function open() {
         const life = term.life;
@@ -85,6 +112,8 @@ Rectangle {
             term.sessionId = result.id;
             term.topic = result.topic;
             term.follows = result.follow === true;
+            term.colors = result.colors ?? {};
+            term.behavior = result.behavior ?? {};
             DuxFilesService.subscribeTopic(term.topic, term.handleFrame);
             term.redraw();
         });
@@ -110,7 +139,9 @@ Rectangle {
     function redraw() {
         request("terminal.resize", {
             "cols": fitCols,
-            "rows": fitRows
+            "rows": fitRows,
+            "cellWidth": Math.round(cellWidth),
+            "cellHeight": cellHeight
         });
     }
 
@@ -155,6 +186,9 @@ Rectangle {
             lineStore[line.y] = line.runs;
             lineUpdated(line.y, line.runs);
         }
+        updateImages(data);
+        if (data.clipboard !== undefined)
+            Quickshell.clipboardText = data.clipboard;
         cursor = data.cursor;
         mouse = data.mouse ?? 0;
         if (painted)
@@ -162,6 +196,37 @@ Rectangle {
         painted = lines.length === rows;
         if (!painted)
             redraw();
+    }
+
+    function updateImages(data) {
+        if (data.images?.length || data.dropped?.length) {
+            const next = Object.assign({}, images);
+            for (const image of data.images ?? [])
+                next[image.id] = image.src;
+            for (const id of data.dropped ?? [])
+                delete next[id];
+            images = next;
+        }
+        if (data.placements !== undefined)
+            placements = data.placements;
+    }
+
+    function linkAt(cell) {
+        for (const run of lineStore[cell.y] ?? []) {
+            if (run.l && cell.x >= run.x && cell.x < run.x + run.w)
+                return run.l;
+        }
+        const text = rowCells(cell.y).join("");
+        for (const match of text.matchAll(/(https?|ftp|file):\/\/[^\s<>"'`]+/g)) {
+            if (cell.x >= match.index && cell.x < match.index + match[0].length)
+                return match[0].replace(/[.,;:!?)\]}]+$/, "");
+        }
+        return "";
+    }
+
+    function openLink(url) {
+        if (/^(https?|ftp|file|mailto):/i.test(url))
+            DuxFilesService.openUri(url);
     }
 
     function rowCells(y) {
@@ -182,6 +247,14 @@ Rectangle {
     }
 
     function isWordCell(text) {
+        switch (true) {
+        case text === "" || /^\s$/.test(text):
+            return false;
+        case !!behavior.wordDelims:
+            return !behavior.wordDelims.includes(text);
+        case !!behavior.wordChars:
+            return /^\w$/.test(text) || text.charCodeAt(0) > 127 || behavior.wordChars.includes(text);
+        }
         return /^[\w@\-.\/~?&=%+#]$/.test(text);
     }
 
@@ -355,34 +428,73 @@ Rectangle {
         SessionData.terminalZoom = Math.max(FilesMetrics.terminalMinZoom, Math.min(FilesMetrics.terminalMaxZoom, value));
     }
 
-    function zoomStep(key) {
-        switch (key) {
-        case Qt.Key_Plus:
-        case Qt.Key_Equal:
-            return 1;
-        case Qt.Key_Minus:
-        case Qt.Key_Underscore:
-            return -1;
+    function chordKey(key) {
+        switch (true) {
+        case key >= Qt.Key_A && key <= Qt.Key_Z:
+            return String.fromCharCode(97 + key - Qt.Key_A);
+        case key >= Qt.Key_0 && key <= Qt.Key_9:
+            return String(key - Qt.Key_0);
+        case key === Qt.Key_Plus || key === Qt.Key_Equal:
+            return "plus";
+        case key === Qt.Key_Minus || key === Qt.Key_Underscore:
+            return "minus";
         }
-        return 0;
+        return keyName(key).toLowerCase();
     }
 
-    function handleZoom(event) {
-        if (modifierMask(event.modifiers) !== 5)
-            return false;
-        if (event.key === Qt.Key_Backspace) {
+    function chordOf(event) {
+        const key = chordKey(event.key);
+        if (key === "")
+            return "";
+        const mods = event.modifiers;
+        return [(mods & Qt.ControlModifier) ? "ctrl+" : "", (mods & Qt.AltModifier) ? "alt+" : "", (mods & Qt.ShiftModifier) ? "shift+" : "", (mods & Qt.MetaModifier) ? "super+" : "", key].join("");
+    }
+
+    function actionFor(chord) {
+        const defaults = {
+            "copy": ["ctrl+shift+c"],
+            "paste": ["ctrl+shift+v"],
+            "zoomIn": ["ctrl+shift+plus"],
+            "zoomOut": ["ctrl+shift+minus"],
+            "zoomReset": ["ctrl+shift+backspace"]
+        };
+        const custom = behavior.keys ?? {};
+        for (const action of Object.keys(defaults)) {
+            if (defaults[action].includes(chord) || (custom[action] ?? []).includes(chord))
+                return action;
+        }
+        return "";
+    }
+
+    function runAction(action, chord) {
+        switch (action) {
+        case "copy":
+            if (selStart === null && chord !== "ctrl+shift+c")
+                return false;
+            copySelection();
+            return true;
+        case "paste":
+            sendInput({
+                "text": Quickshell.clipboardText,
+                "paste": true
+            });
+            return true;
+        case "zoomIn":
+            setZoom(SessionData.terminalZoom + 1);
+            return true;
+        case "zoomOut":
+            setZoom(SessionData.terminalZoom - 1);
+            return true;
+        case "zoomReset":
             setZoom(0);
             return true;
         }
-        const step = zoomStep(event.key);
-        if (step === 0)
-            return false;
-        setZoom(SessionData.terminalZoom + step);
-        return true;
+        return false;
     }
 
     function handleKey(event) {
-        if (handleZoom(event))
+        const chord = chordOf(event);
+        if (runAction(actionFor(chord), chord))
             return;
         const mods = modifierMask(event.modifiers);
         const name = keyName(event.key);
@@ -393,16 +505,8 @@ Rectangle {
             });
             return;
         }
-        if ((mods & 5) === 5) {
-            if (event.key === Qt.Key_C)
-                copySelection();
-            if (event.key === Qt.Key_V)
-                sendInput({
-                    "text": Quickshell.clipboardText,
-                    "paste": true
-                });
+        if ((mods & 5) === 5)
             return;
-        }
         const text = (mods & 4) ? controlText(event.key) : event.text;
         if (text === "")
             return;
@@ -420,6 +524,17 @@ Rectangle {
         event.accepted = true;
     }
 
+    function isFixedWidth(probe) {
+        return probe.font.family !== "" && Math.abs(probe.advanceWidth("M") - probe.advanceWidth("i")) < 0.01;
+    }
+
+    FontMetrics {
+        id: configured
+
+        font.family: term.behavior.fontFamily ?? ""
+        font.pixelSize: Theme.fontSizeMedium
+    }
+
     FontMetrics {
         id: themed
 
@@ -430,8 +545,15 @@ Rectangle {
     FontMetrics {
         id: metrics
 
-        font.family: Math.abs(themed.advanceWidth("M") - themed.advanceWidth("i")) < 0.01 ? Theme.monoFontFamily : "monospace"
-        font.pixelSize: Theme.fontSizeMedium + SessionData.terminalZoom
+        font.family: term.isFixedWidth(configured) ? configured.font.family : term.isFixedWidth(themed) ? themed.font.family : "monospace"
+        font.pixelSize: term.baseFontSize + SessionData.terminalZoom
+    }
+
+    TextMetrics {
+        id: glyph
+
+        font: metrics.font
+        text: "M"
     }
 
     Timer {
@@ -481,11 +603,93 @@ Rectangle {
         }
     }
 
+    component UnderlineMark: Item {
+        id: mark
+
+        required property int style
+        required property color tint
+        readonly property real thickness: Math.max(1, Math.round(term.cellHeight / 16))
+        readonly property real amplitude: thickness
+        readonly property real lineY: height - thickness * 2 - (style === 3 ? amplitude : 0)
+
+        function wave() {
+            const points = [];
+            const steps = Math.max(2, Math.ceil(width / 2));
+            for (let i = 0; i <= steps; i++)
+                points.push(Qt.point(i * width / steps, lineY + amplitude * Math.sin(2 * Math.PI * i / steps * Math.max(1, Math.round(width / term.cellWidth)))));
+            return points;
+        }
+
+        Rectangle {
+            visible: mark.style === 1 || mark.style === 2
+            width: mark.width
+            height: mark.thickness
+            y: mark.lineY
+            color: mark.tint
+        }
+
+        Rectangle {
+            visible: mark.style === 2
+            width: mark.width
+            height: mark.thickness
+            y: mark.lineY - mark.thickness * 2
+            color: mark.tint
+        }
+
+        Repeater {
+            model: mark.style === 4 || mark.style === 5 ? Math.ceil(mark.width / (mark.thickness * (mark.style === 4 ? 2 : 5))) : 0
+
+            Rectangle {
+                required property int index
+
+                x: index * mark.thickness * (mark.style === 4 ? 2 : 5)
+                y: mark.lineY
+                width: mark.style === 4 ? mark.thickness : mark.thickness * 3
+                height: mark.thickness
+                color: mark.tint
+            }
+        }
+
+        Shape {
+            visible: mark.style === 3
+            anchors.fill: parent
+
+            ShapePath {
+                strokeColor: mark.tint
+                strokeWidth: mark.thickness
+                fillColor: "transparent"
+
+                PathPolyline {
+                    path: mark.style === 3 ? mark.wave() : []
+                }
+            }
+        }
+    }
+
+    component PlacedImage: Image {
+        required property var modelData
+
+        x: modelData.x * term.cellWidth + (modelData.ox ?? 0)
+        y: modelData.y * term.cellHeight + (modelData.oy ?? 0)
+        width: modelData.w * term.cellWidth
+        height: modelData.h * term.cellHeight
+        source: term.images[modelData.i] ?? ""
+        sourceClipRect: Qt.rect(modelData.sx, modelData.sy, modelData.sw, modelData.sh)
+        fillMode: Image.Stretch
+        asynchronous: true
+    }
+
     Item {
         id: screen
 
         anchors.fill: parent
         anchors.margins: FilesMetrics.terminalPadding
+
+        Repeater {
+            model: term.placements.filter(p => (p.z ?? 0) < 0)
+
+            PlacedImage {}
+        }
 
         Repeater {
             model: term.rows
@@ -517,9 +721,11 @@ Rectangle {
 
                         required property var modelData
                         readonly property int attrs: modelData.a ?? 0
-                        readonly property color ink: modelData.f || Theme.surfaceText
-                        readonly property color paper: modelData.b || term.color
+                        readonly property color ink: modelData.f || term.ink
+                        readonly property color paper: modelData.b || term.paper
                         readonly property bool inverse: (attrs & 32) !== 0
+                        readonly property int underline: modelData.u ?? 0
+                        readonly property bool plainUnderline: underline === 1 && !modelData.uc
 
                         x: modelData.x * term.cellWidth
                         width: modelData.w * term.cellWidth
@@ -541,12 +747,27 @@ Rectangle {
                             font.pixelSize: metrics.font.pixelSize
                             font.bold: (cell.attrs & 1) !== 0
                             font.italic: (cell.attrs & 4) !== 0
-                            font.underline: (cell.attrs & 8) !== 0
+                            font.underline: cell.plainUnderline
                             font.strikeout: (cell.attrs & 16) !== 0
+                        }
+
+                        Loader {
+                            anchors.fill: parent
+                            active: cell.underline > 0 && !cell.plainUnderline
+                            sourceComponent: UnderlineMark {
+                                style: cell.underline
+                                tint: cell.modelData.uc || (cell.inverse ? cell.paper : cell.ink)
+                            }
                         }
                     }
                 }
             }
+        }
+
+        Repeater {
+            model: term.placements.filter(p => (p.z ?? 0) >= 0)
+
+            PlacedImage {}
         }
 
         Repeater {
@@ -564,8 +785,27 @@ Rectangle {
                 y: row * term.cellHeight
                 width: (last - first + 1) * term.cellWidth
                 height: term.cellHeight
-                color: Theme.primary
-                opacity: Theme.pendingOpacity
+                color: term.customSelection ? term.selectionPaper : Theme.primary
+                opacity: term.customSelection ? 1 : Theme.pendingOpacity
+                clip: true
+
+                Repeater {
+                    model: term.customSelection ? (term.lineStore[highlight.row] ?? []) : []
+
+                    Text {
+                        required property var modelData
+
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: modelData.x * term.cellWidth - highlight.x
+                        text: modelData.t
+                        textFormat: Text.PlainText
+                        color: term.colors.selectionFg ? term.colors.selectionFg : term.colors.selectionBg ? (modelData.f || term.ink) : term.paper
+                        font.family: metrics.font.family
+                        font.pixelSize: metrics.font.pixelSize
+                        font.bold: ((modelData.a ?? 0) & 1) !== 0
+                        font.italic: ((modelData.a ?? 0) & 4) !== 0
+                    }
+                }
             }
         }
 
@@ -576,14 +816,20 @@ Rectangle {
             property bool reporting: false
 
             anchors.fill: parent
-            hoverEnabled: term.mouse === 3
-            cursorShape: term.mouse > 0 ? Qt.ArrowCursor : Qt.IBeamCursor
+            hoverEnabled: true
+            cursorShape: term.linkHover ? Qt.PointingHandCursor : term.mouse > 0 ? Qt.ArrowCursor : Qt.IBeamCursor
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
             onPressed: event => {
                 term.forceActiveFocus();
                 const cell = term.cellAt(Qt.point(event.x, event.y));
                 lastCell = cell.y * term.cols + cell.x;
                 reporting = term.mouse > 0 && !(event.modifiers & Qt.ShiftModifier);
+                const link = (event.modifiers & Qt.ControlModifier) && event.button === Qt.LeftButton && !reporting ? term.linkAt(cell) : "";
+                if (link !== "") {
+                    term.openLink(link);
+                    reporting = false;
+                    return;
+                }
                 if (reporting) {
                     term.clearSelection();
                     term.reportMouse("press", cell, term.buttonName(event.button), event.modifiers);
@@ -593,10 +839,14 @@ Rectangle {
             onReleased: event => {
                 if (reporting)
                     term.reportMouse("release", term.cellAt(Qt.point(event.x, event.y)), term.buttonName(event.button), event.modifiers);
+                else if (event.button === Qt.LeftButton && term.behavior.copyOnSelect)
+                    term.copySelection();
             }
+            onExited: term.linkHover = false
             onPositionChanged: event => {
                 const cell = term.cellAt(Qt.point(event.x, event.y));
                 const index = cell.y * term.cols + cell.x;
+                term.linkHover = (event.modifiers & Qt.ControlModifier) !== 0 && !(term.mouse > 0 && !(event.modifiers & Qt.ShiftModifier)) && term.linkAt(cell) !== "";
                 if (index === lastCell)
                     return;
                 if (pressedButtons === 0) {
@@ -618,15 +868,28 @@ Rectangle {
         }
 
         Rectangle {
-            visible: term.cursor.visible && term.sessionId !== ""
+            readonly property bool hollow: !term.activeFocus
+            readonly property string shape: hollow ? "block" : term.cursorShape
+
+            visible: term.cursor.visible && term.sessionId !== "" && term.blinkVisible
             x: term.cursor.x * term.cellWidth
-            y: term.cursor.y * term.cellHeight
-            width: term.cellWidth
-            height: term.cellHeight
-            color: term.activeFocus ? Theme.primary : "transparent"
-            opacity: Theme.pendingOpacity
-            border.width: Theme.outlineWidthFocused
-            border.color: Theme.primary
+            y: term.cursor.y * term.cellHeight + (shape === "underline" ? term.cellHeight - height : 0)
+            width: shape === "bar" ? Theme.outlineWidthFocused : term.cellWidth
+            height: shape === "underline" ? Theme.outlineWidthFocused : term.cellHeight
+            color: hollow ? "transparent" : term.cursorColor
+            opacity: shape === "block" ? Theme.pendingOpacity : 1
+            border.width: shape === "block" ? Theme.outlineWidthFocused : 0
+            border.color: term.cursorColor
+        }
+
+        Timer {
+            id: blinkTimer
+
+            interval: FilesMetrics.terminalBlinkInterval
+            repeat: true
+            running: term.cursorBlinks && term.activeFocus && term.cursor.visible
+            onTriggered: term.blinkVisible = !term.blinkVisible
+            onRunningChanged: term.blinkVisible = true
         }
     }
 }

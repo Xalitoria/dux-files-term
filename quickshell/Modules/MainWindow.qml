@@ -57,6 +57,7 @@ FloatingWindow {
     readonly property bool lastActive: WindowService.lastActiveId === windowId
     readonly property var terminalModes: ["hidden", "files", "bottom", "right"]
     readonly property bool terminalOpen: terminalMode !== "hidden"
+    readonly property bool terminalSeeThrough: terminalOpen && (terminalLoader.item?.paperOpacity ?? 1) < 1
     readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (surface.height - header.height - FilesMetrics.windowMargin - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
     readonly property real terminalDockHeight: Math.min(terminalHeight, terminalMaxHeight)
     readonly property real terminalBottomInset: terminalMode === "bottom" ? terminalDockHeight + FilesMetrics.splitterWidth + FilesMetrics.windowMargin : 0
@@ -68,7 +69,7 @@ FloatingWindow {
     implicitWidth: SessionData.windowWidth
     implicitHeight: SessionData.windowHeight
     minimumSize: Qt.size(FilesMetrics.windowMinWidth, FilesMetrics.windowMinHeight)
-    color: Theme.surface
+    color: "transparent"
     visible: true
 
     onClosed: requestClose()
@@ -430,6 +431,42 @@ FloatingWindow {
 
         LayoutMirroring.enabled: I18n.isRtl
         LayoutMirroring.childrenInherit: true
+
+        Item {
+            id: backdrop
+
+            readonly property rect hole: window.terminalSeeThrough ? Qt.rect(Math.round(terminalLoader.x), Math.round(terminalLoader.y), Math.round(terminalLoader.width), Math.round(terminalLoader.height)) : Qt.rect(0, surface.height, 0, 0)
+
+            anchors.fill: parent
+
+            Rectangle {
+                width: parent.width
+                height: backdrop.hole.y
+                color: Theme.surface
+            }
+
+            Rectangle {
+                y: backdrop.hole.y
+                width: backdrop.hole.x
+                height: backdrop.hole.height
+                color: Theme.surface
+            }
+
+            Rectangle {
+                x: backdrop.hole.x + backdrop.hole.width
+                y: backdrop.hole.y
+                width: Math.max(0, parent.width - x)
+                height: backdrop.hole.height
+                color: Theme.surface
+            }
+
+            Rectangle {
+                y: backdrop.hole.y + backdrop.hole.height
+                width: parent.width
+                height: Math.max(0, parent.height - y)
+                color: Theme.surface
+            }
+        }
 
         WheelHandler {
             property var forwardedScroller: null

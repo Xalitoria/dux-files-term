@@ -7,7 +7,7 @@ const view = source("../Modules/TerminalView.qml");
 
 const terminal = (cols, rows) => {
     const ctx = vm.createContext({ Qt: { point: (x, y) => ({ x, y }) } });
-    vm.runInContext(`var cols = ${cols}; var lineStore = ${JSON.stringify(rows)}; var selStart = null; var selEnd = null; var selAnchor = null;`, ctx);
+    vm.runInContext(`var cols = ${cols}; var lineStore = ${JSON.stringify(rows)}; var selStart = null; var selEnd = null; var selAnchor = null; var behavior = {};`, ctx);
     for (const name of ["rowCells", "isWordCell", "select", "clearSelection", "selectWord", "selectLine", "selectedText"])
         lift(view, name, ctx);
     return ctx;
@@ -60,4 +60,22 @@ test("a wide emoji stays whole when the selection ends on it", () => {
     const ctx = terminal(6, [[run(0, "a"), run(1, "😀", 2), run(3, "b")]]);
     vm.runInContext("select({x: 0, y: 0}, {x: 1, y: 0})", ctx);
     assert.equal(call(ctx, "selectedText()"), "a😀");
+});
+
+test("a terminal that lists delimiters ends words at those characters only", () => {
+    const ctx = terminal(30, [[run(0, "git commit -m'fix' ~/a.txt")]]);
+    vm.runInContext("behavior = {wordDelims: \" '\"}", ctx);
+    vm.runInContext("selectWord({x: 12, y: 0})", ctx);
+    assert.equal(call(ctx, "selectedText()"), "-m", "the quote ends the word");
+    vm.runInContext("selectWord({x: 22, y: 0})", ctx);
+    assert.equal(call(ctx, "selectedText()"), "~/a.txt");
+});
+
+test("a terminal that lists word characters adds them to letters and digits", () => {
+    const ctx = terminal(30, [[run(0, "see a:b-c/d.e now")]]);
+    vm.runInContext("behavior = {wordChars: \"-.\"}", ctx);
+    vm.runInContext("selectWord({x: 4, y: 0})", ctx);
+    assert.equal(call(ctx, "selectedText()"), "a", "the colon is not a word character here");
+    vm.runInContext("selectWord({x: 6, y: 0})", ctx);
+    assert.equal(call(ctx, "selectedText()"), "b-c", "the slash is not either");
 });
