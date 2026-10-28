@@ -2,6 +2,11 @@
 - dest: core/vendor
   path: modules.txt
   type: file
+- dest: core/vendor/github.com/BurntSushi/toml
+  sha256: 01f03d6c3f4bfee108bda3202407b54ac0c295b8302a1315512f12ac05011fd8
+  strip-components: 3
+  type: archive
+  url: https://proxy.golang.org/github.com/!burnt!sushi/toml/@v/v1.6.0.zip
 - dest: core/vendor/github.com/bodgit/sevenzip
   sha256: 9dbad89992338ff0c408a351e9135221715d309acf4234f52fe69d23da7ace7c
   strip-components: 3

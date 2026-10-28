@@ -3,6 +3,7 @@ module github.com/duxlabs-dev/dux-files/core
 go 1.27
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/bodgit/sevenzip v1.6.5
 	github.com/cavaliergopher/cpio v1.0.1
 	github.com/charmbracelet/ultraviolet v0.0.0-20260303162955-0b88c25f3fff
