@@ -2,8 +2,10 @@ package terminal
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,6 +19,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/vt"
 	"github.com/creack/pty"
+	"github.com/duxlabs-dev/dux-files/core/internal/termtheme"
 	"golang.org/x/sys/unix"
 )
 
@@ -24,7 +27,11 @@ const (
 	frameInterval   = 16 * time.Millisecond
 	scrollbackLines = 1000
 	maxCols         = 500
+	maxCellPixels   = 64
 	maxRows         = 200
+
+	maxClipboardBytes = 1 << 20
+	syncTimeout       = 150 * time.Millisecond
 )
 
 type Publisher func(topic string, data any)
@@ -38,6 +45,10 @@ type cursor struct {
 	X       int  `json:"x"`
 	Y       int  `json:"y"`
 	Visible bool `json:"visible"`
+
+	// Set once a program picks a cursor of its own; until then the terminal's own setting applies.
+	Shape string `json:"shape,omitempty"`
+	Blink bool   `json:"blink,omitempty"`
 }
 
 type frame struct {
@@ -49,6 +60,11 @@ type frame struct {
 	Scrollback int         `json:"scrollback"`
 	Title      string      `json:"title"`
 	Mouse      int         `json:"mouse"`
+	Clipboard  *string     `json:"clipboard,omitempty"`
+
+	Images     []frameImage    `json:"images,omitempty"`
+	Dropped    []int           `json:"dropped,omitempty"`
+	Placements json.RawMessage `json:"placements,omitempty"`
 }
 
 type input struct {
@@ -72,11 +88,18 @@ type Session struct {
 
 	mu         sync.Mutex
 	emu        *vt.Emulator
+	gfx        *graphics
 	rows       []json.RawMessage
 	lastCursor cursor
 	lastTitle  string
 	mouse      mouseTracker
+	cellW      int
+	cellH      int
+	sized      pty.Winsize
 	lastMouse  int
+	styled     bool
+	clipboard  *string
+	syncSince  time.Time
 	title      string
 	scroll     int
 	scheduled  bool
@@ -87,7 +110,7 @@ type Session struct {
 	queued  map[int]input
 }
 
-func startSession(topic string, argv []string, cwd string, cols, rows int, follow bool, publish Publisher) (*Session, error) {
+func startSession(topic string, argv []string, cwd string, cols, rows int, follow bool, colors *termtheme.Profile, publish Publisher) (*Session, error) {
 	if len(argv) == 0 {
 		return nil, errors.New("no shell to run")
 	}
@@ -113,16 +136,69 @@ func startSession(topic string, argv []string, cwd string, cols, rows int, follo
 		emu:     emu,
 		queued:  map[int]input{},
 	}
+	s.gfx = newGraphics(emu, func(b []byte) { s.writes.push(b) }, func() (int, int) { return s.cellW, s.cellH })
 	emu.SetCallbacks(vt.Callbacks{
 		Title:       func(title string) { s.title = title },
-		EnableMode:  func(mode ansi.Mode) { s.mouse.set(mode, true) },
-		DisableMode: func(mode ansi.Mode) { s.mouse.set(mode, false) },
+		EnableMode:  func(mode ansi.Mode) { s.setMode(mode, true) },
+		DisableMode: func(mode ansi.Mode) { s.setMode(mode, false) },
+		CursorStyle: func(vt.CursorStyle, bool) { s.styled = true },
 	})
+	emu.RegisterOscHandler(52, s.clipboardWrite)
+
+	emu.RegisterCsiHandler('t', s.windowReport)
+	if colors != nil {
+		s.applyColors(*colors)
+	}
 
 	go s.writes.run()
 	go s.pumpInput()
 	go s.readOutput()
 	return s, nil
+}
+
+func (s *Session) setMode(mode ansi.Mode, enabled bool) {
+	s.mouse.set(mode, enabled)
+	if mode != ansi.ModeSynchronizedOutput {
+		return
+	}
+	s.syncSince = time.Time{}
+	if enabled {
+		s.syncSince = time.Now()
+	}
+}
+
+// Only the write half of OSC 52: a program may fill the clipboard but never read it.
+func (s *Session) clipboardWrite(data []byte) bool {
+	parts := bytes.SplitN(data, []byte(";"), 3)
+	if len(parts) != 3 || len(parts[2]) > maxClipboardBytes*4/3 {
+		return true
+	}
+	text, err := base64.StdEncoding.DecodeString(string(parts[2]))
+	if err != nil {
+		return true
+	}
+	value := string(text)
+	s.clipboard = &value
+	return true
+}
+
+// XTWINOPS size reports, which image tools use to learn the cell size.
+func (s *Session) windowReport(params ansi.Params) bool {
+	op, _, _ := params.Param(0, 0)
+	width, height := s.emu.Width(), s.emu.Height()
+	switch {
+	case s.cellW <= 0 || s.cellH <= 0:
+		return false
+	case op == 14:
+		s.writes.push([]byte(fmt.Sprintf("\x1b[4;%d;%dt", height*s.cellH, width*s.cellW)))
+	case op == 16:
+		s.writes.push([]byte(fmt.Sprintf("\x1b[6;%d;%dt", s.cellH, s.cellW)))
+	case op == 18:
+		s.writes.push([]byte(fmt.Sprintf("\x1b[8;%d;%dt", height, width)))
+	default:
+		return false
+	}
+	return true
 }
 
 func clampSize(cols, rows int) (int, int) {
@@ -148,7 +224,7 @@ func (s *Session) readOutput() {
 		n, err := s.pty.Read(buf)
 		if n > 0 {
 			s.mu.Lock()
-			_, _ = s.emu.Write(buf[:n])
+			s.gfx.feed(buf[:n])
 			s.scheduleLocked()
 			s.mu.Unlock()
 		}
@@ -198,6 +274,11 @@ func (s *Session) flush() {
 		s.mu.Unlock()
 		return
 	}
+	if !s.syncSince.IsZero() && time.Since(s.syncSince) < syncTimeout {
+		s.scheduleLocked()
+		s.mu.Unlock()
+		return
+	}
 	next, changed := s.frameLocked()
 	s.mu.Unlock()
 	if changed {
@@ -228,12 +309,19 @@ func (s *Session) frameLocked() (frame, bool) {
 
 	position := s.emu.CursorPosition()
 	current := cursor{X: position.X, Y: position.Y + s.scroll, Visible: !s.emu.CursorHidden() && s.scroll == 0}
+	if s.styled {
+		style, blink := s.emu.CursorStyle()
+		current.Shape, current.Blink = cursorShapes[style], blink
+	}
 	mouse := s.mouse.level()
-	changed := len(lines) > 0 || current != s.lastCursor || s.title != s.lastTitle || mouse != s.lastMouse
+	images, imagesChanged := s.gfx.frame(history-s.scroll, height)
+	clipboard := s.clipboard
+	s.clipboard = nil
+	changed := len(lines) > 0 || imagesChanged || clipboard != nil || current != s.lastCursor || s.title != s.lastTitle || mouse != s.lastMouse
 	s.lastCursor = current
 	s.lastTitle = s.title
 	s.lastMouse = mouse
-	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title, Mouse: mouse}, changed
+	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title, Mouse: mouse, Images: images.Images, Dropped: images.Dropped, Placements: images.Placements, Clipboard: clipboard}, changed
 }
 
 func (s *Session) lineSource(index, history int) func(x int) *uv.Cell {
@@ -270,9 +358,7 @@ func (s *Session) apply(in input) {
 		return
 	}
 	if in.mouse != "" {
-		if event := mouseEventOf(in); event != nil {
-			s.emu.SendMouse(event)
-		}
+		s.sendMouse(mouseEventOf(in))
 		return
 	}
 	s.jumpToBottomLocked()
@@ -283,6 +369,33 @@ func (s *Session) apply(in input) {
 	sendKey(s.emu, in.key, in.text, in.mods)
 }
 
+func (s *Session) sendMouse(event uv.MouseEvent) {
+	switch {
+	case event == nil:
+	case s.mouse.pixels && s.cellW > 0 && s.cellH > 0:
+		if s.mouse.level() > 0 {
+			s.writes.push([]byte(pixelMouse(event, s.cellW, s.cellH)))
+		}
+	default:
+		s.emu.SendMouse(event)
+	}
+}
+
+var cursorShapes = map[vt.CursorStyle]string{vt.CursorBlock: "block", vt.CursorUnderline: "underline", vt.CursorBar: "bar"}
+
+// Programs that ask for focus events (mode 1004) learn when the view gains or loses focus.
+func (s *Session) Focus(focused bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	switch {
+	case s.closed:
+	case focused:
+		s.emu.Focus()
+	default:
+		s.emu.Blur()
+	}
+}
+
 func (s *Session) jumpToBottomLocked() {
 	if s.scroll == 0 {
 		return
@@ -291,8 +404,10 @@ func (s *Session) jumpToBottomLocked() {
 	s.scheduleLocked()
 }
 
-func (s *Session) Resize(cols, rows int) {
+// The cell size is in pixels. Programs that report the mouse in pixels need it to find the cell.
+func (s *Session) Resize(cols, rows, cellW, cellH int) {
 	cols, rows = clampSize(cols, rows)
+	cellW, cellH = min(max(cellW, 0), maxCellPixels), min(max(cellH, 0), maxCellPixels)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
@@ -300,9 +415,14 @@ func (s *Session) Resize(cols, rows int) {
 	}
 	if cols != s.emu.Width() || rows != s.emu.Height() {
 		s.emu.Resize(cols, rows)
-		_ = pty.Setsize(s.pty, &pty.Winsize{Cols: uint16(cols), Rows: uint16(rows)})
+	}
+	size := pty.Winsize{Cols: uint16(cols), Rows: uint16(rows), X: uint16(cols * cellW), Y: uint16(rows * cellH)}
+	if size != s.sized {
+		s.cellW, s.cellH, s.sized = cellW, cellH, size
+		_ = pty.Setsize(s.pty, &size)
 	}
 	s.rows = nil
+	s.gfx.resync()
 	s.lastCursor = cursor{X: -1}
 	s.scheduleLocked()
 }

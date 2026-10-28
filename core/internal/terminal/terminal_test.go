@@ -27,8 +27,10 @@ func TestRowRuns(t *testing.T) {
 		{"style change splits runs", "a\x1b[1;31mb\x1b[0mc", []run{{X: 0, W: 1, Text: "a"}, {X: 1, W: 1, Text: "b", Fg: "#800000", Attr: attrBold}, {X: 2, W: 1, Text: "c"}}},
 		{"truecolor background", "\x1b[48;2;1;2;3mx", []run{{X: 0, W: 1, Text: "x", Bg: "#010203"}}},
 		{"coloured trailing space is kept", "a\x1b[44m  ", []run{{X: 0, W: 1, Text: "a"}, {X: 1, W: 2, Text: "  ", Bg: "#000080"}}},
-		{"inverse, italic and underline", "\x1b[7;3;4mz", []run{{X: 0, W: 1, Text: "z", Attr: attrInverse | attrItalic | attrUnderline}}},
+		{"inverse, italic and underline", "\x1b[7;3;4mz", []run{{X: 0, W: 1, Text: "z", Attr: attrInverse | attrItalic | attrUnderline, Underline: 1}}},
 		{"non-ascii glyphs sit on the grid", "ab│c\uf0a0 d", []run{{X: 0, W: 2, Text: "ab"}, {X: 2, W: 1, Text: "│"}, {X: 3, W: 1, Text: "c"}, {X: 4, W: 1, Text: "\uf0a0"}, {X: 5, W: 2, Text: " d"}}},
+		{"underline styles and colours", "\x1b[4:3m\x1b[58;2;255;0;0mz", []run{{X: 0, W: 1, Text: "z", Attr: attrUnderline, Underline: 3, UnderlineColor: "#ff0000"}}},
+		{"hyperlinks split runs", "a\x1b]8;;https://example.com\x1b\\bc\x1b]8;;\x1b\\d", []run{{X: 0, W: 1, Text: "a"}, {X: 1, W: 2, Text: "bc", Link: "https://example.com"}, {X: 3, W: 1, Text: "d"}}},
 		{"wide characters sit on the grid", "a漢b", []run{{X: 0, W: 1, Text: "a"}, {X: 1, W: 2, Text: "漢"}, {X: 3, W: 1, Text: "b"}}},
 	}
 	for _, tt := range tests {

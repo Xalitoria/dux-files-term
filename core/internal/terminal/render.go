@@ -26,6 +26,10 @@ type run struct {
 	Fg   string `json:"f,omitempty"`
 	Bg   string `json:"b,omitempty"`
 	Attr int    `json:"a,omitempty"`
+
+	Underline      int    `json:"u,omitempty"`
+	UnderlineColor string `json:"uc,omitempty"`
+	Link           string `json:"l,omitempty"`
 }
 
 type palette func(index int) color.Color
@@ -68,15 +72,23 @@ func attrsOf(style uv.Style) int {
 }
 
 func styleOf(cell *uv.Cell, colors palette) run {
-	return run{Fg: hexColor(cell.Style.Fg, colors), Bg: hexColor(cell.Style.Bg, colors), Attr: attrsOf(cell.Style)}
+	r := run{Fg: hexColor(cell.Style.Fg, colors), Bg: hexColor(cell.Style.Bg, colors), Attr: attrsOf(cell.Style)}
+	if cell.Style.Underline != uv.UnderlineNone {
+		r.Underline = int(cell.Style.Underline)
+		r.UnderlineColor = hexColor(cell.Style.UnderlineColor, colors)
+	}
+	if !strings.HasPrefix(cell.Link.URL, markerPrefix) {
+		r.Link = cell.Link.URL
+	}
+	return r
 }
 
 func sameStyle(a, b run) bool {
-	return a.Fg == b.Fg && a.Bg == b.Bg && a.Attr == b.Attr
+	return a.Fg == b.Fg && a.Bg == b.Bg && a.Attr == b.Attr && a.Underline == b.Underline && a.UnderlineColor == b.UnderlineColor && a.Link == b.Link
 }
 
 func invisible(r run) bool {
-	return r.Bg == "" && r.Attr&(attrInverse|attrUnderline|attrStrike) == 0
+	return r.Bg == "" && r.Link == "" && r.Attr&(attrInverse|attrUnderline|attrStrike) == 0
 }
 
 // Wide and non-ASCII characters get a run of their own: they can come from a fallback font with a

@@ -24,10 +24,15 @@ var mouseLevels = map[ansi.Mode]int{
 }
 
 type mouseTracker struct {
-	on map[ansi.Mode]bool
+	on     map[ansi.Mode]bool
+	pixels bool
 }
 
 func (t *mouseTracker) set(mode ansi.Mode, enabled bool) {
+	if mode == ansi.ModeMouseExtSgrPixel {
+		t.pixels = enabled
+		return
+	}
 	if _, tracked := mouseLevels[mode]; !tracked {
 		return
 	}
@@ -74,4 +79,14 @@ func mouseEventOf(in input) uv.MouseEvent {
 		return uv.MouseWheelEvent(mouse)
 	}
 	return nil
+}
+
+// The emulator only knows the X10 and SGR encodings. A program that asked for pixels
+// (kitty's own tools do) gets the middle of the cell the pointer is in.
+func pixelMouse(event uv.MouseEvent, cellW, cellH int) string {
+	mouse := event.Mouse()
+	_, motion := event.(uv.MouseMotionEvent)
+	_, release := event.(uv.MouseReleaseEvent)
+	b := ansi.EncodeMouseButton(mouse.Button, motion, mouse.Mod.Contains(uv.ModShift), mouse.Mod.Contains(uv.ModAlt), mouse.Mod.Contains(uv.ModCtrl))
+	return ansi.MouseSgr(b, mouse.X*cellW+cellW/2, mouse.Y*cellH+cellH/2, release)
 }

@@ -46,7 +46,7 @@ func startShell(t *testing.T, events *published) (*Session, string) {
 	}
 	dir := t.TempDir()
 	t.Setenv("PS1", "$ ")
-	session, err := startSession("terminal:test", []string{shell}, dir, 80, 24, true, events.publish)
+	session, err := startSession("terminal:test", []string{shell}, dir, 80, 24, true, nil, events.publish)
 	require.NoError(t, err)
 	go session.wait(func() {})
 	t.Cleanup(session.Close)
@@ -86,4 +86,89 @@ func TestSessionCloseEndsShell(t *testing.T) {
 	session.Close()
 
 	assert.Eventually(t, events.hasExited, 5*time.Second, 20*time.Millisecond)
+}
+
+func TestSessionReportsMouseInPixelsWhenAsked(t *testing.T) {
+	script := `printf '\033[?1003h\033[?1016h'; stty raw -echo; head -c 12 | od -An -c; sleep 5`
+	session, err := startSession("terminal:pixels", []string{"sh", "-c", script}, t.TempDir(), 80, 24, false, nil, (&published{}).publish)
+	require.NoError(t, err)
+	go session.wait(func() {})
+	t.Cleanup(session.Close)
+	session.Resize(80, 24, 10, 20)
+	require.Eventually(t, func() bool {
+		session.mu.Lock()
+		defer session.mu.Unlock()
+		return session.mouse.pixels && session.mouse.level() == 3
+	}, 5*time.Second, 20*time.Millisecond)
+
+	session.Input(0, input{mouse: "move", x: 2, y: 1, button: "none"})
+
+	assert.Eventually(t, func() bool { return strings.Contains(screenText(session), "3   5   ;   2   6   ;   3   1   M") }, 5*time.Second, 20*time.Millisecond, screenText(session))
+}
+
+func frameOf(s *Session) frame {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	f, _ := s.frameLocked()
+	return f
+}
+
+type clipboards struct {
+	mu   sync.Mutex
+	seen []string
+}
+
+func (c *clipboards) publish(_ string, data any) {
+	f, ok := data.(frame)
+	if !ok || f.Clipboard == nil {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.seen = append(c.seen, *f.Clipboard)
+}
+
+func (c *clipboards) all() []string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return append([]string(nil), c.seen...)
+}
+
+func TestSessionPassesClipboardWritesOnly(t *testing.T) {
+	seen := &clipboards{}
+	session, err := startSession("terminal:clip", []string{"sh", "-c", `printf '\033]52;c;aGVsbG8=\033\\'; sleep 0.3; printf '\033]52;c;?\033\\'; sleep 5`}, t.TempDir(), 80, 24, false, nil, seen.publish)
+	require.NoError(t, err)
+	go session.wait(func() {})
+	t.Cleanup(session.Close)
+
+	require.Eventually(t, func() bool { return len(seen.all()) > 0 }, 5*time.Second, 20*time.Millisecond)
+
+	time.Sleep(500 * time.Millisecond)
+	assert.Equal(t, []string{"hello"}, seen.all(), "a read request is ignored")
+}
+
+func TestSessionReportsTheCursorAProgramPicked(t *testing.T) {
+	session, err := startSession("terminal:cursor", []string{"sh", "-c", `sleep 0.3; printf '\033[6 q'; sleep 5`}, t.TempDir(), 80, 24, false, nil, (&published{}).publish)
+	require.NoError(t, err)
+	go session.wait(func() {})
+	t.Cleanup(session.Close)
+	assert.Empty(t, frameOf(session).Cursor.Shape, "the terminal's own setting applies until a program picks one")
+
+	require.Eventually(t, func() bool { return frameOf(session).Cursor.Shape == "bar" }, 5*time.Second, 20*time.Millisecond)
+
+	assert.False(t, frameOf(session).Cursor.Blink)
+}
+
+func TestSessionHoldsFramesDuringSynchronizedOutput(t *testing.T) {
+	session, err := startSession("terminal:sync", []string{"sh", "-c", `printf '\033[?2026hhalf'; sleep 5`}, t.TempDir(), 80, 24, false, nil, (&published{}).publish)
+	require.NoError(t, err)
+	go session.wait(func() {})
+	t.Cleanup(session.Close)
+	require.Eventually(t, func() bool { return strings.Contains(screenText(session), "half") }, 5*time.Second, 20*time.Millisecond)
+
+	session.mu.Lock()
+	held := !session.syncSince.IsZero()
+	session.mu.Unlock()
+
+	assert.True(t, held)
 }

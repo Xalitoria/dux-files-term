@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/duxlabs-dev/dux-files/core/internal/termtheme"
 	"github.com/duxlabs-dev/dux-files/core/internal/wire"
 	"github.com/duxlabs-dev/dux-go/files"
 	"github.com/duxlabs-dev/dux-go/ipc"
@@ -56,7 +57,10 @@ func (m *Manager) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 		})
 		w.Respond(req.ID, map[string]any{})
 	case "terminal.resize":
-		session.Resize(params.IntOpt(req.Params, "cols", 80), params.IntOpt(req.Params, "rows", 24))
+		session.Resize(params.IntOpt(req.Params, "cols", 80), params.IntOpt(req.Params, "rows", 24), params.IntOpt(req.Params, "cellWidth", 0), params.IntOpt(req.Params, "cellHeight", 0))
+		w.Respond(req.ID, map[string]any{})
+	case "terminal.focus":
+		session.Focus(params.BoolOpt(req.Params, "focused", false))
 		w.Respond(req.ID, map[string]any{})
 	case "terminal.scroll":
 		session.Scroll(params.IntOpt(req.Params, "lines", 0))
@@ -87,9 +91,14 @@ func (m *Manager) handleOpen(ctx context.Context, w *ipc.ConnWriter, req ipc.Req
 	id := strconv.Itoa(m.lastID)
 	m.mu.Unlock()
 
+	var profile *termtheme.Profile
+	if loaded, ok := termtheme.Load(); ok {
+		profile = &loaded
+	}
+
 	topic := "terminal:" + id
 	session, err := startSession(topic, shellArgv(m.sandboxed, cwd, os.Getenv("SHELL")), cwd,
-		params.IntOpt(req.Params, "cols", 80), params.IntOpt(req.Params, "rows", 24), !m.sandboxed, m.publish)
+		params.IntOpt(req.Params, "cols", 80), params.IntOpt(req.Params, "rows", 24), !m.sandboxed, profile, m.publish)
 	if err != nil {
 		wire.RespondError(w, req.ID, err)
 		return
@@ -107,7 +116,12 @@ func (m *Manager) handleOpen(ctx context.Context, w *ipc.ConnWriter, req ipc.Req
 		case <-session.done:
 		}
 	}()
-	w.Respond(req.ID, map[string]any{"id": id, "topic": topic, "follow": session.follow})
+	opened := map[string]any{"id": id, "topic": topic, "follow": session.follow}
+	if profile != nil {
+		opened["colors"] = colorsPayload(*profile)
+		opened["behavior"] = behaviorPayload(*profile)
+	}
+	w.Respond(req.ID, opened)
 }
 
 // A sandboxed shell runs on the host, where the foreground process group cannot be read, so it never follows folders.
