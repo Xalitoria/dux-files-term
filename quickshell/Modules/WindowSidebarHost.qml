@@ -202,7 +202,7 @@ Item {
 
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: Math.max(FilesMetrics.sidebarMinWidth, Math.min(host.width - FilesMetrics.windowMargin * 2, CacheData.sidebarWidth))
+        width: Math.max(FilesMetrics.sidebarMinWidth, Math.min(host.width - FilesMetrics.contentMarginH * 2, CacheData.sidebarWidth))
         visible: x > -width
         x: host.overlayOpen ? 0 : -width
         color: Theme.surfaceContainerLow

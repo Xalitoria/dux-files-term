@@ -59,9 +59,9 @@ FloatingWindow {
     readonly property var terminalModes: ["hidden", "files", "bottom", "right"]
     readonly property bool terminalOpen: terminalMode !== "hidden"
     readonly property bool terminalSeeThrough: terminalOpen && (terminalLoader.item?.paperOpacity ?? 1) < 1
-    readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (surface.height - header.height - FilesMetrics.windowMargin - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
+    readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (surface.height - header.height - FilesMetrics.contentMarginV - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
     readonly property real terminalDockHeight: Math.min(terminalHeight, terminalMaxHeight)
-    readonly property real terminalBottomInset: terminalMode === "bottom" ? terminalDockHeight + FilesMetrics.splitterWidth + FilesMetrics.windowMargin : 0
+    readonly property real terminalBottomInset: terminalMode === "bottom" ? terminalDockHeight + FilesMetrics.splitterWidth + FilesMetrics.contentMarginV : 0
     readonly property real terminalRightInset: terminalMode === "right" ? surface.width / 2 + FilesMetrics.splitterWidth : 0
     readonly property var previewTarget: {
         const entries = selectedEntries();
@@ -663,7 +663,7 @@ FloatingWindow {
                 anchors.bottomMargin: window.terminalMode === "files" ? terminalLoader.height + FilesMetrics.splitterWidth : 0
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.rightMargin: Math.max(0, window.terminalRightInset - FilesMetrics.windowMargin)
+                anchors.rightMargin: Math.max(0, window.terminalRightInset - FilesMetrics.contentMarginH)
 
                 readonly property real usableWidth: width - (window.splitView ? FilesMetrics.splitterWidth : 0)
 
@@ -730,19 +730,19 @@ FloatingWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: FilesMetrics.windowMargin
-            anchors.rightMargin: FilesMetrics.windowMargin
+            anchors.bottomMargin: FilesMetrics.contentMarginV
+            anchors.rightMargin: FilesMetrics.contentMarginH
             anchors.leftMargin: {
                 switch (window.terminalMode) {
                 case "right":
                     return surface.width / 2;
                 case "bottom":
-                    return FilesMetrics.windowMargin;
+                    return FilesMetrics.contentMarginH;
                 default:
-                    return FilesMetrics.windowMargin + sidebarHost.dockedWidth;
+                    return FilesMetrics.contentMarginH + sidebarHost.dockedWidth;
                 }
             }
-            height: atRight ? surface.height - content.y - panesRow.y - FilesMetrics.windowMargin : window.terminalDockHeight
+            height: atRight ? surface.height - content.y - panesRow.y - FilesMetrics.contentMarginV : window.terminalDockHeight
             active: window.terminalStarted
             visible: window.terminalOpen
             sourceComponent: TerminalView {
@@ -759,7 +759,6 @@ FloatingWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.topMargin: -FilesMetrics.sidebarPadding
             anchors.bottomMargin: Math.max(0, window.terminalBottomInset - FilesMetrics.sidebarPadding)
             anchors.rightMargin: window.terminalRightInset
             mainWindow: window

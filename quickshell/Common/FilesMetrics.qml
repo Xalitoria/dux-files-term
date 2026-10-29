@@ -20,7 +20,8 @@ Singleton {
     readonly property real topbarSpacing: FileBrowserMetrics.controlSpacing
     readonly property real topbarGroupSpacing: Theme.spacingXS
 
-    readonly property real windowMargin: Theme.windowInset
+    readonly property real contentMarginH: Theme.spacingXL
+    readonly property real contentMarginV: FileBrowserMetrics.contentMargin
     readonly property real contentSpacing: FileBrowserMetrics.contentSpacing
     readonly property real paneRadius: FileBrowserMetrics.paneRadius
     readonly property real paneBodyMargin: FileBrowserMetrics.paneMargin
