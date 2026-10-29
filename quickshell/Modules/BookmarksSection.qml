@@ -92,7 +92,7 @@ FilePlaceSection {
                     return RecentService.count < 0 ? "" : RecentService.count > 0 ? FileFormat.count(RecentService.count) : I18n.tr("No recent files", "recent files view placeholder when nothing was opened yet");
                 if (trash)
                     return TrashService.count > 0 ? FileFormat.count(TrashService.count) : I18n.tr("Trash is empty", "trash view placeholder and sidebar tooltip when nothing is trashed");
-                return "";
+                return [label, target].join("\n");
             }
             selected: target === section.currentPath
             actionIcon: saved ? "bookmark_remove" : ""

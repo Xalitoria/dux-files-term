@@ -1,6 +1,6 @@
 import QtQuick
 import qs.Common
-import qs.DCommon.Widgets
+import qs.Modules
 
 SettingsRow {
     id: root
@@ -19,12 +19,13 @@ SettingsRow {
     subtitle: description
     onCurrentValueChanged: dropdown.currentValue = currentValue
 
-    DDropdown {
+    FitDropdown {
         id: dropdown
         enabled: root.enabled
         Accessible.name: root.text
         Accessible.description: root.description + (root.description ? " · " : "") + currentValue
-        width: Math.min(dropdownWidth, root.width - SettingsMetrics.rowPaddingH * 2)
+        alignPopupRight: true
+        width: Math.min(Math.max(dropdownWidth, fittedWidth), root.width - SettingsMetrics.rowPaddingH * 2)
         Component.onCompleted: currentValue = root.currentValue
         onValueChanged: value => root.valueChanged(value)
     }

@@ -111,7 +111,7 @@ OverlayDialog {
             text: I18n.tr("Connect anonymously", "credential dialog option that skips the login")
         }
 
-        DDropdown {
+        FitDropdown {
             id: saveDropdown
 
             width: parent.width

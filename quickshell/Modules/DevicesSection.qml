@@ -126,7 +126,7 @@ FilePlaceSection {
             selected: modelData.mounted && (modelData.mountPoints?.length ? modelData.mountPoints : [modelData.mountPoint]).includes(section.currentPath)
             tooltipText: {
                 const usage = DevicesService.usage[modelData.mountPoint];
-                const location = [modelData.mountPoint, modelData.device].filter(value => value).join("\n");
+                const location = [modelData.name || modelData.label, modelData.mountPoint, modelData.device].filter((value, index, values) => value && values.indexOf(value) === index).join("\n");
                 if (!usage?.total || usage.code)
                     return location;
                 return location + "\n" + I18n.tr("%1 used · %2 free · %3 total", "storage volume usage, free space and total capacity").arg(FileFormat.size(usage.used)).arg(FileFormat.size(usage.free)).arg(FileFormat.size(usage.total));
@@ -162,6 +162,7 @@ FilePlaceSection {
 
             label: modelData.name
             iconName: modelData.iconName
+            tooltipText: modelData.name
             actionIcon: "play_arrow"
             actionTooltip: I18n.tr("Mount", "device action")
             busy: section.busyId === modelData.id
@@ -181,6 +182,7 @@ FilePlaceSection {
 
             label: modelData.name
             iconName: modelData.iconName
+            tooltipText: [modelData.name, modelData.path].filter(line => line).join("\n")
             actionIcon: "eject"
             actionTooltip: I18n.tr("Disconnect", "network mount action")
             busy: section.busyId === modelData.id

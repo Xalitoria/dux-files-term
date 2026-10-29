@@ -34,16 +34,19 @@ FilePlaceSection {
         FilePlaceRow {
             required property var modelData
 
+            readonly property string target: modelData.homePath || modelData.path
+
             label: modelData.name
             iconName: modelData.iconName
+            tooltipText: [modelData.name, modelData.uri, target].filter((line, index, lines) => line && lines.indexOf(line) === index).join("\n")
             actionIcon: "eject"
             actionTooltip: I18n.tr("Disconnect", "network mount action")
             busy: section.busyId === modelData.id
-            dropPath: modelData.path
-            onClicked: section.navigateRequested(modelData.path)
-            onMiddleClicked: section.tabRequested(modelData.path)
-            onDropped: drop => section.dropRequested(modelData.path, drop)
-            onSpringLoaded: section.navigateRequested(modelData.path)
+            dropPath: target
+            onClicked: section.navigateRequested(target)
+            onMiddleClicked: section.tabRequested(target)
+            onDropped: drop => section.dropRequested(target, drop)
+            onSpringLoaded: section.navigateRequested(target)
             onActionTriggered: {
                 section.busyId = modelData.id;
                 NetworkService.disconnect(modelData.id, () => section.busyId = "");

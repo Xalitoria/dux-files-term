@@ -10,12 +10,40 @@ OverlayDialog {
     id: root
 
     property string errorText: ""
+    readonly property var logins: [
+        {
+            "label": I18n.tr("Yourself", "connect dialog: log in as the user in the address"),
+            "kind": "",
+            "asks": false
+        },
+        {
+            "label": I18n.tr("root, with sudo", "connect dialog: become root on the server with sudo"),
+            "kind": "sudo",
+            "asks": false
+        },
+        {
+            "label": I18n.tr("Another user, with sudo", "connect dialog: become another user on the server with sudo"),
+            "kind": "sudo",
+            "asks": true
+        },
+        {
+            "label": I18n.tr("Another user, with machinectl", "connect dialog: become another user on the server with machinectl"),
+            "kind": "machinectl",
+            "asks": true
+        }
+    ]
+    readonly property var login: logins.find(item => item.label === loginDropdown.currentValue) ?? logins[0]
+    readonly property bool canElevate: /^(sftp|ssh):\/\//.test(addressField.text.trim())
+    readonly property bool elevating: canElevate && login.kind !== ""
 
     signal connected(string path)
 
     function ask() {
         errorText = "";
         addressField.text = schemeDropdown.currentValue === "" ? "" : schemeDropdown.currentValue + "://";
+        loginDropdown.currentValue = logins[0].label;
+        userField.text = "";
+        sudoPasswordField.text = "";
         open();
         addressField.forceActiveFocus();
     }
@@ -31,9 +59,28 @@ OverlayDialog {
                 root.showFailure(target, result);
                 return;
             }
+            sudoPasswordField.text = "";
+            if (result.notice)
+                ToastService.info(I18n.tr("This server has no separate sftp-server, so its files open as you. The terminal still becomes the other user.", "toast after connecting as another user to a server that can only share files as the login user"));
             root.connected(path);
             root.close();
-        });
+        }, "", elevating ? {
+            "elevate": login.kind,
+            "elevateUser": login.asks ? userField.text.trim() : "",
+            "elevatePassword": sudoPasswordField.text
+        } : null);
+    }
+
+    function useRecent(server) {
+        if (!server.elevate) {
+            submit(server.uri);
+            return;
+        }
+        const [kind, user] = server.elevate.split("+");
+        addressField.text = server.uri;
+        loginDropdown.currentValue = (logins.find(item => item.kind === kind && item.asks === !!user) ?? logins[0]).label;
+        userField.text = user ?? "";
+        sudoPasswordField.forceActiveFocus();
     }
 
     function localPath(result) {
@@ -57,7 +104,7 @@ OverlayDialog {
         width: parent.width
         spacing: Theme.spacingM
 
-        DDropdown {
+        FitDropdown {
             id: schemeDropdown
 
             width: parent.width
@@ -80,6 +127,41 @@ OverlayDialog {
             onAccepted: root.submit("")
         }
 
+        FitDropdown {
+            id: loginDropdown
+
+            width: parent.width
+            visible: root.canElevate
+            text: I18n.tr("Log in as", "label for choosing which user to become on the server")
+            description: I18n.tr("Become another user after logging in", "connect dialog hint for the log in as picker")
+            options: root.logins.map(item => item.label)
+            currentValue: root.logins[0].label
+        }
+
+        DTextField {
+            id: userField
+
+            width: parent.width
+            visible: root.elevating && root.login.asks
+            outlined: true
+            labelText: I18n.tr("User", "label for the user to become on the server")
+            placeholderText: "nix"
+            onAccepted: root.submit("")
+        }
+
+        DTextField {
+            id: sudoPasswordField
+
+            width: parent.width
+            visible: root.elevating
+            outlined: true
+            echoMode: TextInput.Password
+            showPasswordToggle: true
+            labelText: I18n.tr("sudo password", "label for the sudo password input on the connect dialog")
+            supportingText: I18n.tr("Leave empty if sudo doesn't ask. It is only used for this connection and isn't saved.", "connect dialog hint under the sudo password input")
+            onAccepted: root.submit("")
+        }
+
         StyledText {
             visible: NetworkService.servers.length > 0
             text: I18n.tr("Recent", "header above previously used servers")
@@ -95,11 +177,11 @@ OverlayDialog {
                 required property var modelData
 
                 width: parent.width
-                label: modelData.uri
+                label: modelData.elevate ? modelData.uri + " (" + modelData.elevate.replace("+", " ") + ")" : modelData.uri
                 iconName: "folder-remote"
                 actionIcon: "close"
                 busy: NetworkService.connecting
-                onClicked: root.submit(modelData.uri)
+                onClicked: root.useRecent(modelData)
                 onActionTriggered: NetworkService.forget(modelData.uri)
             }
         }

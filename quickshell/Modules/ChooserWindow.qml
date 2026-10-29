@@ -666,7 +666,7 @@ FloatingWindow {
                 spacing: Theme.spacingM
                 visible: window.filters.length > 0 || window.choices.length > 0
 
-                DDropdown {
+                FitDropdown {
                     id: filterDropdown
 
                     visible: window.filters.length > 0
@@ -709,7 +709,7 @@ FloatingWindow {
                             onToggled: value => window.setChoice(choiceRow.modelData.id, value ? "true" : "false")
                         }
 
-                        DDropdown {
+                        FitDropdown {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !choiceRow.isToggle
                             showLabel: false

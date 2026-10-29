@@ -50,13 +50,15 @@ Singleton {
     }
 
     // Blocks in the daemon until gvfs is done, credential round trips included.
-    function connectTo(uri, callback, password) {
+    function connectTo(uri, callback, password, elevation) {
         connecting = true;
         const params = {
             "uri": uri
         };
         if (password)
             params.password = password;
+        if (elevation?.elevate)
+            Object.assign(params, elevation);
         _send("network.connect", params, result => {
             root.connecting = false;
             if (!result.error && result.mount) {
