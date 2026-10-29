@@ -1,12 +1,17 @@
 package netmount
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/duxlabs-dev/dux-files/core/internal/location"
+	"github.com/duxlabs-dev/dux-files/core/internal/sshfs"
 	"github.com/duxlabs-dev/dux-go/files"
 	"github.com/duxlabs-dev/dux-go/log"
 	"github.com/godbus/dbus/v5"
@@ -24,9 +29,13 @@ type Publisher interface {
 type Service struct {
 	bus       Publisher
 	servers   *serverStore
+	ssh       *sshfs.Manager
 	opCounter atomic.Uint32
 	stop      chan struct{}
 	stopped   sync.Once
+
+	asMu       sync.Mutex
+	terminalAs map[sshfs.Login]sshfs.Elevation
 
 	mu         sync.RWMutex
 	conn       *dbus.Conn
@@ -46,13 +55,25 @@ type Snapshot struct {
 }
 
 func NewService(bus Publisher, configDir string) *Service {
-	return &Service{
+	s := &Service{
 		bus:     bus,
 		servers: newServerStore(configDir),
 		stop:    make(chan struct{}),
 		reason:  "gvfs is not running",
 		ops:     map[dbus.ObjectPath]*mountOp{},
+
+		terminalAs: map[sshfs.Login]sshfs.Elevation{},
 	}
+	s.ssh = sshfs.NewManager(sshfsRoot(), func() { s.publish(s.Snapshot()) })
+	return s
+}
+
+func sshfsRoot() string {
+	runtime := os.Getenv("XDG_RUNTIME_DIR")
+	if runtime == "" {
+		runtime = filepath.Join(os.TempDir(), "dfiles-"+strconv.Itoa(os.Getuid()))
+	}
+	return filepath.Join(runtime, "dfiles", "sshfs")
 }
 
 func (s *Service) Start() error {
@@ -79,6 +100,7 @@ func (s *Service) Start() error {
 
 func (s *Service) Close() {
 	s.stopped.Do(func() { close(s.stop) })
+	s.ssh.Close()
 }
 
 func (s *Service) loop(conn *dbus.Conn, signals chan *dbus.Signal) {
@@ -146,12 +168,14 @@ func (s *Service) reload(conn *dbus.Conn) {
 func (s *Service) Snapshot() Snapshot {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return Snapshot{Kind: "mounts", Available: s.available, Reason: s.reason, Schemes: availableSchemes(s.mountables), Mounts: s.mounts}
+	mounts := append(append([]Mount{}, s.mounts...), s.elevatedMounts()...)
+	return Snapshot{Kind: "mounts", Available: s.available, Reason: s.reason, Schemes: availableSchemes(s.mountables), Mounts: mounts}
 }
 
 type Connected struct {
 	Mount    Mount  `json:"mount"`
 	Location string `json:"location"`
+	Notice   string `json:"notice,omitempty"`
 }
 
 func (s *Service) Connect(uri, password string) (Connected, error) {
@@ -168,11 +192,22 @@ func (s *Service) Connect(uri, password string) (Connected, error) {
 	if err != nil {
 		return Connected{}, err
 	}
+	if login, _, err := sshfs.ParseURI(remote.URI); err == nil {
+		s.setTerminalElevation(login, sshfs.Elevation{})
+	}
 	mount, err := s.mount(conn, remote.URI, password, spec)
 	if err != nil {
 		return Connected{}, err
 	}
-	return Connected{Mount: mount, Location: LocationIn(mount, URIOf(spec, s.mountableList()))}, nil
+	return Connected{Mount: mount, Location: openingFolder(mount, spec, s.mountableList())}, nil
+}
+
+// Without a path in the address a server opens in the user's home, as other file managers do.
+func openingFolder(mount Mount, spec Spec, mountables []Mountable) string {
+	if spec.Prefix == "/" && mount.HomePath != "" {
+		return mount.HomePath
+	}
+	return LocationIn(mount, URIOf(spec, mountables))
 }
 
 func (s *Service) mount(conn *dbus.Conn, uri, password string, spec Spec) (Mount, error) {
@@ -206,6 +241,13 @@ func (s *Service) mount(conn *dbus.Conn, uri, password string, spec Spec) (Mount
 }
 
 func (s *Service) Disconnect(id string) error {
+	if s.ssh.Owns(id) {
+		if err := s.ssh.Unmount(id); err != nil {
+			return fail(files.CodeBusy, "%v", err)
+		}
+		s.publish(s.Snapshot())
+		return nil
+	}
 	conn := s.connection()
 	if conn == nil {
 		return fail(files.CodeNotSupported, "gvfs is not running")
@@ -246,6 +288,78 @@ func (s *Service) Answer(id string, answer Answer) error {
 		return fail(files.CodeInvalid, "question %s is no longer waiting", id)
 	}
 	return nil
+}
+
+// ConnectAs opens an sftp server as another user. gvfs can't, so the server is mounted with sshfs instead.
+func (s *Service) ConnectAs(uri string, as sshfs.Elevation, sudoPassword string) (Connected, error) {
+	login, dir, err := sshfs.ParseURI(location.SplitPassword(strings.TrimSpace(uri)).URI)
+	if err != nil {
+		return Connected{}, fail(files.CodeInvalid, "%v", err)
+	}
+	mounted, err := s.ssh.Mount(login, as, sudoPassword)
+	if errors.Is(err, sshfs.ErrNoServer) {
+		return s.terminalOnly(uri, login, as)
+	}
+	if err != nil {
+		return Connected{}, fail(files.CodeIO, "%v", err)
+	}
+	mount := elevatedMount(mounted)
+	if err := s.servers.remember(Server{URI: login.URI(), Name: mount.Name, Scheme: "sftp", Elevate: as.Tag()}); err != nil {
+		log.Warnf("network: saving recent servers: %v", err)
+	}
+	s.publish(s.Snapshot())
+	if dir == "/" && mount.HomePath != "" {
+		return Connected{Mount: mount, Location: mount.HomePath}, nil
+	}
+	return Connected{Mount: mount, Location: filepath.Join(mount.Path, dir)}, nil
+}
+
+// Without a separate sftp-server the files open as yourself, and the terminal still becomes the other user.
+func (s *Service) terminalOnly(uri string, login sshfs.Login, as sshfs.Elevation) (Connected, error) {
+	connected, err := s.Connect(uri, "")
+	if err != nil {
+		return Connected{}, err
+	}
+	s.setTerminalElevation(login, as)
+	connected.Notice = "files"
+	if err := s.servers.remember(Server{URI: login.URI(), Name: connected.Mount.Name, Scheme: "sftp", Elevate: as.Tag()}); err != nil {
+		log.Warnf("network: saving recent servers: %v", err)
+	}
+	return connected, nil
+}
+
+func (s *Service) setTerminalElevation(login sshfs.Login, as sshfs.Elevation) {
+	s.asMu.Lock()
+	defer s.asMu.Unlock()
+	if as.Active() {
+		s.terminalAs[login] = as
+		return
+	}
+	delete(s.terminalAs, login)
+}
+
+// TerminalElevation is who the terminal becomes after logging in to a server whose files could only be opened as yourself.
+func (s *Service) TerminalElevation(user, host string, port int) sshfs.Elevation {
+	s.asMu.Lock()
+	defer s.asMu.Unlock()
+	return s.terminalAs[sshfs.Login{User: user, Host: host, Port: port}]
+}
+
+func (s *Service) elevatedMounts() []Mount {
+	list := s.ssh.List()
+	mounts := make([]Mount, 0, len(list))
+	for _, mounted := range list {
+		mounts = append(mounts, elevatedMount(mounted))
+	}
+	return mounts
+}
+
+func elevatedMount(mounted sshfs.Mounted) Mount {
+	home := ""
+	if mounted.Home != "" {
+		home = filepath.Join(mounted.Path, mounted.Home)
+	}
+	return Mount{ID: mounted.ID, Name: mounted.Name, URI: mounted.URI, Path: mounted.Path, HomePath: home, Scheme: "sftp", Kind: KindNetwork, IconName: "folder-remote"}
 }
 
 func (s *Service) Servers() []Server { return s.servers.list() }

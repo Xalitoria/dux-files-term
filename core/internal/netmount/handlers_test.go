@@ -6,6 +6,7 @@ import (
 	"net"
 	"testing"
 
+	"github.com/duxlabs-dev/dux-files/core/internal/sshfs"
 	"github.com/duxlabs-dev/dux-go/ipc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -122,4 +123,33 @@ func TestConnectReusesAMountThatCoversTheAddress(t *testing.T) {
 	require.NoError(t, err)
 	_, found := svc.mountedAt(spec)
 	assert.False(t, found)
+}
+
+func TestHandleConnectRejectsABadElevation(t *testing.T) {
+	for _, params := range []map[string]any{
+		{"uri": "sftp://host/", "elevate": "su"},
+		{"uri": "sftp://host/", "elevate": "machinectl"},
+		{"uri": "sftp://host/", "elevate": "sudo", "elevateUser": "-oProxyCommand=x"},
+	} {
+		out := call(t, mountedService(t), ipc.Request{ID: 5, Method: "network.connect", Params: params})
+		assert.Equal(t, "EINVAL", out["code"], params)
+	}
+}
+
+func TestHandleConnectAsNeedsAnSftpAddress(t *testing.T) {
+	out := call(t, mountedService(t), ipc.Request{ID: 6, Method: "network.connect", Params: map[string]any{"uri": "smb://host/share", "elevate": "sudo"}})
+	assert.Equal(t, "EINVAL", out["code"])
+}
+
+func TestTerminalElevationFollowsTheLastConnection(t *testing.T) {
+	svc := mountedService(t)
+	login := sshfs.Login{User: "me", Host: "box"}
+	as := sshfs.Elevation{Kind: "machinectl", User: "nix"}
+
+	svc.setTerminalElevation(login, as)
+	assert.Equal(t, as, svc.TerminalElevation("me", "box", 0))
+	assert.False(t, svc.TerminalElevation("me", "other", 0).Active())
+
+	svc.setTerminalElevation(login, sshfs.Elevation{})
+	assert.False(t, svc.TerminalElevation("me", "box", 0).Active())
 }

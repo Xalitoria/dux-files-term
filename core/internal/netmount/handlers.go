@@ -1,6 +1,7 @@
 package netmount
 
 import (
+	"github.com/duxlabs-dev/dux-files/core/internal/sshfs"
 	"github.com/duxlabs-dev/dux-files/core/internal/wire"
 	"github.com/duxlabs-dev/dux-go/files"
 	"github.com/duxlabs-dev/dux-go/ipc"
@@ -51,7 +52,17 @@ func (s *Service) handleConnect(w *ipc.ConnWriter, req ipc.Request) {
 		wire.RespondError(w, req.ID, wire.Invalid("network.connect requires a uri"))
 		return
 	}
-	connected, err := s.Connect(uri, params.StringOpt(req.Params, "password", ""))
+	as, err := sshfs.NewElevation(params.StringOpt(req.Params, "elevate", ""), params.StringOpt(req.Params, "elevateUser", ""))
+	if err != nil {
+		wire.RespondError(w, req.ID, wire.Invalid(err.Error()))
+		return
+	}
+	var connected Connected
+	if as.Active() {
+		connected, err = s.ConnectAs(uri, as, params.StringOpt(req.Params, "elevatePassword", ""))
+	} else {
+		connected, err = s.Connect(uri, params.StringOpt(req.Params, "password", ""))
+	}
 	if err != nil {
 		wire.RespondError(w, req.ID, err)
 		return

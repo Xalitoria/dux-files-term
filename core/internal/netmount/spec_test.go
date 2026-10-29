@@ -188,3 +188,25 @@ func TestLocationInFromParsedURIs(t *testing.T) {
 	mount := Mount{URI: "smb://ana@server/public", Path: "/gvfs/smb-share:server=server,share=public,user=ana"}
 	assert.Equal(t, mount.Path+"/reports", LocationIn(mount, URIOf(spec, mountables)))
 }
+
+func TestHomeInReadsTheFolderAServerOpensIn(t *testing.T) {
+	tests := []struct{ mountPath, home, want string }{
+		{"/run/user/1000/gvfs/sftp:host=box", "/home/me", "/run/user/1000/gvfs/sftp:host=box/home/me"},
+		{"/run/user/1000/gvfs/sftp:host=box", "sftp://me@box/home/me", "/run/user/1000/gvfs/sftp:host=box/home/me"},
+		{"/run/user/1000/gvfs/sftp:host=box", "/", ""},
+		{"/run/user/1000/gvfs/sftp:host=box", "", ""},
+		{"", "/home/me", ""},
+	}
+	for _, tt := range tests {
+		assert.Equal(t, tt.want, homeIn(tt.mountPath, tt.home), tt.home)
+	}
+}
+
+func TestAServerOpensInTheHomeFolderUnlessTheAddressNamesOne(t *testing.T) {
+	mount := Mount{URI: "sftp://me@box/", Path: "/mnt/box", HomePath: "/mnt/box/home/me"}
+	bare, _ := ParseURI("sftp://me@box", mountables)
+	named, _ := ParseURI("sftp://me@box/srv/data", mountables)
+
+	assert.Equal(t, "/mnt/box/home/me", openingFolder(mount, bare, mountables))
+	assert.Equal(t, "/mnt/box/srv/data", openingFolder(mount, named, mountables))
+}

@@ -1,6 +1,7 @@
 package netmount
 
 import (
+	"path/filepath"
 	"strings"
 
 	"github.com/duxlabs-dev/dux-files/core/internal/dbusutil"
@@ -52,6 +53,7 @@ type Mount struct {
 	Name     string `json:"name"`
 	URI      string `json:"uri"`
 	Path     string `json:"path,omitempty"`
+	HomePath string `json:"homePath,omitempty"`
 	Scheme   string `json:"scheme"`
 	Kind     string `json:"kind"`
 	IconName string `json:"iconName"`
@@ -63,17 +65,32 @@ type Mount struct {
 func decodeMount(raw wireMount, mountables []Mountable) Mount {
 	spec := decodeSpec(raw.Spec)
 	scheme := SchemeOf(spec, mountables)
+	path := dbusutil.ByteString(raw.FuseMountpoint)
 	return Mount{
 		ID:       raw.StableName,
 		Name:     raw.DisplayName,
 		URI:      URIOf(spec, mountables),
-		Path:     dbusutil.ByteString(raw.FuseMountpoint),
+		Path:     path,
+		HomePath: homeIn(path, dbusutil.ByteString(raw.DefaultLocation)),
 		Scheme:   scheme,
 		Kind:     kindOf(spec.Type()),
 		IconName: themedIcon(raw.Icon),
 		dbusID:   raw.DBusID,
 		object:   raw.ObjectPath,
 	}
+}
+
+// The folder a server opens in, such as the user's home, as a path under where the mount is on disk.
+func homeIn(mountPath, home string) string {
+	home = strings.TrimSpace(home)
+	if scheme := strings.Index(home, "://"); scheme >= 0 {
+		rest := home[scheme+3:]
+		home = rest[strings.Index(rest+"/", "/"):]
+	}
+	if mountPath == "" || !strings.HasPrefix(home, "/") || home == "/" {
+		return ""
+	}
+	return filepath.Join(mountPath, filepath.Clean(home))
 }
 
 func decodeSpec(raw wireSpec) Spec {

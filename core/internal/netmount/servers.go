@@ -16,6 +16,7 @@ type Server struct {
 	URI      string `json:"uri"`
 	Name     string `json:"name,omitempty"`
 	Scheme   string `json:"scheme,omitempty"`
+	Elevate  string `json:"elevate,omitempty"`
 	LastUsed int64  `json:"lastUsedMs"`
 }
 
@@ -47,7 +48,7 @@ func (s *serverStore) remember(server Server) error {
 	server.LastUsed = s.now().UnixMilli()
 	kept := []Server{server}
 	for _, existing := range s.items {
-		if existing.URI == server.URI || len(kept) >= recentServers {
+		if (existing.URI == server.URI && existing.Elevate == server.Elevate) || len(kept) >= recentServers {
 			continue
 		}
 		kept = append(kept, existing)

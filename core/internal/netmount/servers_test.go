@@ -67,3 +67,15 @@ func TestServersTolerateAnUnreadableStore(t *testing.T) {
 	store := newServerStore(filepath.Join(t.TempDir(), "missing"))
 	assert.Empty(t, store.list())
 }
+
+func TestServersKeepOneEntryPerElevation(t *testing.T) {
+	store := newServerStore(t.TempDir())
+	store.remember(Server{URI: "sftp://box/"})
+	store.remember(Server{URI: "sftp://box/", Elevate: "sudo"})
+	store.remember(Server{URI: "sftp://box/", Elevate: "sudo"})
+
+	list := store.list()
+	require.Len(t, list, 2)
+	assert.Equal(t, "sudo", list[0].Elevate)
+	assert.Equal(t, "", list[1].Elevate)
+}
