@@ -19,6 +19,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/vt"
 	"github.com/creack/pty"
+	"github.com/duxlabs-dev/dux-files/core/internal/sshfs"
 	"github.com/duxlabs-dev/dux-files/core/internal/termtheme"
 	"golang.org/x/sys/unix"
 )
@@ -32,6 +33,8 @@ const (
 
 	maxClipboardBytes = 1 << 20
 	syncTimeout       = 150 * time.Millisecond
+	leavePoll         = 50 * time.Millisecond
+	leaveAttempts     = 60
 )
 
 type Publisher func(topic string, data any)
@@ -98,6 +101,12 @@ type Session struct {
 	sized      pty.Winsize
 	lastMouse  int
 	styled     bool
+	bracketed  bool
+	elevation  func(user, host string, port int) sshfs.Elevation
+	remoteKey  string
+	remoteDir  string
+	pending    string
+	leaving    bool
 	clipboard  *string
 	syncSince  time.Time
 	title      string
@@ -158,6 +167,9 @@ func startSession(topic string, argv []string, cwd string, cols, rows int, follo
 
 func (s *Session) setMode(mode ansi.Mode, enabled bool) {
 	s.mouse.set(mode, enabled)
+	if mode == ansi.ModeBracketedPaste {
+		s.bracketed = enabled
+	}
 	if mode != ansi.ModeSynchronizedOutput {
 		return
 	}
@@ -456,23 +468,108 @@ func abs(n int) int {
 
 // Only an idle shell is told to cd, so nothing gets typed into a running program.
 func (s *Session) FollowDirectory(dir string) bool {
-	if !s.follow || !isDir(dir) || !s.shellIdle() || s.shellCwd() == filepath.Clean(dir) {
+	if !s.follow || !filepath.IsAbs(dir) {
 		return false
 	}
+	target, isRemote := s.remoteAt(dir)
+	switch {
+	case s.inRemote() && (!isRemote || s.remoteKey != target.key()):
+		return (isRemote || isDir(dir)) && s.leaveRemote(dir)
+	case isRemote:
+		return isDir(dir) && s.followRemote(target)
+	case !isDir(dir) || !s.shellIdle() || s.shellCwd() == filepath.Clean(dir):
+		return false
+	}
+	return s.send(cdCommand(dir), "", "")
+}
+
+func (s *Session) remoteAt(dir string) (remote, bool) {
+	target, ok := parseRemote(dir)
+	if ok && !target.as.Active() && s.elevation != nil {
+		target.as = s.elevation(target.user, target.host, target.port)
+	}
+	return target, ok
+}
+
+func (s *Session) inRemote() bool {
+	s.mu.Lock()
+	remote := s.remoteKey != ""
+	s.mu.Unlock()
+	return remote && !s.shellIdle() && commandName(s.foreground()) == "ssh"
+}
+
+// Ends the ssh session when its shell sits at a prompt, then follows the folder from the local shell.
+func (s *Session) leaveRemote(dir string) bool {
+	s.mu.Lock()
+	ready, waiting := s.bracketed && !s.emu.IsAltScreen(), s.leaving
+	if ready || waiting {
+		s.pending = dir
+	}
+	s.leaving = s.leaving || ready
+	key, path := s.remoteKey, s.remoteDir
+	s.mu.Unlock()
+	switch {
+	case waiting:
+		return true
+	case !ready || !s.send(leaveCommand, key, path):
+		return false
+	}
+	go s.followAfterLeaving()
+	return true
+}
+
+func (s *Session) followAfterLeaving() {
+	defer func() {
+		s.mu.Lock()
+		s.leaving, s.pending = false, ""
+		s.mu.Unlock()
+	}()
+	for range leaveAttempts {
+		select {
+		case <-s.done:
+			return
+		case <-time.After(leavePoll):
+		}
+		if !s.shellIdle() {
+			continue
+		}
+		s.mu.Lock()
+		dir := s.pending
+		s.remoteKey, s.remoteDir, s.leaving = "", "", false
+		s.mu.Unlock()
+		s.FollowDirectory(dir)
+		return
+	}
+}
+
+// An idle local shell logs in over ssh. Once logged in, moving around the same server cd's the remote shell,
+// which is only done at a prompt: a shell reading a line has bracketed paste on.
+func (s *Session) followRemote(target remote) bool {
+	if s.shellIdle() {
+		return s.send(sshCommand(target), target.key(), target.dir)
+	}
+	s.mu.Lock()
+	moves := s.remoteKey == target.key() && s.remoteDir != target.dir && s.bracketed && !s.emu.IsAltScreen()
+	s.mu.Unlock()
+	return moves && commandName(s.foreground()) == "ssh" && s.send(remoteCdCommand(target.dir), target.key(), target.dir)
+}
+
+func (s *Session) send(text, remoteKey, remoteDir string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.closed {
 		return false
 	}
+	s.remoteKey, s.remoteDir = remoteKey, remoteDir
 	s.jumpToBottomLocked()
-	s.emu.SendText(cdCommand(dir))
+	s.emu.SendText(text)
 	return true
 }
 
-func (s *Session) shellIdle() bool {
+func (s *Session) foreground() int {
 	conn, err := s.pty.SyscallConn()
 	if err != nil {
-		return false
+		return -1
 	}
 	foreground := -1
 	_ = conn.Control(func(fd uintptr) {
@@ -480,7 +577,11 @@ func (s *Session) shellIdle() bool {
 			foreground = pgrp
 		}
 	})
-	return s.cmd.Process != nil && foreground == s.cmd.Process.Pid
+	return foreground
+}
+
+func (s *Session) shellIdle() bool {
+	return s.cmd.Process != nil && s.foreground() == s.cmd.Process.Pid
 }
 
 func (s *Session) shellCwd() string {

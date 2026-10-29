@@ -144,6 +144,7 @@ func bootDaemonServices(ctx context.Context, ownsWindow bool) (*daemonServices, 
 	}
 
 	terminals := terminal.NewManager(bus.Publish, caps.Sandboxed, caps.HostSpawn)
+	terminals.SetElevation(networkService.TerminalElevation)
 
 	colorSchemeWatcher := colorscheme.New(bus.Publish)
 	if err := colorSchemeWatcher.Start(); err != nil {

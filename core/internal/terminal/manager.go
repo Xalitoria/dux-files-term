@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/duxlabs-dev/dux-files/core/internal/sshfs"
 	"github.com/duxlabs-dev/dux-files/core/internal/termtheme"
 	"github.com/duxlabs-dev/dux-files/core/internal/wire"
 	"github.com/duxlabs-dev/dux-go/files"
@@ -19,6 +20,7 @@ type Manager struct {
 	publish   Publisher
 	sandboxed bool
 	hostSpawn bool
+	elevation func(user, host string, port int) sshfs.Elevation
 
 	mu       sync.Mutex
 	sessions map[string]*Session
@@ -27,6 +29,11 @@ type Manager struct {
 
 func NewManager(publish Publisher, sandboxed, hostSpawn bool) *Manager {
 	return &Manager{publish: publish, sandboxed: sandboxed, hostSpawn: hostSpawn, sessions: map[string]*Session{}}
+}
+
+// SetElevation tells sessions who to become on servers whose folders carry no elevation of their own.
+func (m *Manager) SetElevation(lookup func(user, host string, port int) sshfs.Elevation) {
+	m.elevation = lookup
 }
 
 func Handles(method string) bool {
@@ -104,6 +111,7 @@ func (m *Manager) handleOpen(ctx context.Context, w *ipc.ConnWriter, req ipc.Req
 		return
 	}
 
+	session.elevation = m.elevation
 	m.mu.Lock()
 	m.sessions[id] = session
 	m.mu.Unlock()
