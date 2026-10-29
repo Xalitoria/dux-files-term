@@ -118,6 +118,9 @@ Picked up from `PATH` when the daemon starts:
 
 Images in png, jpeg, gif, bmp, tiff and webp are decoded in-process. Anything else uses the freedesktop thumbnailers installed on the system, so packages that ship one (glycin, gsf, evince, totem) just work. `dfiles ipc system.capabilities` shows what was found.
 
+PDF previews use the optional `QtQuick.Pdf` QML module: `qt6-webengine` on Arch, `qt6-qtpdf` on Fedora, `qt6-pdf-imports` on openSUSE, `qml6-module-qtquick-pdf` on Debian and Ubuntu. The nix package wires it in by default, `dux-files.override { withPdfPreview = false; }` drops it.
+Without it, the preview shows an installation hint; image previews and the rest of the file manager still work.
+
 ## Usage
 
 ```bash
@@ -158,7 +161,7 @@ Jobs started from the CLI answer their own prompts. A restore that finds its ori
 
 ## Docked terminal
 
-Press `F4` to cycle the terminal through its places, or pick one from the terminal button in the toolbar:
+Press `F12` to cycle the terminal through its places, or pick one from the terminal button in the toolbar:
 
 | mode | where |
 | --- | --- |
@@ -167,7 +170,7 @@ Press `F4` to cycle the terminal through its places, or pick one from the termin
 | along the bottom | the full width of the window, below the sidebar as well |
 | on the right | the right half of the window, below the toolbar |
 
-`F4` also works while the terminal has focus. Drag the splitter to resize it, the height is remembered. The terminal starts your `$SHELL` in the folder you are looking at. When the shell is idle at a prompt it changes folder with you, and a program that is running is never typed into. Exiting the shell hides the terminal.
+`F12` also works while the terminal has focus. Drag the splitter to resize it, the height is remembered. The terminal starts your `$SHELL` in the folder you are looking at. When the shell is idle at a prompt it changes folder with you, and a program that is running is never typed into. Exiting the shell hides the terminal.
 
 Browsing an SFTP server follows too: when you open a server in the file view, an idle terminal runs `ssh` into the same host, user and port and lands in the folder you are looking at. Moving around that server `cd`s the remote shell while it sits at a prompt. Switching to a local folder, or to another server, ends the `ssh` session first (when its shell sits at a prompt) and then follows from your local shell. Exiting the `ssh` session yourself brings back your local shell too. Authentication is `ssh`'s own, so keys, `~/.ssh/config` and password prompts work in the terminal. This needs the server's folder to be a real path on disk, which means gvfs has to be built with FUSE (`gvfsd-fuse`), the same thing the file view needs to open a server.
 

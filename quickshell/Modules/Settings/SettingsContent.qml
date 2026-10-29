@@ -55,6 +55,25 @@ Item {
         }
     ]
 
+    readonly property var densityOptions: [
+        {
+            label: I18n.tr("Spacious", "interface density option with the most room between items"),
+            value: "spacious"
+        },
+        {
+            label: I18n.tr("Comfortable", "interface density option with the default spacing"),
+            value: "comfortable"
+        },
+        {
+            label: I18n.tr("Compact", "interface density option fitting the most items on screen"),
+            value: "compact"
+        },
+        {
+            label: I18n.tr("Dense", "interface density option denser than compact for small text and tight rows"),
+            value: "dense"
+        }
+    ]
+
     readonly property var viewOptions: [
         {
             label: I18n.tr("List view", "view mode showing one row per item"),
@@ -115,6 +134,17 @@ Item {
         {
             label: I18n.tr("Ask every time", "drag default action option"),
             value: "ask"
+        }
+    ]
+
+    readonly property var openerOptions: [
+        {
+            label: I18n.tr("Default application", "opener dropdown option launching the app registered for the file type"),
+            value: ""
+        },
+        {
+            label: "xdg-open",
+            value: "xdg-open"
         }
     ]
 
@@ -954,6 +984,18 @@ Item {
             }
 
             SettingsCard {
+                title: I18n.tr("Density", "appearance settings section label")
+
+                OptionGroupRow {
+                    text: I18n.tr("Interface density", "interface density setting label")
+                    keywords: I18n.tr("density compact dense spacious comfortable spacing padding rows", "settings search keywords, space separated, add synonyms in your language")
+                    optionList: root.densityOptions
+                    current: SettingsData.density
+                    onPicked: value => SettingsData.density = value
+                }
+            }
+
+            SettingsCard {
                 title: I18n.tr("Typography", "appearance settings section label")
 
                 OptionGroupRow {
@@ -1031,6 +1073,14 @@ Item {
                     description: I18n.tr("Off leaves decorations to the compositor. Applies to new windows.", "window title bars toggle description")
                     checked: SettingsData.windowTitleBars
                     onToggled: checked => SettingsData.windowTitleBars = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Window header", "toggle label for the window title and buttons")
+                    keywords: I18n.tr("title bar header hide decorations", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Hides the title and the window buttons, leaving a thin strip to drag the window.", "window header toggle description")
+                    checked: SettingsData.showTitleBar
+                    onToggled: checked => SettingsData.showTitleBar = checked
                 }
             }
 
@@ -1128,6 +1178,19 @@ Item {
             }
 
             SettingsCard {
+                title: I18n.tr("Open files", "behaviour settings section label for the file opener")
+
+                OptionDropdownRow {
+                    text: I18n.tr("Open files with", "file opener setting label")
+                    keywords: I18n.tr("xdg-open handlr mimeo opener default application launch", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("xdg-open follows the handler on your PATH.", "file opener setting description")
+                    optionList: root.openerOptions
+                    current: SettingsData.opener
+                    onPicked: value => SettingsData.opener = value
+                }
+            }
+
+            SettingsCard {
                 title: I18n.tr("Drag and drop", "behaviour settings section label")
 
                 OptionDropdownRow {
@@ -1209,11 +1272,22 @@ Item {
     Component {
         id: devicesPage
         SettingsPage {
-            SettingsGroup {
+            SettingsCard {
+                title: I18n.tr("Devices in the sidebar", "devices settings section label")
+
+                SettingsToggleRow {
+                    text: I18n.tr("Show devices", "devices setting label")
+                    keywords: I18n.tr("drives usb volumes sidebar hide", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Mounted and removable drives.", "devices setting description")
+                    checked: SettingsData.showDevicesSection
+                    onToggled: checked => SettingsData.showDevicesSection = checked
+                }
+
                 SettingsToggleRow {
                     text: I18n.tr("Show system partitions", "devices setting label")
                     keywords: I18n.tr("internal drives udisks home boot", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Such as a separate /home.", "devices setting description")
+                    enabled: SettingsData.showDevicesSection
                     checked: SettingsData.showSystemPartitions
                     onToggled: checked => SettingsData.showSystemPartitions = checked
                 }
@@ -1222,8 +1296,87 @@ Item {
                     text: I18n.tr("Open unmounted drives on click", "devices setting label")
                     keywords: I18n.tr("mount usb removable sidebar", "settings search keywords, space separated, add synonyms in your language")
                     description: I18n.tr("Off only mounts.", "devices setting description")
+                    enabled: SettingsData.showDevicesSection
                     checked: SettingsData.mountOnClick
                     onToggled: checked => SettingsData.mountOnClick = checked
+                }
+            }
+
+            SettingsCard {
+                title: I18n.tr("Network in the sidebar", "network settings section label")
+
+                SettingsToggleRow {
+                    text: I18n.tr("Show network", "network setting label")
+                    keywords: I18n.tr("gvfs smb sftp remote servers sidebar hide", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Mounted network locations and Connect to Server.", "network setting description")
+                    checked: SettingsData.showNetworkSection
+                    onToggled: checked => SettingsData.showNetworkSection = checked
+                }
+            }
+
+            SettingsCard {
+                title: I18n.tr("Games in the sidebar", "games settings section label")
+
+                SettingsToggleRow {
+                    text: I18n.tr("Show games", "games setting label")
+                    keywords: I18n.tr("steam heroic lutris proton games sidebar hide", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Only launchers with an installed game are listed.", "games setting description")
+                    checked: SettingsData.showGamesSidebar
+                    onToggled: checked => SettingsData.showGamesSidebar = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Steam", "games setting label for the steam group")
+                    keywords: I18n.tr("steam proton valve", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Libraries and Proton prefixes.", "steam games setting description")
+                    enabled: SettingsData.showGamesSidebar
+                    checked: SettingsData.showSteamGames
+                    onToggled: checked => SettingsData.showSteamGames = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Heroic", "games setting label for the heroic group")
+                    keywords: I18n.tr("heroic epic gog amazon", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Games and prefixes Heroic installed.", "heroic games setting description")
+                    enabled: SettingsData.showGamesSidebar
+                    checked: SettingsData.showHeroicGames
+                    onToggled: checked => SettingsData.showHeroicGames = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Lutris", "games setting label for the lutris group")
+                    keywords: I18n.tr("lutris wine prefix", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Games and prefixes Lutris installed.", "lutris games setting description")
+                    enabled: SettingsData.showGamesSidebar
+                    checked: SettingsData.showLutrisGames
+                    onToggled: checked => SettingsData.showLutrisGames = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Settings folders", "games setting label hiding the launcher config folders")
+                    keywords: I18n.tr("config folder launcher wine prefix", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Each launcher's own configuration folder.", "games setting description for the settings folders")
+                    enabled: SettingsData.showGamesSidebar
+                    checked: SettingsData.showGameSettingsFolders
+                    onToggled: checked => SettingsData.showGameSettingsFolders = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Prefixes", "games setting label hiding wine prefixes")
+                    keywords: I18n.tr("wine prefix proton compatdata", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("The Wine prefix of each game.", "games setting description for the wine prefixes")
+                    enabled: SettingsData.showGamesSidebar
+                    checked: SettingsData.showGamePrefixes
+                    onToggled: checked => SettingsData.showGamePrefixes = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Games folders", "games setting label hiding the folders holding the games")
+                    keywords: I18n.tr("games library steamapps common", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Where the launcher keeps the games.", "games setting description for the games folders")
+                    enabled: SettingsData.showGamesSidebar
+                    checked: SettingsData.showGameFolders
+                    onToggled: checked => SettingsData.showGameFolders = checked
                 }
             }
 

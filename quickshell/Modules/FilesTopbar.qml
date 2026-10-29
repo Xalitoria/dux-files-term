@@ -11,13 +11,13 @@ Item {
     id: topbar
 
     property bool splitView: false
-    property bool bookmarked: false
     property bool backEnabled: false
     property bool forwardEnabled: false
     property bool compact: false
     property string viewMode: "list"
     property bool previewOpen: false
     property string terminalMode: "hidden"
+    property bool previewExpandable: false
     property string sortKey: "name"
     property bool sortDescending: false
     property bool trashActive: false
@@ -29,7 +29,6 @@ Item {
     property bool folderHasSettings: false
 
     readonly property bool virtualActive: trashActive || recentActive
-    readonly property string bookmarkLabel: bookmarked ? I18n.tr("Remove bookmark", "tooltip on the bookmark button") : I18n.tr("Bookmark this folder", "tooltip on the bookmark button")
     readonly property var viewModes: [
         {
             "value": "list",
@@ -48,6 +47,7 @@ Item {
         }
     ]
     readonly property string previewLabel: I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
+    readonly property string previewExpandLabel: I18n.tr("Open the preview in a large view", "keyboard shortcut opening the preview overlay")
     readonly property string useForAllLabel: I18n.tr("Use these settings for all folders", "view menu entry making this folder's sort and view the defaults")
     readonly property string resetFolderLabel: I18n.tr("Reset this folder", "view menu entry dropping this folder's own sort and view")
     readonly property bool terminalOpen: terminalMode !== "hidden"
@@ -170,9 +170,10 @@ Item {
     signal backRequested
     signal forwardRequested
     signal splitToggled
-    signal bookmarkToggled
     signal viewModeSelected(string mode)
+    signal zoomRequested(int step)
     signal previewToggled
+    signal previewExpandRequested
     signal sortKeySelected(string key)
     signal sortDirectionToggled
     signal useForAllFoldersRequested
@@ -278,18 +279,6 @@ Item {
         spacing: FilesMetrics.topbarSpacing
 
         FlatButton {
-            anchors.verticalCenter: parent.verticalCenter
-            visible: !topbar.compact
-            enabled: !topbar.virtualActive
-            iconName: "bookmark"
-            iconFilled: topbar.bookmarked
-            iconColor: topbar.bookmarked ? Theme.primary : Theme.surfaceText
-            backgroundColor: Theme.chipSurface
-            tooltipText: topbar.bookmarkLabel
-            onClicked: topbar.bookmarkToggled()
-        }
-
-        FlatButton {
             id: viewButton
 
             anchors.verticalCenter: parent.verticalCenter
@@ -308,6 +297,15 @@ Item {
             backgroundColor: topbar.previewOpen ? Theme.primary : Theme.chipSurface
             tooltipText: topbar.previewLabel
             onClicked: topbar.previewToggled()
+        }
+
+        FlatButton {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: !topbar.compact && topbar.previewExpandable
+            iconName: "open_in_full"
+            backgroundColor: Theme.chipSurface
+            tooltipText: topbar.previewExpandLabel
+            onClicked: topbar.previewExpandRequested()
         }
 
         FlatButton {
@@ -385,14 +383,6 @@ Item {
                 action();
             }
 
-            FileMenuItem {
-                visible: menu.compactRows
-                enabled: !topbar.virtualActive
-                text: topbar.bookmarkLabel
-                iconName: topbar.bookmarked ? "bookmark_remove" : "bookmark"
-                onClicked: menu.pick(() => topbar.bookmarkToggled())
-            }
-
             Repeater {
                 model: topbar.viewModes
 
@@ -427,10 +417,35 @@ Item {
 
             FileMenuItem {
                 visible: menu.viewRows
+                text: I18n.tr("Zoom in", "menu entry making the file view bigger")
+                iconName: "zoom_in"
+                onClicked: topbar.zoomRequested(1)
+            }
+
+            FileMenuItem {
+                visible: menu.viewRows
+                text: I18n.tr("Zoom out", "menu entry making the file view smaller")
+                iconName: "zoom_out"
+                onClicked: topbar.zoomRequested(-1)
+            }
+
+            FileMenuDivider {
+                visible: menu.viewOnly
+            }
+
+            FileMenuItem {
+                visible: menu.viewRows
                 text: topbar.previewLabel
                 iconName: "view_sidebar"
                 checked: topbar.previewOpen
                 onClicked: menu.pick(() => topbar.previewToggled())
+            }
+
+            FileMenuItem {
+                visible: menu.viewRows && topbar.previewExpandable
+                text: topbar.previewExpandLabel
+                iconName: "open_in_full"
+                onClicked: menu.pick(() => topbar.previewExpandRequested())
             }
 
             FileMenuItem {
@@ -522,7 +537,7 @@ Item {
         anchors.leftMargin: FilesMetrics.topbarSpacing
         anchors.rightMargin: FilesMetrics.topbarSpacing
         anchors.verticalCenter: parent.verticalCenter
-        controlHeight: FilesMetrics.topbarControlSize
+        fieldHeight: FilesMetrics.topbarControlSize
         leftIconSize: Theme.iconSizeMedium
         backgroundColor: Theme.surfaceContainerLowest
         placeholderText: I18n.tr("Search in Files", "placeholder in the search field")

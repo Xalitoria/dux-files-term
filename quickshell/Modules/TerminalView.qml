@@ -516,9 +516,9 @@ Rectangle {
         });
     }
 
-    Keys.onShortcutOverride: event => event.accepted = event.key !== Qt.Key_F4
+    Keys.onShortcutOverride: event => event.accepted = event.key !== Qt.Key_F12
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_F4)
+        if (event.key === Qt.Key_F12)
             return;
         handleKey(event);
         event.accepted = true;

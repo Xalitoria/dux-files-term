@@ -47,6 +47,7 @@ QtObject {
         case "extract":
         case "extractTo":
         case "properties":
+        case "customizeFolder":
         case "copyPath":
         case "bookmark":
         case "bookmarkSelected":
@@ -244,6 +245,9 @@ QtObject {
         case "togglePreview":
             togglePreview();
             return;
+        case "previewExpand":
+            mainWindow.preview.present(mainWindow.previewTarget);
+            return;
         case "zoomIn":
             activePane.body.zoomBy(1);
             return;
@@ -312,6 +316,9 @@ QtObject {
             return;
         case "properties":
             showProperties();
+            return;
+        case "customizeFolder":
+            mainWindow.dialogs.showAppearance(mainWindow.selectedEntries());
             return;
         case "copyPath":
             copyText((mainWindow.selectedPaths().length > 0 ? mainWindow.selectedPaths() : [currentPath]).join("\n"));

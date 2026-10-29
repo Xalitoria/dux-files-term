@@ -415,7 +415,7 @@
   {
     "term": "Auto",
     "translation": "",
-    "context": "color source button group option following DMS | theme mode button group option",
+    "context": "color source button group option following DMS | font source button group option following DMS | theme mode button group option",
     "reference": "",
     "comment": ""
   },
@@ -479,6 +479,13 @@
     "term": "Backend: started on demand through %1",
     "translation": "",
     "context": "portal chooser status line, %1 is a path",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Badges",
+    "translation": "",
+    "context": "folder appearance tab listing badge icons",
     "reference": "",
     "comment": ""
   },
@@ -560,6 +567,20 @@
     "comment": ""
   },
   {
+    "term": "Choose a badge image",
+    "translation": "",
+    "context": "file picker title for a folder badge image",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Clear",
+    "translation": "",
+    "context": "folder appearance action clearing the badge",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Clear Recent",
     "translation": "",
     "context": "action emptying the recently used list without touching the files",
@@ -590,7 +611,7 @@
   {
     "term": "Close",
     "translation": "",
-    "context": "dialog button dismissing a dialog | dialog button to close",
+    "context": "dialog button closing the dialog | dialog button dismissing a dialog | dialog button to close | tooltip on the button closing the large preview",
     "reference": "",
     "comment": ""
   },
@@ -633,6 +654,20 @@
     "term": "Column view",
     "translation": "",
     "context": "view mode showing folders side by side",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Comfortable",
+    "translation": "",
+    "context": "interface density option with the default spacing",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Compact",
+    "translation": "",
+    "context": "interface density option fitting the most items on screen",
     "reference": "",
     "comment": ""
   },
@@ -835,7 +870,7 @@
   {
     "term": "Custom",
     "translation": "",
-    "context": "color source button group option for a custom theme file",
+    "context": "color source button group option for a custom theme file | font source button group option for app-chosen fonts",
     "reference": "",
     "comment": ""
   },
@@ -864,6 +899,20 @@
     "term": "Decrease",
     "translation": "",
     "context": "slider row step down button",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Default",
+    "translation": "",
+    "context": "font family dropdown option for the bundled font",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Default application",
+    "translation": "",
+    "context": "opener dropdown option launching the app registered for the file type",
     "reference": "",
     "comment": ""
   },
@@ -917,6 +966,20 @@
     "comment": ""
   },
   {
+    "term": "Dense",
+    "translation": "",
+    "context": "interface density option denser than compact for small text and tight rows",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Density",
+    "translation": "",
+    "context": "appearance settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Details",
     "translation": "",
     "context": "properties tab with the basic facts about an item",
@@ -931,9 +994,23 @@
     "comment": ""
   },
   {
+    "term": "Devices in the sidebar",
+    "translation": "",
+    "context": "devices settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Disconnect",
     "translation": "",
     "context": "network mount action",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Display family",
+    "translation": "",
+    "context": "display font family dropdown label",
     "reference": "",
     "comment": ""
   },
@@ -1050,9 +1127,23 @@
     "comment": ""
   },
   {
+    "term": "Dux Shell not detected, using %1.",
+    "translation": "",
+    "context": "auto font source status when DMS is missing",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Dux Shell not detected, using the %1 preset.",
     "translation": "",
     "context": "auto color source status when DMS is missing",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Each launcher's own configuration folder.",
+    "translation": "",
+    "context": "games setting description for the settings folders",
     "reference": "",
     "comment": ""
   },
@@ -1183,6 +1274,13 @@
     "comment": ""
   },
   {
+    "term": "Family",
+    "translation": "",
+    "context": "font family dropdown label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "File operations",
     "translation": "",
     "context": "jobs popover header",
@@ -1239,6 +1337,13 @@
     "comment": ""
   },
   {
+    "term": "Folder appearance",
+    "translation": "",
+    "context": "context menu entry opening the folder appearance dialog | folder appearance dialog title",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Folders",
     "translation": "",
     "context": "search filter chip for directories",
@@ -1288,6 +1393,13 @@
     "comment": ""
   },
   {
+    "term": "Font source",
+    "translation": "",
+    "context": "font source setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Forget",
     "translation": "",
     "context": "dialog button clearing the remembered folder settings",
@@ -1326,6 +1438,48 @@
     "term": "Fuzzy",
     "translation": "",
     "context": "search chip also matching names whose letters appear in order",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Games",
+    "translation": "",
+    "context": "sidebar section listing game libraries",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Games and prefixes Heroic installed.",
+    "translation": "",
+    "context": "heroic games setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Games and prefixes Lutris installed.",
+    "translation": "",
+    "context": "lutris games setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Games folder",
+    "translation": "",
+    "context": "games sidebar row for the launcher's games folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Games folders",
+    "translation": "",
+    "context": "games setting label hiding the folders holding the games",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Games in the sidebar",
+    "translation": "",
+    "context": "games settings section label",
     "reference": "",
     "comment": ""
   },
@@ -1400,6 +1554,20 @@
     "comment": ""
   },
   {
+    "term": "Heroic",
+    "translation": "",
+    "context": "games setting label for the heroic group | games sidebar group holding heroic games",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Hides the title and the window buttons, leaving a thin strip to drag the window.",
+    "translation": "",
+    "context": "window header toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Home",
     "translation": "",
     "context": "sidebar entry for the user's home folder",
@@ -1414,9 +1582,23 @@
     "comment": ""
   },
   {
+    "term": "Icons",
+    "translation": "",
+    "context": "folder appearance tab listing folder icons",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Image pasted",
     "translation": "",
     "context": "toast after writing a clipboard image into the folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Image web address",
+    "translation": "",
+    "context": "placeholder of the folder appearance badge web address field",
     "reference": "",
     "comment": ""
   },
@@ -1466,6 +1648,13 @@
     "term": "Index is still building, results may be incomplete",
     "translation": "",
     "context": "search results header note while danksearch is indexing",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Interface density",
+    "translation": "",
+    "context": "interface density setting label",
     "reference": "",
     "comment": ""
   },
@@ -1561,6 +1750,20 @@
     "comment": ""
   },
   {
+    "term": "Libraries and Proton prefixes.",
+    "translation": "",
+    "context": "steam games setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Library · %1",
+    "translation": "",
+    "context": "games sidebar row for a steam library",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Light",
     "translation": "",
     "context": "theme mode button group option",
@@ -1624,6 +1827,13 @@
     "comment": ""
   },
   {
+    "term": "Lutris",
+    "translation": "",
+    "context": "games setting label for the lutris group | games sidebar group holding lutris games",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "MIT License",
     "translation": "",
     "context": "about page license footer link",
@@ -1659,6 +1869,13 @@
     "comment": ""
   },
   {
+    "term": "Monospace family",
+    "translation": "",
+    "context": "monospace font family dropdown label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "More actions",
     "translation": "",
     "context": "tooltip on the overflow menu button",
@@ -1676,6 +1893,20 @@
     "term": "Mount",
     "translation": "",
     "context": "device action",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Mounted and removable drives.",
+    "translation": "",
+    "context": "devices setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Mounted network locations and Connect to Server.",
+    "translation": "",
+    "context": "network setting description",
     "reference": "",
     "comment": ""
   },
@@ -1802,6 +2033,13 @@
     "term": "Network",
     "translation": "",
     "context": "sidebar section listing network locations | sidebar section listing remote locations",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Network in the sidebar",
+    "translation": "",
+    "context": "network settings section label",
     "reference": "",
     "comment": ""
   },
@@ -1974,6 +2212,13 @@
     "comment": ""
   },
   {
+    "term": "Only launchers with an installed game are listed.",
+    "translation": "",
+    "context": "games setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Only the window process serves the portal",
     "translation": "",
     "context": "explanation when a daemon without a window answers a portal question",
@@ -2011,7 +2256,14 @@
   {
     "term": "Open files",
     "translation": "",
-    "context": "file chooser default title when picking several files",
+    "context": "behaviour settings section label for the file opener | file chooser default title when picking several files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Open files with",
+    "translation": "",
+    "context": "file opener setting label",
     "reference": "",
     "comment": ""
   },
@@ -2093,6 +2345,13 @@
     "comment": ""
   },
   {
+    "term": "Open the preview in a large view",
+    "translation": "",
+    "context": "keyboard shortcut opening the preview overlay",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open unmounted drives on click",
     "translation": "",
     "context": "devices setting label",
@@ -2138,6 +2397,13 @@
     "term": "Owner",
     "translation": "",
     "context": "file list column header",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "PDF preview is not available. Install Qt PDF support to view this file.",
+    "translation": "",
+    "context": "large preview warning when the optional Qt PDF module is missing",
     "reference": "",
     "comment": ""
   },
@@ -2268,6 +2534,20 @@
     "comment": ""
   },
   {
+    "term": "Prefix · %1",
+    "translation": "",
+    "context": "games sidebar row for one game's wine prefix",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Prefixes",
+    "translation": "",
+    "context": "games setting label hiding wine prefixes",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Preset",
     "translation": "",
     "context": "color source button group option for bundled palettes",
@@ -2313,6 +2593,13 @@
     "term": "Protocol",
     "translation": "",
     "context": "label for the network protocol picker",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Proton · %1",
+    "translation": "",
+    "context": "games sidebar row for the proton prefixes of a steam library",
     "reference": "",
     "comment": ""
   },
@@ -2492,6 +2779,13 @@
     "comment": ""
   },
   {
+    "term": "Reset the view",
+    "translation": "",
+    "context": "tooltip on the button restoring zoom and rotation",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Reset this folder",
     "translation": "",
     "context": "view menu entry dropping this folder's own sort and view",
@@ -2541,6 +2835,13 @@
     "comment": ""
   },
   {
+    "term": "Restore default",
+    "translation": "",
+    "context": "folder appearance action dropping color and badge",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Restored",
     "translation": "",
     "context": "toast after restoring items from the trash",
@@ -2586,6 +2887,20 @@
     "term": "Ripple effects",
     "translation": "",
     "context": "ripple effects toggle label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Rotate left",
+    "translation": "",
+    "context": "tooltip on the button turning the large preview left",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Rotate right",
+    "translation": "",
+    "context": "tooltip on the button turning the large preview right",
     "reference": "",
     "comment": ""
   },
@@ -2681,6 +2996,20 @@
     "comment": ""
   },
   {
+    "term": "Search icon",
+    "translation": "",
+    "context": "placeholder of the folder appearance icon search",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Search icons",
+    "translation": "",
+    "context": "folder appearance button toggling the icon search",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Search in Files",
     "translation": "",
     "context": "placeholder in the search field",
@@ -2772,6 +3101,20 @@
     "comment": ""
   },
   {
+    "term": "Settings folder",
+    "translation": "",
+    "context": "games sidebar row for the launcher's settings folder",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Settings folders",
+    "translation": "",
+    "context": "games setting label hiding the launcher config folders",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Shape",
     "translation": "",
     "context": "appearance settings section label",
@@ -2793,9 +3136,37 @@
     "comment": ""
   },
   {
+    "term": "Show devices",
+    "translation": "",
+    "context": "devices setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show file extensions",
+    "translation": "",
+    "context": "toggle showing the file type suffix in names",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show games",
+    "translation": "",
+    "context": "games setting label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Show hidden files",
     "translation": "",
     "context": "file browser toolbar toggle | menu entry listing dot files",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Show network",
+    "translation": "",
+    "context": "network setting label",
     "reference": "",
     "comment": ""
   },
@@ -2919,6 +3290,13 @@
     "comment": ""
   },
   {
+    "term": "Spacious",
+    "translation": "",
+    "context": "interface density option with the most room between items",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Split view",
     "translation": "",
     "context": "tooltip on the button showing a second pane",
@@ -2943,6 +3321,13 @@
     "term": "Status",
     "translation": "",
     "context": "about page daemon status column label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Steam",
+    "translation": "",
+    "context": "games setting label for the steam group | games sidebar group holding steam libraries",
     "reference": "",
     "comment": ""
   },
@@ -2982,6 +3367,13 @@
     "comment": ""
   },
   {
+    "term": "System",
+    "translation": "",
+    "context": "font source button group option for the Qt system font",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "System default",
     "translation": "",
     "context": "language dropdown option that follows the system language",
@@ -3006,6 +3398,13 @@
     "term": "Terminal, drag and thumbnails",
     "translation": "",
     "context": "settings sidebar tab hint",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The Wine prefix of each game.",
+    "translation": "",
+    "context": "games setting description for the wine prefixes",
     "reference": "",
     "comment": ""
   },
@@ -3062,6 +3461,13 @@
     "term": "Thickness",
     "translation": "",
     "context": "focus ring thickness slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This file could not be opened",
+    "translation": "",
+    "context": "large preview placeholder",
     "reference": "",
     "comment": ""
   },
@@ -3213,6 +3619,13 @@
     "comment": ""
   },
   {
+    "term": "Unavailable until its drive is mounted",
+    "translation": "",
+    "context": "games sidebar row for a library on a drive that is not mounted",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Under 1 MB",
     "translation": "",
     "context": "search filter chip for small files",
@@ -3276,6 +3689,13 @@
     "comment": ""
   },
   {
+    "term": "Use",
+    "translation": "",
+    "context": "folder appearance button applying the typed badge web address",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Use Dux Files for open and save dialogs",
     "translation": "",
     "context": "setting label for serving the desktop portal file chooser",
@@ -3286,6 +3706,20 @@
     "term": "Use a bundled color palette.",
     "translation": "",
     "context": "color source description for preset",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Use an image from a web address",
+    "translation": "",
+    "context": "folder appearance button typing a web badge address",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Use an image from this computer",
+    "translation": "",
+    "context": "folder appearance button picking a local badge image",
     "reference": "",
     "comment": ""
   },
@@ -3374,9 +3808,23 @@
     "comment": ""
   },
   {
+    "term": "Where the launcher keeps the games.",
+    "translation": "",
+    "context": "games setting description for the games folders",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Window",
     "translation": "",
     "context": "general settings section label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Window header",
+    "translation": "",
+    "context": "toggle label for the window title and buttons",
     "reference": "",
     "comment": ""
   },
@@ -3405,6 +3853,20 @@
     "term": "Wrong password",
     "translation": "",
     "context": "archive password dialog error after a failed attempt",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Zoom in",
+    "translation": "",
+    "context": "menu entry making the file view bigger | tooltip on the button zooming the large preview in",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Zoom out",
+    "translation": "",
+    "context": "menu entry making the file view smaller | tooltip on the button zooming the large preview out",
     "reference": "",
     "comment": ""
   },
@@ -3438,6 +3900,13 @@
   },
   {
     "term": "capability available sandbox",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "config folder launcher wine prefix",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
@@ -3521,6 +3990,13 @@
     "comment": ""
   },
   {
+    "term": "density compact dense spacious comfortable spacing padding rows",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "directories first sort",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
@@ -3543,6 +4019,13 @@
   },
   {
     "term": "drag drop copy move ask default action",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "drives usb volumes sidebar hide",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
@@ -3577,7 +4060,49 @@
     "comment": ""
   },
   {
+    "term": "font family typeface dms system qt",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "font size text zoom typography",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "font typeface",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "font typeface code mono",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "font typeface headline title",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "games library steamapps common",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "gvfs smb sftp remote servers sidebar hide",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
@@ -3594,6 +4119,13 @@
     "term": "h j k l move, / searches.",
     "translation": "",
     "context": "vim keys toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "heroic epic gog amazon",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
     "comment": ""
   },
@@ -3655,6 +4187,13 @@
   },
   {
     "term": "locale translation interface",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "lutris wine prefix",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
@@ -3766,6 +4305,27 @@
     "comment": ""
   },
   {
+    "term": "steam heroic lutris proton games sidebar hide",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "steam proton valve",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "suffix type filename",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "tabs external open location",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
@@ -3780,6 +4340,13 @@
     "comment": ""
   },
   {
+    "term": "title bar header hide decorations",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "type-ahead jump filter search keyboard",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
@@ -3787,7 +4354,28 @@
     "comment": ""
   },
   {
+    "term": "wine prefix proton compatdata",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "xdg-desktop-portal",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "xdg-open follows the handler on your PATH.",
+    "translation": "",
+    "context": "file opener setting description",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "xdg-open handlr mimeo opener default application launch",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",

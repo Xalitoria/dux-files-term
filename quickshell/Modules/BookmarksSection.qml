@@ -67,7 +67,7 @@ FilePlaceSection {
 
         width: section.width
         model: section.bookmarks
-        spacing: Theme.spacingXXS
+        spacing: FileBrowserMetrics.sidebarRowGap
         onReordered: indices => BookmarksService.reorder(section.fullOrder(indices.map(index => section.bookmarks[index].path)))
 
         delegate: FilePlaceRow {
@@ -87,6 +87,7 @@ FilePlaceSection {
             label: recent ? I18n.tr("Recent", "recent files view header and sidebar entry") : trash ? I18n.tr("Trash", "trash view header and sidebar entry") : section.labelFor(modelData)
             glyph: recent ? "history" : ""
             iconName: recent ? "" : trash ? (TrashService.count > 0 ? "user-trash-full" : "user-trash") : section.iconFor(modelData)
+            path: recent || trash ? "" : target
             tooltipText: {
                 if (recent)
                     return RecentService.count < 0 ? "" : RecentService.count > 0 ? FileFormat.count(RecentService.count) : I18n.tr("No recent files", "recent files view placeholder when nothing was opened yet");
@@ -95,15 +96,12 @@ FilePlaceSection {
                 return [label, target].join("\n");
             }
             selected: target === section.currentPath
-            actionIcon: saved ? "bookmark_remove" : ""
-            actionTooltip: I18n.tr("Remove bookmark", "tooltip on the bookmark button")
             dropPath: recent ? "" : target
             springLoad: saved
             z: dragging ? 1 : 0
             opacity: dragging ? Theme.pendingOpacity : 1
             onClicked: section.navigateRequested(target)
             onMiddleClicked: section.tabRequested(target)
-            onActionTriggered: BookmarksService.remove(modelData.path)
             onDropped: drop => section.dropRequested(target, drop)
             onSpringLoaded: section.navigateRequested(target)
 

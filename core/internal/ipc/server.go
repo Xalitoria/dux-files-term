@@ -16,7 +16,7 @@ func NewServer(deps Deps) *Server {
 	cfg := dankipc.Config{
 		AppName:                "dfiles",
 		APIVersion:             APIVersion,
-		Capabilities:           []string{"subscribe", "ui", "system", "files", "files.op", "devices", "network", "clipboard", "search", "bookmarks", "trash", "terminal"},
+		Capabilities:           []string{"subscribe", "ui", "system", "files", "files.op", "devices", "network", "clipboard", "search", "bookmarks", "games", "trash", "terminal"},
 		DefaultSubscribeTopics: []string{"ui"},
 		Bus:                    deps.Bus,
 		OnSubscribe: func(topics []string, _ *Subscriber) {

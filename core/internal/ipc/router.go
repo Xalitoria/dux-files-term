@@ -7,6 +7,7 @@ import (
 	"github.com/duxlabs-dev/dux-files/core/internal/bookmarks"
 	"github.com/duxlabs-dev/dux-files/core/internal/clipboard"
 	"github.com/duxlabs-dev/dux-files/core/internal/devices"
+	"github.com/duxlabs-dev/dux-files/core/internal/games"
 	"github.com/duxlabs-dev/dux-files/core/internal/mimeapps"
 	"github.com/duxlabs-dev/dux-files/core/internal/netmount"
 	"github.com/duxlabs-dev/dux-files/core/internal/search"
@@ -67,6 +68,8 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 			return
 		}
 		deps.Terminals.Handle(ctx, w, req)
+	case games.Handles(req.Method):
+		games.Handle(w, req)
 	case strings.HasPrefix(req.Method, "files.op."):
 		if deps.FileOps == nil {
 			w.RespondError(req.ID, "file operations unavailable")
@@ -89,6 +92,8 @@ func Route(ctx context.Context, w *ConnWriter, req Request, deps Deps) {
 		HandlePreview(ctx, w, req)
 	case req.Method == "files.imageSize":
 		HandleImageSize(ctx, w, req)
+	case req.Method == "files.iconCatalog":
+		HandleIconCatalog(ctx, w, req)
 	case strings.HasPrefix(req.Method, "files."):
 		if deps.Files == nil {
 			w.RespondError(req.ID, "file service unavailable")

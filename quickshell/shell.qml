@@ -1,3 +1,4 @@
+//@ pragma Env QT_WAYLAND_DISABLE_WINDOWDECORATION=1
 //@ pragma Env QSG_RENDER_LOOP=threaded
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Material
 //@ pragma UseQApplication
@@ -35,6 +36,7 @@ ShellRoot {
         DC.Host.session = SessionService;
         DC.Host.cache = CacheData;
         DC.Host.files = DirectoryService;
+        DC.Host.appearance = FolderAppearances;
         DC.Host.ownWindowDecorations = Qt.binding(() => SettingsData.windowTitleBars);
         if (Quickshell.env("DFILES_START_HIDDEN") !== "1")
             WindowService.create([]);

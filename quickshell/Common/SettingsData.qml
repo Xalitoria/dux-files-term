@@ -53,6 +53,7 @@ Singleton {
     property alias presetTheme: adapter.presetTheme
     property alias customThemeFile: adapter.customThemeFile
     property alias radiusStrength: adapter.radiusStrength
+    property alias density: adapter.density
     property alias animationDuration: adapter.animationDuration
     property alias reduceMotion: adapter.reduceMotion
     property alias springBounce: adapter.springBounce
@@ -67,8 +68,10 @@ Singleton {
     property alias focusRingWidth: adapter.focusRingWidth
     property alias focusRingColor: adapter.focusRingColor
     property alias windowTitleBars: adapter.windowTitleBars
+    property alias showTitleBar: adapter.showTitleBar
     property alias language: adapter.language
     property alias terminal: adapter.terminal
+    property alias opener: adapter.opener
     property alias closeBehavior: adapter.closeBehavior
     property alias openLocationIn: adapter.openLocationIn
     property alias extractOnOpen: adapter.extractOnOpen
@@ -89,7 +92,16 @@ Singleton {
     property alias thumbnails: adapter.thumbnails
     property alias thumbnailSizeLimitMb: adapter.thumbnailSizeLimitMb
     property alias networkThumbnails: adapter.networkThumbnails
+    property alias showDevicesSection: adapter.showDevicesSidebar
     property alias showSystemPartitions: adapter.showSystemPartitions
+    property alias showNetworkSection: adapter.showNetworkSidebar
+    property alias showGamesSidebar: adapter.showGamesSidebar
+    property alias showSteamGames: adapter.showSteamGames
+    property alias showHeroicGames: adapter.showHeroicGames
+    property alias showLutrisGames: adapter.showLutrisGames
+    property alias showGameSettingsFolders: adapter.showGameSettingsFolders
+    property alias showGamePrefixes: adapter.showGamePrefixes
+    property alias showGameFolders: adapter.showGameFolders
     property alias mountOnClick: adapter.mountOnClick
     property alias searchHidden: adapter.searchHidden
     property alias searchExcludes: adapter.searchExcludes
@@ -158,6 +170,7 @@ Singleton {
             property string presetTheme: "purple"
             property string customThemeFile: ""
             property int radiusStrength: 50
+            property string density: "comfortable"
             property int animationDuration: 250
             property bool reduceMotion: false
             property int springBounce: 1
@@ -172,8 +185,10 @@ Singleton {
             property real focusRingWidth: 1.5
             property string focusRingColor: "primary"
             property bool windowTitleBars: true
+            property bool showTitleBar: true
             property string language: ""
             property string terminal: ""
+            property string opener: ""
             property string closeBehavior: "quit"
             property string openLocationIn: "current"
             property bool extractOnOpen: true
@@ -194,7 +209,16 @@ Singleton {
             property bool thumbnails: true
             property int thumbnailSizeLimitMb: 64
             property bool networkThumbnails: false
+            property bool showDevicesSidebar: true
             property bool showSystemPartitions: false
+            property bool showNetworkSidebar: true
+            property bool showGamesSidebar: true
+            property bool showSteamGames: true
+            property bool showHeroicGames: true
+            property bool showLutrisGames: true
+            property bool showGameSettingsFolders: true
+            property bool showGamePrefixes: true
+            property bool showGameFolders: true
             property bool mountOnClick: true
             property bool searchHidden: false
             property var searchExcludes: []

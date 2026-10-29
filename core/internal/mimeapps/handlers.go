@@ -141,7 +141,7 @@ func (s *Service) handleForMime(w *ipc.ConnWriter, req ipc.Request) {
 	w.Respond(req.ID, appsResult{
 		MimeType:  mimeType,
 		DefaultID: defaultID,
-		Apps:      viewsOf(s.Associations(mimeType), defaultID),
+		Apps:      viewsOf(shown(s.Associations(mimeType), defaultID), defaultID),
 	})
 }
 
@@ -194,6 +194,7 @@ func launchOptions(req ipc.Request) LaunchOptions {
 		WorkingDir:      params.StringOpt(req.Params, "cwd", ""),
 		ActivationToken: params.StringOpt(req.Params, "activationToken", ""),
 		Terminal:        params.StringOpt(req.Params, "terminal", ""),
+		Opener:          params.StringOpt(req.Params, "opener", ""),
 	}
 }
 

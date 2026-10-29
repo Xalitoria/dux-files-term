@@ -382,6 +382,10 @@ FloatingWindow {
         LayoutMirroring.enabled: I18n.isRtl
         LayoutMirroring.childrenInherit: true
 
+        FocusFallback {
+            onTriggered: pane.focusBody()
+        }
+
         Keys.onPressed: event => {
             const control = (event.modifiers & Qt.ControlModifier) !== 0;
             const alt = (event.modifiers & Qt.AltModifier) !== 0;
@@ -579,7 +583,7 @@ FloatingWindow {
                     anchors.leftMargin: FilesMetrics.topbarSpacing
                     anchors.rightMargin: FilesMetrics.topbarSpacing
                     anchors.verticalCenter: parent.verticalCenter
-                    controlHeight: FilesMetrics.topbarControlSize
+                    fieldHeight: FilesMetrics.topbarControlSize
                     leftIconSize: Theme.iconSizeMedium
                     backgroundColor: Theme.surfaceContainerLowest
                     placeholderText: I18n.tr("Search in Files", "placeholder in the search field")

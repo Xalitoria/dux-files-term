@@ -47,13 +47,14 @@ FloatingWindow {
     readonly property WindowActions actions: actions
     readonly property WindowSidebarHost sidebar: sidebarHost
     readonly property FilesTopbar topbar: topbar
+    readonly property PreviewOverlay preview: previewOverlay
     readonly property var activePane: splitView && activePaneIndex === 1 && secondPane ? secondPane : primaryPane
     readonly property string currentPath: activePane.path
     readonly property bool dialogOpen: dialogs.anyOpen
     readonly property bool textEditing: surface.focusItem instanceof TextInput || surface.focusItem instanceof TextEdit
     readonly property bool sidebarFocused: sidebarHost.focused
     readonly property bool tabRowFocused: ItemTree.isInside(surface.focusItem, tabRow)
-    readonly property bool shortcutsEnabled: !dialogOpen && !textEditing
+    readonly property bool shortcutsEnabled: !dialogOpen && !textEditing && !(preview?.open ?? false)
     readonly property bool lastActive: WindowService.lastActiveId === windowId
     readonly property var terminalModes: ["hidden", "files", "bottom", "right"]
     readonly property bool terminalOpen: terminalMode !== "hidden"
@@ -62,6 +63,11 @@ FloatingWindow {
     readonly property real terminalDockHeight: Math.min(terminalHeight, terminalMaxHeight)
     readonly property real terminalBottomInset: terminalMode === "bottom" ? terminalDockHeight + FilesMetrics.splitterWidth + FilesMetrics.windowMargin : 0
     readonly property real terminalRightInset: terminalMode === "right" ? surface.width / 2 + FilesMetrics.splitterWidth : 0
+    readonly property var previewTarget: {
+        const entries = selectedEntries();
+        return entries.length === 1 ? entries[0] : null;
+    }
+    readonly property bool previewExpandable: preview.supports(previewTarget)
 
     Component.onDestruction: FileOpsService.forget(opScope)
 
@@ -404,7 +410,11 @@ FloatingWindow {
         onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
         onSortRequested: key => pane.toggleSort(key)
         onColumnsMenuRequested: (pointX, pointY) => window.menus.showColumnsMenu(pointX, pointY)
-        onFocusRequested: window.activePaneIndex = paneIndex
+        onFocusRequested: {
+            window.activePaneIndex = paneIndex;
+            if (window.sidebarFocused)
+                pane.focusBody();
+        }
         onPreviewToggleRequested: window.actions.runAction("togglePreview")
         onServerDialogRequested: window.dialogs.askServer()
         onConnectFailed: (uri, result) => window.dialogs.showServerFailure(uri, result)
@@ -466,6 +476,10 @@ FloatingWindow {
                 height: Math.max(0, parent.height - y)
                 color: Theme.surface
             }
+        }
+
+        FocusFallback {
+            onTriggered: window.activePane.focusBody()
         }
 
         WheelHandler {
@@ -530,11 +544,22 @@ FloatingWindow {
             anchors.right: parent.right
             controls: windowControls
             title: window.title
+            visible: SettingsData.showTitleBar
+            height: visible ? implicitHeight : 0
             onCloseRequested: window.requestClose()
 
             JobsButton {
                 anchors.verticalCenter: parent.verticalCenter
             }
+        }
+
+        MouseArea {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: Theme.spacingS
+            visible: !SettingsData.showTitleBar
+            onPressed: windowControls.tryStartMove()
         }
 
         Item {
@@ -544,9 +569,11 @@ FloatingWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.bottomMargin: Math.max(FilesMetrics.windowMargin, window.terminalBottomInset)
-            anchors.leftMargin: FilesMetrics.windowMargin + sidebarHost.dockedWidth
-            anchors.rightMargin: FilesMetrics.windowMargin
+            anchors.topMargin: FilesMetrics.contentMarginV
+            anchors.bottomMargin: Math.max(FilesMetrics.contentMarginV, window.terminalBottomInset)
+            anchors.leftMargin: FilesMetrics.contentMarginH + sidebarHost.dockedWidth
+            anchors.rightMargin: FilesMetrics.contentMarginH
+            enabled: !window.preview.open
 
             TabRow {
                 id: tabRow
@@ -575,7 +602,6 @@ FloatingWindow {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 splitView: window.splitView
-                bookmarked: BookmarksService.has(window.currentPath)
                 backEnabled: window.activePane.canGoBack
                 forwardEnabled: window.activePane.canGoForward
                 sortKey: window.activePane.effectiveSortKey
@@ -587,6 +613,7 @@ FloatingWindow {
                 folderHasSettings: window.activePane.hasFolderSettings
                 previewOpen: window.previewOpen
                 terminalMode: window.terminalMode
+                previewExpandable: window.previewExpandable
                 trashActive: window.activePane.trashActive
                 recentActive: window.activePane.recentActive
                 filterText: window.activePane.nameFilter
@@ -611,14 +638,15 @@ FloatingWindow {
                 onBackRequested: window.activePane.back()
                 onForwardRequested: window.activePane.forward()
                 onSplitToggled: window.toggleSplit()
-                onBookmarkToggled: window.actions.runAction("bookmark")
                 onSortKeySelected: key => window.activePane.sortBy(key)
                 onSortDirectionToggled: window.activePane.flipSort()
                 onCopyPathRequested: window.actions.copyText(window.currentPath)
                 onViewModeSelected: mode => window.activePane.setViewMode(mode)
+                onZoomRequested: step => window.activePane.body.zoomBy(step)
                 onUseForAllFoldersRequested: window.useForAllFolders()
                 onResetFolderRequested: window.activePane.resetFolder()
                 onPreviewToggled: window.actions.runAction("togglePreview")
+                onPreviewExpandRequested: window.actions.runAction("previewExpand")
                 onReloadRequested: window.actions.runAction("reload")
                 onTerminalRequested: window.actions.runAction("openTerminal")
                 onTerminalModeSelected: mode => window.setTerminalMode(mode)
@@ -736,6 +764,7 @@ FloatingWindow {
             anchors.rightMargin: window.terminalRightInset
             mainWindow: window
             focusItem: surface.focusItem
+            enabled: !window.preview.open
         }
 
         DragController {
@@ -760,6 +789,13 @@ FloatingWindow {
                         window.dismissEditors(point.position);
                 }
             }
+        }
+
+        PreviewOverlay {
+            id: previewOverlay
+
+            anchors.fill: parent
+            onClosed: window.activePane.focusBody()
         }
     }
 

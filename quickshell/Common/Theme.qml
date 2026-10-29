@@ -216,6 +216,8 @@ Singleton {
     readonly property color cardSurface: surfaceContainer
     readonly property color chipSurface: surfaceContainerHigh
     readonly property color chipSurfaceNested: surfaceContainerHighest
+    readonly property color tooltipSurface: inverseSurface
+    readonly property color tooltipText: Contrast.readableOn(tooltipSurface, [inverseOnSurface].concat(onContainerCandidates))
     property color inverseSurface: currentThemeData.inverseSurface || surfaceText
     property color inverseOnSurface: currentThemeData.inverseOnSurface || surface
     readonly property color contrastDark: "#000000"
@@ -390,6 +392,21 @@ Singleton {
         return Shape.buttonRadius(width, height, sizeHeight, pressed, round, shapeScale);
     }
 
+    readonly property int densityLevel: {
+        switch (SettingsData.density) {
+        case "spacious":
+            return 1;
+        case "compact":
+            return -1;
+        case "dense":
+            return -2;
+        default:
+            return 0;
+        }
+    }
+    readonly property real densityStepS: densityLevel * spacingXS
+    readonly property real densityStepM: densityLevel * spacingS
+    readonly property real densityStepXS: densityLevel * spacingXXS
     readonly property real groupedListGap: spacingXXS
     readonly property real groupedListInnerRadius: cornerRadiusXS
     readonly property real groupedListOuterRadius: cornerRadiusL
@@ -465,8 +482,8 @@ Singleton {
     readonly property real tabIndicatorMinWidth: 24
     readonly property real tabIndicatorInset: 2
     readonly property real fieldDefaultWidth: 200
-    readonly property real fieldHeight: Math.round(fontSizeMedium * 3)
-    readonly property real fieldHeightLarge: 48
+    readonly property real fieldHeight: Math.round(fontSizeMedium * 3) + densityStepS
+    readonly property real fieldHeightLarge: 48 + densityStepS
     readonly property real outlinedFieldLabelLineHeight: 16
     readonly property real osdHeight: sliderHandleHeight + spacingS * 2
     readonly property real bottomSheetHandleWidth: 36

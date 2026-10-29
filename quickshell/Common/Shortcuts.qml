@@ -239,7 +239,7 @@ Singleton {
         },
         {
             "id": "toggleTerminal",
-            "keys": ["F4"],
+            "keys": ["F12"],
             "group": "navigation",
             "scope": "window",
             "label": I18n.tr("Toggle terminal", "keyboard shortcut showing or hiding the terminal docked under the panes")
@@ -329,6 +329,13 @@ Singleton {
             "group": "view",
             "scope": "view",
             "label": I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
+        },
+        {
+            "id": "previewExpand",
+            "keys": ["F4"],
+            "group": "view",
+            "scope": "window",
+            "label": I18n.tr("Open the preview in a large view", "keyboard shortcut opening the preview overlay")
         },
         {
             "id": "previewStep",
