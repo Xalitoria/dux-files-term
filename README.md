@@ -137,7 +137,7 @@ dfiles properties ~/notes.txt   # Properties dialog
 | `computer:///` | `/` |
 | `network:///` | the Connect to Server dialog |
 | `admin:///path` | the path, with Retry as administrator on denied operations |
-| `sftp:// ssh:// smb:// ftp:// ftps:// dav:// davs:// nfs:// afp://` | mounted through gvfs, then opened in a new tab |
+| `sftp:// ssh:// smb:// ftp:// ftps:// dav:// davs:// nfs:// afp://` | mounted through gvfs, then opened in a new tab, in your home folder on the server unless the address has a path |
 
 Started by the systemd unit, closing the window just hides it. Started any other way, closing the last window quits unless Settings, Close behavior says otherwise.
 
@@ -168,6 +168,27 @@ Press `F4` to cycle the terminal through its places, or pick one from the termin
 | on the right | the right half of the window, below the toolbar |
 
 `F4` also works while the terminal has focus. Drag the splitter to resize it, the height is remembered. The terminal starts your `$SHELL` in the folder you are looking at. When the shell is idle at a prompt it changes folder with you, and a program that is running is never typed into. Exiting the shell hides the terminal.
+
+Browsing an SFTP server follows too: when you open a server in the file view, an idle terminal runs `ssh` into the same host, user and port and lands in the folder you are looking at. Moving around that server `cd`s the remote shell while it sits at a prompt. Switching to a local folder, or to another server, ends the `ssh` session first (when its shell sits at a prompt) and then follows from your local shell. Exiting the `ssh` session yourself brings back your local shell too. Authentication is `ssh`'s own, so keys, `~/.ssh/config` and password prompts work in the terminal. This needs the server's folder to be a real path on disk, which means gvfs has to be built with FUSE (`gvfsd-fuse`), the same thing the file view needs to open a server.
+
+### Servers that don't allow root
+
+Log in with your own account and become root, or another user such as a service account, afterwards. In **Connect to Server**, pick an `sftp://` address and set **Log in as**:
+
+| choice | files | terminal |
+| --- | --- | --- |
+| Yourself | as you, through gvfs | `ssh`, a shell as you |
+| root, with sudo | as root | `sudo -s` after `ssh` |
+| Another user, with sudo | as that user | `sudo -s -u user` after `ssh` |
+| Another user, with machinectl | as that user, through sudo | `sudo machinectl shell user@` after `ssh` |
+
+The server shows up in the sidebar like any other, named for example `root on box (sudo)`, and the terminal follows it as above, already running as that user. It is remembered in the recent servers with its choice, and picking it fills the dialog in again.
+
+- Login is by key (or your agent): the connection never asks for an SSH password. Host keys must already be in `known_hosts`.
+- **sudo password**: leave it empty when `sudo` doesn't ask. Otherwise type it in the dialog. It is sent to the server for this connection only and is never saved, so reconnecting asks again.
+- Files are opened with `sshfs`, which runs the server's `sftp-server` through `sudo`. You need `sshfs` and `fuse3` on your machine, and the server needs a separate `sftp-server` program. A server that only has the SSH daemon's built-in SFTP (`internal-sftp`) can't run it as another user. Then the files open as yourself through gvfs, a message says so, and the terminal still becomes the other user, until you connect to that server as yourself again or the daemon restarts.
+- `machinectl` is for the terminal, for accounts that can't log in over SSH but have a session through `machinectl shell`. Only root may open one without a polkit prompt that fails for a regular user, so the terminal runs it through `sudo` and asks for your sudo password there. The files use `sudo -u` for that user, or open as yourself as above.
+- Mounts live in `$XDG_RUNTIME_DIR/dfiles/sshfs` and are removed when you disconnect, the server drops, or the daemon exits. They aren't available in the Flatpak.
 
 | key | does |
 | --- | --- |
