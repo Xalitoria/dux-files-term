@@ -557,10 +557,10 @@ func (g *graphics) place(c command, img *storedImage) {
 	_, _ = g.emu.WriteString(strings.Repeat("\n", p.rows-1))
 	g.mark(p, x, g.emu.CursorPosition().Y-(p.rows-1))
 	if c.number('C') == 1 {
-		_, _ = g.emu.WriteString(fmt.Sprintf("\x1b[%dA\x1b[%dG", p.rows-1, x+1))
+		_, _ = fmt.Fprintf(g.emu, "\x1b[%dA\x1b[%dG", p.rows-1, x+1)
 		return
 	}
-	_, _ = g.emu.WriteString(fmt.Sprintf("\x1b[%dC", p.cols))
+	_, _ = fmt.Fprintf(g.emu, "\x1b[%dC", p.cols)
 }
 
 func (g *graphics) geometry(c command, img *storedImage) *placement {

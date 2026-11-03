@@ -87,6 +87,7 @@ type Session struct {
 	pty     *os.File
 	follow  bool
 	done    chan struct{}
+	pumped  chan struct{}
 	writes  *writeQueue
 
 	mu         sync.Mutex
@@ -141,6 +142,7 @@ func startSession(topic string, argv []string, cwd string, cols, rows int, follo
 		pty:     ptmx,
 		follow:  follow,
 		done:    make(chan struct{}),
+		pumped:  make(chan struct{}),
 		writes:  newWriteQueue(ptmx),
 		emu:     emu,
 		queued:  map[int]input{},
@@ -218,6 +220,7 @@ func clampSize(cols, rows int) (int, int) {
 }
 
 func (s *Session) pumpInput() {
+	defer close(s.pumped)
 	buf := make([]byte, 4096)
 	for {
 		n, err := s.emu.Read(buf)
@@ -226,6 +229,11 @@ func (s *Session) pumpInput() {
 		}
 		if err != nil {
 			return
+		}
+		select {
+		case <-s.done:
+			return
+		default:
 		}
 	}
 }
@@ -268,7 +276,12 @@ func (s *Session) Close() {
 	}
 	s.writes.close()
 	_ = s.pty.Close()
+
+	go s.emu.SendText("\x00")
+	<-s.pumped
+	s.mu.Lock()
 	_ = s.emu.Close()
+	s.mu.Unlock()
 }
 
 func (s *Session) scheduleLocked() {
