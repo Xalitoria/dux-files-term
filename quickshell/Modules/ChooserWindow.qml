@@ -93,10 +93,18 @@ FloatingWindow {
     implicitWidth: Math.min(FileBrowserMetrics.pickerWidth, (screen?.width ?? FileBrowserMetrics.pickerWidth) * FileBrowserMetrics.pickerScreenFraction)
     implicitHeight: Math.min(FileBrowserMetrics.pickerHeight, (screen?.height ?? FileBrowserMetrics.pickerHeight) * FileBrowserMetrics.pickerScreenFraction)
     minimumSize: Qt.size(FileBrowserMetrics.pickerMinWidth, FileBrowserMetrics.pickerMinHeight)
-    color: Theme.surface
+    color: Theme.windowSurface
+    surfaceFormat.opaque: false
     visible: request !== null
 
     onClosed: cancel()
+
+    WindowBlur {
+        targetWindow: window
+        blurEnabled: Theme.translucentWindows
+        blurWidth: window.width
+        blurHeight: window.height
+    }
     Component.onCompleted: start()
     Component.onDestruction: FileOpsService.forget(opScope)
 
@@ -110,6 +118,7 @@ FloatingWindow {
         sortDescending = saved.sortDesc;
         showHidden = saved.showHidden ?? SettingsData.showHidden;
         sidebarShown = saved.showSidebar;
+        previewOpen = saved.showPreview;
         restoring = false;
         filterIndex = request.currentFilter >= 0 ? request.currentFilter : (filters.length > 0 ? 0 : -1);
         const values = ({});
@@ -192,6 +201,13 @@ FloatingWindow {
         sidebarShown = show;
         persist({
             "showSidebar": show
+        });
+    }
+
+    function setPreviewOpen(open) {
+        previewOpen = open;
+        persist({
+            "showPreview": open
         });
     }
 
@@ -388,6 +404,7 @@ FloatingWindow {
 
         Keys.onPressed: event => {
             const control = (event.modifiers & Qt.ControlModifier) !== 0;
+            const shift = (event.modifiers & Qt.ShiftModifier) !== 0;
             const alt = (event.modifiers & Qt.AltModifier) !== 0;
             switch (event.key) {
             case Qt.Key_Escape:
@@ -409,6 +426,11 @@ FloatingWindow {
                     return;
                 search.forceActiveFocus();
                 search.selectAll();
+                break;
+            case Qt.Key_N:
+                if (!control || !shift)
+                    return;
+                window.createFolder();
                 break;
             case Qt.Key_Left:
                 if (!alt)
@@ -451,8 +473,9 @@ FloatingWindow {
 
             anchors.top: header.bottom
             anchors.bottom: footer.top
+            anchors.bottomMargin: FilesMetrics.contentSpacing
             anchors.left: parent.left
-            width: window.sidebarDocked ? Math.max(FilesMetrics.sidebarMinWidth, Math.min(CacheData.sidebarWidth, surface.width - FilesMetrics.windowMinWidth)) : 0
+            width: window.sidebarDocked ? Math.max(FilesMetrics.sidebarMinWidth, Math.min(CacheData.sidebarWidth, surface.width - Math.max(FilesMetrics.windowMinWidth, topbar.minimumWidth + FilesMetrics.contentMarginH))) : 0
             clip: true
 
             Behavior on width {
@@ -469,6 +492,7 @@ FloatingWindow {
 
                 anchors.fill: parent
                 anchors.margins: FilesMetrics.sidebarPadding
+                anchors.topMargin: 0
                 visible: parent.width > 0
                 currentPath: pane.path
                 onNavigateRequested: path => pane.navigate(path)
@@ -484,14 +508,16 @@ FloatingWindow {
 
             anchors.top: header.bottom
             anchors.bottom: footer.top
-            anchors.left: sidebarSlot.right
+            anchors.left: parent.left
             anchors.right: parent.right
-            anchors.topMargin: FilesMetrics.contentMarginV
-            anchors.leftMargin: FilesMetrics.contentMarginH
+            anchors.bottomMargin: FilesMetrics.contentSpacing
+            anchors.leftMargin: Math.max(FilesMetrics.contentMarginH, sidebarSlot.width)
             anchors.rightMargin: FilesMetrics.contentMarginH
 
             Item {
                 id: topbar
+
+                readonly property real minimumWidth: leftActions.width + rightActions.width + FilesMetrics.topbarSpacing * 2 + FilesMetrics.topbarControlSize
 
                 anchors.top: parent.top
                 anchors.left: parent.left
@@ -562,7 +588,7 @@ FloatingWindow {
                         iconColor: window.previewOpen ? Theme.onPrimary : Theme.surfaceText
                         backgroundColor: window.previewOpen ? Theme.primary : Theme.chipSurface
                         tooltipText: I18n.tr("Preview", "view menu entry and shortcut showing or hiding the preview drawer")
-                        onClicked: window.previewOpen = !window.previewOpen
+                        onClicked: window.setPreviewOpen(!window.previewOpen)
                     }
 
                     FileSortButton {
@@ -627,13 +653,14 @@ FloatingWindow {
                 typeAhead: true
                 dragEnabled: false
                 dropEnabled: false
-                menusEnabled: false
                 onActivateRequested: entry => window.activate(entry)
                 onOpenRequested: entries => window.openEntries(entries)
+                onItemMenuRequested: (index, pointX, pointY, modifiers) => menus.showItemMenu(pointX, pointY)
+                onBackgroundMenuRequested: (pointX, pointY) => menus.showBackgroundMenu(pointX, pointY)
                 onTabRequested: path => pane.navigate(path)
                 onRenameRequested: (target, name) => FileOpsService.rename(target, name, window.opScope)
                 onSortRequested: key => window.setSort(key)
-                onPreviewToggleRequested: window.previewOpen = !window.previewOpen
+                onPreviewToggleRequested: window.setPreviewOpen(!window.previewOpen)
                 onServerDialogRequested: connectDialog.ask()
                 onConnectFailed: (uri, result) => connectDialog.showFailure(uri, result)
                 onNameFilterChanged: {
@@ -803,7 +830,8 @@ FloatingWindow {
                     return;
                 }
                 const created = job.created?.[0]?.path ?? "";
-                if (job.kind !== "newFolder" || created === "" || FilePaths.parentOf(created) !== pane.path)
+                const creates = job.kind === "newFolder" || job.kind === "newFile";
+                if (!creates || created === "" || FilePaths.parentOf(created) !== pane.path)
                     return;
                 pane.revealAndRename(created);
             }
@@ -832,6 +860,14 @@ FloatingWindow {
                 if (!window.settled)
                     window.focusStart();
             }
+        }
+
+        ChooserMenus {
+            id: menus
+
+            anchors.fill: parent
+            chooser: window
+            pane: pane
         }
 
         ConnectServerDialog {

@@ -38,10 +38,10 @@
   type: archive
   url: https://proxy.golang.org/github.com/creack/pty/@v/v1.1.24.zip
 - dest: core/vendor/github.com/duxlabs-dev/dux-go
-  sha256: e034b77eaf9c77d722a4e0252b3f64f11b3f63db1141c512c4572ff807291692
+  sha256: 1678e5421a278de065470ea644a2e1dbe0dad168b06bcbd07fcd7dfe8b340b5f
   strip-components: 3
   type: archive
-  url: https://proxy.golang.org/github.com/duxlabs-dev/dux-go/@v/v1.6.3-0.20261020163124-e2ca52bdf500.zip
+  url: https://proxy.golang.org/github.com/duxlabs-dev/dux-go/@v/v1.6.3-0.20261031181736-024402301dff.zip
 - dest: core/vendor/github.com/fsnotify/fsnotify
   sha256: b2c6a334e0d518da2e046066bdd9da34cb26bad6df9f17701802d3de522ab016
   strip-components: 3

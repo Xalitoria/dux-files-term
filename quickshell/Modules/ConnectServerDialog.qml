@@ -35,11 +35,13 @@ OverlayDialog {
     readonly property var login: logins.find(item => item.label === loginDropdown.currentValue) ?? logins[0]
     readonly property bool canElevate: /^(sftp|ssh):\/\//.test(addressField.text.trim())
     readonly property bool elevating: canElevate && login.kind !== ""
+    property string server: ""
+    property var shares: []
 
     signal connected(string path)
 
     function ask() {
-        errorText = "";
+        reset();
         addressField.text = schemeDropdown.currentValue === "" ? "" : schemeDropdown.currentValue + "://";
         loginDropdown.currentValue = logins[0].label;
         userField.text = "";
@@ -48,27 +50,39 @@ OverlayDialog {
         addressField.forceActiveFocus();
     }
 
+    function reset() {
+        errorText = "";
+        server = "";
+        shares = [];
+    }
+
     function submit(uri) {
         const target = (uri || addressField.text).trim();
         if (target === "")
             return;
         errorText = "";
-        NetworkService.connectTo(target, result => {
-            const path = root.localPath(result);
-            if (path === "") {
-                root.showFailure(target, result);
-                return;
-            }
-            sudoPasswordField.text = "";
-            if (result.notice)
-                ToastService.info(I18n.tr("This server has no separate sftp-server, so its files open as you. The terminal still becomes the other user.", "toast after connecting as another user to a server that can only share files as the login user"));
-            root.connected(path);
-            root.close();
-        }, "", elevating ? {
+        NetworkService.connectTo(target, result => root.present(target, result), "", elevating ? {
             "elevate": login.kind,
             "elevateUser": login.asks ? userField.text.trim() : "",
             "elevatePassword": sudoPasswordField.text
         } : null);
+    }
+
+    function present(target, result) {
+        if (result.shares) {
+            showShares(result);
+            return;
+        }
+        const path = localPath(result);
+        if (path === "") {
+            showFailure(target, result);
+            return;
+        }
+        sudoPasswordField.text = "";
+        if (result.notice)
+            ToastService.info(I18n.tr("This server has no separate sftp-server, so its files open as you. The terminal still becomes the other user.", "toast after connecting as another user to a server that can only share files as the login user"));
+        connected(path);
+        close();
     }
 
     function useRecent(server) {
@@ -87,6 +101,15 @@ OverlayDialog {
         if (result.error)
             return "";
         return result.location || result.mount?.path || "";
+    }
+
+    function showShares(result) {
+        errorText = "";
+        server = result.server;
+        shares = result.shares;
+        addressField.text = result.server;
+        if (!visible)
+            open();
     }
 
     function showFailure(target, result) {
@@ -163,7 +186,37 @@ OverlayDialog {
         }
 
         StyledText {
-            visible: NetworkService.servers.length > 0
+            visible: root.server !== ""
+            text: I18n.tr("Shares on %1", "header above the shares of a browsed server, %1 is the server").arg(root.server)
+            color: Theme.primary
+            font.pixelSize: Theme.fontSizeSmall
+            font.weight: Theme.fontWeightMedium
+        }
+
+        StyledText {
+            visible: root.server !== "" && root.shares.length === 0
+            text: I18n.tr("This server offers no shares", "connect dialog note when a browsed server lists nothing")
+            color: Theme.surfaceVariantText
+            font.pixelSize: Theme.fontSizeSmall
+        }
+
+        Repeater {
+            model: root.shares
+
+            FilePlaceRow {
+                required property var modelData
+
+                width: parent.width
+                label: modelData.name
+                subtitle: modelData.comment ?? ""
+                iconName: "folder-remote"
+                busy: NetworkService.connecting
+                onClicked: root.submit(modelData.uri)
+            }
+        }
+
+        StyledText {
+            visible: root.server === "" && NetworkService.servers.length > 0
             text: I18n.tr("Recent", "header above previously used servers")
             color: Theme.primary
             font.pixelSize: Theme.fontSizeSmall
@@ -171,7 +224,7 @@ OverlayDialog {
         }
 
         Repeater {
-            model: NetworkService.servers
+            model: root.server === "" ? NetworkService.servers : []
 
             FilePlaceRow {
                 required property var modelData

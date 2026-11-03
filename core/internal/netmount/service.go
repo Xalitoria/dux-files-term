@@ -44,14 +44,16 @@ type Service struct {
 	available  bool
 	reason     string
 	ops        map[dbus.ObjectPath]*mountOp
+	listers    map[dbus.ObjectPath]*enumerator
 }
 
 type Snapshot struct {
-	Kind      string   `json:"kind"`
-	Available bool     `json:"available"`
-	Reason    string   `json:"reason,omitempty"`
-	Schemes   []string `json:"schemes"`
-	Mounts    []Mount  `json:"mounts"`
+	Kind      string     `json:"kind"`
+	Available bool       `json:"available"`
+	Reason    string     `json:"reason,omitempty"`
+	Schemes   []string   `json:"schemes"`
+	Mounts    []Mount    `json:"mounts"`
+	Portables []Portable `json:"portables"`
 }
 
 func NewService(bus Publisher, configDir string) *Service {
@@ -63,6 +65,7 @@ func NewService(bus Publisher, configDir string) *Service {
 		ops:     map[dbus.ObjectPath]*mountOp{},
 
 		terminalAs: map[sshfs.Login]sshfs.Elevation{},
+		listers:    map[dbus.ObjectPath]*enumerator{},
 	}
 	s.ssh = sshfs.NewManager(sshfsRoot(), func() { s.publish(s.Snapshot()) })
 	return s
@@ -77,25 +80,39 @@ func sshfsRoot() string {
 }
 
 func (s *Service) Start() error {
-	conn, err := dbus.ConnectSessionBus()
+	conn, err := dbus.ConnectSessionBus(dbus.WithIncomingInterceptor(s.intercept))
 	if err != nil {
 		s.setReason("the session bus is unavailable")
 		return err
 	}
 
+	s.run(conn)
+	return nil
+}
+
+func (s *Service) run(conn *dbus.Conn) {
 	s.mu.Lock()
 	s.conn = conn
 	s.mu.Unlock()
 
-	if err := conn.AddMatchSignal(dbus.WithMatchInterface(TrackerIface)); err != nil {
-		log.Debugf("network: gvfs signals unavailable: %v", err)
-	}
+	s.watch(conn)
 	signals := make(chan *dbus.Signal, 16)
 	conn.Signal(signals)
 
 	s.reload(conn)
 	go s.loop(conn, signals)
-	return nil
+}
+
+func (s *Service) watch(conn *dbus.Conn) {
+	rules := [][]dbus.MatchOption{{dbus.WithMatchInterface(TrackerIface)}}
+	for _, monitor := range portableMonitors {
+		rules = append(rules, []dbus.MatchOption{dbus.WithMatchInterface(MonitorIface), dbus.WithMatchArg(0, monitor)})
+	}
+	for _, rule := range rules {
+		if err := conn.AddMatchSignal(rule...); err != nil {
+			log.Debugf("network: gvfs signals unavailable: %v", err)
+		}
+	}
 }
 
 func (s *Service) Close() {
@@ -115,7 +132,7 @@ func (s *Service) loop(conn *dbus.Conn, signals chan *dbus.Signal) {
 			if !ok {
 				return
 			}
-			if sig.Name != TrackerIface+".Mounted" && sig.Name != TrackerIface+".Unmounted" {
+			if !refreshes(sig.Name) {
 				continue
 			}
 			if flush == nil {
@@ -124,9 +141,17 @@ func (s *Service) loop(conn *dbus.Conn, signals chan *dbus.Signal) {
 		case <-flush:
 			flush = nil
 			s.reload(s.connection())
-			s.publish(s.Snapshot())
+			s.publishMounts()
 		}
 	}
+}
+
+func refreshes(signal string) bool {
+	switch signal {
+	case TrackerIface + ".Mounted", TrackerIface + ".Unmounted":
+		return true
+	}
+	return strings.HasPrefix(signal, MonitorIface+".Volume")
 }
 
 func (s *Service) reload(conn *dbus.Conn) {
@@ -173,9 +198,11 @@ func (s *Service) Snapshot() Snapshot {
 }
 
 type Connected struct {
-	Mount    Mount  `json:"mount"`
-	Location string `json:"location"`
-	Notice   string `json:"notice,omitempty"`
+	Mount    *Mount  `json:"mount,omitempty"`
+	Location string  `json:"location,omitempty"`
+	Server   string  `json:"server,omitempty"`
+	Shares   []Share `json:"shares"`
+	Notice   string  `json:"notice,omitempty"`
 }
 
 func (s *Service) Connect(uri, password string) (Connected, error) {
@@ -192,6 +219,9 @@ func (s *Service) Connect(uri, password string) (Connected, error) {
 	if err != nil {
 		return Connected{}, err
 	}
+	if spec.Type() == "smb-server" {
+		return s.browse(conn, remote.URI, password, spec)
+	}
 	if login, _, err := sshfs.ParseURI(remote.URI); err == nil {
 		s.setTerminalElevation(login, sshfs.Elevation{})
 	}
@@ -199,7 +229,7 @@ func (s *Service) Connect(uri, password string) (Connected, error) {
 	if err != nil {
 		return Connected{}, err
 	}
-	return Connected{Mount: mount, Location: openingFolder(mount, spec, s.mountableList())}, nil
+	return Connected{Mount: &mount, Location: openingFolder(mount, spec, s.mountableList())}, nil
 }
 
 // Without a path in the address a server opens in the user's home, as other file managers do.
@@ -214,30 +244,60 @@ func (s *Service) mount(conn *dbus.Conn, uri, password string, spec Spec) (Mount
 	if mount, found := s.mountedAt(spec); found {
 		return mount, nil
 	}
-
-	op := s.newOp(uri)
-	op.password = password
-	if err := op.export(conn); err != nil {
-		return Mount{}, &files.Error{Code: files.CodeIO, Err: err}
-	}
-	s.trackOp(op)
-	defer s.releaseOp(op, conn)
-
-	source := wireSource{DBusID: conn.Names()[0], Path: op.path}
-	if err := conn.Object(VfsBus, TrackerPath).Call(TrackerIface+".MountLocation", 0, encodeSpec(spec), source).Store(); err != nil {
-		return Mount{}, wrapDBus(err)
+	if err := s.mountLocation(conn, uri, password, spec); err != nil {
+		return Mount{}, err
 	}
 
 	s.reload(conn)
 	mount, found := s.findBySpec(spec)
 	if !found {
-		return Mount{}, fail(files.CodeIO, "%s mounted but gvfs did not report it", uri)
+		return Mount{}, fail(files.CodeNotSupported, "%s is mounted but gvfs offers no folder for it", uri)
 	}
-	if err := s.servers.remember(Server{URI: mount.URI, Name: mount.Name, Scheme: mount.Scheme}); err != nil {
+	s.remember(Server{URI: mount.URI, Name: mount.Name, Scheme: mount.Scheme})
+	s.publishMounts()
+	return mount, nil
+}
+
+// gvfsd-smb-browse keeps a server mount hidden and without a FUSE folder, so its shares are read over D-Bus.
+func (s *Service) browse(conn *dbus.Conn, uri, password string, spec Spec) (Connected, error) {
+	if err := s.mountLocation(conn, uri, password, spec); err != nil {
+		return Connected{}, err
+	}
+
+	var raw wireMount
+	if err := conn.Object(VfsBus, TrackerPath).Call(TrackerIface+".LookupMount", 0, encodeSpec(spec)).Store(&raw); err != nil {
+		return Connected{}, wrapDBus(err)
+	}
+	server := URIOf(spec, s.mountableList())
+	shares, err := s.listShares(conn, raw, server)
+	if err != nil {
+		return Connected{}, err
+	}
+	s.remember(Server{URI: server, Name: raw.DisplayName, Scheme: SchemeOf(spec, s.mountableList())})
+	return Connected{Server: server, Shares: shares}, nil
+}
+
+func (s *Service) mountLocation(conn *dbus.Conn, uri, password string, spec Spec) error {
+	op := s.newOp(uri)
+	op.password = password
+	if err := op.export(conn); err != nil {
+		return &files.Error{Code: files.CodeIO, Err: err}
+	}
+	s.trackOp(op)
+	defer s.releaseOp(op, conn)
+
+	source := wireSource{DBusID: conn.Names()[0], Path: op.path}
+	err := conn.Object(VfsBus, TrackerPath).Call(TrackerIface+".MountLocation", 0, encodeSpec(spec), source).Store()
+	if err != nil && !alreadyMounted(err) {
+		return wrapDBus(err)
+	}
+	return nil
+}
+
+func (s *Service) remember(server Server) {
+	if err := s.servers.remember(server); err != nil {
 		log.Warnf("network: saving recent servers: %v", err)
 	}
-	s.publish(s.Snapshot())
-	return mount, nil
 }
 
 func (s *Service) Disconnect(id string) error {
@@ -270,7 +330,7 @@ func (s *Service) Disconnect(id string) error {
 	}
 
 	s.reload(conn)
-	s.publish(s.Snapshot())
+	s.publishMounts()
 	return nil
 }
 
@@ -309,9 +369,9 @@ func (s *Service) ConnectAs(uri string, as sshfs.Elevation, sudoPassword string)
 	}
 	s.publish(s.Snapshot())
 	if dir == "/" && mount.HomePath != "" {
-		return Connected{Mount: mount, Location: mount.HomePath}, nil
+		return Connected{Mount: &mount, Location: mount.HomePath}, nil
 	}
-	return Connected{Mount: mount, Location: filepath.Join(mount.Path, dir)}, nil
+	return Connected{Mount: &mount, Location: filepath.Join(mount.Path, dir)}, nil
 }
 
 // Without a separate sftp-server the files open as yourself, and the terminal still becomes the other user.
@@ -443,6 +503,12 @@ func (s *Service) setReason(reason string) {
 	defer s.mu.Unlock()
 	s.available = false
 	s.reason = reason
+}
+
+func (s *Service) publishMounts() {
+	snapshot := s.Snapshot()
+	snapshot.Portables = s.Portables()
+	s.publish(snapshot)
 }
 
 func (s *Service) publish(data any) {

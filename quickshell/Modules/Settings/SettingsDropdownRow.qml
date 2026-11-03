@@ -22,6 +22,7 @@ SettingsRow {
     FitDropdown {
         id: dropdown
         enabled: root.enabled
+        backgroundColor: SettingsMetrics.controlSurface
         Accessible.name: root.text
         Accessible.description: root.description + (root.description ? " · " : "") + currentValue
         alignPopupRight: true

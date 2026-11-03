@@ -266,6 +266,24 @@ ShellRoot {
         check("connect clears the busy flag", NetworkService.connecting, false);
         check("connect refreshes recent servers", lastRequest().method, "network.recent");
 
+        responses["network.connect"] = {
+            "server": "smb://nas/",
+            "shares": [
+                {
+                    "name": "media",
+                    "uri": "smb://nas/media"
+                }
+            ]
+        };
+        let browsed = null;
+        NetworkService.connectTo("smb://nas/", result => browsed = result.shares);
+        check("browsing a server hands back its shares", browsed, [
+            {
+                "name": "media",
+                "uri": "smb://nas/media"
+            }
+        ]);
+
         emit("network", {
             "kind": "mounts",
             "available": true,
@@ -273,6 +291,14 @@ ShellRoot {
         });
         check("mount events replace the list", NetworkService.mounts.length, 0);
         check("portables survive a mounts event", NetworkService.portables.length, 1);
+
+        emit("network", {
+            "kind": "mounts",
+            "available": true,
+            "mounts": [],
+            "portables": []
+        });
+        check("mount events carrying portables replace them", NetworkService.portables.length, 0);
 
         if (failures === 0)
             log.info("FIXTURE PASS");

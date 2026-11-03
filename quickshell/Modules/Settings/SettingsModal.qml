@@ -31,11 +31,19 @@ FloatingWindow {
 
     onClosed: hide()
 
+    WindowBlur {
+        targetWindow: settingsModal
+        blurEnabled: Theme.translucentWindows
+        blurWidth: settingsModal.width
+        blurHeight: settingsModal.height
+    }
+
     title: I18n.tr("Files Settings", "settings window title")
     minimumSize: Qt.size(SettingsMetrics.windowMinWidth, SettingsMetrics.windowMinHeight)
     implicitWidth: screen ? Math.min(SettingsMetrics.windowWidth, screen.width - Theme.spacingXL * 2) : SettingsMetrics.windowWidth
     implicitHeight: screen ? Math.min(SettingsMetrics.windowHeight, screen.height - Theme.spacingXL * 2) : SettingsMetrics.windowHeight
-    color: Theme.surface
+    color: Theme.windowSurface
+    surfaceFormat.opaque: false
     visible: false
 
     onIsCompactModeChanged: menuVisible = false
@@ -126,16 +134,29 @@ FloatingWindow {
 
                 FocusScope {
                     id: contentScope
+
+                    readonly property real paneInset: SettingsMetrics.paneMargin
+
                     anchors.left: settingsModal.isCompactMode ? (settingsModal.menuVisible && !settingsModal.compactSearch ? sidebar.right : parent.left) : sidebar.right
                     anchors.right: parent.right
                     anchors.top: settingsModal.compactSearch ? sidebar.bottom : parent.top
                     anchors.bottom: parent.bottom
-                    clip: true
+                    anchors.leftMargin: settingsModal.isCompactMode ? paneInset : 0
+                    anchors.rightMargin: paneInset
+                    anchors.bottomMargin: paneInset
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: SettingsMetrics.paneRadius
+                        color: SettingsMetrics.paneColor
+                    }
 
                     SettingsContent {
                         id: content
 
                         anchors.fill: parent
+                        anchors.leftMargin: SettingsMetrics.panePadding
+                        anchors.rightMargin: SettingsMetrics.panePadding
                         currentIndex: settingsModal.currentTabIndex
                         hostWindow: settingsModal
                         searchQuery: sidebar.query

@@ -119,6 +119,13 @@
     "comment": ""
   },
   {
+    "term": "%1 running operations will be stopped part way through.",
+    "translation": "",
+    "context": "quit confirmation explanation for several running file operations",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "%1 s left",
     "translation": "",
     "context": "time left for a file operation, in seconds",
@@ -483,6 +490,13 @@
     "comment": ""
   },
   {
+    "term": "Background blur",
+    "translation": "",
+    "context": "toggle asking the compositor to blur behind see-through windows",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Badges",
     "translation": "",
     "context": "folder appearance tab listing badge icons",
@@ -514,6 +528,13 @@
     "term": "Blue",
     "translation": "",
     "context": "color palette name",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Blurs what shows through the window. Needs an opacity below 100%.",
+    "translation": "",
+    "context": "background blur toggle description",
     "reference": "",
     "comment": ""
   },
@@ -892,6 +913,13 @@
     "term": "Dark",
     "translation": "",
     "context": "theme mode button group option",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Date format",
+    "translation": "",
+    "context": "setting label for how file timestamps are shown",
     "reference": "",
     "comment": ""
   },
@@ -1400,6 +1428,13 @@
     "comment": ""
   },
   {
+    "term": "Foreground layers",
+    "translation": "",
+    "context": "toggle keeping cards and panes solid over a see-through window",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Forget",
     "translation": "",
     "context": "dialog button clearing the remembered folder settings",
@@ -1561,9 +1596,9 @@
     "comment": ""
   },
   {
-    "term": "Hides the title and the window buttons, leaving a thin strip to drag the window.",
+    "term": "Hidden files after other files",
     "translation": "",
-    "context": "window header toggle description",
+    "context": "hidden files last toggle label",
     "reference": "",
     "comment": ""
   },
@@ -1578,6 +1613,20 @@
     "term": "Host filesystem",
     "translation": "",
     "context": "capability row on the about page",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "ISO 8601",
+    "translation": "",
+    "context": "date format option, year-month-day hour:minute",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "ISO 8601 with seconds",
+    "translation": "",
+    "context": "date format option, year-month-day hour:minute:second",
     "reference": "",
     "comment": ""
   },
@@ -1722,6 +1771,13 @@
     "comment": ""
   },
   {
+    "term": "Keeps cards and panes solid when the window is see-through.",
+    "translation": "",
+    "context": "foreground layers toggle description",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Keyboard",
     "translation": "",
     "context": "general settings section label",
@@ -1746,6 +1802,20 @@
     "term": "Larger icons",
     "translation": "",
     "context": "keyboard shortcut",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Layer opacity",
+    "translation": "",
+    "context": "foreground layer opacity slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Lets the desktop show through the window. Text and controls stay solid.",
+    "translation": "",
+    "context": "window opacity slider description",
     "reference": "",
     "comment": ""
   },
@@ -2226,6 +2296,13 @@
     "comment": ""
   },
   {
+    "term": "Opacity",
+    "translation": "",
+    "context": "window opacity slider label",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Open",
     "translation": "",
     "context": "context menu entry opening a file | file browser open button",
@@ -2618,6 +2695,13 @@
     "comment": ""
   },
   {
+    "term": "Quit while file operations are running?",
+    "translation": "",
+    "context": "confirmation header when closing the last window would stop running file operations",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Radius strength",
     "translation": "",
     "context": "global component corner rounding",
@@ -2684,6 +2768,13 @@
     "term": "Register as the session file manager",
     "translation": "",
     "context": "setting label for owning org.freedesktop.FileManager1",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Relative",
+    "translation": "",
+    "context": "date format option showing today, yesterday or the weekday",
     "reference": "",
     "comment": ""
   },
@@ -3129,6 +3220,13 @@
     "comment": ""
   },
   {
+    "term": "Shares on %1",
+    "translation": "",
+    "context": "header above the shares of a browsed server, %1 is the server",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "Show",
     "translation": "",
     "context": "toast action revealing the extracted files",
@@ -3381,6 +3479,13 @@
     "comment": ""
   },
   {
+    "term": "System locale",
+    "translation": "",
+    "context": "date format option using the locale's short date and time",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "System preference unavailable, using dark.",
     "translation": "",
     "context": "theme mode setting description",
@@ -3426,6 +3531,13 @@
     "term": "The portal list is managed by the system.",
     "translation": "",
     "context": "portal chooser setting description when XDG_DESKTOP_PORTAL_DIR is set",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "The running operation will be stopped part way through.",
+    "translation": "",
+    "context": "quit confirmation explanation for a single running file operation",
     "reference": "",
     "comment": ""
   },
@@ -3503,6 +3615,13 @@
     "term": "This month",
     "translation": "",
     "context": "search filter chip for files changed in the last thirty days",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "This server offers no shares",
+    "translation": "",
+    "context": "connect dialog note when a browsed server lists nothing",
     "reference": "",
     "comment": ""
   },
@@ -3822,13 +3941,6 @@
     "comment": ""
   },
   {
-    "term": "Window header",
-    "translation": "",
-    "context": "toggle label for the window title and buttons",
-    "reference": "",
-    "comment": ""
-  },
-  {
     "term": "Windows",
     "translation": "",
     "context": "appearance settings section label",
@@ -3853,6 +3965,13 @@
     "term": "Wrong password",
     "translation": "",
     "context": "archive password dialog error after a failed attempt",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "Your compositor does not support background blur.",
+    "translation": "",
+    "context": "hint shown instead of the background blur toggle",
     "reference": "",
     "comment": ""
   },
@@ -3900,6 +4019,13 @@
   },
   {
     "term": "capability available sandbox",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "cards panes contrast glass",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
@@ -4018,6 +4144,13 @@
     "comment": ""
   },
   {
+    "term": "dotfiles sort last bottom",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
     "term": "drag drop copy move ask default action",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
@@ -4089,6 +4222,13 @@
   },
   {
     "term": "font typeface headline title",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "frosted glass compositor",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",
@@ -4340,7 +4480,14 @@
     "comment": ""
   },
   {
-    "term": "title bar header hide decorations",
+    "term": "time modified timestamp iso relative seconds",
+    "translation": "",
+    "context": "settings search keywords, space separated, add synonyms in your language",
+    "reference": "",
+    "comment": ""
+  },
+  {
+    "term": "transparency translucent glass see-through",
     "translation": "",
     "context": "settings search keywords, space separated, add synonyms in your language",
     "reference": "",

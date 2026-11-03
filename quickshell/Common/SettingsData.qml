@@ -68,7 +68,10 @@ Singleton {
     property alias focusRingWidth: adapter.focusRingWidth
     property alias focusRingColor: adapter.focusRingColor
     property alias windowTitleBars: adapter.windowTitleBars
-    property alias showTitleBar: adapter.showTitleBar
+    property alias floatingWindowTransparency: adapter.floatingWindowTransparency
+    property alias floatingWindowForegroundLayers: adapter.floatingWindowForegroundLayers
+    property alias floatingWindowForegroundTransparency: adapter.floatingWindowForegroundTransparency
+    property alias blurEnabled: adapter.blurEnabled
     property alias language: adapter.language
     property alias terminal: adapter.terminal
     property alias opener: adapter.opener
@@ -83,7 +86,9 @@ Singleton {
     property alias defaultSortDescending: adapter.defaultSortDescending
     property alias showHidden: adapter.showHidden
     property alias showExtensions: adapter.showExtensions
+    property alias dateFormat: adapter.dateFormat
     property alias foldersFirst: adapter.foldersFirst
+    property alias hiddenLast: adapter.hiddenLast
     property alias rememberFolderViews: adapter.rememberFolderViews
     property alias folderCounts: adapter.folderCounts
     property alias confirmTrash: adapter.confirmTrash
@@ -185,11 +190,14 @@ Singleton {
             property real focusRingWidth: 1.5
             property string focusRingColor: "primary"
             property bool windowTitleBars: true
-            property bool showTitleBar: true
+            property real floatingWindowTransparency: 1.0
+            property bool floatingWindowForegroundLayers: true
+            property real floatingWindowForegroundTransparency: 1.0
+            property bool blurEnabled: false
             property string language: ""
             property string terminal: ""
             property string opener: ""
-            property string closeBehavior: "quit"
+            property string closeBehavior: "hide"
             property string openLocationIn: "current"
             property bool extractOnOpen: true
             property bool registerFileManager: true
@@ -200,7 +208,9 @@ Singleton {
             property bool defaultSortDescending: false
             property bool showHidden: false
             property bool showExtensions: true
+            property string dateFormat: "locale"
             property bool foldersFirst: true
+            property bool hiddenLast: true
             property bool rememberFolderViews: true
             property bool folderCounts: true
             property bool confirmTrash: false

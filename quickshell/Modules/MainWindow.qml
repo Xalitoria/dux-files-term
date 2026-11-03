@@ -12,7 +12,7 @@ import qs.DCommon.FileBrowser
 FloatingWindow {
     id: window
 
-    signal closeRequested
+    signal closeRequested(bool force)
     signal newWindowRequested(var locations)
 
     required property int windowId
@@ -47,6 +47,7 @@ FloatingWindow {
     readonly property WindowActions actions: actions
     readonly property WindowSidebarHost sidebar: sidebarHost
     readonly property FilesTopbar topbar: topbar
+    readonly property bool headerHostsJobs: !header.compositorDecorated
     readonly property PreviewOverlay preview: previewOverlay
     readonly property var activePane: splitView && activePaneIndex === 1 && secondPane ? secondPane : primaryPane
     readonly property string currentPath: activePane.path
@@ -76,9 +77,17 @@ FloatingWindow {
     implicitHeight: SessionData.windowHeight
     minimumSize: Qt.size(FilesMetrics.windowMinWidth, FilesMetrics.windowMinHeight)
     color: "transparent"
+    surfaceFormat.opaque: false
     visible: true
 
     onClosed: requestClose()
+
+    WindowBlur {
+        targetWindow: window
+        blurEnabled: Theme.translucentWindows
+        blurWidth: window.width
+        blurHeight: window.height
+    }
     onMaximizedChanged: SessionData.maximized = maximized
 
     onWidthChanged: {
@@ -131,7 +140,13 @@ FloatingWindow {
     }
 
     function requestClose() {
-        closeRequested();
+        closeRequested(false);
+    }
+
+    function confirmQuit() {
+        if (!visible)
+            visible = true;
+        dialogs.confirmQuit();
     }
 
     function setSplitRatio(value) {
@@ -417,7 +432,7 @@ FloatingWindow {
         }
         onPreviewToggleRequested: window.actions.runAction("togglePreview")
         onServerDialogRequested: window.dialogs.askServer()
-        onConnectFailed: (uri, result) => window.dialogs.showServerFailure(uri, result)
+        onConnectFailed: (uri, result) => window.dialogs.presentServer(uri, result)
         onRestoreRequested: window.actions.runAction("restore")
         onEmptyTrashRequested: window.actions.runAction("emptyTrash")
         onRemoveFromRecentRequested: window.actions.runAction("removeFromRecent")
@@ -452,14 +467,14 @@ FloatingWindow {
             Rectangle {
                 width: parent.width
                 height: backdrop.hole.y
-                color: Theme.surface
+                color: Theme.windowSurface
             }
 
             Rectangle {
                 y: backdrop.hole.y
                 width: backdrop.hole.x
                 height: backdrop.hole.height
-                color: Theme.surface
+                color: Theme.windowSurface
             }
 
             Rectangle {
@@ -467,14 +482,14 @@ FloatingWindow {
                 y: backdrop.hole.y
                 width: Math.max(0, parent.width - x)
                 height: backdrop.hole.height
-                color: Theme.surface
+                color: Theme.windowSurface
             }
 
             Rectangle {
                 y: backdrop.hole.y + backdrop.hole.height
                 width: parent.width
                 height: Math.max(0, parent.height - y)
-                color: Theme.surface
+                color: Theme.windowSurface
             }
         }
 
@@ -544,22 +559,12 @@ FloatingWindow {
             anchors.right: parent.right
             controls: windowControls
             title: window.title
-            visible: SettingsData.showTitleBar
-            height: visible ? implicitHeight : 0
             onCloseRequested: window.requestClose()
 
             JobsButton {
                 anchors.verticalCenter: parent.verticalCenter
+                hosted: window.headerHostsJobs
             }
-        }
-
-        MouseArea {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: Theme.spacingS
-            visible: !SettingsData.showTitleBar
-            onPressed: windowControls.tryStartMove()
         }
 
         Item {
@@ -569,9 +574,8 @@ FloatingWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.topMargin: FilesMetrics.contentMarginV
             anchors.bottomMargin: Math.max(FilesMetrics.contentMarginV, window.terminalBottomInset)
-            anchors.leftMargin: FilesMetrics.contentMarginH + sidebarHost.dockedWidth
+            anchors.leftMargin: Math.max(FilesMetrics.contentMarginH, sidebarHost.dockedWidth)
             anchors.rightMargin: FilesMetrics.contentMarginH
             enabled: !window.preview.open
 
@@ -608,6 +612,7 @@ FloatingWindow {
                 sortDescending: window.activePane.effectiveSortDescending
                 resultsActive: window.activePane.resultsActive
                 compact: sidebarHost.compact
+                showJobs: !window.headerHostsJobs
                 viewMode: window.activePane.viewMode
                 folderRemembered: window.activePane.folderRemembered
                 folderHasSettings: window.activePane.hasFolderSettings
@@ -641,6 +646,15 @@ FloatingWindow {
                 onSortKeySelected: key => window.activePane.sortBy(key)
                 onSortDirectionToggled: window.activePane.flipSort()
                 onCopyPathRequested: window.actions.copyText(window.currentPath)
+                onNewFolderRequested: window.actions.runAction("newFolder")
+                onNewDocumentRequested: (pointX, pointY) => {
+                    const point = topbar.mapToItem(surface, pointX, pointY);
+                    window.menus.showNewDocumentMenu(point.x, point.y);
+                }
+                onColumnsMenuRequested: (pointX, pointY) => {
+                    const point = topbar.mapToItem(window.activePane, pointX, pointY);
+                    window.menus.showColumnsMenu(point.x, point.y);
+                }
                 onViewModeSelected: mode => window.activePane.setViewMode(mode)
                 onZoomRequested: step => window.activePane.body.zoomBy(step)
                 onUseForAllFoldersRequested: window.useForAllFolders()
@@ -739,7 +753,7 @@ FloatingWindow {
                 case "bottom":
                     return FilesMetrics.contentMarginH;
                 default:
-                    return FilesMetrics.contentMarginH + sidebarHost.dockedWidth;
+                    return Math.max(FilesMetrics.contentMarginH, sidebarHost.dockedWidth);
                 }
             }
             height: atRight ? surface.height - content.y - panesRow.y - FilesMetrics.contentMarginV : window.terminalDockHeight
@@ -755,6 +769,7 @@ FloatingWindow {
         WindowSidebarHost {
             id: sidebarHost
 
+            contentMinWidth: Math.max(FilesMetrics.windowMinWidth, topbar.minimumWidth + FilesMetrics.contentMarginH)
             anchors.top: header.bottom
             anchors.bottom: parent.bottom
             anchors.left: parent.left

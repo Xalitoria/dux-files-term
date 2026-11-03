@@ -16,6 +16,7 @@ Item {
     property var matchCounts: []
 
     readonly property bool searching: searchQuery.trim() !== ""
+    readonly property date sampleTime: new Date()
     readonly property var pageComponents: [generalPage, appearancePage, behaviourPage, devicesPage, aboutPage]
     readonly property var pageLabels: [I18n.tr("General", "settings sidebar tab label"), I18n.tr("Appearance", "settings sidebar tab label"), I18n.tr("Behaviour", "settings sidebar tab label"), I18n.tr("Devices", "sidebar section listing drives and volumes"), I18n.tr("About", "settings sidebar tab label")]
 
@@ -86,6 +87,25 @@ Item {
         {
             label: I18n.tr("Column view", "view mode showing folders side by side"),
             value: "columns"
+        }
+    ]
+
+    readonly property var dateFormatOptions: [
+        {
+            label: I18n.tr("System locale", "date format option using the locale's short date and time"),
+            value: "locale"
+        },
+        {
+            label: I18n.tr("Relative", "date format option showing today, yesterday or the weekday"),
+            value: "relative"
+        },
+        {
+            label: I18n.tr("ISO 8601", "date format option, year-month-day hour:minute"),
+            value: "iso"
+        },
+        {
+            label: I18n.tr("ISO 8601 with seconds", "date format option, year-month-day hour:minute:second"),
+            value: "isoSeconds"
         }
     ]
 
@@ -449,7 +469,7 @@ Item {
     Item {
         id: pageHeader
 
-        width: Math.min(SettingsMetrics.contentMaxWidth, parent.width - Theme.spacingL * 2)
+        width: Math.min(SettingsMetrics.contentMaxWidth, parent.width)
         anchors.horizontalCenter: parent.horizontalCenter
         height: Math.max(SettingsMetrics.pageHeaderHeight, pageHeading.implicitHeight + Theme.spacingM * 2)
 
@@ -491,6 +511,7 @@ Item {
                 y: current ? 0 : pagesHost.height
                 active: current || root.searching
                 enabled: current && !root.searching
+                visible: !(current && root.searching)
                 sourceComponent: root.pageComponents[index]
                 onLoaded: rebuild.restart()
             }
@@ -500,7 +521,7 @@ Item {
     Rectangle {
         anchors.fill: pagesHost
         visible: root.searching
-        color: Theme.surface
+        color: "transparent"
 
         SettingsPage {
             StyledText {
@@ -718,11 +739,27 @@ Item {
                     onToggled: checked => SettingsData.showExtensions = checked
                 }
 
+                OptionDropdownRow {
+                    text: I18n.tr("Date format", "setting label for how file timestamps are shown")
+                    keywords: I18n.tr("time modified timestamp iso relative seconds", "settings search keywords, space separated, add synonyms in your language")
+                    description: FileFormat.timestamp(root.sampleTime, SettingsData.dateFormat, root.sampleTime)
+                    optionList: root.dateFormatOptions
+                    current: SettingsData.dateFormat
+                    onPicked: value => SettingsData.dateFormat = value
+                }
+
                 SettingsToggleRow {
                     text: I18n.tr("Folders before files", "folders first toggle label")
                     keywords: I18n.tr("directories first sort", "settings search keywords, space separated, add synonyms in your language")
                     checked: SettingsData.foldersFirst
                     onToggled: checked => SettingsData.foldersFirst = checked
+                }
+
+                SettingsToggleRow {
+                    text: I18n.tr("Hidden files after other files", "hidden files last toggle label")
+                    keywords: I18n.tr("dotfiles sort last bottom", "settings search keywords, space separated, add synonyms in your language")
+                    checked: SettingsData.hiddenLast
+                    onToggled: checked => SettingsData.hiddenLast = checked
                 }
 
                 SettingsToggleRow {
@@ -838,6 +875,8 @@ Item {
         id: appearancePage
         SettingsPage {
             id: appearanceFlickable
+
+            Component.onCompleted: BlurService.probe()
 
             SettingsCard {
                 title: I18n.tr("Theme", "appearance settings section label")
@@ -1075,12 +1114,48 @@ Item {
                     onToggled: checked => SettingsData.windowTitleBars = checked
                 }
 
+                SettingsSliderRow {
+                    text: I18n.tr("Opacity", "window opacity slider label")
+                    keywords: I18n.tr("transparency translucent glass see-through", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Lets the desktop show through the window. Text and controls stay solid.", "window opacity slider description")
+                    minimum: 0
+                    maximum: 100
+                    unit: "%"
+                    value: Math.round(SettingsData.floatingWindowTransparency * 100)
+                    onSliderValueChanged: newValue => SettingsData.floatingWindowTransparency = newValue / 100
+                }
+
                 SettingsToggleRow {
-                    text: I18n.tr("Window header", "toggle label for the window title and buttons")
-                    keywords: I18n.tr("title bar header hide decorations", "settings search keywords, space separated, add synonyms in your language")
-                    description: I18n.tr("Hides the title and the window buttons, leaving a thin strip to drag the window.", "window header toggle description")
-                    checked: SettingsData.showTitleBar
-                    onToggled: checked => SettingsData.showTitleBar = checked
+                    text: I18n.tr("Foreground layers", "toggle keeping cards and panes solid over a see-through window")
+                    keywords: I18n.tr("cards panes contrast glass", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Keeps cards and panes solid when the window is see-through.", "foreground layers toggle description")
+                    checked: SettingsData.floatingWindowForegroundLayers
+                    onToggled: checked => SettingsData.floatingWindowForegroundLayers = checked
+                }
+
+                SettingsSliderRow {
+                    text: I18n.tr("Layer opacity", "foreground layer opacity slider label")
+                    enabled: SettingsData.floatingWindowForegroundLayers
+                    minimum: 0
+                    maximum: 100
+                    unit: "%"
+                    value: Math.round(SettingsData.floatingWindowForegroundTransparency * 100)
+                    onSliderValueChanged: newValue => SettingsData.floatingWindowForegroundTransparency = newValue / 100
+                }
+
+                SettingsToggleRow {
+                    visible: BlurService.available
+                    text: I18n.tr("Background blur", "toggle asking the compositor to blur behind see-through windows")
+                    keywords: I18n.tr("frosted glass compositor", "settings search keywords, space separated, add synonyms in your language")
+                    description: I18n.tr("Blurs what shows through the window. Needs an opacity below 100%.", "background blur toggle description")
+                    checked: SettingsData.blurEnabled
+                    onToggled: checked => SettingsData.blurEnabled = checked
+                }
+
+                SettingsRow {
+                    visible: BlurService.probed && !BlurService.available
+                    title: I18n.tr("Background blur", "toggle asking the compositor to blur behind see-through windows")
+                    subtitle: I18n.tr("Your compositor does not support background blur.", "hint shown instead of the background blur toggle")
                 }
             }
 

@@ -14,6 +14,7 @@ Item {
     property bool backEnabled: false
     property bool forwardEnabled: false
     property bool compact: false
+    property bool showJobs: false
     property string viewMode: "list"
     property bool previewOpen: false
     property string terminalMode: "hidden"
@@ -74,6 +75,7 @@ Item {
         }
     ]
     readonly property var currentViewMode: viewModes.find(mode => mode.value === viewMode) ?? viewModes[0]
+    readonly property real minimumWidth: leftActions.width + rightActions.width + FilesMetrics.topbarSpacing * 2 + FilesMetrics.topbarControlSize
     property bool resultsActive: false
     readonly property var resultSortKeys: [
         {
@@ -179,6 +181,9 @@ Item {
     signal useForAllFoldersRequested
     signal resetFolderRequested
     signal propertiesRequested
+    signal newFolderRequested
+    signal newDocumentRequested(real pointX, real pointY)
+    signal columnsMenuRequested(real pointX, real pointY)
     signal newWindowRequested
     signal copyPathRequested
     signal reloadRequested
@@ -342,6 +347,15 @@ Item {
             onDirectionToggled: topbar.sortDirectionToggled()
         }
 
+        JobsButton {
+            anchors.verticalCenter: parent.verticalCenter
+            hosted: topbar.showJobs
+            focusPolicy: Qt.TabFocus
+            buttonSize: FilesMetrics.topbarControlSize
+            iconSize: Theme.iconSizeMedium
+            backgroundColor: Theme.chipSurface
+        }
+
         FlatButton {
             id: overflowButton
 
@@ -456,6 +470,17 @@ Item {
                 onClicked: menu.pick(() => topbar.splitToggled())
             }
 
+            FileMenuItem {
+                visible: menu.viewRows && topbar.viewMode === "list" && !topbar.virtualActive && !topbar.resultsActive
+                text: I18n.tr("Columns", "view menu entry choosing which list columns are shown")
+                iconName: "view_column"
+                submenu: true
+                onClicked: menu.pick(() => {
+                    const point = rightActions.mapToItem(topbar, menu.x, menu.y);
+                    topbar.columnsMenuRequested(point.x, point.y);
+                })
+            }
+
             FileMenuDivider {
                 visible: menu.viewOnly && topbar.folderRemembered
             }
@@ -473,6 +498,30 @@ Item {
                 text: topbar.resetFolderLabel
                 iconName: "restart_alt"
                 onClicked: menu.pick(() => topbar.resetFolderRequested())
+            }
+
+            FileMenuItem {
+                visible: menu.moreRows
+                enabled: !topbar.virtualActive
+                text: I18n.tr("New folder", "new folder dialog header")
+                iconName: "create_new_folder"
+                onClicked: menu.pick(() => topbar.newFolderRequested())
+            }
+
+            FileMenuItem {
+                visible: menu.moreRows
+                enabled: !topbar.virtualActive
+                text: I18n.tr("New document", "context menu entry creating a file from a template")
+                iconName: "note_add"
+                submenu: true
+                onClicked: menu.pick(() => {
+                    const point = rightActions.mapToItem(topbar, menu.x, menu.y);
+                    topbar.newDocumentRequested(point.x, point.y);
+                })
+            }
+
+            FileMenuDivider {
+                visible: menu.moreRows
             }
 
             FileMenuItem {
