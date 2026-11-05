@@ -45,6 +45,8 @@ Rectangle {
 
     readonly property real cellWidth: Math.max(1, glyph.advanceWidth)
     readonly property real cellHeight: Math.max(1, Math.ceil(metrics.height))
+    readonly property real boxStretch: boxInk.tightBoundingRect.height > 0 ? (cellHeight + 1) / boxInk.tightBoundingRect.height : 1
+    readonly property real brailleStretch: brailleInk.tightBoundingRect.height > brailleDot.tightBoundingRect.height ? cellHeight / 4 * 3 / (brailleInk.tightBoundingRect.height - brailleDot.tightBoundingRect.height) : 1
     readonly property int fitCols: Math.floor((width - 2 * FilesMetrics.terminalPadding) / cellWidth)
     readonly property int fitRows: Math.floor((height - 2 * FilesMetrics.terminalPadding) / cellHeight)
 
@@ -524,6 +526,17 @@ Rectangle {
         event.accepted = true;
     }
 
+    function glyphKind(text) {
+        const code = text.codePointAt(0);
+        switch (true) {
+        case code >= 0x2500 && code <= 0x259f:
+            return 1;
+        case code >= 0x2800 && code <= 0x28ff:
+            return 2;
+        }
+        return 0;
+    }
+
     function isFixedWidth(probe) {
         return probe.font.family !== "" && Math.abs(probe.advanceWidth("M") - probe.advanceWidth("i")) < 0.01;
     }
@@ -547,6 +560,27 @@ Rectangle {
 
         font.family: term.isFixedWidth(configured) ? configured.font.family : term.isFixedWidth(themed) ? themed.font.family : "monospace"
         font.pixelSize: term.baseFontSize + SessionData.terminalZoom
+    }
+
+    TextMetrics {
+        id: boxInk
+
+        font: metrics.font
+        text: "\u2503"
+    }
+
+    TextMetrics {
+        id: brailleInk
+
+        font: metrics.font
+        text: "\u28ff"
+    }
+
+    TextMetrics {
+        id: brailleDot
+
+        font: metrics.font
+        text: "\u2840"
     }
 
     TextMetrics {
@@ -738,7 +772,17 @@ Rectangle {
                         }
 
                         Text {
-                            anchors.verticalCenter: parent.verticalCenter
+                            id: label
+
+                            readonly property int kind: term.glyphKind(cell.modelData.t)
+                            readonly property var bounds: kind === 2 ? brailleInk.tightBoundingRect : boxInk.tightBoundingRect
+                            readonly property real inkCenter: kind === 0 ? height / 2 : baselineOffset + bounds.y + bounds.height / 2
+
+                            y: cell.height / 2 - inkCenter
+                            transform: Scale {
+                                origin.y: label.inkCenter
+                                yScale: label.kind === 2 ? term.brailleStretch : label.kind === 1 ? term.boxStretch : 1
+                            }
                             text: cell.modelData.t
                             textFormat: Text.PlainText
                             color: cell.inverse ? cell.paper : cell.ink
