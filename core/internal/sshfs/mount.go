@@ -327,7 +327,7 @@ echo "$s"
 getent passwd %s | cut -d: -f6
 sudo %s true 2>/dev/null && exit 0
 [ "$pw" = 1 ] || exit %d
-sudo -S -p "" %s true 2>/dev/null || exit %d`,
+out=$(sudo -S -p "" %s true 2>&1 >/dev/null) || { echo "$out" >&2; exit %d; }`,
 		boolInt(password != ""), strings.Join(serverCandidates, " "), exitNoServer, as.Target(),
 		as.sudoArgs(), exitNeedsPassword, as.userArgs(), exitWrongPassword)
 
@@ -352,9 +352,18 @@ sudo -S -p "" %s true 2>/dev/null || exit %d`,
 	case exitNeedsPassword:
 		return "", "", errors.New("sudo asks for a password, enter it to connect")
 	case exitWrongPassword:
-		return "", "", errors.New("sudo did not accept the password")
+		return "", "", sudoRefusal(stderr.String())
 	}
 	return "", "", errors.New(lastLine(stderr.String(), "could not log in over ssh"))
+}
+
+func sudoRefusal(output string) error {
+	reason := lastLine(output, "")
+	switch {
+	case reason == "", strings.Contains(reason, "incorrect password"), strings.Contains(reason, "Sorry, try again"):
+		return errors.New("sudo did not accept the password")
+	}
+	return errors.New("sudo refused: " + strings.TrimPrefix(reason, "sudo: "))
 }
 
 func boolInt(b bool) int {

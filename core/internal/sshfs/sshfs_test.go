@@ -196,3 +196,15 @@ func TestRelaySendsThePasswordThenWhatSshfsWritesEvenOnANonBlockingPipe(t *testi
 	assert.Zero(t, code)
 	assert.Equal(t, "hunter2\nsftp bytes", out.String())
 }
+
+func TestSudoRefusalSaysWhySudoSaidNo(t *testing.T) {
+	cases := map[string]string{
+		"": "sudo did not accept the password",
+		"Sorry, try again.\nsudo: 1 incorrect password attempt\n":                        "sudo did not accept the password",
+		"audi is not in the sudoers file.\n":                                             "sudo refused: audi is not in the sudoers file.",
+		"Sorry, user audi is not allowed to execute '/usr/bin/true' as nix on rosaic.\n": "sudo refused: Sorry, user audi is not allowed to execute '/usr/bin/true' as nix on rosaic.",
+	}
+	for output, want := range cases {
+		assert.EqualError(t, sudoRefusal(output), want)
+	}
+}
