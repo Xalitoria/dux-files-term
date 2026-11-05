@@ -11,6 +11,8 @@ Rectangle {
 
     required property string directory
 
+    property var transport: DuxFilesService
+
     property string sessionId: ""
     property string topic: ""
     property bool follows: false
@@ -94,14 +96,14 @@ Rectangle {
 
     function open() {
         const life = term.life;
-        DuxFilesService.call("terminal.open", {
+        transport.call("terminal.open", {
             "cwd": directory,
             "cols": fitCols,
             "rows": fitRows
         }, result => {
             if (!life.alive) {
                 if (!result.error)
-                    DuxFilesService.call("terminal.close", {
+                    transport.call("terminal.close", {
                         "id": result.id
                     }, null);
                 return;
@@ -116,7 +118,7 @@ Rectangle {
             term.follows = result.follow === true;
             term.colors = result.colors ?? {};
             term.behavior = result.behavior ?? {};
-            DuxFilesService.subscribeTopic(term.topic, term.handleFrame);
+            transport.subscribeTopic(term.topic, term.handleFrame);
             term.redraw();
         });
     }
@@ -124,8 +126,8 @@ Rectangle {
     function close() {
         if (sessionId === "")
             return;
-        DuxFilesService.unsubscribeTopic(topic, handleFrame);
-        DuxFilesService.call("terminal.close", {
+        transport.unsubscribeTopic(topic, handleFrame);
+        transport.call("terminal.close", {
             "id": sessionId
         }, null);
         sessionId = "";
@@ -135,7 +137,7 @@ Rectangle {
         if (sessionId === "")
             return;
         params.id = sessionId;
-        DuxFilesService.call(method, params, null);
+        transport.call(method, params, null);
     }
 
     function redraw() {
@@ -166,7 +168,7 @@ Rectangle {
 
     function handleFrame(data) {
         if (data.exited) {
-            DuxFilesService.unsubscribeTopic(topic, handleFrame);
+            transport.unsubscribeTopic(topic, handleFrame);
             sessionId = "";
             exited();
             return;

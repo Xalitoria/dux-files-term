@@ -13,6 +13,8 @@ QtObject {
 
     property var tabs: []
     property int currentTab: 0
+    property int currentTabId: 0
+    property int lastTabId: 0
     property var closedTabs: []
     property bool applyingTab: false
 
@@ -21,9 +23,26 @@ QtObject {
 
     signal activePaneRequested(int index)
     signal dropRequested(var paths, string dest, string action)
+    signal tabsClosed(var ids)
 
     function tabState(index) {
         return tabs[index] ?? null;
+    }
+
+    function tabPath(id) {
+        const state = tabs.find(tab => tab.id === id);
+        return state?.panes?.[state.active ?? 0]?.path || state?.panes?.[0]?.path || "";
+    }
+
+    function setCurrentTab(index) {
+        currentTab = index;
+        currentTabId = tabs[index]?.id ?? 0;
+    }
+
+    function withId(state) {
+        return Object.assign({}, state, {
+            "id": ++lastTabId
+        });
     }
 
     function paneStates() {
@@ -36,6 +55,7 @@ QtObject {
             return;
         const next = tabs.slice();
         next[currentTab] = {
+            "id": tabs[currentTab].id,
             "panes": paneStates(),
             "active": activePaneIndex
         };
@@ -63,7 +83,7 @@ QtObject {
         if (index === currentTab || index < 0 || index >= tabs.length)
             return;
         captureTabs();
-        currentTab = index;
+        setCurrentTab(index);
         applyTab(index);
         persistTabs();
     }
@@ -71,20 +91,20 @@ QtObject {
     function newTab(path, background) {
         captureTabs();
         const next = tabs.slice();
-        next.push({
+        next.push(withId({
             "panes": [
                 {
                     "path": path === "" ? activePane.path : path
                 },
                 null],
             "active": 0
-        });
+        }));
         tabs = next;
         if (background) {
             persistTabs();
             return;
         }
-        currentTab = next.length - 1;
+        setCurrentTab(next.length - 1);
         applyTab(currentTab);
         persistTabs();
         if (path !== "")
@@ -112,7 +132,7 @@ QtObject {
         const index = Math.min(closed.index, next.length);
         next.splice(index, 0, closed.state);
         tabs = next;
-        currentTab = index;
+        setCurrentTab(index);
         applyTab(index);
         persistTabs();
     }
@@ -126,7 +146,7 @@ QtObject {
         const moved = next.splice(from, 1)[0];
         next.splice(to, 0, moved);
         tabs = next;
-        currentTab = next.indexOf(current);
+        setCurrentTab(next.indexOf(current));
         persistTabs();
     }
 
@@ -140,17 +160,20 @@ QtObject {
                     "index": index,
                     "state": tabs[index]
                 }))).slice(-FilesMetrics.closedTabHistory);
+        const closedIds = closing.map(index => tabs[index].id);
         const kept = tabs.filter((_, index) => !closing.includes(index));
         tabs = kept;
         const index = kept.indexOf(current);
         if (index >= 0) {
-            currentTab = index;
+            setCurrentTab(index);
             persistTabs();
+            tabsClosed(closedIds);
             return;
         }
-        currentTab = Math.max(0, Math.min(fallback, kept.length - 1));
+        setCurrentTab(Math.max(0, Math.min(fallback, kept.length - 1)));
         applyTab(currentTab);
         persistTabs();
+        tabsClosed(closedIds);
     }
 
     function closeOtherTabs(index) {
@@ -166,9 +189,9 @@ QtObject {
             return;
         captureTabs();
         const next = tabs.slice();
-        next.splice(index + 1, 0, Object.assign({}, tabs[index]));
+        next.splice(index + 1, 0, withId(tabs[index]));
         tabs = next;
-        currentTab = index + 1;
+        setCurrentTab(index + 1);
         applyTab(currentTab);
         persistTabs();
     }
@@ -209,27 +232,27 @@ QtObject {
 
     function homeTabs() {
         return [
-            {
+            withId({
                 "panes": [
                     {
                         "path": Paths.strip(Paths.home)
                     },
                     null],
                 "active": 0
-            }
+            })
         ];
     }
 
     function restoreSession() {
         const stored = SessionData.tabs;
-        tabs = Array.isArray(stored) && stored.length > 0 ? stored : homeTabs();
-        currentTab = Math.max(0, Math.min(SessionData.currentTab, tabs.length - 1));
+        tabs = Array.isArray(stored) && stored.length > 0 ? stored.map(withId) : homeTabs();
+        setCurrentTab(Math.max(0, Math.min(SessionData.currentTab, tabs.length - 1)));
         applyTab(currentTab);
     }
 
     function startFresh() {
         tabs = homeTabs();
-        currentTab = 0;
+        setCurrentTab(0);
         applyTab(0);
     }
 }

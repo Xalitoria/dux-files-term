@@ -23,7 +23,8 @@ FloatingWindow {
     property bool splitView: false
     property real splitRatio: 0.5
     property string terminalMode: "hidden"
-    property bool terminalStarted: false
+    property var activeTerminal: null
+    property var terminalTransport: DuxFilesService
     property real terminalHeight: FilesMetrics.terminalDefaultHeight
     property bool showHidden: SessionData.lastUsed("showHidden", SettingsData.showHidden)
     property bool previewOpen: SessionData.lastUsed("previewOpen", true)
@@ -60,7 +61,7 @@ FloatingWindow {
     readonly property bool lastActive: WindowService.lastActiveId === windowId
     readonly property var terminalModes: ["hidden", "files", "bottom", "right"]
     readonly property bool terminalOpen: terminalMode !== "hidden"
-    readonly property bool terminalSeeThrough: terminalOpen && (terminalLoader.item?.paperOpacity ?? 1) < 1
+    readonly property bool terminalSeeThrough: terminalOpen && (activeTerminal?.paperOpacity ?? 1) < 1
     readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (surface.height - header.height - FilesMetrics.contentMarginV - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
     readonly property real terminalDockHeight: Math.min(terminalHeight, terminalMaxHeight)
     readonly property real terminalBottomInset: terminalMode === "bottom" ? terminalDockHeight + FilesMetrics.splitterWidth + FilesMetrics.contentMarginV : 0
@@ -166,11 +167,11 @@ FloatingWindow {
     }
 
     function setTerminalMode(mode) {
-        const hadFocus = terminalLoader.item?.activeFocus ?? false;
+        const hadFocus = activeTerminal?.activeFocus ?? false;
         terminalMode = mode;
         if (terminalOpen) {
-            terminalStarted = true;
-            terminalLoader.item.forceActiveFocus();
+            startTerminal();
+            activeTerminal?.forceActiveFocus();
             return;
         }
         if (hadFocus)
@@ -181,11 +182,49 @@ FloatingWindow {
         setTerminalMode(terminalModes[(terminalModes.indexOf(terminalMode) + 1) % terminalModes.length]);
     }
 
-    function endTerminal() {
-        if (terminalLoader.item?.activeFocus)
-            activePane.focusBody();
-        terminalMode = "hidden";
-        Qt.callLater(() => window.terminalStarted = false);
+    function hasTerminal(tabId) {
+        for (let i = 0; i < terminals.count; i++) {
+            if (terminals.get(i).tabId === tabId)
+                return true;
+        }
+        return false;
+    }
+
+    function startTerminal() {
+        const tabId = tabManager.currentTabId;
+        if (tabId === 0 || hasTerminal(tabId))
+            return;
+        terminals.append({
+            "tabId": tabId
+        });
+    }
+
+    function stopTerminal(tabId) {
+        for (let i = 0; i < terminals.count; i++) {
+            if (terminals.get(i).tabId !== tabId)
+                continue;
+            terminals.remove(i);
+            return;
+        }
+    }
+
+    function trackTerminal(view) {
+        switch (true) {
+        case view.current:
+            activeTerminal = view;
+            return;
+        case activeTerminal === view:
+            activeTerminal = null;
+        }
+    }
+
+    function endTerminal(tabId) {
+        if (tabId === tabManager.currentTabId) {
+            if (activeTerminal?.activeFocus)
+                activePane.focusBody();
+            terminalMode = "hidden";
+        }
+        Qt.callLater(() => window.stopTerminal(tabId));
     }
 
     function openPath(path, inNewTab) {
@@ -365,6 +404,15 @@ FloatingWindow {
         primary: window.primary
         onActivePaneRequested: index => window.activePaneIndex = index
         onDropRequested: (paths, dest, action) => window.drag.applyDrop(paths, dest, action)
+        onTabsClosed: ids => ids.forEach(id => window.stopTerminal(id))
+        onCurrentTabIdChanged: {
+            if (window.terminalOpen)
+                window.startTerminal();
+        }
+    }
+
+    ListModel {
+        id: terminals
     }
 
     FloatingWindowControls {
@@ -429,7 +477,7 @@ FloatingWindow {
         Item {
             id: backdrop
 
-            readonly property rect hole: window.terminalSeeThrough ? Qt.rect(Math.round(terminalLoader.x), Math.round(terminalLoader.y), Math.round(terminalLoader.width), Math.round(terminalLoader.height)) : Qt.rect(0, surface.height, 0, 0)
+            readonly property rect hole: window.terminalSeeThrough ? Qt.rect(Math.round(terminalDock.x), Math.round(terminalDock.y), Math.round(terminalDock.width), Math.round(terminalDock.height)) : Qt.rect(0, surface.height, 0, 0)
 
             anchors.fill: parent
 
@@ -643,7 +691,7 @@ FloatingWindow {
                 anchors.top: topbar.bottom
                 anchors.topMargin: FilesMetrics.contentSpacing
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: window.terminalMode === "files" ? terminalLoader.height + FilesMetrics.splitterWidth : 0
+                anchors.bottomMargin: window.terminalMode === "files" ? terminalDock.height + FilesMetrics.splitterWidth : 0
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.rightMargin: Math.max(0, window.terminalRightInset - FilesMetrics.contentMarginH)
@@ -696,17 +744,17 @@ FloatingWindow {
         PaneSplitter {
             id: terminalSplitter
 
-            anchors.left: terminalLoader.left
-            anchors.right: terminalLoader.right
-            anchors.bottom: terminalLoader.top
+            anchors.left: terminalDock.left
+            anchors.right: terminalDock.right
+            anchors.bottom: terminalDock.top
             orientation: Qt.Vertical
             visible: window.terminalOpen && window.terminalMode !== "right"
-            onMoved: delta => window.setTerminalHeight(terminalLoader.height - delta)
+            onMoved: delta => window.setTerminalHeight(terminalDock.height - delta)
             onReset: window.setTerminalHeight(FilesMetrics.terminalDefaultHeight)
         }
 
-        Loader {
-            id: terminalLoader
+        Item {
+            id: terminalDock
 
             readonly property bool atRight: window.terminalMode === "right"
 
@@ -726,12 +774,30 @@ FloatingWindow {
                 }
             }
             height: atRight ? surface.height - content.y - panesRow.y - FilesMetrics.contentMarginV : window.terminalDockHeight
-            active: window.terminalStarted
             visible: window.terminalOpen
-            sourceComponent: TerminalView {
-                directory: window.currentPath
-                onExited: window.endTerminal()
-                onFailed: response => window.openFlow.reportError(response)
+
+            Repeater {
+                model: terminals
+
+                TerminalView {
+                    id: view
+
+                    required property int tabId
+                    readonly property bool current: tabId === window.tabManager.currentTabId
+
+                    anchors.fill: parent
+                    visible: current
+                    transport: window.terminalTransport
+                    directory: window.tabManager.tabPath(tabId)
+                    onCurrentChanged: window.trackTerminal(view)
+                    onExited: window.endTerminal(tabId)
+                    onFailed: response => window.openFlow.reportError(response)
+                    Component.onCompleted: window.trackTerminal(view)
+                    Component.onDestruction: {
+                        if (window.activeTerminal === view)
+                            window.activeTerminal = null;
+                    }
+                }
             }
         }
 
