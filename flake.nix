@@ -54,7 +54,7 @@
             withPdfPreview ? true,
           }:
           let
-            version = "2.0.0";
+            version = "2.1.0";
             thumbnailTools = with pkgs; [
               bubblewrap
               ffmpegthumbnailer
@@ -67,7 +67,7 @@
             pname = "dux-files";
             src = ./.;
             modRoot = "core";
-            vendorHash = "sha256-4R4aEsFMTF7gp5pQvXvrs2QGlqFQ63Q2C8PmwUleBcQ=";
+            vendorHash = "sha256-G39wL2xiRggsW/dfgE3xZsSLqtPZM1cxu57vPpEqRy8=";
 
             subPackages = [ "cmd/dfiles" ];
 

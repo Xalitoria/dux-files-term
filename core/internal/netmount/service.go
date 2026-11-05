@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/duxlabs-dev/dux-files/core/internal/wire"
+
 	"github.com/duxlabs-dev/dux-files/core/internal/location"
 	"github.com/duxlabs-dev/dux-files/core/internal/sshfs"
 	"github.com/duxlabs-dev/dux-go/files"
@@ -208,7 +210,7 @@ type Connected struct {
 func (s *Service) Connect(uri, password string) (Connected, error) {
 	conn := s.connection()
 	if conn == nil {
-		return Connected{}, fail(files.CodeNotSupported, "gvfs is not running")
+		return Connected{}, wire.Fail(files.CodeNotSupported, "gvfs is not running")
 	}
 
 	remote := location.SplitPassword(strings.TrimSpace(uri))
@@ -251,7 +253,7 @@ func (s *Service) mount(conn *dbus.Conn, uri, password string, spec Spec) (Mount
 	s.reload(conn)
 	mount, found := s.findBySpec(spec)
 	if !found {
-		return Mount{}, fail(files.CodeNotSupported, "%s is mounted but gvfs offers no folder for it", uri)
+		return Mount{}, wire.Fail(files.CodeNotSupported, "%s is mounted but gvfs offers no folder for it", uri)
 	}
 	s.remember(Server{URI: mount.URI, Name: mount.Name, Scheme: mount.Scheme})
 	s.publishMounts()
@@ -303,19 +305,19 @@ func (s *Service) remember(server Server) {
 func (s *Service) Disconnect(id string) error {
 	if s.ssh.Owns(id) {
 		if err := s.ssh.Unmount(id); err != nil {
-			return fail(files.CodeBusy, "%v", err)
+			return wire.Fail(files.CodeBusy, "%v", err)
 		}
 		s.publish(s.Snapshot())
 		return nil
 	}
 	conn := s.connection()
 	if conn == nil {
-		return fail(files.CodeNotSupported, "gvfs is not running")
+		return wire.Fail(files.CodeNotSupported, "gvfs is not running")
 	}
 
 	mount, found := s.find(id)
 	if !found {
-		return fail(files.CodeNotFound, "unknown mount: %s", id)
+		return wire.Fail(files.CodeNotFound, "unknown mount: %s", id)
 	}
 
 	op := s.newOp(mount.URI)
@@ -337,7 +339,7 @@ func (s *Service) Disconnect(id string) error {
 func (s *Service) Answer(id string, answer Answer) error {
 	path, _, ok := cutLast(id, "/")
 	if !ok {
-		return fail(files.CodeInvalid, "unknown question: %s", id)
+		return wire.Fail(files.CodeInvalid, "unknown question: %s", id)
 	}
 
 	s.mu.RLock()
@@ -345,7 +347,7 @@ func (s *Service) Answer(id string, answer Answer) error {
 	s.mu.RUnlock()
 
 	if op == nil || !op.answer(id, answer) {
-		return fail(files.CodeInvalid, "question %s is no longer waiting", id)
+		return wire.Fail(files.CodeInvalid, "question %s is no longer waiting", id)
 	}
 	return nil
 }
@@ -354,14 +356,14 @@ func (s *Service) Answer(id string, answer Answer) error {
 func (s *Service) ConnectAs(uri string, as sshfs.Elevation, sudoPassword string) (Connected, error) {
 	login, dir, err := sshfs.ParseURI(location.SplitPassword(strings.TrimSpace(uri)).URI)
 	if err != nil {
-		return Connected{}, fail(files.CodeInvalid, "%v", err)
+		return Connected{}, wire.Fail(files.CodeInvalid, "%v", err)
 	}
 	mounted, err := s.ssh.Mount(login, as, sudoPassword)
 	if errors.Is(err, sshfs.ErrNoServer) {
 		return s.terminalOnly(uri, login, as)
 	}
 	if err != nil {
-		return Connected{}, fail(files.CodeIO, "%v", err)
+		return Connected{}, wire.Fail(files.CodeIO, "%v", err)
 	}
 	mount := elevatedMount(mounted)
 	if err := s.servers.remember(Server{URI: login.URI(), Name: mount.Name, Scheme: "sftp", Elevate: as.Tag()}); err != nil {
