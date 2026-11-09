@@ -63,6 +63,7 @@ Rectangle {
     signal exited
     signal failed(var response)
     signal lineUpdated(int y, var runs)
+    signal rang(var features)
 
     readonly property color paper: colors.bg ? colors.bg : Theme.foregroundColor(Theme.cardSurface, true)
     readonly property color ink: colors.fg ? colors.fg : Theme.surfaceText
@@ -70,6 +71,8 @@ Rectangle {
     readonly property real paperOpacity: colors.opacity ?? 1
     readonly property string rightClick: behavior.rightClick || "menu"
     readonly property string middleClick: behavior.middleClick || "primaryPaste"
+    readonly property real wheelLines: behavior.wheelLines > 0 ? behavior.wheelLines : FilesMetrics.terminalWheelLines
+    readonly property var bellFeatures: behavior.bell ?? ["attention"]
     readonly property bool customSelection: !!(colors.selectionBg || colors.selectionFg)
     readonly property color selectionPaper: colors.selectionBg ? colors.selectionBg : ink
     readonly property string cursorShape: cursor.shape || behavior.cursorShape || "block"
@@ -212,6 +215,8 @@ Rectangle {
         updateImages(data);
         if (data.clipboard !== undefined)
             Quickshell.clipboardText = data.clipboard;
+        if (data.bell)
+            ring();
         cursor = data.cursor;
         mouse = data.mouse ?? 0;
         if (painted)
@@ -575,6 +580,12 @@ Rectangle {
         return false;
     }
 
+    function ring() {
+        if (bellFeatures.includes("visual"))
+            bellFade.restart();
+        rang(bellFeatures);
+    }
+
     function openSearch() {
         searching = true;
         searchField.forceActiveFocus();
@@ -800,6 +811,27 @@ Rectangle {
     }
 
     Rectangle {
+        id: bellFlash
+
+        anchors.fill: parent
+        z: 1
+        radius: term.radius
+        color: term.ink
+        opacity: 0
+        visible: opacity > 0
+
+        NumberAnimation {
+            id: bellFade
+
+            target: bellFlash
+            property: "opacity"
+            from: Theme.pendingOpacity / 2
+            to: 0
+            duration: Theme.shortDuration
+        }
+    }
+
+    Rectangle {
         id: searchBar
 
         visible: term.searching
@@ -875,7 +907,7 @@ Rectangle {
                     term.reportMouse("wheel", cell, notches > 0 ? "wheelUp" : "wheelDown", event.modifiers);
                 return;
             }
-            term.wheelRemainder += event.angleDelta.y / 120 * FilesMetrics.terminalWheelLines;
+            term.wheelRemainder += event.angleDelta.y / 120 * term.wheelLines;
             const lines = Math.trunc(term.wheelRemainder);
             term.wheelRemainder -= lines;
             if (lines !== 0)

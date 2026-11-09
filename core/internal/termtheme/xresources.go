@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	resourceKey = regexp.MustCompile(`^(color(\d+)|foreground|background|cursorcolor)$`)
+	resourceKey = regexp.MustCompile(`^(color(\d+)|foreground|background|cursorcolor|savelines)$`)
 	includeLine = regexp.MustCompile(`^#\s*include\s+"([^"]+)"`)
 )
 
@@ -47,6 +47,7 @@ func readXresources(apps ...string) reader {
 		for i := range colors.ANSI {
 			colors.ANSI[i] = tint(lookup("color" + strconv.Itoa(i)))
 		}
+		colors.ScrollbackLines = parseLines(lookup("savelines"))
 		return colors, colors.usable()
 	}
 }

@@ -43,6 +43,11 @@ type alacrittyConfig struct {
 	Mouse struct {
 		Bindings []struct{ Mouse, Mods, Action, Mode string }
 	}
+	Scrolling struct {
+		History    *int
+		Multiplier *int
+	}
+	Bell struct{ Duration *int }
 }
 
 func readAlacritty(s sources) (Profile, bool) {
@@ -83,6 +88,15 @@ func readAlacritty(s sources) (Profile, bool) {
 		case "Middle":
 			profile.MiddleClick = alacrittyClick(binding.Action)
 		}
+	}
+	if config.Scrolling.History != nil && *config.Scrolling.History > 0 {
+		profile.ScrollbackLines = *config.Scrolling.History
+	}
+	if config.Scrolling.Multiplier != nil && *config.Scrolling.Multiplier > 0 {
+		profile.WheelLines = float64(*config.Scrolling.Multiplier)
+	}
+	if config.Bell.Duration != nil {
+		profile.Bell = bellOf(false, *config.Bell.Duration > 0, false)
 	}
 	for _, binding := range config.Keyboard.Bindings {
 		if !alwaysActive(binding.Mode) {

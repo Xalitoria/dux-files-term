@@ -130,6 +130,7 @@ ShellRoot {
             scenario_rightTerminalResizes();
             scenario_rightAndMiddleClicks();
             scenario_scrollbackSearch();
+            scenario_bellMarksABackgroundTab();
             scenario_backgroundTabsAndDuplicates();
             scenario_closingTabsClosesTheirTerminals();
             scenario_closingATabBesideTheCurrentOneStartsNothing();
@@ -329,6 +330,50 @@ ShellRoot {
 
             view.searchQuery = "";
             compare(root.searched.length, 4, "typing into a closed search asks nothing");
+        }
+
+        function scenario_bellMarksABackgroundTab() {
+            const win = root.window;
+            const tabs = win.tabManager;
+            const view = win.activeTerminal;
+            verify(view !== null);
+            const tabId = view.tabId;
+            const tabCount = tabs.tabs.length;
+
+            compare(view.wheelLines, FilesMetrics.terminalWheelLines);
+            compare(view.bellFeatures, ["attention"]);
+            view.behavior = {
+                "wheelLines": 5,
+                "bell": []
+            };
+            compare(view.wheelLines, 5);
+            view.ring();
+            compare(win.ringingTabs.length, 0, "a quiet bell marks nothing");
+            view.behavior = {};
+
+            tabs.newTab("/srv", false);
+            verify(tabs.currentTabId !== tabId);
+            root.handlers["terminal:" + view.sessionId]({
+                "cols": 20,
+                "rows": 5,
+                "scroll": 0,
+                "lines": [],
+                "cursor": {
+                    "x": 0,
+                    "y": 0,
+                    "visible": false
+                },
+                "bell": true
+            });
+            compare(win.ringingTabs, [tabId]);
+            verify(win.tabTitle(tabs.tabs.find(state => state.id === tabId)).includes("🔔"));
+
+            tabs.selectTab(tabs.tabs.findIndex(state => state.id === tabId));
+            compare(win.ringingTabs.length, 0, "looking at the tab clears the bell");
+
+            tabs.closeTab(tabCount);
+            compare(tabs.tabs.length, tabCount);
+            compare(tabs.currentTabId, tabId);
         }
 
         function scenario_pickingATerminalRestylesOpenTerminals() {

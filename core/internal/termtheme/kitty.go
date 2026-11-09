@@ -49,6 +49,9 @@ func readKitty(s sources) (Profile, bool) {
 	profile.setCursor(value("cursor_shape"), blink != "" && blink != "0")
 	kittyKeys(&profile, config)
 	kittyClicks(&profile, config)
+	profile.ScrollbackLines = parseLines(value("scrollback_lines"))
+	profile.WheelLines = parsePositive(value("wheel_scroll_multiplier"))
+	kittyBell(&profile, config)
 	return profile, profile.usable()
 }
 
@@ -106,6 +109,18 @@ func kittyKeys(profile *Profile, config kittyConfig) {
 			}
 		}
 	}
+}
+
+// Kitty's bell plays a sound, marks the tab and alerts the window unless the config says otherwise.
+func kittyBell(profile *Profile, config kittyConfig) {
+	audio, visual, alert := config.settings["enable_audio_bell"], config.settings["visual_bell_duration"], config.settings["window_alert_on_bell"]
+	onTab, tabSet := config.settings["bell_on_tab"]
+	if !anySet(audio, visual, alert) && !tabSet {
+		return
+	}
+	onTab = strings.Trim(strings.TrimSpace(onTab), `"'`)
+	marksTab := !tabSet || (onTab != "" && onTab != "no" && onTab != "none")
+	profile.Bell = bellOf(boolOr(audio, true), parsePositive(firstField(visual)) > 0, boolOr(alert, true) || marksTab)
 }
 
 // Only plain clicks of the left-out buttons count. Mappings with modifiers, or for a grabbed mouse, are the program's.

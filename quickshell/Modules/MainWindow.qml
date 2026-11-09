@@ -24,6 +24,7 @@ FloatingWindow {
     property real splitRatio: 0.5
     property string terminalMode: "hidden"
     property var activeTerminal: null
+    property var ringingTabs: []
     property var terminalTransport: DuxFilesService
     property real terminalHeight: FilesMetrics.terminalDefaultHeight
     property real terminalWidthRatio: FilesMetrics.terminalDefaultWidthRatio
@@ -230,7 +231,25 @@ FloatingWindow {
         }
     }
 
+    function markBell(tabId) {
+        if (tabId === tabManager.currentTabId && (activeTerminal?.activeFocus ?? false))
+            return;
+        if (!ringingTabs.includes(tabId))
+            ringingTabs = ringingTabs.concat([tabId]);
+    }
+
+    function clearBell(tabId) {
+        if (ringingTabs.includes(tabId))
+            ringingTabs = ringingTabs.filter(id => id !== tabId);
+    }
+
+    function tabTitle(state) {
+        const label = tabManager.tabLabel(state);
+        return ringingTabs.includes(state.id) ? I18n.tr("🔔 %1", "tab title of a folder whose terminal rang its bell").arg(label) : label;
+    }
+
     function endTerminal(tabId) {
+        clearBell(tabId);
         if (tabId === tabManager.currentTabId) {
             if (activeTerminal?.activeFocus)
                 activePane.focusBody();
@@ -617,7 +636,7 @@ FloatingWindow {
                 anchors.right: parent.right
                 visible: window.tabManager.tabs.length > 1
                 height: visible ? implicitHeight : 0
-                tabs: window.tabManager.tabs.map(state => window.tabManager.tabLabel(state))
+                tabs: window.tabManager.tabs.map(state => window.tabTitle(state))
                 currentIndex: window.tabManager.currentTab
                 onTabSelected: index => window.tabManager.selectTab(index)
                 onTabClosed: index => window.tabManager.closeTab(index)
@@ -814,7 +833,19 @@ FloatingWindow {
                     visible: current
                     transport: window.terminalTransport
                     directory: window.tabManager.tabPath(tabId)
-                    onCurrentChanged: window.trackTerminal(view)
+                    onCurrentChanged: {
+                        window.trackTerminal(view);
+                        if (current)
+                            window.clearBell(tabId);
+                    }
+                    onActiveFocusChanged: {
+                        if (activeFocus)
+                            window.clearBell(tabId);
+                    }
+                    onRang: features => {
+                        if (features.includes("attention"))
+                            window.markBell(tabId);
+                    }
                     onExited: window.endTerminal(tabId)
                     onFailed: response => window.openFlow.reportError(response)
                     Component.onCompleted: window.trackTerminal(view)

@@ -60,10 +60,41 @@ func readGhostty(s sources) (Profile, bool) {
 	profile.setCursor(config.values["cursor-style"], truthy(config.values["cursor-style-blink"]))
 	profile.RightClick = ghosttyClick(config.values["right-click-action"])
 	profile.MiddleClick = ghosttyClick(config.values["middle-click-action"])
+	profile.ScrollbackLines = parseLines(config.values["scrollback-limit-lines"])
+	profile.WheelLines = ghosttyWheel(config.values["mouse-scroll-multiplier"])
+	if features, set := config.values["bell-features"]; set {
+		profile.Bell = ghosttyBell(features)
+	}
 	for _, bind := range config.binds {
 		ghosttyBind(&profile, bind)
 	}
 	return profile, profile.usable()
+}
+
+// The multiplier is one number, or "precision:1,discrete:3" with the wheel being the discrete one.
+func ghosttyWheel(value string) float64 {
+	for _, part := range strings.Split(value, ",") {
+		if kind, number, found := strings.Cut(part, ":"); found && strings.TrimSpace(kind) == "discrete" {
+			return parsePositive(number)
+		}
+	}
+	if strings.Contains(value, ":") {
+		return 0
+	}
+	return parsePositive(value)
+}
+
+// Features are listed as "audio,no-attention,title"; the ones left out keep ghostty's defaults.
+func ghosttyBell(features string) []string {
+	on := map[string]bool{"attention": true, "title": true}
+	for _, feature := range strings.Split(features, ",") {
+		feature = strings.TrimSpace(feature)
+		if feature == "" {
+			continue
+		}
+		on[strings.TrimPrefix(feature, "no-")] = !strings.HasPrefix(feature, "no-")
+	}
+	return bellOf(on["audio"] || on["system"], false, on["attention"] || on["title"] || on["border"])
 }
 
 // A bind reads "ctrl+shift+c=copy_to_clipboard". The chord can end in "=", so the split is at the last one.

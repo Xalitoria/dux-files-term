@@ -18,6 +18,13 @@ func readXfce(s sources) (Profile, bool) {
 			colors.ANSI[i] = tint(entry)
 		}
 	}
+	colors.ScrollbackLines = parseLines(config["ScrollingLines"])
+	if truthy(config["ScrollingUnlimited"]) {
+		colors.ScrollbackLines = UnlimitedScrollback
+	}
+	if bell, urgent := config["MiscBell"], config["MiscBellUrgent"]; anySet(bell, urgent) {
+		colors.Bell = bellOf(truthy(bell), false, truthy(urgent))
+	}
 	if config["BackgroundMode"] == "TERMINAL_BACKGROUND_TRANSPARENT" {
 		if opacity, ok := parseOpacity(config["BackgroundDarkness"]); ok {
 			colors.Opacity = opacity

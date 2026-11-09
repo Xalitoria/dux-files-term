@@ -26,11 +26,12 @@ import (
 )
 
 const (
-	frameInterval   = 16 * time.Millisecond
-	scrollbackLines = 1000
-	maxCols         = 500
-	maxCellPixels   = 64
-	maxRows         = 200
+	frameInterval      = 16 * time.Millisecond
+	scrollbackLines    = 1000
+	maxScrollbackLines = 5000
+	maxCols            = 500
+	maxCellPixels      = 64
+	maxRows            = 200
 
 	maxClipboardBytes = 1 << 20
 	syncTimeout       = 150 * time.Millisecond
@@ -66,6 +67,7 @@ type frame struct {
 	Mouse      int         `json:"mouse"`
 	Clipboard  *string     `json:"clipboard,omitempty"`
 	Matches    []match     `json:"matches,omitempty"`
+	Bell       bool        `json:"bell,omitempty"`
 
 	Images     []frameImage    `json:"images,omitempty"`
 	Dropped    []int           `json:"dropped,omitempty"`
@@ -120,6 +122,9 @@ type Session struct {
 	restyle    *termtheme.Profile
 	search     searchState
 	lastFound  []match
+	rang       bool
+	bellAudio  bool
+	lastBell   time.Time
 
 	inputMu sync.Mutex
 	nextSeq int
@@ -155,6 +160,7 @@ func startSession(topic string, argv []string, cwd string, cols, rows int, follo
 	}
 	s.gfx = newGraphics(emu, func(b []byte) { s.writes.push(b) }, func() (int, int) { return s.cellW, s.cellH })
 	emu.SetCallbacks(vt.Callbacks{
+		Bell:        s.ring,
 		Title:       func(title string) { s.title = title },
 		EnableMode:  func(mode ansi.Mode) { s.setMode(mode, true) },
 		DisableMode: func(mode ansi.Mode) { s.setMode(mode, false) },
@@ -164,7 +170,7 @@ func startSession(topic string, argv []string, cwd string, cols, rows int, follo
 
 	emu.RegisterCsiHandler('t', s.windowReport)
 	if colors != nil {
-		s.applyColors(*colors)
+		s.applyProfile(*colors)
 	}
 
 	go s.writes.run()
@@ -350,12 +356,14 @@ func (s *Session) frameLocked() (frame, bool) {
 	clipboard := s.clipboard
 	s.clipboard = nil
 	found := s.visibleMatchesLocked(history, height)
-	changed := len(lines) > 0 || imagesChanged || clipboard != nil || current != s.lastCursor || s.title != s.lastTitle || mouse != s.lastMouse || !slices.Equal(found, s.lastFound)
+	rang := s.rang
+	s.rang = false
+	changed := len(lines) > 0 || imagesChanged || clipboard != nil || rang || current != s.lastCursor || s.title != s.lastTitle || mouse != s.lastMouse || !slices.Equal(found, s.lastFound)
 	s.lastCursor = current
 	s.lastTitle = s.title
 	s.lastMouse = mouse
 	s.lastFound = found
-	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title, Mouse: mouse, Images: images.Images, Dropped: images.Dropped, Placements: images.Placements, Clipboard: clipboard, Matches: found}, changed
+	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title, Mouse: mouse, Images: images.Images, Dropped: images.Dropped, Placements: images.Placements, Clipboard: clipboard, Matches: found, Bell: rang}, changed
 }
 
 func (s *Session) lineSource(index, history int) func(x int) *uv.Cell {
@@ -458,7 +466,7 @@ func (s *Session) applyRestyleLocked() (map[string]any, bool) {
 	}
 	profile := *s.restyle
 	s.restyle = nil
-	s.applyColors(profile)
+	s.applyProfile(profile)
 	s.rows = nil
 	s.scheduleLocked()
 	return map[string]any{"theme": map[string]any{"colors": colorsPayload(profile), "behavior": behaviorPayload(profile)}}, true

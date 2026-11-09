@@ -1,6 +1,10 @@
 package terminal
 
-import "github.com/duxlabs-dev/dux-files/core/internal/termtheme"
+import (
+	"slices"
+
+	"github.com/duxlabs-dev/dux-files/core/internal/termtheme"
+)
 
 func colorsPayload(colors termtheme.Profile) map[string]any {
 	return map[string]any{
@@ -30,7 +34,26 @@ func behaviorPayload(profile termtheme.Profile) map[string]any {
 		"cursorBlink":  profile.CursorBlink,
 		"rightClick":   profile.RightClick,
 		"middleClick":  profile.MiddleClick,
+		"wheelLines":   profile.WheelLines,
+		"bell":         profile.Bell,
 	}
+}
+
+func (s *Session) applyProfile(profile termtheme.Profile) {
+	s.applyColors(profile)
+	s.emu.SetScrollbackSize(scrollbackSize(profile.ScrollbackLines))
+	s.bellAudio = slices.Contains(profile.Bell, termtheme.BellAudio)
+}
+
+// The dock keeps at most maxScrollbackLines, however many the terminal would.
+func scrollbackSize(lines int) int {
+	switch {
+	case lines == 0:
+		return scrollbackLines
+	case lines < 0:
+		return maxScrollbackLines
+	}
+	return min(lines, maxScrollbackLines)
 }
 
 func (s *Session) applyColors(colors termtheme.Profile) {

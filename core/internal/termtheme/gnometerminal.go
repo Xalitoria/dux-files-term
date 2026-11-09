@@ -44,6 +44,13 @@ func readGnomeTerminal(s sources) (Profile, bool) {
 	if profile["cursor-colors-set"] == "true" {
 		colors.Cursor = tint(profile["cursor-background-color"])
 	}
+	colors.ScrollbackLines = parseLines(profile["scrollback-lines"])
+	if profile["scrollback-unlimited"] == "true" {
+		colors.ScrollbackLines = UnlimitedScrollback
+	}
+	if audible := profile["audible-bell"]; audible != "" {
+		colors.Bell = bellOf(audible == "true", false, false)
+	}
 	if profile["use-transparent-background"] == "true" {
 		if percent, err := strconv.Atoi(number.FindString(profile["background-transparency-percent"])); err == nil {
 			colors.Opacity = clampOpacity(1 - float64(percent)/100)

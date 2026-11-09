@@ -36,6 +36,13 @@ func readTerminator(s sources) (Profile, bool) {
 			colors.ANSI[i] = tint(entry)
 		}
 	}
+	colors.ScrollbackLines = parseLines(profile["scrollback_lines"])
+	if truthy(profile["scrollback_infinite"]) {
+		colors.ScrollbackLines = UnlimitedScrollback
+	}
+	if audible, visible, urgent, icon := profile["audible_bell"], profile["visible_bell"], profile["urgent_bell"], profile["icon_bell"]; anySet(audible, visible, urgent, icon) {
+		colors.Bell = bellOf(truthy(audible), truthy(visible), truthy(urgent) || boolOr(icon, true))
+	}
 	if profile["background_type"] == "transparent" {
 		if opacity, ok := parseOpacity(profile["background_darkness"]); ok {
 			colors.Opacity = opacity

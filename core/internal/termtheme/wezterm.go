@@ -84,6 +84,10 @@ func readWezterm(s sources) (Profile, bool) {
 	style := luaSetting(source, "default_cursor_style")
 	colors.setCursor(style, strings.HasPrefix(style, "Blinking"))
 	weztermKeys(&colors, source)
+	colors.ScrollbackLines = parseLines(luaSetting(source, "scrollback_lines"))
+	if audible, fadeIn, fadeOut := luaSetting(source, "audible_bell"), luaSetting(source, "fade_in_duration_ms"), luaSetting(source, "fade_out_duration_ms"); anySet(audible, fadeIn, fadeOut) {
+		colors.Bell = bellOf(!strings.EqualFold(audible, "Disabled"), parsePositive(fadeIn) > 0 || parsePositive(fadeOut) > 0, false)
+	}
 	return colors, colors.usable()
 }
 

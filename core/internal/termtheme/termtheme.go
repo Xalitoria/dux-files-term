@@ -31,6 +31,13 @@ type Profile struct {
 
 	// What right and middle clicks do, as the Click constants. Unset leaves the choice to the view.
 	RightClick, MiddleClick string
+
+	// Lines kept above the screen; UnlimitedScrollback asks for all the dock allows. 0 leaves the dock's own size.
+	ScrollbackLines int
+	// Lines scrolled per wheel notch. 0 leaves the dock's own speed.
+	WheelLines float64
+	// What a bell does, as the Bell constants. Nil leaves the choice to the view; empty keeps it quiet.
+	Bell []string
 }
 
 func newProfile() Profile {
@@ -43,6 +50,8 @@ func (c Profile) usable() bool {
 	case c.Fg != nil, c.Bg != nil, c.Cursor != nil, c.SelectionFg != nil, c.SelectionBg != nil, c.Opacity < 1:
 		return true
 	case c.WordChars != "", c.WordDelims != "", c.CopyOnSelect, len(c.Keys) > 0, c.FontFamily != "", c.FontSize > 0, c.CursorShape != "", c.CursorBlink:
+		return true
+	case c.ScrollbackLines != 0, c.WheelLines > 0, c.Bell != nil:
 		return true
 	}
 	for _, ansi := range c.ANSI {
@@ -76,6 +85,10 @@ type terminal struct {
 	right, middle string
 	// The keys that open the terminal's scrollback search out of the box. Kitty has no search; its scrollback pager key stands in.
 	search []string
+	// The scrollback size, wheel speed and bell the terminal has out of the box.
+	scrollback int
+	wheel      float64
+	bell       []string
 }
 
 // Names that say nothing about which terminal runs, so they don't count as a default.
@@ -87,18 +100,18 @@ var (
 )
 
 var terminals = []terminal{
-	{[]string{"kitty"}, readKitty, false, ClickExtend, ClickPrimaryPaste, []string{"ctrl+shift+h"}},
-	{[]string{"ghostty", "com.mitchellh.ghostty"}, readGhostty, true, ClickMenu, ClickPrimaryPaste, searchF},
-	{[]string{"alacritty"}, readAlacritty, true, ClickExtend, ClickPrimaryPaste, searchFB},
-	{[]string{"foot", "footclient"}, readFoot, true, ClickExtend, ClickPrimaryPaste, []string{"ctrl+shift+r"}},
-	{[]string{"wezterm", "org.wezfurlong.wezterm"}, readWezterm, true, ClickNone, ClickPrimaryPaste, searchF},
-	{[]string{"konsole", "org.kde.konsole"}, readKonsole, true, ClickMenu, ClickPrimaryPaste, searchF},
-	{[]string{"rio", "com.raphamorim.rio"}, readRio, true, "", "", searchFB},
-	{[]string{"xfce4-terminal"}, readXfce, true, ClickMenu, ClickPrimaryPaste, searchF},
-	{[]string{"gnome-terminal", "org.gnome.terminal"}, readGnomeTerminal, true, ClickMenu, ClickPrimaryPaste, searchF},
-	{[]string{"terminator"}, readTerminator, true, ClickMenu, ClickPrimaryPaste, searchF},
-	{[]string{"urxvt", "urxvtc", "rxvt-unicode"}, readXresources("urxvt", "rxvt"), false, ClickExtend, ClickPrimaryPaste, nil},
-	{[]string{"xterm", "uxterm"}, readXresources("xterm", "uxterm"), false, ClickExtend, ClickPrimaryPaste, nil},
+	{ids: []string{"kitty"}, read: readKitty, right: ClickExtend, middle: ClickPrimaryPaste, search: []string{"ctrl+shift+h"}, scrollback: 2000, wheel: 5, bell: bellOf(true, false, true)},
+	{ids: []string{"ghostty", "com.mitchellh.ghostty"}, read: readGhostty, ctrlZoom: true, right: ClickMenu, middle: ClickPrimaryPaste, search: searchF, scrollback: UnlimitedScrollback, wheel: 3, bell: bellOf(false, false, true)},
+	{ids: []string{"alacritty"}, read: readAlacritty, ctrlZoom: true, right: ClickExtend, middle: ClickPrimaryPaste, search: searchFB, scrollback: 10000, wheel: 3, bell: quietBell},
+	{ids: []string{"foot", "footclient"}, read: readFoot, ctrlZoom: true, right: ClickExtend, middle: ClickPrimaryPaste, search: []string{"ctrl+shift+r"}, scrollback: 1000, wheel: 3, bell: quietBell},
+	{ids: []string{"wezterm", "org.wezfurlong.wezterm"}, read: readWezterm, ctrlZoom: true, right: ClickNone, middle: ClickPrimaryPaste, search: searchF, scrollback: 3500, wheel: 3, bell: bellOf(true, false, false)},
+	{ids: []string{"konsole", "org.kde.konsole"}, read: readKonsole, ctrlZoom: true, right: ClickMenu, middle: ClickPrimaryPaste, search: searchF, scrollback: 1000, wheel: 3, bell: bellOf(true, false, false)},
+	{ids: []string{"rio", "com.raphamorim.rio"}, read: readRio, ctrlZoom: true, search: searchFB, wheel: 3},
+	{ids: []string{"xfce4-terminal"}, read: readXfce, ctrlZoom: true, right: ClickMenu, middle: ClickPrimaryPaste, search: searchF, scrollback: 1000, wheel: 3, bell: quietBell},
+	{ids: []string{"gnome-terminal", "org.gnome.terminal"}, read: readGnomeTerminal, ctrlZoom: true, right: ClickMenu, middle: ClickPrimaryPaste, search: searchF, scrollback: 10000, wheel: 3, bell: bellOf(true, false, false)},
+	{ids: []string{"terminator"}, read: readTerminator, ctrlZoom: true, right: ClickMenu, middle: ClickPrimaryPaste, search: searchF, scrollback: 500, wheel: 3, bell: bellOf(false, false, true)},
+	{ids: []string{"urxvt", "urxvtc", "rxvt-unicode"}, read: readXresources("urxvt", "rxvt"), right: ClickExtend, middle: ClickPrimaryPaste, scrollback: 1000, wheel: 3, bell: bellOf(true, false, false)},
+	{ids: []string{"xterm", "uxterm"}, read: readXresources("xterm", "uxterm"), right: ClickExtend, middle: ClickPrimaryPaste, scrollback: 1024, wheel: 3, bell: bellOf(true, false, false)},
 }
 
 // Load follows the colours of the preferred terminal, else the default one, else the first supported one that has a config.
@@ -135,6 +148,7 @@ func (t terminal) load(s sources) (Profile, bool) {
 	}
 	profile.addKeys(map[string][]string{ActionSearch: t.search})
 	profile.setClickDefaults(t.right, t.middle)
+	profile.setSettingDefaults(t.scrollback, t.wheel, t.bell)
 	return profile, true
 }
 

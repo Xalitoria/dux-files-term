@@ -41,6 +41,11 @@ func readFoot(s sources) (Profile, bool) {
 	colors.setCursor(config.get("cursor", "style"), truthy(config.get("cursor", "blink")))
 	colors.FontFamily, colors.FontSize = footFont(config.get("main", "font"))
 	colors.RightClick, colors.MiddleClick = footClicks(config["mouse-bindings"])
+	colors.ScrollbackLines = parseLines(config.get("scrollback", "lines"))
+	colors.WheelLines = parsePositive(config.get("scrollback", "multiplier"))
+	if urgent, notify, visual := config.get("bell", "urgent"), config.get("bell", "notify"), config.get("bell", "visual"); anySet(urgent, notify, visual) {
+		colors.Bell = bellOf(false, truthy(visual), truthy(urgent) || truthy(notify))
+	}
 	for action, name := range footActions {
 		for _, text := range strings.Fields(config.get("key-bindings", name)) {
 			if chord, ok := parseChord(text); ok {

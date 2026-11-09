@@ -24,6 +24,7 @@ type rioConfig struct {
 	Theme  string
 	Colors rioColors
 	Window struct{ Opacity *float64 }
+	Scroll struct{ Multiplier float64 }
 }
 
 func readRio(s sources) (Profile, bool) {
@@ -55,6 +56,9 @@ func readRio(s sources) (Profile, bool) {
 	}
 	if config.Window.Opacity != nil {
 		colors.Opacity = clampOpacity(*config.Window.Opacity)
+	}
+	if config.Scroll.Multiplier > 0 {
+		colors.WheelLines = config.Scroll.Multiplier
 	}
 	return colors, colors.usable()
 }

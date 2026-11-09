@@ -17,19 +17,31 @@ type published struct {
 	mu     sync.Mutex
 	exited bool
 	theme  map[string]any
+	bells  int
 }
 
 func (p *published) publish(_ string, data any) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	event, ok := data.(map[string]any)
-	switch {
-	case !ok:
-	case event["exited"] == true:
-		p.exited = true
-	case event["theme"] != nil:
-		p.theme, _ = event["theme"].(map[string]any)
+	switch event := data.(type) {
+	case frame:
+		if event.Bell {
+			p.bells++
+		}
+	case map[string]any:
+		switch {
+		case event["exited"] == true:
+			p.exited = true
+		case event["theme"] != nil:
+			p.theme, _ = event["theme"].(map[string]any)
+		}
 	}
+}
+
+func (p *published) bellCount() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.bells
 }
 
 func (p *published) lastTheme() map[string]any {

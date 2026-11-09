@@ -32,12 +32,12 @@ func TestColorsPayload(t *testing.T) {
 }
 
 func TestBehaviorPayload(t *testing.T) {
-	profile := termtheme.Profile{WordChars: "-.", CopyOnSelect: true, FontFamily: "Iosevka", FontSize: 12, Keys: map[string][]string{"copy": {"ctrl+c"}}, RightClick: termtheme.ClickMenu, MiddleClick: termtheme.ClickPrimaryPaste}
+	profile := termtheme.Profile{WordChars: "-.", CopyOnSelect: true, FontFamily: "Iosevka", FontSize: 12, Keys: map[string][]string{"copy": {"ctrl+c"}}, RightClick: termtheme.ClickMenu, MiddleClick: termtheme.ClickPrimaryPaste, WheelLines: 5, Bell: []string{"audio", "attention"}}
 
 	assert.Equal(t, map[string]any{
 		"wordChars": "-.", "wordDelims": "", "copyOnSelect": true, "fontFamily": "Iosevka", "fontSize": 12.0,
 		"cursorShape": "", "cursorBlink": false, "rightClick": "menu", "middleClick": "primaryPaste",
-		"keys": map[string][]string{"copy": {"ctrl+c"}},
+		"keys": map[string][]string{"copy": {"ctrl+c"}}, "wheelLines": 5.0, "bell": []string{"audio", "attention"},
 	}, behaviorPayload(profile))
 	assert.Equal(t, map[string][]string{}, behaviorPayload(termtheme.Profile{})["keys"], "no bindings is an empty object, not null")
 }
