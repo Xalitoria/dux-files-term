@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -43,7 +44,8 @@ func (s *Service) terminal(preferred string) (terminalSpec, error) {
 	}
 
 	for _, spec := range knownTerminals {
-		if _, err := exec.LookPath(spec.command); err == nil {
+		if found, ok := findCommand(spec.command); ok {
+			spec.command = found
 			return spec, nil
 		}
 	}
@@ -51,10 +53,40 @@ func (s *Service) terminal(preferred string) (terminalSpec, error) {
 }
 
 func lookupTerminal(command string) (terminalSpec, bool) {
-	if _, err := exec.LookPath(command); err != nil {
+	found, ok := findCommand(command)
+	if !ok {
 		return terminalSpec{}, false
 	}
-	return specFor(command), true
+	return specFor(found), true
+}
+
+// A daemon started by systemd gets a bare PATH, so the per-user and Nix locations are searched too.
+func extraBinDirs() []string {
+	home, _ := os.UserHomeDir()
+	dirs := []string{"/run/current-system/sw/bin", "/nix/var/nix/profiles/default/bin"}
+	if home == "" {
+		return dirs
+	}
+	return append([]string{
+		filepath.Join(home, ".nix-profile", "bin"),
+		filepath.Join(home, ".local", "state", "nix", "profiles", "home-manager", "home-manager-path", "bin"),
+		filepath.Join(home, ".local", "bin"),
+	}, dirs...)
+}
+
+func findCommand(command string) (string, bool) {
+	if _, err := exec.LookPath(command); err == nil {
+		return command, true
+	}
+	if strings.Contains(command, "/") {
+		return "", false
+	}
+	for _, dir := range extraBinDirs() {
+		if found, err := exec.LookPath(filepath.Join(dir, command)); err == nil {
+			return found, true
+		}
+	}
+	return "", false
 }
 
 func specFor(command string) terminalSpec {
@@ -86,7 +118,7 @@ func (s terminalSpec) argv(dir string) []string {
 func Terminals() []string {
 	var out []string
 	for _, spec := range knownTerminals {
-		if _, err := exec.LookPath(spec.command); err == nil {
+		if _, ok := findCommand(spec.command); ok {
 			out = append(out, spec.command)
 		}
 	}
