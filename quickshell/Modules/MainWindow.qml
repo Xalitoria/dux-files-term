@@ -26,6 +26,7 @@ FloatingWindow {
     property var activeTerminal: null
     property var terminalTransport: DuxFilesService
     property real terminalHeight: FilesMetrics.terminalDefaultHeight
+    property real terminalWidthRatio: FilesMetrics.terminalDefaultWidthRatio
     property bool showHidden: SessionData.lastUsed("showHidden", SettingsData.showHidden)
     property bool previewOpen: SessionData.lastUsed("previewOpen", true)
 
@@ -65,7 +66,8 @@ FloatingWindow {
     readonly property real terminalMaxHeight: Math.max(FilesMetrics.terminalMinHeight, (surface.height - header.height - FilesMetrics.contentMarginV - topbar.y - topbar.height) * (1 - FilesMetrics.minimumPaneFraction))
     readonly property real terminalDockHeight: Math.min(terminalHeight, terminalMaxHeight)
     readonly property real terminalBottomInset: terminalMode === "bottom" ? terminalDockHeight + FilesMetrics.splitterWidth + FilesMetrics.contentMarginV : 0
-    readonly property real terminalRightInset: terminalMode === "right" ? surface.width / 2 + FilesMetrics.splitterWidth : 0
+    readonly property real terminalRightStart: clampTerminalStart(surface.width * (1 - terminalWidthRatio))
+    readonly property real terminalRightInset: terminalMode === "right" ? surface.width - terminalRightStart + FilesMetrics.splitterWidth : 0
     readonly property var previewTarget: {
         const entries = selectedEntries();
         return entries.length === 1 ? entries[0] : null;
@@ -115,6 +117,7 @@ FloatingWindow {
         }
         maximized = SessionData.maximized;
         terminalHeight = SessionData.terminalHeight;
+        terminalWidthRatio = SessionData.terminalWidthRatio;
         if (primary)
             offerGtkImport();
         primaryPane.focusBody();
@@ -164,6 +167,15 @@ FloatingWindow {
     function setTerminalHeight(value) {
         terminalHeight = Math.max(FilesMetrics.terminalMinHeight, Math.min(terminalMaxHeight, value));
         SessionData.terminalHeight = terminalHeight;
+    }
+
+    function clampTerminalStart(start) {
+        return Math.max(surface.width * FilesMetrics.minimumPaneFraction, Math.min(surface.width - FilesMetrics.terminalMinWidth, start));
+    }
+
+    function setTerminalStart(start) {
+        terminalWidthRatio = 1 - clampTerminalStart(start) / Math.max(1, surface.width);
+        SessionData.terminalWidthRatio = terminalWidthRatio;
     }
 
     function setTerminalMode(mode) {
@@ -753,6 +765,17 @@ FloatingWindow {
             onReset: window.setTerminalHeight(FilesMetrics.terminalDefaultHeight)
         }
 
+        PaneSplitter {
+            id: terminalSideSplitter
+
+            anchors.right: terminalDock.left
+            anchors.top: terminalDock.top
+            anchors.bottom: terminalDock.bottom
+            visible: window.terminalOpen && window.terminalMode === "right"
+            onMoved: delta => window.setTerminalStart(window.terminalRightStart + delta)
+            onReset: window.setTerminalStart(surface.width * (1 - FilesMetrics.terminalDefaultWidthRatio))
+        }
+
         Item {
             id: terminalDock
 
@@ -766,7 +789,7 @@ FloatingWindow {
             anchors.leftMargin: {
                 switch (window.terminalMode) {
                 case "right":
-                    return surface.width / 2;
+                    return window.terminalRightStart;
                 case "bottom":
                     return FilesMetrics.contentMarginH;
                 default:

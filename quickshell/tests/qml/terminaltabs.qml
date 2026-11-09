@@ -115,6 +115,7 @@ ShellRoot {
         function test_terminalTabs() {
             scenario_terminalPerTab();
             scenario_pickingATerminalRestylesOpenTerminals();
+            scenario_rightTerminalResizes();
             scenario_backgroundTabsAndDuplicates();
             scenario_closingTabsClosesTheirTerminals();
             scenario_closingATabBesideTheCurrentOneStartsNothing();
@@ -174,6 +175,29 @@ ShellRoot {
             compare(root.followed, [["1", "/var"], ["2", "/opt"]]);
             tabs.selectTab(0);
             compare(root.followed.length, 2);
+        }
+
+        function scenario_rightTerminalResizes() {
+            const win = root.window;
+            const width = win.contentItem.children.find(child => child.isFloatingWindowSurface === true).width;
+            const mode = win.terminalMode;
+
+            win.setTerminalMode("right");
+            compare(win.terminalRightStart, width / 2);
+            compare(win.terminalRightInset, width / 2 + FilesMetrics.splitterWidth);
+
+            win.setTerminalStart(width * 0.4);
+            compare(win.terminalRightStart, width * 0.4);
+            compare(win.terminalRightInset, width * 0.6 + FilesMetrics.splitterWidth);
+            fuzzyCompare(SessionData.terminalWidthRatio, 0.6, 0.001);
+
+            win.setTerminalStart(0);
+            compare(win.terminalRightStart, width * FilesMetrics.minimumPaneFraction);
+            win.setTerminalStart(width);
+            compare(win.terminalRightStart, width - FilesMetrics.terminalMinWidth);
+
+            win.setTerminalStart(width / 2);
+            win.setTerminalMode(mode);
         }
 
         function scenario_pickingATerminalRestylesOpenTerminals() {

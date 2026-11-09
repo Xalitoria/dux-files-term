@@ -32,6 +32,8 @@ Singleton {
 
     readonly property real terminalDefaultHeight: Theme.smallBreakpoint / 2
     readonly property real terminalMinHeight: Theme.buttonHeightS * 2
+    readonly property real terminalMinWidth: Theme.smallBreakpoint / 2
+    readonly property real terminalDefaultWidthRatio: 0.5
     readonly property real terminalPadding: Theme.spacingS
     readonly property int terminalMinZoom: -4
     readonly property int terminalMaxZoom: 24
