@@ -125,7 +125,7 @@ func load(s sources) (Profile, bool) {
 	if name := s.defaultTerminal(); name != "" && !slices.Contains(genericTerminals, name) {
 		for _, t := range terminals {
 			if slices.Contains(t.ids, name) {
-				return t.load(s)
+				return t.loadOrDefaults(s), true
 			}
 		}
 		return Profile{}, false
@@ -138,18 +138,31 @@ func load(s sources) (Profile, bool) {
 	return Profile{}, false
 }
 
+// A terminal the user picked keeps its own defaults when it has no config file yet.
+func (t terminal) loadOrDefaults(s sources) Profile {
+	profile, ok := t.read(s)
+	if !ok {
+		profile = newProfile()
+	}
+	return t.withDefaults(profile)
+}
+
 func (t terminal) load(s sources) (Profile, bool) {
 	profile, ok := t.read(s)
 	if !ok {
 		return profile, false
 	}
+	return t.withDefaults(profile), true
+}
+
+func (t terminal) withDefaults(profile Profile) Profile {
 	if t.ctrlZoom {
 		profile.addKeys(ctrlZoomKeys)
 	}
 	profile.addKeys(map[string][]string{ActionSearch: t.search})
 	profile.setClickDefaults(t.right, t.middle)
 	profile.setSettingDefaults(t.scrollback, t.wheel, t.bell)
-	return profile, true
+	return profile
 }
 
 func hostSources() sources {

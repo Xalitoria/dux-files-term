@@ -262,9 +262,12 @@ func TestDefaultTerminalDecidesWhoIsFollowed(t *testing.T) {
 		assert.Equal(t, "#333333", background(t, fixture(t, "", map[string]string{".config/foot/foot.ini": "[colors]\nbackground=333333\n"})))
 	})
 
-	t.Run("a default with no config follows nothing", func(t *testing.T) {
-		_, ok := load(fixture(t, "kitty", nil))
-		assert.False(t, ok)
+	t.Run("a default with no config keeps its own behaviour and leaves the colours alone", func(t *testing.T) {
+		profile, ok := load(fixture(t, "kitty", nil))
+		assert.True(t, ok)
+		assert.Nil(t, profile.Bg)
+		assert.Equal(t, 2000, profile.ScrollbackLines)
+		assert.Equal(t, []string{"ctrl+shift+h"}, profile.Keys[ActionSearch])
 	})
 }
 
