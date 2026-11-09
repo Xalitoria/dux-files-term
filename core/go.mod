@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.11.9
 	github.com/charmbracelet/x/vt v0.1.0
 	github.com/creack/pty v1.1.24
-	github.com/duxlabs-dev/dux-go v1.6.3-0.20261104145206-caf8643a6a6c
+	github.com/duxlabs-dev/dux-go v1.6.3-0.20261106152240-dc9b388fdc6f
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-git/go-billy/v5 v5.9.2
 	github.com/go-git/go-git/v5 v5.19.3

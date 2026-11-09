@@ -14,13 +14,14 @@ func renameNoReplace(from, to string) error {
 	case err == nil:
 		return nil
 	case errors.Is(err, unix.EINVAL), errors.Is(err, unix.ENOSYS), errors.Is(err, unix.ENOTSUP):
-		return renameUnlessExists(from, to)
+		return renameIfAbsent(from, to)
+	default:
+		return &os.LinkError{Op: "rename", Old: from, New: to, Err: err}
 	}
-	return &os.LinkError{Op: "rename", Old: from, New: to, Err: err}
 }
 
 // Filesystems like sshfs and FUSE mounts without flag support take this path.
-func renameUnlessExists(from, to string) error {
+func renameIfAbsent(from, to string) error {
 	_, err := os.Lstat(to)
 	switch {
 	case err == nil:

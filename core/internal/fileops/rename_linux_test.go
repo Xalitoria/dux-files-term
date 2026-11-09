@@ -16,12 +16,12 @@ func TestRenameUnlessExistsKeepsExistingTargets(t *testing.T) {
 	require.NoError(t, os.WriteFile(from, []byte("new"), 0o644))
 	require.NoError(t, os.WriteFile(taken, []byte("old"), 0o644))
 
-	err := renameUnlessExists(from, taken)
+	err := renameIfAbsent(from, taken)
 	assert.ErrorIs(t, err, fs.ErrExist)
 	kept, _ := os.ReadFile(taken)
 	assert.Equal(t, "old", string(kept))
 
-	require.NoError(t, renameUnlessExists(from, free))
+	require.NoError(t, renameIfAbsent(from, free))
 	moved, _ := os.ReadFile(free)
 	assert.Equal(t, "new", string(moved))
 }

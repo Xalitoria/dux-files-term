@@ -71,10 +71,13 @@ QtObject {
         primaryPane.restoreState(state.panes?.[0] ?? {
             "path": Paths.strip(Paths.home)
         });
-        if (secondPane)
+        leaveMissingFolder(primaryPane);
+        if (secondPane) {
             secondPane.restoreState(state.panes?.[1] ?? {
                 "path": primaryPane.path
             });
+            leaveMissingFolder(secondPane);
+        }
         activePaneRequested(secondPane ? (state.active ?? 0) : 0);
         applyingTab = false;
     }
@@ -94,7 +97,7 @@ QtObject {
         next.push(withId({
             "panes": [
                 {
-                    "path": path === "" ? activePane.path : path
+                    "path": path === "" ? SettingsData.folderFor(SettingsData.newTabFolder, activePane.path) : path
                 },
                 null],
             "active": 0
@@ -230,12 +233,12 @@ QtObject {
         SessionData.currentTab = currentTab;
     }
 
-    function homeTabs() {
+    function tabsAt(path) {
         return [
             withId({
                 "panes": [
                     {
-                        "path": Paths.strip(Paths.home)
+                        "path": path
                     },
                     null],
                 "active": 0
@@ -245,13 +248,29 @@ QtObject {
 
     function restoreSession() {
         const stored = SessionData.tabs;
-        tabs = Array.isArray(stored) && stored.length > 0 ? stored.map(withId) : homeTabs();
+        const folder = SettingsData.folderFor(SettingsData.startupFolder, "");
+        if (folder !== "")
+            tabs = tabsAt(folder);
+        else
+            tabs = Array.isArray(stored) && stored.length > 0 ? stored.map(withId) : tabsAt(Paths.strip(Paths.home));
         setCurrentTab(Math.max(0, Math.min(SessionData.currentTab, tabs.length - 1)));
         applyTab(currentTab);
     }
 
+    function leaveMissingFolder(pane) {
+        const path = pane.path;
+        if (!path.startsWith("/"))
+            return;
+        DirectoryService.stat(path, result => {
+            if (result.code === "ENOENT" && pane.path === path)
+                pane.restoreState({
+                    "path": Paths.strip(Paths.home)
+                });
+        });
+    }
+
     function startFresh() {
-        tabs = homeTabs();
+        tabs = tabsAt(SettingsData.folderFor(SettingsData.newWindowFolder, Paths.strip(Paths.home)));
         setCurrentTab(0);
         applyTab(0);
     }

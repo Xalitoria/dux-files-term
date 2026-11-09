@@ -532,16 +532,14 @@ Item {
             }
 
             FileMenuItem {
-                visible: menu.moreRows
-                enabled: !topbar.virtualActive
+                visible: menu.moreRows && !topbar.virtualActive
                 text: FileActions.label("newFolder")
                 iconName: FileActions.icon("newFolder")
                 onClicked: menu.pick(() => topbar.newFolderRequested())
             }
 
             FileMenuItem {
-                visible: menu.moreRows
-                enabled: !topbar.virtualActive
+                visible: menu.moreRows && !topbar.virtualActive
                 text: FileActions.label("newDocument")
                 iconName: FileActions.icon("newDocument")
                 submenu: true
@@ -552,7 +550,7 @@ Item {
             }
 
             FileMenuDivider {
-                visible: menu.moreRows
+                visible: menu.moreRows && !topbar.virtualActive
             }
 
             FileMenuItem {
@@ -563,8 +561,7 @@ Item {
             }
 
             FileMenuItem {
-                visible: menu.moreRows
-                enabled: !topbar.virtualActive
+                visible: menu.moreRows && !topbar.virtualActive
                 text: FileActions.label("properties")
                 iconName: FileActions.icon("properties")
                 onClicked: menu.pick(() => topbar.propertiesRequested())
