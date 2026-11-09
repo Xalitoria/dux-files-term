@@ -21,6 +21,7 @@ ShellRoot {
     property var followed: []
     property var restyled: []
     property var typed: []
+    property var searched: []
     property var handlers: ({})
 
     Component {
@@ -78,6 +79,13 @@ ShellRoot {
             case "terminal.restyle":
                 root.restyled = root.restyled.concat([[params.id, params.terminal]]);
                 break;
+            case "terminal.search":
+                root.searched = root.searched.concat([params]);
+                callback?.({
+                    "count": params.query === "" ? 0 : 2,
+                    "index": params.query === "" ? 0 : 1
+                });
+                return;
             case "terminal.cd":
                 root.followed = root.followed.concat([[params.id, params.path]]);
                 break;
@@ -121,6 +129,7 @@ ShellRoot {
             scenario_pickingATerminalRestylesOpenTerminals();
             scenario_rightTerminalResizes();
             scenario_rightAndMiddleClicks();
+            scenario_scrollbackSearch();
             scenario_backgroundTabsAndDuplicates();
             scenario_closingTabsClosesTheirTerminals();
             scenario_closingATabBesideTheCurrentOneStartsNothing();
@@ -250,6 +259,76 @@ ShellRoot {
             view.clearSelection();
             view.behavior = {};
             compare(view.rightClick, "menu");
+        }
+
+        function scenario_scrollbackSearch() {
+            const view = root.window.activeTerminal;
+            verify(view !== null);
+            verify(view.sessionId !== "");
+            compare(view.searching, false);
+
+            view.behavior = {
+                "keys": {
+                    "search": ["ctrl+shift+r"]
+                }
+            };
+            compare(view.actionFor("ctrl+shift+r"), "search", "the terminal's own key opens the search");
+            compare(view.actionFor("ctrl+shift+f"), "search");
+            view.behavior = {};
+
+            root.searched = [];
+            verify(view.runAction("search"));
+            compare(view.searching, true);
+            compare(root.searched.length, 0, "an empty query asks nothing");
+
+            view.searchQuery = "foo";
+            compare(root.searched.length, 1);
+            compare(root.searched[0].id, view.sessionId);
+            compare(root.searched[0].query, "foo");
+            compare(root.searched[0].step, 0);
+            compare(view.matchCount, 2);
+            compare(view.matchIndex, 1);
+
+            view.runSearch(-1);
+            compare(root.searched[1].step, -1);
+            view.runSearch(1);
+            compare(root.searched[2].step, 1);
+
+            root.handlers["terminal:" + view.sessionId]({
+                "cols": 20,
+                "rows": 5,
+                "scroll": 0,
+                "lines": [],
+                "cursor": {
+                    "x": 0,
+                    "y": 0,
+                    "visible": false
+                },
+                "matches": [
+                    {
+                        "y": 1,
+                        "x": 2,
+                        "w": 3,
+                        "current": true
+                    },
+                    {
+                        "y": 3,
+                        "x": 0,
+                        "w": 3
+                    }
+                ]
+            });
+            compare(view.matches.length, 2);
+
+            view.closeSearch();
+            compare(view.searching, false);
+            compare(root.searched.length, 4);
+            compare(root.searched[3].query, "", "closing ends the search in the core");
+            compare(view.matches.length, 0);
+            compare(view.matchCount, 0);
+
+            view.searchQuery = "";
+            compare(root.searched.length, 4, "typing into a closed search asks nothing");
         }
 
         function scenario_pickingATerminalRestylesOpenTerminals() {

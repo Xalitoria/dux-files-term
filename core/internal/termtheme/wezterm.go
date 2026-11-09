@@ -117,6 +117,8 @@ func weztermKeys(profile *Profile, source string) {
 			profile.bind(ActionZoomOut, chord)
 		case action[1] == "ResetFontSize":
 			profile.bind(ActionZoomReset, chord)
+		case action[1] == "Search":
+			profile.bind(ActionSearch, chord)
 		}
 	}
 }

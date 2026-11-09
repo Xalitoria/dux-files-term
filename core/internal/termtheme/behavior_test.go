@@ -46,6 +46,7 @@ map ctrl+shift+minus change_font_size all -2.0
 map ctrl+shift+backspace change_font_size all 0
 map ctrl+a>c new_tab
 map f5 load_config_file
+map ctrl+alt+s show_scrollback
 `,
 			},
 			want: behavior{
@@ -57,6 +58,7 @@ map f5 load_config_file
 					ActionZoomIn:    {"ctrl+shift+plus"},
 					ActionZoomOut:   {"ctrl+shift+minus"},
 					ActionZoomReset: {"ctrl+shift+backspace"},
+					ActionSearch:    {"ctrl+alt+s", "ctrl+shift+h"},
 				},
 			},
 		},
@@ -86,6 +88,7 @@ keybind = ctrl+minus=decrease_font_size:1
 keybind = ctrl+0=reset_font_size
 keybind = ctrl+a>n=new_window
 keybind = f5=reload_config
+keybind = ctrl+f=start_search
 `,
 			},
 			want: behavior{
@@ -97,6 +100,7 @@ keybind = f5=reload_config
 					ActionZoomIn:    {"ctrl+plus"},
 					ActionZoomOut:   {"ctrl+minus"},
 					ActionZoomReset: {"ctrl+0"},
+					ActionSearch:    {"ctrl+f", "ctrl+shift+f"},
 				},
 			},
 		},
@@ -131,6 +135,8 @@ bindings = [
   { key = "C", mods = "Control", mode = "Vi", action = "ClearSelection" },
   { key = "Y", mods = "Control", mode = "Vi", action = "Copy" },
   { key = "N", mods = "Control", mode = "~Vi|~Search", action = "Paste" },
+  { key = "S", mods = "Control", mode = "~Search", action = "SearchBackward" },
+  { key = "Slash", mode = "Vi|~Search", action = "SearchForward" },
 ]
 `,
 			},
@@ -142,6 +148,7 @@ bindings = [
 					ActionPaste:     {"ctrl+shift+v", "ctrl+n"},
 					ActionZoomIn:    {"ctrl+plus"},
 					ActionZoomReset: {"ctrl+0"},
+					ActionSearch:    {"ctrl+s", "ctrl+shift+f", "ctrl+shift+b"},
 				},
 			},
 		},
@@ -168,6 +175,7 @@ clipboard-paste=Control+Shift+v
 font-increase=Control+plus Control+KP_Add
 font-decrease=Control+minus
 font-reset=Control+0
+search-start=Control+Shift+f
 `,
 			},
 			want: behavior{
@@ -179,6 +187,7 @@ font-reset=Control+0
 					ActionZoomIn:    {"ctrl+plus"},
 					ActionZoomOut:   {"ctrl+minus"},
 					ActionZoomReset: {"ctrl+0"},
+					ActionSearch:    {"ctrl+shift+f", "ctrl+shift+r"},
 				},
 			},
 		},
@@ -202,6 +211,7 @@ local config = {
     { key = '-', mods = 'CTRL', action = wezterm.action.DecreaseFontSize },
     { key = '0', mods = 'CTRL', action = act.ResetFontSize },
     { key = 'a', mods = 'LEADER', action = act.CopyTo 'Clipboard' },
+    { key = 'f', mods = 'CTRL', action = act.Search 'CurrentSelectionOrEmptyString' },
   },
 }
 return config
@@ -216,6 +226,7 @@ return config
 					ActionZoomIn:    {"ctrl+plus"},
 					ActionZoomOut:   {"ctrl+minus"},
 					ActionZoomReset: {"ctrl+0"},
+					ActionSearch:    {"ctrl+f", "ctrl+shift+f"},
 				},
 			},
 		},

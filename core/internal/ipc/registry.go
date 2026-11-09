@@ -132,6 +132,7 @@ var Methods = []MethodSpec{
 	{Name: "terminal.focus", Group: "terminal", Desc: "Tell a terminal whether its view has focus, for programs that track it", Params: []ParamSpec{req("id", "terminal id"), req("focused", "true when the view has focus")}},
 	{Name: "terminal.restyle", Group: "terminal", Desc: "Re-read the terminal's colours and behaviour; a busy terminal without focus applies them once its shell is idle or it gains focus", Params: []ParamSpec{req("id", "terminal id"), opt("terminal", "terminal whose config to follow (default: the system default)")}},
 	{Name: "terminal.scroll", Group: "terminal", Desc: "Scroll through the history; full-screen programs get arrow keys instead", Params: []ParamSpec{req("id", "terminal id"), req("lines", "positive scrolls back, negative forward")}},
+	{Name: "terminal.search", Group: "terminal", Desc: "Find text in the history and screen, ignoring case, and scroll the current match into view", Params: []ParamSpec{req("id", "terminal id"), req("query", "text to find; empty ends the search"), opt("step", "-1 moves to the match above, 1 to the one below, 0 starts over from the bottom of the view")}},
 	{Name: "terminal.cd", Group: "terminal", Desc: "Change the shell's folder when it sits idle at a prompt", Params: []ParamSpec{req("id", "terminal id"), req("path", "absolute folder")}},
 	{Name: "terminal.close", Group: "terminal", Desc: "End a terminal and its shell", Params: []ParamSpec{req("id", "terminal id")}},
 

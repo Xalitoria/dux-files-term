@@ -57,6 +57,7 @@ var footActions = map[string]string{
 	ActionZoomIn:    "font-increase",
 	ActionZoomOut:   "font-decrease",
 	ActionZoomReset: "font-reset",
+	ActionSearch:    "search-start",
 }
 
 // The first of foot's fonts, written "Family:size=12:weight=bold".

@@ -75,6 +75,9 @@ func (m *Manager) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 	case "terminal.scroll":
 		session.Scroll(params.IntOpt(req.Params, "lines", 0))
 		w.Respond(req.ID, map[string]any{})
+	case "terminal.search":
+		count, index := session.Search(params.StringOpt(req.Params, "query", ""), params.IntOpt(req.Params, "step", 0))
+		w.Respond(req.ID, map[string]any{"count": count, "index": index})
 	case "terminal.cd":
 		w.Respond(req.ID, map[string]any{"sent": session.FollowDirectory(params.StringOpt(req.Params, "path", ""))})
 	case "terminal.close":

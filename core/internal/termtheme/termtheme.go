@@ -74,24 +74,31 @@ type terminal struct {
 	ctrlZoom bool
 	// The clicks the terminal has out of the box, for configs that do not say.
 	right, middle string
+	// The keys that open the terminal's scrollback search out of the box. Kitty has no search; its scrollback pager key stands in.
+	search []string
 }
 
 // Names that say nothing about which terminal runs, so they don't count as a default.
 var genericTerminals = []string{"x-terminal-emulator", "xdg-terminal-exec", "terminal"}
 
+var (
+	searchF  = []string{"ctrl+shift+f"}
+	searchFB = []string{"ctrl+shift+f", "ctrl+shift+b"}
+)
+
 var terminals = []terminal{
-	{[]string{"kitty"}, readKitty, false, ClickExtend, ClickPrimaryPaste},
-	{[]string{"ghostty", "com.mitchellh.ghostty"}, readGhostty, true, ClickMenu, ClickPrimaryPaste},
-	{[]string{"alacritty"}, readAlacritty, true, ClickExtend, ClickPrimaryPaste},
-	{[]string{"foot", "footclient"}, readFoot, true, ClickExtend, ClickPrimaryPaste},
-	{[]string{"wezterm", "org.wezfurlong.wezterm"}, readWezterm, true, ClickNone, ClickPrimaryPaste},
-	{[]string{"konsole", "org.kde.konsole"}, readKonsole, true, ClickMenu, ClickPrimaryPaste},
-	{[]string{"rio", "com.raphamorim.rio"}, readRio, true, "", ""},
-	{[]string{"xfce4-terminal"}, readXfce, true, ClickMenu, ClickPrimaryPaste},
-	{[]string{"gnome-terminal", "org.gnome.terminal"}, readGnomeTerminal, true, ClickMenu, ClickPrimaryPaste},
-	{[]string{"terminator"}, readTerminator, true, ClickMenu, ClickPrimaryPaste},
-	{[]string{"urxvt", "urxvtc", "rxvt-unicode"}, readXresources("urxvt", "rxvt"), false, ClickExtend, ClickPrimaryPaste},
-	{[]string{"xterm", "uxterm"}, readXresources("xterm", "uxterm"), false, ClickExtend, ClickPrimaryPaste},
+	{[]string{"kitty"}, readKitty, false, ClickExtend, ClickPrimaryPaste, []string{"ctrl+shift+h"}},
+	{[]string{"ghostty", "com.mitchellh.ghostty"}, readGhostty, true, ClickMenu, ClickPrimaryPaste, searchF},
+	{[]string{"alacritty"}, readAlacritty, true, ClickExtend, ClickPrimaryPaste, searchFB},
+	{[]string{"foot", "footclient"}, readFoot, true, ClickExtend, ClickPrimaryPaste, []string{"ctrl+shift+r"}},
+	{[]string{"wezterm", "org.wezfurlong.wezterm"}, readWezterm, true, ClickNone, ClickPrimaryPaste, searchF},
+	{[]string{"konsole", "org.kde.konsole"}, readKonsole, true, ClickMenu, ClickPrimaryPaste, searchF},
+	{[]string{"rio", "com.raphamorim.rio"}, readRio, true, "", "", searchFB},
+	{[]string{"xfce4-terminal"}, readXfce, true, ClickMenu, ClickPrimaryPaste, searchF},
+	{[]string{"gnome-terminal", "org.gnome.terminal"}, readGnomeTerminal, true, ClickMenu, ClickPrimaryPaste, searchF},
+	{[]string{"terminator"}, readTerminator, true, ClickMenu, ClickPrimaryPaste, searchF},
+	{[]string{"urxvt", "urxvtc", "rxvt-unicode"}, readXresources("urxvt", "rxvt"), false, ClickExtend, ClickPrimaryPaste, nil},
+	{[]string{"xterm", "uxterm"}, readXresources("xterm", "uxterm"), false, ClickExtend, ClickPrimaryPaste, nil},
 }
 
 // Load follows the colours of the preferred terminal, else the default one, else the first supported one that has a config.
@@ -126,6 +133,7 @@ func (t terminal) load(s sources) (Profile, bool) {
 	if t.ctrlZoom {
 		profile.addKeys(ctrlZoomKeys)
 	}
+	profile.addKeys(map[string][]string{ActionSearch: t.search})
 	profile.setClickDefaults(t.right, t.middle)
 	return profile, true
 }

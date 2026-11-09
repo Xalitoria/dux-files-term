@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -64,6 +65,7 @@ type frame struct {
 	Title      string      `json:"title"`
 	Mouse      int         `json:"mouse"`
 	Clipboard  *string     `json:"clipboard,omitempty"`
+	Matches    []match     `json:"matches,omitempty"`
 
 	Images     []frameImage    `json:"images,omitempty"`
 	Dropped    []int           `json:"dropped,omitempty"`
@@ -116,6 +118,8 @@ type Session struct {
 	closed     bool
 	focused    bool
 	restyle    *termtheme.Profile
+	search     searchState
+	lastFound  []match
 
 	inputMu sync.Mutex
 	nextSeq int
@@ -319,10 +323,7 @@ func (s *Session) flush() {
 
 func (s *Session) frameLocked() (frame, bool) {
 	width, height := s.emu.Width(), s.emu.Height()
-	history := 0
-	if !s.emu.IsAltScreen() {
-		history = s.emu.ScrollbackLen()
-	}
+	history := s.historyLocked()
 	s.scroll = min(max(s.scroll, 0), history)
 	if len(s.rows) != height {
 		s.rows = make([]json.RawMessage, height)
@@ -348,11 +349,13 @@ func (s *Session) frameLocked() (frame, bool) {
 	images, imagesChanged := s.gfx.frame(history-s.scroll, height)
 	clipboard := s.clipboard
 	s.clipboard = nil
-	changed := len(lines) > 0 || imagesChanged || clipboard != nil || current != s.lastCursor || s.title != s.lastTitle || mouse != s.lastMouse
+	found := s.visibleMatchesLocked(history, height)
+	changed := len(lines) > 0 || imagesChanged || clipboard != nil || current != s.lastCursor || s.title != s.lastTitle || mouse != s.lastMouse || !slices.Equal(found, s.lastFound)
 	s.lastCursor = current
 	s.lastTitle = s.title
 	s.lastMouse = mouse
-	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title, Mouse: mouse, Images: images.Images, Dropped: images.Dropped, Placements: images.Placements, Clipboard: clipboard}, changed
+	s.lastFound = found
+	return frame{Cols: width, Rows: height, Lines: lines, Cursor: current, Scroll: s.scroll, Scrollback: history, Title: s.title, Mouse: mouse, Images: images.Images, Dropped: images.Dropped, Placements: images.Placements, Clipboard: clipboard, Matches: found}, changed
 }
 
 func (s *Session) lineSource(index, history int) func(x int) *uv.Cell {

@@ -104,6 +104,8 @@ func readAlacritty(s sources) (Profile, bool) {
 			profile.bind(ActionZoomOut, chord)
 		case "ResetFontSize":
 			profile.bind(ActionZoomReset, chord)
+		case "SearchForward", "SearchBackward":
+			profile.bind(ActionSearch, chord)
 		}
 	}
 	return profile, profile.usable()

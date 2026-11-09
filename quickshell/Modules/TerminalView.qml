@@ -5,6 +5,7 @@ import QtQuick.Shapes
 import Quickshell
 import qs.Common
 import qs.Services
+import qs.DCommon.Widgets
 import qs.DCommon.FileBrowser
 
 Rectangle {
@@ -35,6 +36,11 @@ Rectangle {
     property var lineStore: []
     property var images: ({})
     property var placements: []
+    property var matches: []
+    property bool searching: false
+    property int matchCount: 0
+    property int matchIndex: 0
+    property alias searchQuery: searchField.text
     property var cursor: ({
             "x": 0,
             "y": 0,
@@ -180,6 +186,8 @@ Rectangle {
         if (data.exited) {
             transport.unsubscribeTopic(topic, handleFrame);
             sessionId = "";
+            searching = false;
+            matches = [];
             exited();
             return;
         }
@@ -187,6 +195,7 @@ Rectangle {
             scrolled = data.scroll;
             clearSelection();
         }
+        matches = data.matches ?? [];
         if (data.rows !== rows || data.cols !== cols) {
             clearSelection();
             lineStore = Array.from({
@@ -526,7 +535,8 @@ Rectangle {
             "paste": ["ctrl+shift+v"],
             "zoomIn": ["ctrl+shift+plus"],
             "zoomOut": ["ctrl+shift+minus"],
-            "zoomReset": ["ctrl+shift+backspace"]
+            "zoomReset": ["ctrl+shift+backspace"],
+            "search": ["ctrl+shift+f"]
         };
         const custom = behavior.keys ?? {};
         for (const action of Object.keys(defaults)) {
@@ -558,8 +568,48 @@ Rectangle {
         case "zoomReset":
             setZoom(0);
             return true;
+        case "search":
+            openSearch();
+            return true;
         }
         return false;
+    }
+
+    function openSearch() {
+        searching = true;
+        searchField.forceActiveFocus();
+        searchField.selectAll();
+        if (searchField.text !== "")
+            runSearch(0);
+    }
+
+    function closeSearch() {
+        if (!searching)
+            return;
+        searching = false;
+        matches = [];
+        matchCount = 0;
+        matchIndex = 0;
+        request("terminal.search", {
+            "query": ""
+        });
+        forceActiveFocus();
+    }
+
+    function runSearch(step) {
+        if (sessionId === "" || !searching)
+            return;
+        const life = term.life;
+        transport.call("terminal.search", {
+            "id": sessionId,
+            "query": searchField.text,
+            "step": step
+        }, result => {
+            if (!life.alive || result.error)
+                return;
+            term.matchCount = result.count ?? 0;
+            term.matchIndex = result.index ?? 0;
+        });
     }
 
     function handleKey(event) {
@@ -724,6 +774,92 @@ Rectangle {
         onPressedChanged: {
             if (pressed)
                 term.forceActiveFocus();
+        }
+    }
+
+    Item {
+        id: searchKeys
+
+        Keys.onPressed: event => {
+            switch (event.key) {
+            case Qt.Key_Escape:
+                term.closeSearch();
+                event.accepted = true;
+                return;
+            case Qt.Key_Return:
+            case Qt.Key_Enter:
+                term.runSearch((event.modifiers & Qt.ShiftModifier) ? 1 : -1);
+                event.accepted = true;
+                return;
+            }
+            if (term.actionFor(term.chordOf(event)) !== "search")
+                return;
+            searchField.selectAll();
+            event.accepted = true;
+        }
+    }
+
+    Rectangle {
+        id: searchBar
+
+        visible: term.searching
+        z: 1
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: Theme.spacingS
+        width: searchRow.implicitWidth + Theme.spacingS * 2
+        height: searchRow.implicitHeight + Theme.spacingS * 2
+        radius: Theme.cornerRadiusS
+        color: Theme.cardSurface
+        border.width: Theme.outlineWidth
+        border.color: Theme.outlineVariant
+
+        Row {
+            id: searchRow
+
+            anchors.centerIn: parent
+            spacing: Theme.spacingXS
+
+            DTextField {
+                id: searchField
+
+                width: FilesMetrics.terminalSearchWidth
+                anchors.verticalCenter: parent.verticalCenter
+                placeholderText: I18n.tr("Search", "placeholder of the terminal scrollback search field")
+                keyForwardTargets: [searchKeys]
+                onTextEdited: term.runSearch(0)
+            }
+
+            StyledText {
+                visible: term.searchQuery !== ""
+                anchors.verticalCenter: parent.verticalCenter
+                text: term.matchCount > 0 ? I18n.tr("%1 of %2", "position of the current match among all terminal search matches").arg(term.matchIndex).arg(term.matchCount) : I18n.tr("No results", "search results header when nothing matched")
+                color: term.matchCount > 0 ? Theme.surfaceVariantText : Theme.error
+                font.pixelSize: Theme.fontSizeSmall
+            }
+
+            DIconButton {
+                anchors.verticalCenter: parent.verticalCenter
+                iconName: "keyboard_arrow_up"
+                enabled: term.matchCount > 0
+                tooltipText: I18n.tr("Previous match", "terminal search button moving to the match above")
+                onClicked: term.runSearch(-1)
+            }
+
+            DIconButton {
+                anchors.verticalCenter: parent.verticalCenter
+                iconName: "keyboard_arrow_down"
+                enabled: term.matchCount > 0
+                tooltipText: I18n.tr("Next match", "terminal search button moving to the match below")
+                onClicked: term.runSearch(1)
+            }
+
+            DIconButton {
+                anchors.verticalCenter: parent.verticalCenter
+                iconName: "close"
+                tooltipText: I18n.tr("Close", "dialog button closing the dialog")
+                onClicked: term.closeSearch()
+            }
         }
     }
 
@@ -962,6 +1098,21 @@ Rectangle {
                         font.italic: ((modelData.a ?? 0) & 4) !== 0
                     }
                 }
+            }
+        }
+
+        Repeater {
+            model: term.matches
+
+            Rectangle {
+                required property var modelData
+
+                x: modelData.x * term.cellWidth
+                y: modelData.y * term.cellHeight
+                width: modelData.w * term.cellWidth
+                height: term.cellHeight
+                color: modelData.current ? Theme.warning : Theme.tertiary
+                opacity: Theme.pendingOpacity
             }
         }
 

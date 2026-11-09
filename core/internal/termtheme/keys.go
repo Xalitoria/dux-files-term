@@ -12,6 +12,7 @@ const (
 	ActionZoomIn    = "zoomIn"
 	ActionZoomOut   = "zoomOut"
 	ActionZoomReset = "zoomReset"
+	ActionSearch    = "search"
 )
 
 var ctrlZoomKeys = map[string][]string{

@@ -98,6 +98,8 @@ func kittyKeys(profile *Profile, config kittyConfig) {
 			profile.bind(ActionCopy, chord)
 		case "paste_from_clipboard":
 			profile.bind(ActionPaste, chord)
+		case "show_scrollback":
+			profile.bind(ActionSearch, chord)
 		case "change_font_size":
 			if action := kittyZoom(fields[2:]); action != "" {
 				profile.bind(action, chord)

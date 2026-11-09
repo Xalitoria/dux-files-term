@@ -92,6 +92,8 @@ func ghosttyBind(profile *Profile, bind string) {
 		profile.bind(ActionZoomOut, chord)
 	case "reset_font_size":
 		profile.bind(ActionZoomReset, chord)
+	case "start_search":
+		profile.bind(ActionSearch, chord)
 	}
 }
 
