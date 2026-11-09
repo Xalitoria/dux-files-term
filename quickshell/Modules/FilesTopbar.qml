@@ -585,8 +585,12 @@ Item {
                 onClicked: menu.pick(() => topbar.reloadRequested())
             }
 
+            FileMenuDivider {
+                visible: menu.terminalRows && SandboxService.available("terminal")
+            }
+
             FileMenuItem {
-                visible: menu.moreRows && SandboxService.available("terminal")
+                visible: (menu.terminalRows || menu.compactRows) && SandboxService.available("terminal")
                 enabled: !topbar.virtualActive
                 text: FileActions.label("openTerminal")
                 iconName: FileActions.icon("openTerminal")
