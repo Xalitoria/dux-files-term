@@ -6,8 +6,8 @@ EAPI=8
 inherit desktop git-r3 go-module optfeature systemd xdg
 
 DESCRIPTION="Dux Files file manager with a docked terminal, built with Quickshell and Go"
-HOMEPAGE="https://github.com/Xalitoria/dux-files-term"
-EGIT_REPO_URI="https://github.com/Xalitoria/dux-files-term.git"
+HOMEPAGE="https://github.com/duxlabs-dev/dux-files"
+EGIT_REPO_URI="https://github.com/duxlabs-dev/dux-files.git"
 
 LICENSE="MIT"
 SLOT="0"
