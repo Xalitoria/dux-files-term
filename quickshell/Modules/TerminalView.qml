@@ -99,7 +99,8 @@ Rectangle {
         transport.call("terminal.open", {
             "cwd": directory,
             "cols": fitCols,
-            "rows": fitRows
+            "rows": fitRows,
+            "terminal": SettingsData.terminal
         }, result => {
             if (!life.alive) {
                 if (!result.error)
@@ -167,6 +168,11 @@ Rectangle {
     }
 
     function handleFrame(data) {
+        if (data.theme) {
+            colors = data.theme.colors ?? {};
+            behavior = data.theme.behavior ?? {};
+            return;
+        }
         if (data.exited) {
             transport.unsubscribeTopic(topic, handleFrame);
             sessionId = "";
@@ -607,6 +613,16 @@ Rectangle {
                 return;
             term.sessionId = "";
             term.exited();
+        }
+    }
+
+    Connections {
+        target: SettingsData
+
+        function onTerminalChanged() {
+            term.request("terminal.restyle", {
+                "terminal": SettingsData.terminal
+            });
         }
     }
 

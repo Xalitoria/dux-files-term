@@ -33,9 +33,7 @@ func behaviorPayload(profile termtheme.Profile) map[string]any {
 
 func (s *Session) applyColors(colors termtheme.Profile) {
 	for i, c := range colors.ANSI {
-		if c != nil {
-			s.emu.SetIndexedColor(i, c)
-		}
+		s.emu.SetIndexedColor(i, c)
 	}
 	if colors.Fg != nil {
 		s.emu.SetDefaultForegroundColor(colors.Fg)

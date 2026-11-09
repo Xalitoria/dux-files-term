@@ -16,14 +16,26 @@ import (
 type published struct {
 	mu     sync.Mutex
 	exited bool
+	theme  map[string]any
 }
 
 func (p *published) publish(_ string, data any) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if event, ok := data.(map[string]any); ok && event["exited"] == true {
+	event, ok := data.(map[string]any)
+	switch {
+	case !ok:
+	case event["exited"] == true:
 		p.exited = true
+	case event["theme"] != nil:
+		p.theme, _ = event["theme"].(map[string]any)
 	}
+}
+
+func (p *published) lastTheme() map[string]any {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.theme
 }
 
 func (p *published) hasExited() bool {

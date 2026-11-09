@@ -69,6 +69,9 @@ func (m *Manager) Handle(ctx context.Context, w *ipc.ConnWriter, req ipc.Request
 	case "terminal.focus":
 		session.Focus(params.BoolOpt(req.Params, "focused", false))
 		w.Respond(req.ID, map[string]any{})
+	case "terminal.restyle":
+		session.Restyle(themeOf(params.StringOpt(req.Params, "terminal", "")))
+		w.Respond(req.ID, map[string]any{})
 	case "terminal.scroll":
 		session.Scroll(params.IntOpt(req.Params, "lines", 0))
 		w.Respond(req.ID, map[string]any{})
@@ -99,7 +102,7 @@ func (m *Manager) handleOpen(ctx context.Context, w *ipc.ConnWriter, req ipc.Req
 	m.mu.Unlock()
 
 	var profile *termtheme.Profile
-	if loaded, ok := termtheme.Load(); ok {
+	if loaded, ok := termtheme.Load(params.StringOpt(req.Params, "terminal", "")); ok {
 		profile = &loaded
 	}
 
@@ -130,6 +133,13 @@ func (m *Manager) handleOpen(ctx context.Context, w *ipc.ConnWriter, req ipc.Req
 		opened["behavior"] = behaviorPayload(*profile)
 	}
 	w.Respond(req.ID, opened)
+}
+
+func themeOf(terminal string) termtheme.Profile {
+	if loaded, ok := termtheme.Load(terminal); ok {
+		return loaded
+	}
+	return termtheme.Profile{Opacity: 1}
 }
 
 // A sandboxed shell runs on the host, where the foreground process group cannot be read, so it never follows folders.

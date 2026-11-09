@@ -19,6 +19,7 @@ ShellRoot {
     property var opened: []
     property var closed: []
     property var followed: []
+    property var restyled: []
     property var handlers: ({})
 
     Component {
@@ -70,6 +71,9 @@ ShellRoot {
             case "terminal.close":
                 root.closed = root.closed.concat([params.id]);
                 break;
+            case "terminal.restyle":
+                root.restyled = root.restyled.concat([[params.id, params.terminal]]);
+                break;
             case "terminal.cd":
                 root.followed = root.followed.concat([[params.id, params.path]]);
                 break;
@@ -110,6 +114,7 @@ ShellRoot {
 
         function test_terminalTabs() {
             scenario_terminalPerTab();
+            scenario_pickingATerminalRestylesOpenTerminals();
             scenario_backgroundTabsAndDuplicates();
             scenario_closingTabsClosesTheirTerminals();
             scenario_closingATabBesideTheCurrentOneStartsNothing();
@@ -169,6 +174,33 @@ ShellRoot {
             compare(root.followed, [["1", "/var"], ["2", "/opt"]]);
             tabs.selectTab(0);
             compare(root.followed.length, 2);
+        }
+
+        function scenario_pickingATerminalRestylesOpenTerminals() {
+            const live = views(root.window.contentItem, []).filter(view => view.sessionId !== "");
+            verify(live.length > 0);
+            root.restyled = [];
+
+            SettingsData.terminal = "ghostty";
+            compare(root.restyled.length, live.length);
+            for (const view of live)
+                verify(root.restyled.some(entry => entry[0] === view.sessionId && entry[1] === "ghostty"));
+
+            const first = live[0];
+            root.handlers["terminal:" + first.sessionId]({
+                "theme": {
+                    "colors": {
+                        "bg": "#0f0028"
+                    },
+                    "behavior": {
+                        "copyOnSelect": true
+                    }
+                }
+            });
+            compare(first.colors.bg, "#0f0028");
+            compare(first.behavior.copyOnSelect, true);
+
+            SettingsData.terminal = "";
         }
 
         function scenario_backgroundTabsAndDuplicates() {

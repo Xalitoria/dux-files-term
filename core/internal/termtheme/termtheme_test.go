@@ -236,6 +236,12 @@ func TestDefaultTerminalDecidesWhoIsFollowed(t *testing.T) {
 		assert.Equal(t, "#222222", background(t, fixture(t, "foot", configs)))
 	})
 
+	t.Run("the terminal picked in the settings wins over the xdg list and $TERMINAL", func(t *testing.T) {
+		s := fixture(t, "foot", configs)
+		s.preferred = "kitty"
+		assert.Equal(t, "#111111", background(t, s))
+	})
+
 	t.Run("a desktop specific list wins over the general one", func(t *testing.T) {
 		s := fixture(t, "", with(map[string]string{".config/niri-xdg-terminals.list": "kitty.desktop\n"}))
 		s.desktop = "niri"
@@ -300,7 +306,7 @@ func TestSandboxedHomeStillFindsHostConfigs(t *testing.T) {
 	t.Setenv("KITTY_CONFIG_DIRECTORY", "")
 	t.Setenv("TERMINAL", "kitty")
 
-	colors, ok := Load()
+	colors, ok := Load("")
 
 	require.True(t, ok)
 	assert.Equal(t, "#111111", hexOf(colors.Bg))

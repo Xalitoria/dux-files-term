@@ -2,10 +2,13 @@ package terminal
 
 import (
 	"image/color"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/duxlabs-dev/dux-files/core/internal/termtheme"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSessionAppliesColors(t *testing.T) {
@@ -37,4 +40,67 @@ func TestBehaviorPayload(t *testing.T) {
 		"keys": map[string][]string{"copy": {"ctrl+c"}},
 	}, behaviorPayload(profile))
 	assert.Equal(t, map[string][]string{}, behaviorPayload(termtheme.Profile{})["keys"], "no bindings is an empty object, not null")
+}
+
+func themeBackground(t *testing.T, events *published) string {
+	t.Helper()
+	theme := events.lastTheme()
+	require.NotNil(t, theme, "no theme was published")
+	return theme["colors"].(map[string]any)["bg"].(string)
+}
+
+func TestRestyleAppliesAtOnceWhenTheShellIsIdle(t *testing.T) {
+	events := &published{}
+	session, _ := startShell(t, events)
+	require.Eventually(t, session.shellIdle, 5*time.Second, 20*time.Millisecond)
+
+	session.Restyle(termtheme.Profile{Bg: color.RGBA{0x0f, 0, 0x28, 0xff}, Opacity: 1})
+
+	assert.Equal(t, "#0f0028", themeBackground(t, events))
+}
+
+func TestRestyleWaitsForAnUnfocusedBusyTerminal(t *testing.T) {
+	events := &published{}
+	session, _ := startShell(t, events)
+	require.Eventually(t, session.shellIdle, 5*time.Second, 20*time.Millisecond)
+	session.Input(0, input{text: "sleep 1; echo done-$((40+2))"})
+	session.Input(1, input{key: "enter"})
+	require.Eventually(t, func() bool { return !session.shellIdle() }, 5*time.Second, 20*time.Millisecond)
+
+	session.Restyle(termtheme.Profile{Bg: color.RGBA{0x0f, 0, 0x28, 0xff}, Opacity: 1})
+	assert.Nil(t, events.lastTheme(), "a running program is left alone")
+
+	require.Eventually(t, func() bool { return strings.Contains(screenText(session), "done-42") }, 5*time.Second, 20*time.Millisecond)
+	assert.Eventually(t, func() bool { return events.lastTheme() != nil }, 5*time.Second, 20*time.Millisecond, "applies once the shell is back at its prompt")
+	assert.Equal(t, "#0f0028", themeBackground(t, events))
+}
+
+func TestRestyleAppliesToABusyTerminalOnceItHasFocus(t *testing.T) {
+	events := &published{}
+	session, _ := startShell(t, events)
+	require.Eventually(t, session.shellIdle, 5*time.Second, 20*time.Millisecond)
+	session.Input(0, input{text: "sleep 30"})
+	session.Input(1, input{key: "enter"})
+	require.Eventually(t, func() bool { return !session.shellIdle() }, 5*time.Second, 20*time.Millisecond)
+
+	session.Restyle(termtheme.Profile{Bg: color.RGBA{0x0f, 0, 0x28, 0xff}, Opacity: 1})
+	assert.Nil(t, events.lastTheme())
+
+	session.Focus(true)
+	assert.Equal(t, "#0f0028", themeBackground(t, events))
+}
+
+func TestRestyleKeepsOnlyTheLatestLook(t *testing.T) {
+	events := &published{}
+	session, _ := startShell(t, events)
+	require.Eventually(t, session.shellIdle, 5*time.Second, 20*time.Millisecond)
+	session.Input(0, input{text: "sleep 30"})
+	session.Input(1, input{key: "enter"})
+	require.Eventually(t, func() bool { return !session.shellIdle() }, 5*time.Second, 20*time.Millisecond)
+
+	session.Restyle(termtheme.Profile{Bg: color.RGBA{0x11, 0x11, 0x11, 0xff}, Opacity: 1})
+	session.Restyle(termtheme.Profile{Bg: color.RGBA{0x22, 0x22, 0x22, 0xff}, Opacity: 1})
+	session.Focus(true)
+
+	assert.Equal(t, "#222222", themeBackground(t, events))
 }

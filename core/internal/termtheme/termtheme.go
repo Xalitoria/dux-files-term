@@ -58,6 +58,7 @@ type sources struct {
 	dataDirs   []string
 	desktop    string
 	terminal   string
+	preferred  string
 	dconf      func(path string) string
 }
 
@@ -88,9 +89,11 @@ var terminals = []terminal{
 	{[]string{"xterm", "uxterm"}, readXresources("xterm", "uxterm"), false},
 }
 
-// Load follows the colours of the default terminal, or of the first supported one that has a config.
-func Load() (Profile, bool) {
-	return load(hostSources())
+// Load follows the colours of the preferred terminal, else the default one, else the first supported one that has a config.
+func Load(preferred string) (Profile, bool) {
+	s := hostSources()
+	s.preferred = normalizeTerminal(preferred)
+	return load(s)
 }
 
 func load(s sources) (Profile, bool) {
@@ -164,8 +167,11 @@ func (s sources) dataFiles(rel string) []string {
 	return paths
 }
 
-// The xdg-terminal-exec lists come first, then $TERMINAL.
+// The preferred terminal wins, then the xdg-terminal-exec lists, then $TERMINAL.
 func (s sources) defaultTerminal() string {
+	if s.preferred != "" {
+		return s.preferred
+	}
 	lists := []string{"xdg-terminals.list"}
 	if s.desktop != "" {
 		lists = []string{s.desktop + "-xdg-terminals.list", "xdg-terminals.list"}

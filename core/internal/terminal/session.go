@@ -114,6 +114,8 @@ type Session struct {
 	scroll     int
 	scheduled  bool
 	closed     bool
+	focused    bool
+	restyle    *termtheme.Profile
 
 	inputMu sync.Mutex
 	nextSeq int
@@ -246,7 +248,11 @@ func (s *Session) readOutput() {
 			s.mu.Lock()
 			s.gfx.feed(buf[:n])
 			s.scheduleLocked()
+			theme, restyled := s.applyRestyleLocked()
 			s.mu.Unlock()
+			if restyled {
+				s.publish(s.topic, theme)
+			}
 		}
 		if err != nil {
 			return
@@ -411,14 +417,48 @@ var cursorShapes = map[vt.CursorStyle]string{vt.CursorBlock: "block", vt.CursorU
 // Programs that ask for focus events (mode 1004) learn when the view gains or loses focus.
 func (s *Session) Focus(focused bool) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
+	if s.closed {
+		s.mu.Unlock()
+		return
+	}
+	s.focused = focused
 	switch {
-	case s.closed:
 	case focused:
 		s.emu.Focus()
 	default:
 		s.emu.Blur()
 	}
+	theme, restyled := s.applyRestyleLocked()
+	s.mu.Unlock()
+	if restyled {
+		s.publish(s.topic, theme)
+	}
+}
+
+// A new look waits until the shell sits at a prompt or the view has focus, so a running program never changes colours under itself.
+func (s *Session) Restyle(profile termtheme.Profile) {
+	s.mu.Lock()
+	s.restyle = &profile
+	theme, restyled := s.applyRestyleLocked()
+	s.mu.Unlock()
+	if restyled {
+		s.publish(s.topic, theme)
+	}
+}
+
+func (s *Session) applyRestyleLocked() (map[string]any, bool) {
+	switch {
+	case s.restyle == nil, s.closed:
+		return nil, false
+	case !s.focused && !s.shellIdle():
+		return nil, false
+	}
+	profile := *s.restyle
+	s.restyle = nil
+	s.applyColors(profile)
+	s.rows = nil
+	s.scheduleLocked()
+	return map[string]any{"theme": map[string]any{"colors": colorsPayload(profile), "behavior": behaviorPayload(profile)}}, true
 }
 
 func (s *Session) jumpToBottomLocked() {
