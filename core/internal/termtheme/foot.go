@@ -40,6 +40,7 @@ func readFoot(s sources) (Profile, bool) {
 	colors.CopyOnSelect = target == "clipboard" || target == "both"
 	colors.setCursor(config.get("cursor", "style"), truthy(config.get("cursor", "blink")))
 	colors.FontFamily, colors.FontSize = footFont(config.get("main", "font"))
+	colors.RightClick, colors.MiddleClick = footClicks(config["mouse-bindings"])
 	for action, name := range footActions {
 		for _, text := range strings.Fields(config.get("key-bindings", name)) {
 			if chord, ok := parseChord(text); ok {

@@ -28,6 +28,9 @@ type Profile struct {
 	// Shape is "block", "bar" or "underline". Programs can still change it with escape sequences.
 	CursorShape string
 	CursorBlink bool
+
+	// What right and middle clicks do, as the Click constants. Unset leaves the choice to the view.
+	RightClick, MiddleClick string
 }
 
 func newProfile() Profile {
@@ -69,24 +72,26 @@ type terminal struct {
 	read reader
 	// ctrlZoom is set for terminals that zoom with Ctrl+Plus, Ctrl+Minus and Ctrl+0 out of the box.
 	ctrlZoom bool
+	// The clicks the terminal has out of the box, for configs that do not say.
+	right, middle string
 }
 
 // Names that say nothing about which terminal runs, so they don't count as a default.
 var genericTerminals = []string{"x-terminal-emulator", "xdg-terminal-exec", "terminal"}
 
 var terminals = []terminal{
-	{[]string{"kitty"}, readKitty, false},
-	{[]string{"ghostty", "com.mitchellh.ghostty"}, readGhostty, true},
-	{[]string{"alacritty"}, readAlacritty, true},
-	{[]string{"foot", "footclient"}, readFoot, true},
-	{[]string{"wezterm", "org.wezfurlong.wezterm"}, readWezterm, true},
-	{[]string{"konsole", "org.kde.konsole"}, readKonsole, true},
-	{[]string{"rio", "com.raphamorim.rio"}, readRio, true},
-	{[]string{"xfce4-terminal"}, readXfce, true},
-	{[]string{"gnome-terminal", "org.gnome.terminal"}, readGnomeTerminal, true},
-	{[]string{"terminator"}, readTerminator, true},
-	{[]string{"urxvt", "urxvtc", "rxvt-unicode"}, readXresources("urxvt", "rxvt"), false},
-	{[]string{"xterm", "uxterm"}, readXresources("xterm", "uxterm"), false},
+	{[]string{"kitty"}, readKitty, false, ClickExtend, ClickPrimaryPaste},
+	{[]string{"ghostty", "com.mitchellh.ghostty"}, readGhostty, true, ClickMenu, ClickPrimaryPaste},
+	{[]string{"alacritty"}, readAlacritty, true, ClickExtend, ClickPrimaryPaste},
+	{[]string{"foot", "footclient"}, readFoot, true, ClickExtend, ClickPrimaryPaste},
+	{[]string{"wezterm", "org.wezfurlong.wezterm"}, readWezterm, true, ClickNone, ClickPrimaryPaste},
+	{[]string{"konsole", "org.kde.konsole"}, readKonsole, true, ClickMenu, ClickPrimaryPaste},
+	{[]string{"rio", "com.raphamorim.rio"}, readRio, true, "", ""},
+	{[]string{"xfce4-terminal"}, readXfce, true, ClickMenu, ClickPrimaryPaste},
+	{[]string{"gnome-terminal", "org.gnome.terminal"}, readGnomeTerminal, true, ClickMenu, ClickPrimaryPaste},
+	{[]string{"terminator"}, readTerminator, true, ClickMenu, ClickPrimaryPaste},
+	{[]string{"urxvt", "urxvtc", "rxvt-unicode"}, readXresources("urxvt", "rxvt"), false, ClickExtend, ClickPrimaryPaste},
+	{[]string{"xterm", "uxterm"}, readXresources("xterm", "uxterm"), false, ClickExtend, ClickPrimaryPaste},
 }
 
 // Load follows the colours of the preferred terminal, else the default one, else the first supported one that has a config.
@@ -115,10 +120,14 @@ func load(s sources) (Profile, bool) {
 
 func (t terminal) load(s sources) (Profile, bool) {
 	profile, ok := t.read(s)
-	if ok && t.ctrlZoom {
+	if !ok {
+		return profile, false
+	}
+	if t.ctrlZoom {
 		profile.addKeys(ctrlZoomKeys)
 	}
-	return profile, ok
+	profile.setClickDefaults(t.right, t.middle)
+	return profile, true
 }
 
 func hostSources() sources {

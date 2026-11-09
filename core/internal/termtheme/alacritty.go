@@ -40,6 +40,9 @@ type alacrittyConfig struct {
 	Keyboard struct {
 		Bindings []struct{ Key, Mods, Action, Mode string }
 	}
+	Mouse struct {
+		Bindings []struct{ Mouse, Mods, Action, Mode string }
+	}
 }
 
 func readAlacritty(s sources) (Profile, bool) {
@@ -70,6 +73,17 @@ func readAlacritty(s sources) (Profile, bool) {
 	profile.setCursor(config.Cursor.Style.Shape, truthy(config.Cursor.Style.Blinking))
 	profile.FontFamily = namedFamily(config.Font.Normal.Family)
 	profile.FontSize = config.Font.Size
+	for _, binding := range config.Mouse.Bindings {
+		if !alwaysActive(binding.Mode) || strings.Trim(strings.ReplaceAll(binding.Mods, "None", ""), "| ") != "" {
+			continue
+		}
+		switch binding.Mouse {
+		case "Right":
+			profile.RightClick = alacrittyClick(binding.Action)
+		case "Middle":
+			profile.MiddleClick = alacrittyClick(binding.Action)
+		}
+	}
 	for _, binding := range config.Keyboard.Bindings {
 		if !alwaysActive(binding.Mode) {
 			continue

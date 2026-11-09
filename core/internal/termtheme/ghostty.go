@@ -58,6 +58,8 @@ func readGhostty(s sources) (Profile, bool) {
 	profile.FontFamily = namedFamily(config.values["font-family"])
 	profile.FontSize, _ = strconv.ParseFloat(config.values["font-size"], 64)
 	profile.setCursor(config.values["cursor-style"], truthy(config.values["cursor-style-blink"]))
+	profile.RightClick = ghosttyClick(config.values["right-click-action"])
+	profile.MiddleClick = ghosttyClick(config.values["middle-click-action"])
 	for _, bind := range config.binds {
 		ghosttyBind(&profile, bind)
 	}

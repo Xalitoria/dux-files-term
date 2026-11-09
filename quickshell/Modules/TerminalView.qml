@@ -5,6 +5,7 @@ import QtQuick.Shapes
 import Quickshell
 import qs.Common
 import qs.Services
+import qs.DCommon.FileBrowser
 
 Rectangle {
     id: term
@@ -21,6 +22,7 @@ Rectangle {
     property int rows: 0
     property var colors: ({})
     property var behavior: ({})
+    property string primaryText: ""
     property int mouse: 0
     property int scrolled: 0
     property var selStart: null
@@ -60,6 +62,8 @@ Rectangle {
     readonly property color ink: colors.fg ? colors.fg : Theme.surfaceText
     readonly property color cursorColor: colors.cursor ? colors.cursor : Theme.primary
     readonly property real paperOpacity: colors.opacity ?? 1
+    readonly property string rightClick: behavior.rightClick || "menu"
+    readonly property string middleClick: behavior.middleClick || "primaryPaste"
     readonly property bool customSelection: !!(colors.selectionBg || colors.selectionFg)
     readonly property color selectionPaper: colors.selectionBg ? colors.selectionBg : ink
     readonly property string cursorShape: cursor.shape || behavior.cursorShape || "block"
@@ -322,6 +326,62 @@ Rectangle {
     function dragSelection(cell) {
         if (selAnchor !== null)
             select(selAnchor, cell);
+    }
+
+    function selectAll() {
+        selAnchor = Qt.point(0, 0);
+        select(selAnchor, Qt.point(cols - 1, rows - 1));
+        rememberSelection();
+    }
+
+    function extendSelection(cell) {
+        if (selStart === null)
+            return;
+        const index = point => point.y * cols + point.x;
+        const nearStart = Math.abs(index(cell) - index(selStart)) < Math.abs(index(cell) - index(selEnd));
+        selAnchor = nearStart ? selEnd : selStart;
+        select(selAnchor, cell);
+        rememberSelection();
+    }
+
+    function rememberSelection() {
+        const text = selectedText();
+        if (text !== "")
+            primaryText = text;
+    }
+
+    function pasteText(text) {
+        if (text !== "")
+            sendInput({
+                "text": text,
+                "paste": true
+            });
+    }
+
+    function clickAction(kind, cell, point) {
+        switch (kind) {
+        case "menu":
+            clickMenu.openAt(point.x, point.y);
+            break;
+        case "extend":
+            extendSelection(cell);
+            break;
+        case "paste":
+            runAction("paste");
+            break;
+        case "primaryPaste":
+            pasteText(primaryText);
+            break;
+        case "copy":
+            copySelection();
+            break;
+        case "copyOrPaste":
+            if (selStart !== null)
+                copySelection();
+            else
+                runAction("paste");
+            break;
+        }
     }
 
     function selectedText() {
@@ -616,6 +676,40 @@ Rectangle {
         }
     }
 
+    FileMenu {
+        id: clickMenu
+
+        onClosed: term.forceActiveFocus()
+
+        FileMenuItem {
+            text: FileActions.label("copy")
+            iconName: FileActions.icon("copy")
+            enabled: term.selStart !== null
+            onClicked: {
+                clickMenu.close();
+                term.copySelection();
+            }
+        }
+
+        FileMenuItem {
+            text: FileActions.label("paste")
+            iconName: FileActions.icon("paste")
+            onClicked: {
+                clickMenu.close();
+                term.runAction("paste");
+            }
+        }
+
+        FileMenuItem {
+            text: FileActions.label("selectAll")
+            iconName: FileActions.icon("selectAll")
+            onClicked: {
+                clickMenu.close();
+                term.selectAll();
+            }
+        }
+    }
+
     Connections {
         target: SettingsData
 
@@ -833,7 +927,7 @@ Rectangle {
         }
 
         Repeater {
-            model: term.selStart === null ? 0 : term.selEnd.y - term.selStart.y + 1
+            model: term.selStart === null || term.selEnd === null ? 0 : term.selEnd.y - term.selStart.y + 1
 
             Rectangle {
                 id: highlight
@@ -897,12 +991,19 @@ Rectangle {
                     term.reportMouse("press", cell, term.buttonName(event.button), event.modifiers);
                 } else if (event.button === Qt.LeftButton)
                     term.pressSelection(cell);
+                else if (event.button === Qt.RightButton)
+                    term.clickAction(term.rightClick, cell, Qt.point(event.x, event.y));
+                else if (event.button === Qt.MiddleButton)
+                    term.clickAction(term.middleClick, cell, Qt.point(event.x, event.y));
             }
             onReleased: event => {
                 if (reporting)
                     term.reportMouse("release", term.cellAt(Qt.point(event.x, event.y)), term.buttonName(event.button), event.modifiers);
-                else if (event.button === Qt.LeftButton && term.behavior.copyOnSelect)
-                    term.copySelection();
+                else if (event.button === Qt.LeftButton) {
+                    term.rememberSelection();
+                    if (term.behavior.copyOnSelect)
+                        term.copySelection();
+                }
             }
             onExited: term.linkHover = false
             onPositionChanged: event => {

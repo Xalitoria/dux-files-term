@@ -28,6 +28,8 @@ func behaviorPayload(profile termtheme.Profile) map[string]any {
 		"fontSize":     profile.FontSize,
 		"cursorShape":  profile.CursorShape,
 		"cursorBlink":  profile.CursorBlink,
+		"rightClick":   profile.RightClick,
+		"middleClick":  profile.MiddleClick,
 	}
 }
 

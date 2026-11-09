@@ -20,6 +20,7 @@ ShellRoot {
     property var closed: []
     property var followed: []
     property var restyled: []
+    property var typed: []
     property var handlers: ({})
 
     Component {
@@ -71,6 +72,9 @@ ShellRoot {
             case "terminal.close":
                 root.closed = root.closed.concat([params.id]);
                 break;
+            case "terminal.input":
+                root.typed = root.typed.concat([params]);
+                break;
             case "terminal.restyle":
                 root.restyled = root.restyled.concat([[params.id, params.terminal]]);
                 break;
@@ -116,6 +120,7 @@ ShellRoot {
             scenario_terminalPerTab();
             scenario_pickingATerminalRestylesOpenTerminals();
             scenario_rightTerminalResizes();
+            scenario_rightAndMiddleClicks();
             scenario_backgroundTabsAndDuplicates();
             scenario_closingTabsClosesTheirTerminals();
             scenario_closingATabBesideTheCurrentOneStartsNothing();
@@ -198,6 +203,53 @@ ShellRoot {
 
             win.setTerminalStart(width / 2);
             win.setTerminalMode(mode);
+        }
+
+        function scenario_rightAndMiddleClicks() {
+            const view = root.window.activeTerminal;
+            verify(view !== null);
+            verify(view.sessionId !== "");
+            compare(view.rightClick, "menu");
+            compare(view.middleClick, "primaryPaste");
+
+            view.behavior = {
+                "rightClick": "extend",
+                "middleClick": "paste"
+            };
+            compare(view.rightClick, "extend");
+            compare(view.middleClick, "paste");
+
+            root.typed = [];
+            view.primaryText = "picked";
+            view.clickAction("primaryPaste", Qt.point(0, 0), Qt.point(0, 0));
+            compare(root.typed.length, 1);
+            compare(root.typed[0].text, "picked");
+            compare(root.typed[0].paste, true);
+            view.primaryText = "";
+            view.clickAction("primaryPaste", Qt.point(0, 0), Qt.point(0, 0));
+            compare(root.typed.length, 1, "nothing selected, nothing pasted");
+
+            view.cols = 20;
+            view.rows = 5;
+            view.select(Qt.point(2, 1), Qt.point(5, 1));
+            view.extendSelection(Qt.point(9, 1));
+            compare(view.selStart.x, 2);
+            compare(view.selEnd.x, 9);
+            view.extendSelection(Qt.point(0, 1));
+            compare(view.selStart.x, 0);
+            compare(view.selEnd.x, 9);
+
+            view.clearSelection();
+            view.extendSelection(Qt.point(3, 1));
+            compare(view.selStart, null, "no selection to extend");
+
+            view.selectAll();
+            compare(view.selStart, Qt.point(0, 0));
+            compare(view.selEnd, Qt.point(19, 4));
+
+            view.clearSelection();
+            view.behavior = {};
+            compare(view.rightClick, "menu");
         }
 
         function scenario_pickingATerminalRestylesOpenTerminals() {

@@ -9,8 +9,9 @@ import (
 )
 
 type kittyConfig struct {
-	settings map[string]string
-	maps     [][]string
+	settings  map[string]string
+	maps      [][]string
+	mouseMaps [][]string
 }
 
 func readKitty(s sources) (Profile, bool) {
@@ -47,6 +48,7 @@ func readKitty(s sources) (Profile, bool) {
 	blink := value("cursor_blink_interval")
 	profile.setCursor(value("cursor_shape"), blink != "" && blink != "0")
 	kittyKeys(&profile, config)
+	kittyClicks(&profile, config)
 	return profile, profile.usable()
 }
 
@@ -69,6 +71,8 @@ func readKittyFile(path string, depth int, into *kittyConfig) {
 			readKittyFile(resolveFrom(path, fields[1]), depth+1, into)
 		case "map":
 			into.maps = append(into.maps, fields[1:])
+		case "mouse_map":
+			into.mouseMaps = append(into.mouseMaps, fields[1:])
 		default:
 			into.settings[fields[0]] = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), fields[0]))
 		}
@@ -98,6 +102,24 @@ func kittyKeys(profile *Profile, config kittyConfig) {
 			if action := kittyZoom(fields[2:]); action != "" {
 				profile.bind(action, chord)
 			}
+		}
+	}
+}
+
+// Only plain clicks of the left-out buttons count. Mappings with modifiers, or for a grabbed mouse, are the program's.
+func kittyClicks(profile *Profile, config kittyConfig) {
+	if truthy(firstField(config.settings["clear_all_mouse_actions"])) {
+		profile.RightClick, profile.MiddleClick = ClickNone, ClickNone
+	}
+	for _, fields := range config.mouseMaps {
+		if len(fields) < 3 || !strings.Contains(fields[2], "ungrabbed") {
+			continue
+		}
+		switch fields[0] {
+		case "right":
+			profile.RightClick = kittyClick(fields[3:])
+		case "middle":
+			profile.MiddleClick = kittyClick(fields[3:])
 		}
 	}
 }
