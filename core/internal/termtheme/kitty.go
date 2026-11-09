@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 type kittyConfig struct {
@@ -117,12 +118,48 @@ func kittyZoom(args []string) string {
 	return ""
 }
 
-// kitty takes `family="Name" style=...` or a bare name.
+// kitty takes a bare name or key=value pairs like `family='Name' postscript_name=Name`, with either quote.
 func kittyFamily(text string) string {
-	text = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(text), "family="))
-	if quoted, ok := strings.CutPrefix(text, `"`); ok {
-		name, _, _ := strings.Cut(quoted, `"`)
-		return namedFamily(name)
+	text = strings.TrimSpace(text)
+	if !strings.Contains(text, "=") {
+		return namedFamily(strings.Trim(text, `"'`))
 	}
-	return namedFamily(text)
+	for _, token := range kittyTokens(text) {
+		if key, value, ok := strings.Cut(token, "="); ok && key == "family" {
+			return namedFamily(value)
+		}
+	}
+	return ""
+}
+
+// kittyTokens splits on whitespace outside quotes and drops the quotes.
+func kittyTokens(text string) []string {
+	var tokens []string
+	var token strings.Builder
+	var quote rune
+	started := false
+	flush := func() {
+		if started {
+			tokens = append(tokens, token.String())
+		}
+		token.Reset()
+		started = false
+	}
+	for _, r := range text {
+		switch {
+		case quote != 0 && r == quote:
+			quote = 0
+		case quote != 0:
+			token.WriteRune(r)
+		case r == '"' || r == '\'':
+			quote, started = r, true
+		case unicode.IsSpace(r):
+			flush()
+		default:
+			token.WriteRune(r)
+			started = true
+		}
+	}
+	flush()
+	return tokens
 }
